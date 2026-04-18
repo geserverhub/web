@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GOEUN SERVER HUB">
+  <defs>
+    <linearGradient id="fv-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#1e40af"/>
+    </linearGradient>
+    <linearGradient id="fv-ge" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#fv-bg)"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#60a5fa" stroke-width="1" opacity="0.35"/>
+  <!-- G arc -->
+  <path d="M40 20 A18 18 0 1 0 40 44" fill="none" stroke="url(#fv-ge)" stroke-linecap="round" stroke-width="5.5"/>
+  <!-- G crossbar -->
+  <path d="M40 32 H29" fill="none" stroke="url(#fv-ge)" stroke-linecap="round" stroke-width="5.5"/>
+  <!-- E spine -->
+  <path d="M42 20 V44" fill="none" stroke="url(#fv-ge)" stroke-linecap="round" stroke-width="5"/>
+  <!-- E bars -->
+  <path d="M42 20 H54" fill="none" stroke="url(#fv-ge)" stroke-linecap="round" stroke-width="5"/>
+  <path d="M42 32 H52" fill="none" stroke="url(#fv-ge)" stroke-linecap="round" stroke-width="5"/>
+  <path d="M42 44 H54" fill="none" stroke="url(#fv-ge)" stroke-linecap="round" stroke-width="5"/>
+  <!-- Accent dot -->
+  <circle cx="54" cy="20" r="2.5" fill="#06b6d4"/>
+</svg>

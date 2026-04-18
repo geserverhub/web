@@ -1,0 +1,17 @@
+[Unit]
+Description=GEserver Hub — Next.js Frontend (port 3005)
+After=network.target
+
+[Service]
+Type=simple
+User=pavinee
+WorkingDirectory=/home/pavinee/GEserver/frontend
+EnvironmentFile=/home/pavinee/GEserver/.env
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
