@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -63,15 +64,26 @@ export default function LoginPage() {
             <label className="form-label" htmlFor="password">
               รหัสผ่าน
             </label>
-            <input
-              id="password"
-              type="password"
-              className="form-control"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="input-group">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                className="form-control"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+                aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
 
           <button
