@@ -158,6 +158,12 @@ export default function ClientsUsersClient({ session }) {
   // ledger modal
   const [ledgerModal, setLedgerModal] = useState(false);
   const [ledgerCurrency, setLedgerCurrency] = useState("THB");
+  const [ledgerFilterMode, setLedgerFilterMode] = useState("all"); // "all" | "number" | "date" | "range"
+  const [ledgerFilterRef, setLedgerFilterRef] = useState("");
+  const [ledgerFilterDate, setLedgerFilterDate] = useState("");
+  const [ledgerFilterFrom, setLedgerFilterFrom] = useState("");
+  const [ledgerFilterTo, setLedgerFilterTo] = useState("");
+  const [ledgerPaidOnly, setLedgerPaidOnly] = useState(true);
 
   // report/print modal
   const [reportModal, setReportModal] = useState(false);
@@ -1153,7 +1159,7 @@ export default function ClientsUsersClient({ session }) {
     win.document.close();
   };
 
-  const doPrintLedger = (currency) => {
+  const doPrintLedger = (currency, filterMode, filterRef, filterDate, filterFrom, filterTo, paidOnly) => {
     const symMap = { THB: "\u0e3f", KRW: "\u20a9", USD: "$" };
     const sym = symMap[currency] || "";
 
@@ -1181,7 +1187,8 @@ export default function ClientsUsersClient({ session }) {
       footerItems: "\uac74",
       noData: "\ub370\uc774\ud130 \uc5c6\uc74c",
       printBtn: "\ud83d\udda8\ufe0f \uc778\uc1c4",
-      statusMap: { PENDING: "\ubbf8\uacb0\uc81c", PAID: "\uacb0\uc81c\uc644\ub8cc", OVERDUE: "\uc5f0\uccb4", CANCELLED: "\ucd94\uc18c" },
+      statusMap: { PENDING: "\ubbf8\uacb0\uc81c", PAID: "\uacb0\uc81c\uc644\ub8cc", OVERDUE: "\uc5f0\uccb4", CANCELLED: "\ucd94\uc18c", "\u0e23\u0e2d\u0e0a\u0e33\u0e23\u0e30": "\ubbf8\uacb0\uc81c", "\u0e41\u0e19\u0e1a\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27": "\uc601\uc218\uc99d\ucca8\ubd80", "\u0e0a\u0e33\u0e23\u0e30\u0e41\u0e25\u0e49\u0e27": "\uacb0\uc81c\uc644\ub8cc", "\u0e40\u0e01\u0e34\u0e19\u0e01\u0e33\u0e2b\u0e19\u0e14": "\uc5f0\uccb4", "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01": "\ucd94\uc18c" },
+      categoryMap: { "\u0e04\u0e48\u0e32\u0e40\u0e0a\u0e48\u0e32\u0e40\u0e0b\u0e34\u0e23\u0e4c\u0e1f\u0e40\u0e27\u0e2d\u0e23\u0e4c/\u0e42\u0e14\u0e40\u0e21\u0e19": "\uc11c\ubc84/\ub3c4\uba54\uc778 \uc784\ub300\ub8cc", "\u0e04\u0e48\u0e32\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e20\u0e32\u0e22\u0e19\u0e2d\u0e01": "\uc678\ubd80 \uc11c\ube44\uc2a4 \ube44\uc6a9", "\u0e04\u0e48\u0e32\u0e08\u0e49\u0e32\u0e07\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "\uc9c1\uc6d0 \uae09\uc5ec", "\u0e04\u0e48\u0e32\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22\u0e2a\u0e33\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "\uc0ac\ubb34\uc2e4 \ube44\uc6a9", "\u0e04\u0e48\u0e32\u0e02\u0e19\u0e2a\u0e48\u0e07": "\uc6b4\uc1a1\ube44", "\u0e04\u0e48\u0e32\u0e27\u0e31\u0e2a\u0e14\u0e38": "\uc790\uc7ac\ube44", "\u0e04\u0e48\u0e32\u0e42\u0e06\u0e29\u0e13\u0e32": "\uad11\uace0\ube44", "\u0e2d\u0e37\u0e48\u0e19\u0e46": "\uae30\ud0c0" },
     } : currency === "USD" ? {
       locale: "en-US",
       title: "Income & Expense Ledger",
@@ -1205,7 +1212,8 @@ export default function ClientsUsersClient({ session }) {
       footerItems: "items",
       noData: "No records",
       printBtn: "\ud83d\udda8\ufe0f Print",
-      statusMap: { PENDING: "Pending", PAID: "Paid", OVERDUE: "Overdue", CANCELLED: "Cancelled" },
+      statusMap: { PENDING: "Pending", PAID: "Paid", OVERDUE: "Overdue", CANCELLED: "Cancelled", "\u0e23\u0e2d\u0e0a\u0e33\u0e23\u0e30": "Pending", "\u0e41\u0e19\u0e1a\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27": "Receipt Attached", "\u0e0a\u0e33\u0e23\u0e30\u0e41\u0e25\u0e49\u0e27": "Paid", "\u0e40\u0e01\u0e34\u0e19\u0e01\u0e33\u0e2b\u0e19\u0e14": "Overdue", "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01": "Cancelled" },
+      categoryMap: { "\u0e04\u0e48\u0e32\u0e40\u0e0a\u0e48\u0e32\u0e40\u0e0b\u0e34\u0e23\u0e4c\u0e1f\u0e40\u0e27\u0e2d\u0e23\u0e4c/\u0e42\u0e14\u0e40\u0e21\u0e19": "Server/Domain Rental", "\u0e04\u0e48\u0e32\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e20\u0e32\u0e22\u0e19\u0e2d\u0e01": "External Service Fee", "\u0e04\u0e48\u0e32\u0e08\u0e49\u0e32\u0e07\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "Employee Wages", "\u0e04\u0e48\u0e32\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22\u0e2a\u0e33\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "Office Expenses", "\u0e04\u0e48\u0e32\u0e02\u0e19\u0e2a\u0e48\u0e07": "Transport", "\u0e04\u0e48\u0e32\u0e27\u0e31\u0e2a\u0e14\u0e38": "Materials", "\u0e04\u0e48\u0e32\u0e42\u0e06\u0e29\u0e13\u0e32": "Advertising", "\u0e2d\u0e37\u0e48\u0e19\u0e46": "Others" },
     } : {
       locale: "th-TH",
       title: "\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e23\u0e32\u0e22\u0e23\u0e31\u0e1a-\u0e23\u0e32\u0e22\u0e08\u0e48\u0e32\u0e22",
@@ -1230,15 +1238,24 @@ export default function ClientsUsersClient({ session }) {
       noData: "\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23",
       printBtn: "\ud83d\udda8\ufe0f \u0e1e\u0e34\u0e21\u0e1e\u0e4c",
       statusMap: { PENDING: "\u0e23\u0e2d\u0e0a\u0e33\u0e23\u0e30", PAID: "\u0e0a\u0e33\u0e23\u0e30\u0e41\u0e25\u0e49\u0e27", OVERDUE: "\u0e40\u0e01\u0e34\u0e19\u0e01\u0e33\u0e2b\u0e19\u0e14", CANCELLED: "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01" },
+      categoryMap: {},
     };
 
     const fmt = n => Math.abs(n).toLocaleString(L.locale);
-    const curInvoices = invoices.filter(i => (i.currency || "THB") === currency);
-    const curExpenses = expenses.filter(e => (e.currency || "THB") === currency);
+    const PAID_INV = ["PAID"];
+    const PAID_EXP = ["\u0e41\u0e19\u0e1a\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27", "PAID"];
+    const curInvoices = invoices.filter(i => (i.currency || "THB") === currency && (!paidOnly || PAID_INV.includes(i.status)));
+    const curExpenses = expenses.filter(e => (e.currency || "THB") === currency && (!paidOnly || PAID_EXP.includes(e.status)));
     const rows = [
       ...curInvoices.map(i => ({ date: new Date(i.createdAt), type: "income", ref: i.number, desc: i.client?.name || clients.find(c => c.id === i.clientId)?.name || "\u2014", detail: L.statusMap[i.status] || i.status, income: Number(i.amount), expense: 0 })),
-      ...curExpenses.map(e => ({ date: new Date(e.date), type: "expense", ref: e.number, desc: e.category, detail: L.statusMap[e.status] || e.status || L.statusMap["PENDING"], income: 0, expense: Number(e.amount) })),
-    ].sort((a, b) => a.date - b.date);
+      ...curExpenses.map(e => ({ date: new Date(e.date), type: "expense", ref: e.number, desc: L.categoryMap[e.category] || e.category, detail: L.statusMap[e.status] || e.status || L.statusMap["PENDING"], income: 0, expense: Number(e.amount) })),
+    ].sort((a, b) => a.date - b.date).filter(r => {
+      if (!filterMode || filterMode === "all") return true;
+      if (filterMode === "number") return !filterRef || r.ref.toLowerCase().includes(filterRef.toLowerCase());
+      if (filterMode === "date") { if (!filterDate) return true; const d = r.date.toISOString().slice(0, 10); return d === filterDate; }
+      if (filterMode === "range") { const d = r.date.toISOString().slice(0, 10); if (filterFrom && d < filterFrom) return false; if (filterTo && d > filterTo) return false; return true; }
+      return true;
+    });
     let running = 0;
     const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0);
     const totalExpense = curExpenses.reduce((s, e) => s + Number(e.amount), 0);
@@ -1289,7 +1306,8 @@ export default function ClientsUsersClient({ session }) {
       "tfoot td{font-weight:800;background:#f0f0f0;border-top:2px solid #333}" +
       "@media print{button{display:none}}" +
       "</style></head><body>" +
-      "<h2>\ud83d\udcd2 " + L.title + " (" + currency + ")</h2>" +
+      "<div style='font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:4px'>GOEUN SERVER HUB</div>" +
+      "<h2 style='margin:0 0 4px'>\ud83d\udcd2 " + L.title + " (" + currency + ")</h2>" +
       "<div class='sub'>" + L.printedAt + ": " + new Date().toLocaleString(L.locale) + "</div>" +
       "<div class='summary'>" +
         "<div class='card'><div class='label'>" + L.incomeTotal + "</div><div class='val' style='color:green'>" + sym + fmt(totalIncome) + "</div><div class='label'>" + currency + "</div></div>" +
@@ -1863,8 +1881,10 @@ export default function ClientsUsersClient({ session }) {
         const sym = symMap[ledgerCurrency] || "";
         const fmt = n => Math.abs(n).toLocaleString("th-TH");
 
-        const curInvoices = invoices.filter(i => (i.currency || "THB") === ledgerCurrency);
-        const curExpenses = expenses.filter(e => (e.currency || "THB") === ledgerCurrency);
+        const PAID_STATUSES_INV = ["PAID"];
+        const PAID_STATUSES_EXP = ["แนบใบเสร็จแล้ว", "PAID"];
+        const curInvoices = invoices.filter(i => (i.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_INV.includes(i.status)));
+        const curExpenses = expenses.filter(e => (e.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_EXP.includes(e.status)));
 
         // Build combined ledger rows sorted by date
         const rows = [
@@ -1899,16 +1919,25 @@ export default function ClientsUsersClient({ session }) {
             <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 960, border: "1px solid #2a2d3a", marginTop: 16 }}>
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h5 style={{ margin: 0, color: "#4ade80", fontSize: 17 }}>📒 บัญชีรายรับ-รายจ่าย</h5>
+                <div>
+                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GOEUN SERVER HUB</div>
+                  <h5 style={{ margin: 0, color: "#4ade80", fontSize: 17 }}>📒 บัญชีรายรับ-รายจ่าย</h5>
+                </div>
                 <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setLedgerModal(false)}>✕</button>
               </div>
 
               {/* Currency toggle */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                 {CURRENCIES.map(cur => (
                   <button key={cur} style={{ padding: "7px 20px", borderRadius: 6, border: ledgerCurrency === cur ? "1px solid #4ade80" : "1px solid #2a2d3a", background: ledgerCurrency === cur ? "#0f2318" : "#1e2130", color: ledgerCurrency === cur ? "#4ade80" : "#8b8fa8", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
                     onClick={() => setLedgerCurrency(cur)}>{symMap[cur]} {cur}</button>
                 ))}
+              </div>
+              {/* Paid-only filter toggle */}
+              <div style={{ marginBottom: 20 }}>
+                <button onClick={() => setLedgerPaidOnly(p => !p)} style={{ ...S.btn(ledgerPaidOnly ? "#0f2318" : "#1e2130", ledgerPaidOnly ? "#4ade80" : "#8b8fa8"), border: ledgerPaidOnly ? "1px solid #4ade80" : "1px solid #2a2d3a", fontSize: 12, padding: "5px 14px" }}>
+                  {ledgerPaidOnly ? "✅" : "⬜"} แสดงเฉพาะ ชำระแล้ว / แนบใบเสร็จแล้ว
+                </button>
               </div>
 
               {/* Summary cards */}
@@ -2038,6 +2067,33 @@ export default function ClientsUsersClient({ session }) {
                 <div style={{ marginTop: 10, background: "#1a1d27", borderRadius: 8, padding: "10px 14px", border: "1px solid #2a2d3a", fontSize: 13, color: "#8b8fa8" }}>
                   {(() => { const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency).length; const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency).length; const ti = invoices.filter(i=>(i.currency||"THB")===ledgerCurrency).reduce((s,i)=>s+Number(i.amount),0); const te = expenses.filter(e=>(e.currency||"THB")===ledgerCurrency).reduce((s,e)=>s+Number(e.amount),0); const sym={THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||""; return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{ci} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce} รายการ</span> · {ti-te >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{(ti-te).toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(ti-te).toLocaleString("th-TH")}</span>}</>; })()}
                 </div>
+                {/* Ledger search filter */}
+                <div style={{ marginTop: 12 }}>
+                  <label style={S.label}>เงื่อนไขการค้นหา</label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[["all", "📋 ทั้งหมด"], ["number", "🔢 เลขที่บิล"], ["date", "📅 วันที่"], ["range", "📆 ช่วงวันที่"]].map(([v, l]) => (
+                      <button key={v} style={{ ...S.btn(ledgerFilterMode === v ? "#1a2040" : "#1e2130", ledgerFilterMode === v ? "#7eb8f7" : "#8b8fa8"), border: ledgerFilterMode === v ? "1px solid #3b82f6" : "1px solid #2a2d3a", flex: 1, fontSize: 11 }} onClick={() => setLedgerFilterMode(v)}>{l}</button>
+                    ))}
+                  </div>
+                  {ledgerFilterMode === "number" && (
+                    <input style={{ ...S.input, marginTop: 8 }} placeholder="เช่น EXP260420 หรือ INV260420" value={ledgerFilterRef} onChange={e => setLedgerFilterRef(e.target.value)} />
+                  )}
+                  {ledgerFilterMode === "date" && (
+                    <input style={{ ...S.input, marginTop: 8 }} type="date" value={ledgerFilterDate} onChange={e => setLedgerFilterDate(e.target.value)} />
+                  )}
+                  {ledgerFilterMode === "range" && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+                      <div><label style={S.label}>จากวันที่</label><input style={S.input} type="date" value={ledgerFilterFrom} onChange={e => setLedgerFilterFrom(e.target.value)} /></div>
+                      <div><label style={S.label}>ถึงวันที่</label><input style={S.input} type="date" value={ledgerFilterTo} onChange={e => setLedgerFilterTo(e.target.value)} /></div>
+                    </div>
+                  )}
+                </div>
+                {/* Paid-only toggle in print modal */}
+                <div style={{ marginTop: 10 }}>
+                  <button onClick={() => setLedgerPaidOnly(p => !p)} style={{ ...S.btn(ledgerPaidOnly ? "#0f2318" : "#1e2130", ledgerPaidOnly ? "#4ade80" : "#8b8fa8"), border: ledgerPaidOnly ? "1px solid #4ade80" : "1px solid #2a2d3a", fontSize: 12, padding: "5px 14px", width: "100%" }}>
+                    {ledgerPaidOnly ? "✅" : "⬜"} แสดงเฉพาะ ชำระแล้ว / แนบใบเสร็จแล้ว เท่านั้น
+                  </button>
+                </div>
               </div>
               )}
               {/* Input ตามโหมด */}
@@ -2078,7 +2134,7 @@ export default function ClientsUsersClient({ session }) {
             <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
               <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setReportModal(false)}>ยกเลิก</button>
               {reportDataType === "ledger" ? (
-                <button style={S.btn("#0f2318", "#4ade80")} onClick={() => doPrintLedger(ledgerCurrency)}>
+                <button style={S.btn("#0f2318", "#4ade80")} onClick={() => doPrintLedger(ledgerCurrency, ledgerFilterMode, ledgerFilterRef, ledgerFilterDate, ledgerFilterFrom, ledgerFilterTo, ledgerPaidOnly)}>
                   🖨️ พิมพ์บัญชี {ledgerCurrency}
                 </button>
               ) : (
