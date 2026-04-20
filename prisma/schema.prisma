@@ -76,9 +76,10 @@ model Client {
   status       Status   @default(COMING_SOON)
   contactEmail String?
   contactPhone String?
-  systemUrl    String?
-  logoUrl      String?
-  createdAt    DateTime @default(now())
+  systemUrl          String?
+  logoUrl            String?
+  domainRegisteredAt DateTime?
+  createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
 
   users    User[]
@@ -116,9 +117,10 @@ model ClientService {
 }
 
 model Invoice {
-  id        String        @id @default(cuid())
-  number    String        @unique
-  clientId  String
+  id            String        @id @default(cuid())
+  number        String        @unique
+  receiptNumber String?       @unique
+  clientId      String
   userId    String?
   amount    Decimal       @db.Decimal(10, 2)
   currency  String        @default("THB")
@@ -178,6 +180,24 @@ enum NotificationType {
   SYSTEM_ALERT
   WELCOME
   PASSWORD_RESET
+}
+
+model Expense {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  category      String
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String   @default("THB")
+  status        String   @default("รอชำระ")
+  notes         String?  @db.Text
+  date          DateTime @default(now())
+  receiptNumber String?
+  receiptFile   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@index([date])
 }
 
 model Product {

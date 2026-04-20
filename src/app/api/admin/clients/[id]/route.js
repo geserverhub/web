@@ -13,7 +13,18 @@ export async function PUT(req, { params }) {
 
   const { id } = params;
   const body = await req.json();
-  const { name, description, status, contactEmail, contactPhone, systemUrl } = body;
+  const { name, description, status, contactEmail, contactPhone, systemUrl, serviceIds } = body;
+
+  // Sync services if provided
+  if (Array.isArray(serviceIds)) {
+    await prisma.clientService.deleteMany({ where: { clientId: id } });
+    if (serviceIds.length > 0) {
+      await prisma.clientService.createMany({
+        data: serviceIds.map(serviceId => ({ clientId: id, serviceId })),
+        skipDuplicates: true,
+      });
+    }
+  }
 
   const client = await prisma.client.update({
     where: { id },

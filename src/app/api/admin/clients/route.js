@@ -15,6 +15,14 @@ export async function GET(req) {
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { users: true } },
+      invoices: {
+        where: { status: "PENDING" },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, number: true, status: true, amount: true, dueDate: true, paidAt: true, notes: true },
+      },
+      services: {
+        include: { service: { select: { id: true, title: true, highlight: true } } },
+      },
     },
   });
   return NextResponse.json({ clients });
@@ -26,7 +34,7 @@ export async function POST(req) {
   if (!isSuperAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
-  const { name, slug, description, status, contactEmail, contactPhone, systemUrl } = body;
+  const { name, slug, description, status, contactEmail, contactPhone, systemUrl, serviceIds } = body;
 
   if (!name || !slug) {
     return NextResponse.json({ error: "name และ slug จำเป็น" }, { status: 400 });
@@ -44,6 +52,11 @@ export async function POST(req) {
       contactEmail: contactEmail || null,
       contactPhone: contactPhone || null,
       systemUrl: systemUrl || null,
+      ...(Array.isArray(serviceIds) && serviceIds.length > 0 && {
+        services: {
+          create: serviceIds.map(serviceId => ({ serviceId })),
+        },
+      }),
     },
   });
   return NextResponse.json({ client }, { status: 201 });
