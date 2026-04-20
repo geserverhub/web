@@ -18,7 +18,7 @@ export async function PUT(req, { params }) {
   const body = await req.json();
 
   const data = {};
-  const fields = ["sku", "category", "name", "nameEn", "nameZh", "unit", "minOrder", "minWholesale", "desc", "img", "stock", "active"];
+  const fields = ["sku", "category", "name", "nameEn", "nameZh", "unit", "minOrder", "minWholesale", "desc", "img", "stock", "active", "promotion"];
   for (const f of fields) {
     if (body[f] !== undefined) data[f] = body[f];
   }
@@ -27,6 +27,7 @@ export async function PUT(req, { params }) {
   if (body.minOrder !== undefined) data.minOrder = parseInt(body.minOrder);
   if (body.minWholesale !== undefined) data.minWholesale = parseInt(body.minWholesale);
   if (body.stock !== undefined) data.stock = parseInt(body.stock);
+  if (body.promotionPrice !== undefined) data.promotionPrice = body.promotionPrice ? parseFloat(body.promotionPrice) : null;
 
   // Check SKU uniqueness if changing
   if (data.sku) {

@@ -173,6 +173,13 @@ function ProductCard({ product, lang, onAdd }) {
           </div>
         )}
 
+        {product.promotion && (
+          <div style={{ background: "#FFF3E0", border: "1px solid #FFB74D", borderRadius: 4, padding: "3px 8px", fontSize: 11, fontWeight: 700, color: "#E65100", marginBottom: 6 }}>
+            🏷️ {product.promotion}
+            {product.promotionPrice && <span style={{ marginLeft: 6, color: OG }}>฿{Number(product.promotionPrice).toLocaleString()}</span>}
+          </div>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8, marginTop: "auto", paddingTop: 4 }}>
           <span style={{ color: "#f59e0b", fontSize: 11 }}>{"★".repeat(Math.round(product.rating))}{"☆".repeat(5 - Math.round(product.rating))}</span>
           <span style={{ color: LGRAY, fontSize: 11 }}>| {lang === "en" ? "Sold" : lang === "zh" ? "已售" : "ขายแล้ว"} {product.sold}</span>

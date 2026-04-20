@@ -19,7 +19,7 @@ const authConfig: NextAuthConfig = {
           return Response.redirect(new URL("/", nextUrl));
       }
 
-      if (pathname.startsWith("/portal")) {
+      if (pathname.startsWith("/mct-product")) {
         if (!isLoggedIn) return Response.redirect(new URL("/login", nextUrl));
       }
 

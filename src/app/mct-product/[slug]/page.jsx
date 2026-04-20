@@ -55,7 +55,7 @@ export default async function PortalPage({ params }) {
         <div className="text-center">
           <h2>ไม่พบระบบ</h2>
           <p className="text-muted">ไม่พบข้อมูลลูกค้า: {params.slug}</p>
-          <a href="/portal" className="btn btn-outline-light mt-3">
+          <a href="/mct-product" className="btn btn-outline-light mt-3">
             กลับหน้า Portal
           </a>
         </div>

@@ -37,7 +37,7 @@ export default function PortalClient({ client, products, session }) {
         className="navbar px-4 py-3 border-bottom border-secondary"
         style={{ background: "#111" }}
       >
-        <Link href="/portal" className="navbar-brand fw-bold text-white">
+        <Link href="/mct-product" className="navbar-brand fw-bold text-white">
           ← Portal
         </Link>
         <span className="text-muted small">

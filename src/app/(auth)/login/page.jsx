@@ -29,7 +29,7 @@ export default function LoginPage() {
     if (res?.error) {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     } else {
-      router.push("/portal");
+      router.push("/mct-product");
     }
   }
 

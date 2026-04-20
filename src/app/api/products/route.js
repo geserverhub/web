@@ -63,7 +63,7 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const { sku, category, name, nameEn, nameZh, price, priceWholesale, unit, minOrder, minWholesale, desc, img, stock } = body;
+  const { sku, category, name, nameEn, nameZh, price, priceWholesale, unit, minOrder, minWholesale, desc, img, stock, promotion, promotionPrice } = body;
 
   if (!sku || !category || !name || !price) {
     return NextResponse.json({ error: "Missing required fields: sku, category, name, price" }, { status: 400 });
@@ -91,7 +91,9 @@ export async function POST(req) {
       stock: parseInt(stock || 0),
       rating: 5.0,
       sold: 0,
-      active: true,
+      active: body.active !== undefined ? body.active : true,
+      promotion: promotion || null,
+      promotionPrice: promotionPrice ? parseFloat(promotionPrice) : null,
     },
   });
 
