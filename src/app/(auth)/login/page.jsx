@@ -31,16 +31,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Redirect based on role
-    const sessionRes = await fetch("/api/auth/session");
-    const session = await sessionRes.json();
-    const role = session?.user?.role;
-
-    if (role === "SUPER_ADMIN" || role === "ADMIN") {
-      router.push("/admin/clients");
-    } else {
-      router.push("/mct-product");
-    }
+    router.push("/mct-product");
   }
 
   return (

@@ -45,6 +45,7 @@ export default function ClientsUsersClient({ session }) {
     name: "", email: "", password: "", role: "CLIENT", clientId: "",
   });
   const [savingUser, setSavingUser] = useState(false);
+  const [showUserPassword, setShowUserPassword] = useState(false);
 
   // filters
   const [clientSearch, setClientSearch] = useState("");
@@ -111,11 +112,13 @@ export default function ClientsUsersClient({ session }) {
   const openAddUser = () => {
     setEditUserId(null);
     setUserForm({ name: "", email: "", password: "", role: "CLIENT", clientId: "" });
+    setShowUserPassword(false);
     setUserModal(true);
   };
   const openEditUser = (u) => {
     setEditUserId(u.id);
     setUserForm({ name: u.name || "", email: u.email, password: "", role: u.role, clientId: u.clientId || "" });
+    setShowUserPassword(false);
     setUserModal(true);
   };
   const saveUser = async () => {
@@ -296,21 +299,29 @@ export default function ClientsUsersClient({ session }) {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
-                    {["ชื่อ", "Email", "Role", "บริษัท", "สร้างเมื่อ", ""].map(h => (
+                    {["ชื่อ", "Username", "Password", "Email", "Role", "บริษัท", "สร้างเมื่อ", ""].map(h => (
                       <th key={h} style={S.th}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>กำลังโหลด...</td></tr>
+                    <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>กำลังโหลด...</td></tr>
                   ) : filteredUsers.length === 0 ? (
-                    <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>ยังไม่มี User</td></tr>
+                    <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>ยังไม่มี User</td></tr>
                   ) : filteredUsers.map(u => {
                     const rb = ROLE_BADGE[u.role] || ROLE_BADGE.CLIENT;
                     return (
                       <tr key={u.id}>
                         <td style={S.td}><span style={{ fontWeight: 600 }}>{u.name || <span style={{ color: "#4a5070" }}>—</span>}</span></td>
+                        <td style={S.td}>
+                          {u.username
+                            ? <code style={{ background: "#1e2130", color: "#a78bfa", borderRadius: 4, padding: "2px 8px", fontSize: 12 }}>{u.username}</code>
+                            : <span style={{ color: "#4a5070" }}>—</span>}
+                        </td>
+                        <td style={S.td}>
+                          <span style={{ color: "#4a5070", letterSpacing: 2, fontSize: 13 }}>••••••••</span>
+                        </td>
                         <td style={S.td}>{u.email}</td>
                         <td style={S.td}>
                           <span style={{ background: rb.bg, color: rb.color, borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{rb.label}</span>
@@ -407,8 +418,21 @@ export default function ClientsUsersClient({ session }) {
               </div>
               <div>
                 <label style={S.label}>{editUserId ? "รหัสผ่านใหม่ (ว่าง = ไม่เปลี่ยน)" : "รหัสผ่าน *"}</label>
-                <input style={S.input} type="password" value={userForm.password}
-                  onChange={e => setUserForm(p => ({ ...p, password: e.target.value }))} />
+                <div style={{ display: "flex", gap: 0 }}>
+                  <input
+                    style={{ ...S.input, borderRadius: "6px 0 0 6px", borderRight: "none" }}
+                    type={showUserPassword ? "text" : "password"}
+                    value={userForm.password}
+                    onChange={e => setUserForm(p => ({ ...p, password: e.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowUserPassword(v => !v)}
+                    style={{ background: "#2a2d3a", border: "1px solid #2a2d3a", borderLeft: "none", borderRadius: "0 6px 6px 0", padding: "0 14px", cursor: "pointer", color: "#8b8fa8", fontSize: 16, flexShrink: 0 }}
+                  >
+                    {showUserPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </div>
               <div>
                 <label style={S.label}>Role</label>

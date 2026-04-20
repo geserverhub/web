@@ -7,6 +7,8 @@ import prisma from "@/lib/prisma";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  trustHost: true,
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/login",
   },
@@ -21,19 +23,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         const identifier = credentials.email.trim();
+        console.log("[auth] authorize attempt:", identifier);
 
-        // Search by email, username, or name
-        const user =
-          (await prisma.user.findUnique({ where: { email: identifier } })) ??
-          (await prisma.user.findUnique({ where: { username: identifier } })) ??
-          (await prisma.user.findFirst({ where: { name: identifier } }));
+        try {
+          // Search by email, username, or name
+          const user =
+            (await prisma.user.findUnique({ where: { email: identifier } })) ??
+            (await prisma.user.findUnique({ where: { username: identifier } })) ??
+            (await prisma.user.findFirst({ where: { name: identifier } }));
 
-        if (!user || !user.password) return null;
+          console.log("[auth] user found:", user ? `${user.email} role=${user.role}` : "null");
 
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) return null;
+          if (!user || !user.password) return null;
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
+          const valid = await bcrypt.compare(credentials.password, user.password);
+          console.log("[auth] password valid:", valid);
+          if (!valid) return null;
+
+          return { id: user.id, email: user.email, name: user.name, role: user.role };
+        } catch (err) {
+          console.error("[auth] authorize error:", err.message);
+          return null;
+        }
       },
     }),
   ],
