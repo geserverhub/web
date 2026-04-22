@@ -421,9 +421,9 @@ const translationData = {
     chatWithDepartmentAdmin: '{department} 관련 시스템 문제나 질문이 있으시면 관리자와 채팅하세요. 메시지는 이 부서 전용으로 저장됩니다.',
     databaseBrowser: '데이터베이스 브라우저',
     databaseBrowserDesc: 'PostgreSQL 데이터베이스의 모든 테이블 및 데이터 보기',
-    rdSystem: 'R&D System',
-    rdSystemDesc: '원격 액세스 포털',
-    remoteAccessPortal: '원격 액세스 포털',
+    rdSystem: 'K-SAVE R&D 시스템',
+    rdSystemDesc: 'KSave 장치용 원격 액세스 포털',
+    remoteAccessPortal: 'KSave 장치용 원격 액세스 포털',
     connectRemote: '원격 연결',
     zoomMeeting: 'Zoom 미팅',
     signOut: '로그아웃',
@@ -581,7 +581,7 @@ const translationData = {
     estimatedAnnualCost: '예상 연간 비용',
     
     // Pre-installation Current Analysis
-    preInstallationAnalysis: '사전 설치 전류 분석',
+    preInstallationAnalysis: 'KSAVE 사전 설치 전류 분석',
     preInstallationAnalysisDesc: '설치 전 전류 측정 및 L1 L2 L3 N 분석',
     currentMeasurement: '전류 측정',
     threePhaseAnalysis: '3상 전류 분석',
@@ -918,7 +918,7 @@ const translationData = {
     port: '포트',
     interval: '인터벌 (ms)',
     connection: '연결',
-    energyID: '기기 ID',
+    ksaveID: 'K-Save 기기 ID',
     saving: '저장 중...',
     myAPIKeys: '내 API 키',
     apiKeyCreated: 'API 키 생성됨',
@@ -935,7 +935,7 @@ const translationData = {
     gettingStarted: '시작하기',
     quickStartGuide: '빠른 시작 가이드',
     importantTips: '중요 팁',
-    momoSpacePlatformUserGuide: '플랫폼 사용 가이드',
+    momoSpacePlatformUserGuide: 'K Energy Save 플랫폼 사용 가이드',
     documentationComingSoon: '문서 준비 중',
     menuGuide: '메뉴 가이드',
     sidebarMenu: '사이드바 메뉴',
@@ -1031,7 +1031,7 @@ const translationData = {
     viewer: '뷰어',
     dashboardInterface: '대시보드 인터페이스',
     keyFeatures: '주요 기능',
-    systemUsageGuideDescription: '대시보드를 효과적으로 사용하는 방법을 알아보세요.',
+    systemUsageGuideDescription: 'K Energy Save 대시보드를 효과적으로 사용하는 방법을 알아보세요.',
   },
   en: {
     // Header
@@ -1460,9 +1460,9 @@ const translationData = {
     chatWithDepartmentAdmin: 'Chat with the administrator if you have system issues or questions related to {department}. Messages are stored specifically for this department.',
     databaseBrowser: 'Database Browser',
     databaseBrowserDesc: 'View all tables and data in PostgreSQL database',
-    rdSystem: 'R&D System',
-    rdSystemDesc: 'Remote Access Portal for Devices',
-    remoteAccessPortal: 'Remote Access Portal for Devices',
+    rdSystem: 'K-SAVE R&D System',
+    rdSystemDesc: 'Remote Access Portal for KSave Devices',
+    remoteAccessPortal: 'Remote Access Portal for KSave Devices',
     connectRemote: 'Connect Remote',
     zoomMeeting: 'Zoom Meeting',
     signOut: 'Sign Out',
@@ -1613,7 +1613,7 @@ const translationData = {
     estimatedAnnualCost: 'Estimated Annual Cost',
     
     // Pre-installation Current Analysis
-    preInstallationAnalysis: 'Pre-Installation Current Analysis',
+    preInstallationAnalysis: 'KSAVE Pre-Installation Current Analysis',
     preInstallationAnalysisDesc: 'Pre-installation current measurement and L1 L2 L3 N analysis',
     currentMeasurement: 'Current Measurement',
     threePhaseAnalysis: 'Three-Phase Current Analysis',
@@ -1950,7 +1950,7 @@ const translationData = {
     port: 'Port',
     interval: 'Interval (ms)',
     connection: 'Connection',
-    energyID: 'Device ID',
+    ksaveID: 'K-Save Device ID',
     saving: 'Saving...',
     myAPIKeys: 'My API Keys',
     apiKeyCreated: 'API Key Created',
@@ -1967,7 +1967,7 @@ const translationData = {
     gettingStarted: 'Getting Started',
     quickStartGuide: 'Quick Start Guide',
     importantTips: 'Important Tips',
-    momoSpacePlatformUserGuide: 'Platform User Guide',
+    momoSpacePlatformUserGuide: 'K Energy Save Platform User Guide',
     documentationComingSoon: 'Documentation Coming Soon',
     menuGuide: 'Menu Guide',
     sidebarMenu: 'Sidebar Menu',
@@ -2063,7 +2063,7 @@ const translationData = {
     viewer: 'Viewer',
     dashboardInterface: 'Dashboard Interface',
     keyFeatures: 'Key Features',
-    systemUsageGuideDescription: 'Learn how to use the dashboard effectively.',
+    systemUsageGuideDescription: 'Learn how to use the K Energy Save dashboard effectively.',
   },
   cn: {
     // Language names
@@ -2203,7 +2203,7 @@ const translationData = {
     connection: '连接',
     username: '用户名',
     password: '密码',
-    energyID: '设备 ID',
+    ksaveID: 'K-Save 设备 ID',
     saving: '保存中...',
     myAPIKeys: '我的 API 密钥',
     apiKeyCreated: 'API 密钥已创建',
@@ -2218,7 +2218,7 @@ const translationData = {
     gettingStarted: '入门指南',
     quickStartGuide: '快速入门指南',
     importantTips: '重要提示',
-    momoSpacePlatformUserGuide: '平台用户手册',
+    momoSpacePlatformUserGuide: 'K Energy Save 平台用户手册',
     documentationComingSoon: '文档即将推出',
     menuGuide: '菜单指南',
     sidebarMenu: '侧边栏菜单',
@@ -2307,7 +2307,7 @@ const translationData = {
     viewer: '查看器',
     dashboardInterface: '仪表板界面',
     keyFeatures: '主要功能',
-    systemUsageGuideDescription: '了解如何有效使用仪表板。',
+    systemUsageGuideDescription: '了解如何有效使用 K Energy Save 仪表板。',
 
     // Admin Pages
     backToLogin: '返回登录',
@@ -2321,8 +2321,8 @@ const translationData = {
     administratorSupport: '管理员支持',
     adminWelcomeMessage: '您好！我是负责 {department} 的管理员。有什么可以帮助您的吗？',
     chatWithDepartmentAdmin: '如果您有与 {department} 相关的系统问题或疑问，请与管理员聊天。消息专门存储在此部门。',
-    rdSystem: 'R&D 系统',
-    rdSystemDesc: '远程访问门户',
+    rdSystem: 'K-SAVE R&D 系统',
+    rdSystemDesc: 'KSave 设备远程访问门户',
     connectRemote: '远程连接',
     zoomMeeting: 'Zoom 会议',
     signOut: '登出',
@@ -2470,7 +2470,7 @@ const translationData = {
     connection: 'Kết Nối',
     username: 'Tên Người Dùng',
     password: 'Mật Khẩu',
-    energyID: 'ID Thiết Bị',
+    ksaveID: 'ID Thiết Bị K-Save',
     saving: 'Đang lưu...',
     myAPIKeys: 'Khóa API Của Tôi',
     apiKeyCreated: 'Khóa API Đã Tạo',
@@ -2485,7 +2485,7 @@ const translationData = {
     gettingStarted: 'Bắt Đầu',
     quickStartGuide: 'Hướng Dẫn Nhanh',
     importantTips: 'Mẹo Quan Trọng',
-    momoSpacePlatformUserGuide: 'Hướng Dẫn Người Dùng Nền Tảng',
+    momoSpacePlatformUserGuide: 'Hướng Dẫn Người Dùng Nền Tảng K Energy Save',
     documentationComingSoon: 'Tài Liệu Sắp Ra Mắt',
     menuGuide: 'Hướng Dẫn Menu',
     sidebarMenu: 'Menu Thanh Bên',
@@ -2574,7 +2574,7 @@ const translationData = {
     viewer: 'Trình Xem',
     dashboardInterface: 'Giao Diện Bảng Điều Khiển',
     keyFeatures: 'Tính Năng Chính',
-    systemUsageGuideDescription: 'Tìm hiểu cách sử dụng bảng điều khiển hiệu quả.',
+    systemUsageGuideDescription: 'Tìm hiểu cách sử dụng bảng điều khiển K Energy Save hiệu quả.',
 
     // Admin Pages
     backToLogin: 'Quay lại Đăng nhập',
@@ -2588,8 +2588,8 @@ const translationData = {
     administratorSupport: 'Hỗ trợ quản trị viên',
     adminWelcomeMessage: 'Xin chào! Tôi là quản trị viên phụ trách {department}. Tôi có thể giúp gì cho bạn?',
     chatWithDepartmentAdmin: 'Trò chuyện với quản trị viên nếu bạn có sự cố hoặc câu hỏi về hệ thống liên quan đến {department}. Tin nhắn được lưu trữ riêng cho bộ phận này.',
-    rdSystem: 'Hệ thống R&D',
-    rdSystemDesc: 'Cổng truy cập từ xa cho thiết bị',
+    rdSystem: 'Hệ thống R&D K-SAVE',
+    rdSystemDesc: 'Cổng truy cập từ xa cho thiết bị KSave',
     connectRemote: 'Kết nối từ xa',
     zoomMeeting: 'Cuộc họp Zoom',
     signOut: 'Đăng xuất',
@@ -2740,7 +2740,7 @@ const translationData = {
     connection: 'การเชื่อมต่อ',
     username: 'ชื่อผู้ใช้',
     password: 'รหัสผ่าน',
-    energyID: 'Device ID',
+    ksaveID: 'K-Save Device ID',
     saving: 'กำลังบันทึก...',
     myAPIKeys: 'API Keys ของฉัน',
     apiKeyCreated: 'สร้าง API Key แล้ว',
@@ -2755,7 +2755,7 @@ const translationData = {
     gettingStarted: 'เริ่มต้นใช้งาน',
     quickStartGuide: 'คู่มือเริ่มต้น',
     importantTips: 'เคล็ดลับสำคัญ',
-    momoSpacePlatformUserGuide: 'คู่มือผู้ใช้แพลตฟอร์ม',
+    momoSpacePlatformUserGuide: 'คู่มือผู้ใช้แพลตฟอร์ม K Energy Save',
     documentationComingSoon: 'เอกสารกำลังจะมาเร็วๆ นี้',
     menuGuide: 'คู่มือเมนู',
     sidebarMenu: 'เมนูแถบด้านข้าง',
@@ -2844,7 +2844,7 @@ const translationData = {
     viewer: 'ผู้ดู',
     dashboardInterface: 'อินเทอร์เฟสแดชบอร์ด',
     keyFeatures: 'ฟีเจอร์หลัก',
-    systemUsageGuideDescription: 'เรียนรู้วิธีใช้แดชบอร์ดอย่างมีประสิทธิภาพ',
+    systemUsageGuideDescription: 'เรียนรู้วิธีใช้แดชบอร์ด K Energy Save อย่างมีประสิทธิภาพ',
 
     // Admin Pages
     backToLogin: 'กลับไปหน้าเข้าสู่ระบบ',
@@ -2858,8 +2858,8 @@ const translationData = {
     administratorSupport: 'การสนับสนุนจากผู้ดูแลระบบ',
     adminWelcomeMessage: 'สวัสดีครับ! ผมเป็นผู้ดูแลระบบที่รับผิดชอบ {department} มีอะไรให้ช่วยไหมครับ?',
     chatWithDepartmentAdmin: 'แชทกับผู้ดูแลระบบหากคุณมีปัญหาหรือคำถามเกี่ยวกับระบบที่เกี่ยวข้องกับ {department} ข้อความจะถูกเก็บไว้เฉพาะสำหรับแผนกนี้',
-    rdSystem: 'ระบบ R&D',
-    rdSystemDesc: 'พอร์ทัลการเข้าถึงระยะไกลสำหรับอุปกรณ์',
+    rdSystem: 'ระบบ R&D K-SAVE',
+    rdSystemDesc: 'พอร์ทัลการเข้าถึงระยะไกลสำหรับอุปกรณ์ KSave',
     connectRemote: 'เชื่อมต่อระยะไกล',
     zoomMeeting: 'การประชุม Zoom',
     signOut: 'ออกจากระบบ',
@@ -2888,20 +2888,20 @@ const translationData = {
     vietnamese: 'Tiếng Việt',
     malay: 'Melayu',
   },
-}
+} as const;
 
-export const translations = translationData;
+export const translations = translationData as unknown as Record<keyof typeof translationData, typeof translationData.en>;
 
-
-
+export type Locale = keyof typeof translations;
+export type TranslationKeys = keyof typeof translationData.ko;
 
 /**
  * Returns a translation object for the given locale.
  * Missing keys fall back to English so pages never show blank text
  * when switching to cn / vn / th which have sparse translation coverage.
  */
-export function getT(locale) {
-  const key = locale;
-  const localeT = (translations[key] ?? {});
-  return { ...translations['en'], ...localeT };
+export function getT(locale: string): typeof translations['en'] {
+  const key = locale as Locale;
+  const localeT = (translations[key] ?? {}) as Partial<typeof translations['en']>;
+  return { ...translations['en'], ...localeT } as typeof translations['en'];
 }
