@@ -56,7 +56,7 @@ export default function CustomerDashboardLoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif',
     }}>
       <div style={{
@@ -71,7 +71,7 @@ export default function CustomerDashboardLoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             width: 72, height: 72,
-            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+            background: 'linear-gradient(135deg, #16a34a, #15803d)',
             borderRadius: '50%',
             display: 'inline-flex',
             alignItems: 'center',
@@ -80,12 +80,17 @@ export default function CustomerDashboardLoginPage() {
           }}>
             <Users size={36} color="#fff" />
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-            Customer Dashboard
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1e293b', margin: 0 }}>
+            Green Retail Group
           </h1>
-          <p style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
-            Please sign in to continue
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
+            ระบบมอนิเตอริ่ง Demo
           </p>
+          <div style={{ marginTop: 10, fontSize: 12, color: '#94a3b8' }}>
+            <span>it@green-retail.example.com</span>
+            <span style={{ margin: '0 6px' }}>·</span>
+            <span>02-555-1199</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -108,7 +113,7 @@ export default function CustomerDashboardLoginPage() {
                   fontSize: 14, outline: 'none', boxSizing: 'border-box',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => e.target.style.borderColor = '#8b5cf6'}
+                onFocus={e => e.target.style.borderColor = '#16a34a'}
                 onBlur={e => e.target.style.borderColor = '#e5e7eb'}
               />
             </div>
@@ -133,7 +138,7 @@ export default function CustomerDashboardLoginPage() {
                   fontSize: 14, outline: 'none', boxSizing: 'border-box',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => e.target.style.borderColor = '#8b5cf6'}
+                onFocus={e => e.target.style.borderColor = '#16a34a'}
                 onBlur={e => e.target.style.borderColor = '#e5e7eb'}
               />
               <button
@@ -161,7 +166,7 @@ export default function CustomerDashboardLoginPage() {
             disabled={loading}
             style={{
               width: '100%', padding: '12px',
-              background: loading ? '#c4b5fd' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              background: loading ? '#86efac' : 'linear-gradient(135deg, #16a34a, #15803d)',
               color: '#fff', border: 'none', borderRadius: 10,
               fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
@@ -173,11 +178,11 @@ export default function CustomerDashboardLoginPage() {
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <a
-            href="/Korea/Admin-Login"
-            style={{ fontSize: 13, color: '#8b5cf6', textDecoration: 'none' }}
-            onClick={(e) => { e.preventDefault(); window.location.href = '/Korea/Admin-Login'; }}
+            href="/"
+            style={{ fontSize: 13, color: '#16a34a', textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); window.location.href = '/'; }}
           >
-            ← Back to Korea Admin
+            ← กลับหน้าหลัก
           </a>
         </div>
       </div>
