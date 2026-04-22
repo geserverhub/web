@@ -17,6 +17,15 @@ const nextConfig = {
         source: "/backend-api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
+      // Energy dashboard short-path aliases
+      { source: "/dashboard", destination: "/energy-dashboard/dashboard" },
+      { source: "/overview", destination: "/energy-dashboard/overview" },
+      { source: "/monitor", destination: "/energy-dashboard/monitor" },
+      { source: "/location", destination: "/energy-dashboard/location" },
+      { source: "/devices-setting", destination: "/energy-dashboard/devices-setting" },
+      { source: "/devices-setting/:path*", destination: "/energy-dashboard/devices-setting/:path*" },
+      { source: "/meter-seting", destination: "/energy-dashboard/meter-seting" },
+      { source: "/notifications", destination: "/energy-dashboard/notifications" },
     ];
   },
 };

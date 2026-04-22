@@ -42,7 +42,7 @@ export default function EnergyDashboardLoginPage() {
         departmentID: data.departmentID,
       }));
 
-      router.push('/energy-dashboard');
+      router.push('/energy-dashboard/dashboard');
     } catch (err) {
       setError(err.message || 'Connection error');
     } finally {
