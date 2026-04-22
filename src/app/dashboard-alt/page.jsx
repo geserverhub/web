@@ -8,7 +8,7 @@ export default function DashboardAltPage() {
     <div style={{ padding: 28 }}>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>Dashboard (Alternate)</h1>
       <p style={{ color: '#6b7280' }}>This is the alternate dashboard page. Add content here.</p>
-      <p><Link href="/Ksave-list" style={{ color: '#06b6d4' }}>Back to Ksave-list</Link></p>
+      <p><Link href="/energy-devices" style={{ color: '#06b6d4' }}>Back to Device List</Link></p>
     </div>
   )
 }

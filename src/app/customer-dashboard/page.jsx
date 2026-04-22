@@ -588,9 +588,9 @@ export default function CustomersPage() {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">{L(locale,'ชื่อเครื่อง / KSAVE ID','장치명 / KSAVE ID','Device Name / KSAVE ID')}</p>
+                        <p className="text-xs text-gray-400 mb-0.5">{L(locale,'ชื่อเครื่อง / Device ID','장치명 / Device ID','Device Name / Device ID')}</p>
                         <p className="font-semibold text-gray-800">{dev?.deviceName ?? selectedDeviceId}</p>
-                        <p className="text-xs text-blue-500 font-mono mt-0.5">{dd?.ksaveID ?? dev?.ksaveID ?? '-'}</p>
+                        <p className="text-xs text-blue-500 font-mono mt-0.5">{dd?.energyID ?? dev?.energyID ?? '-'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">{L(locale,'ชื่อลูกค้า','고객명','Customer Name')}</p>

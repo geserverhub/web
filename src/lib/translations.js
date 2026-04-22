@@ -643,3 +643,5 @@ export const translations = {
     },
   },
 };
+
+export function getT(locale) { return translations[locale] || translations['en']; }

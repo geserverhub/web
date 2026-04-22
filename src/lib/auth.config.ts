@@ -1,5 +1,17 @@
 import type { NextAuthConfig } from "next-auth";
 
+declare module "next-auth" {
+  interface User {
+    role?: string;
+  }
+  interface Session {
+    user: User & { role?: string };
+  }
+  interface JWT {
+    role?: string;
+  }
+}
+
 /** Edge-safe auth config — NO Prisma, NO bcrypt */
 const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
