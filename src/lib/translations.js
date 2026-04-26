@@ -192,6 +192,10 @@ export const translations = {
         name: "Green Retail Group",
         description: "ระบบมอนิเตอริ่งพลังงานไฟฟ้า",
       },
+      "m-retsort": {
+        name: "M-Resort",
+        description: "เอ็มรีสอร์ท บริการที่พัก บรรยากาศส่วนตัว",
+      },
       "cargo": {
         name: "คาโก้ ไทย-เกาหลี",
         description: "บริการส่งสินค้าทางเครื่องบิน ไทย ↔ เกาหลี ปลอดภัย รวดเร็ว พร้อมติดตามสถานะออนไลน์",
@@ -394,6 +398,10 @@ export const translations = {
         name: "Green Retail Group",
         description: "Electrical Energy Monitoring System",
       },
+      "m-retsort": {
+        name: "M-Resort",
+        description: "M-Resort — private resort accommodation service",
+      },
       "cargo": {
         name: "Thai-Korean Cargo",
         description: "Air freight service Thailand ↔ Korea. Safe, fast, with online shipment tracking.",
@@ -585,6 +593,10 @@ export const translations = {
         name: "Green Retail Group",
         description: "电力能源监控系统",
       },
+      "m-retsort": {
+        name: "M-度假村",
+        description: "M-度假村 — 私人度假村住宿服务",
+      },
       "cargo": {
         name: "泰韩货运服务",
         description: "航空货运服务 泰国 ↔ 韩国，安全快速，支持在线追踪货物状态。",
@@ -775,6 +787,10 @@ export const translations = {
       "green-retail-energy": {
         name: "Green Retail Group",
         description: "전력 에너지 모니터링 시스템",
+      },
+      "m-retsort": {
+        name: "M-리조트",
+        description: "M-리조트 — 프라이빗 리조트 숙박 서비스",
       },
       "cargo": {
         name: "태국-한국 카고 서비스",
