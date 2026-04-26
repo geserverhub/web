@@ -1206,6 +1206,118 @@ export default function PageClient() {
         </div>
       </section>
 
+      {/* ── Factory For Sale ── */}
+      <section id="factory-sale" style={{ padding: "5rem 2rem", background: "linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+            <span style={{
+              display: "inline-block", padding: "0.4rem 1.2rem", borderRadius: 999,
+              background: "linear-gradient(90deg, #dc2626, #ef4444, #fca5a5, #ef4444, #dc2626)",
+              backgroundSize: "200% auto", animation: "badgeShine 2s linear infinite",
+              color: "#fff", fontWeight: 900, fontSize: "1rem", letterSpacing: "0.04em",
+              boxShadow: "0 0 20px rgba(239,68,68,0.6)", marginBottom: "1rem",
+            }}>
+              🔥 ขายโรงงาน / โกดังสำเร็จรูป 🔥
+            </span>
+            <h2 style={{ color: "#fff", fontWeight: 900, fontSize: "clamp(1.3rem,3vw,2rem)", margin: "0.5rem 0 0.25rem" }}>
+              โกดังโรงงานใหม่มาก พร้อมที่พัก ครบ จบ ในที่เดียว
+            </h2>
+            <p style={{ color: "#94a3b8", fontSize: "1rem", margin: 0 }}>📍 คลองโซน 6 ลาดหลุมแก้ว ปทุมธานี</p>
+          </div>
+
+          {/* Image grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.85rem", marginBottom: "2.5rem" }}>
+            {[
+              "/m-factory/sale-1.jpg",
+              "/m-factory/sale-2.jpg",
+              "/m-factory/sale-3.jpg",
+              "/m-factory/sale-4.jpg",
+              "/m-factory/sale-5.jpg",
+              "/m-factory/sale-6.jpg",
+            ].map((src, i) => (
+              <div key={src} style={{
+                borderRadius: "1rem", overflow: "hidden",
+                boxShadow: "0 6px 30px rgba(0,0,0,0.35)",
+                gridColumn: i === 0 ? "span 2" : "span 1",
+              }}>
+                <img src={src} alt={`โรงงานขาย ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", minHeight: i === 0 ? 280 : 200 }} />
+              </div>
+            ))}
+          </div>
+
+          {/* Price badge */}
+          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+            <div style={{
+              display: "inline-block",
+              padding: "1rem 2.5rem", borderRadius: "1rem",
+              background: "linear-gradient(135deg, #c9a227 0%, #e6c040 50%, #c9a227 100%)",
+              boxShadow: "0 0 40px rgba(201,162,39,0.5), 0 8px 32px rgba(201,162,39,0.3)",
+            }}>
+              <div style={{ color: "#0f172a", fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>💥 ราคาพิเศษ</div>
+              <div style={{ color: "#0f172a", fontSize: "clamp(1.8rem,5vw,2.8rem)", fontWeight: 900, lineHeight: 1.1 }}>6,900,000 บาท</div>
+              <div style={{ color: "#78350f", fontSize: "0.9rem", fontWeight: 600 }}>เจ้าของขายเอง · ไม่ผ่านนายหน้า</div>
+            </div>
+          </div>
+
+          {/* Detail cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
+            {/* Suitability */}
+            <div style={{
+              padding: "1.5rem", borderRadius: "1rem",
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+            }}>
+              <div style={{ color: "#e6c040", fontWeight: 800, fontSize: "1rem", marginBottom: "0.85rem" }}>✨ เหมาะสำหรับ</div>
+              {["โรงงานขนาดเล็ก–กลาง", "ธุรกิจ / สต๊อกสินค้า / โลจิสติกส์", "อยู่อาศัย + ทำงานในที่เดียว"].map(item => (
+                <div key={item} style={{ color: "#e2e8f0", fontSize: "0.95rem", marginBottom: "0.4rem" }}>✔ {item}</div>
+              ))}
+            </div>
+            {/* Property details */}
+            <div style={{
+              padding: "1.5rem", borderRadius: "1rem",
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+            }}>
+              <div style={{ color: "#e6c040", fontWeight: 800, fontSize: "1rem", marginBottom: "0.85rem" }}>🔹 รายละเอียดทรัพย์</div>
+              {["3 ห้องนอน", "3 ห้องน้ำ", "ที่จอดรถสะดวก", "พื้นที่โกดัง + โรงงาน", "ห้องออฟฟิศ", "ครัวเล็ก", "มีโฉนด ถูกต้องตามกฎหมาย"].map(item => (
+                <div key={item} style={{ color: "#e2e8f0", fontSize: "0.95rem", marginBottom: "0.4rem" }}>✅ {item}</div>
+              ))}
+            </div>
+            {/* Location */}
+            <div style={{
+              padding: "1.5rem", borderRadius: "1rem",
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+            }}>
+              <div style={{ color: "#e6c040", fontWeight: 800, fontSize: "1rem", marginBottom: "0.85rem" }}>📌 ทำเล</div>
+              {["ทำเลดี เดินทางสะดวก", "พื้นที่ใช้สอยครบ รองรับธุรกิจได้จริง", "พร้อมใช้งานทันที ไม่ต้องสร้างเพิ่ม"].map(item => (
+                <div key={item} style={{ color: "#e2e8f0", fontSize: "0.95rem", marginBottom: "0.4rem" }}>📌 {item}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <a href="tel:0952411833" style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              padding: "0.9rem 2rem", borderRadius: 999,
+              background: "linear-gradient(135deg, #16a34a, #22c55e)",
+              color: "#fff", fontWeight: 800, fontSize: "1.05rem", textDecoration: "none",
+              boxShadow: "0 6px 24px rgba(34,197,94,0.45)",
+            }}>
+              ☎️ โทร 095-241-1833
+            </a>
+            <a href="https://lin.ee/xrAU8PC" target="_blank" rel="noopener noreferrer" style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              padding: "0.9rem 2rem", borderRadius: 999,
+              background: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
+              color: "#fff", fontWeight: 800, fontSize: "1.05rem", textDecoration: "none",
+              boxShadow: "0 6px 24px rgba(14,165,233,0.45)",
+            }}>
+              💬 LINE: @220fltal
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ── Gallery ── */}
       <section id="gallery" style={{ padding: "5.5rem 2rem", background: "#ffffff" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
