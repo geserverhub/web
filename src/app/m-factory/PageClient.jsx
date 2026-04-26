@@ -1071,13 +1071,78 @@ export default function PageClient() {
             ))}
           </div>
 
+          {/* ── Completed project banner ── */}
+          <div
+            style={{
+              marginTop: "3rem",
+              borderRadius: "1.25rem",
+              background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%)",
+              padding: "2rem 2.5rem",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1.25rem",
+              boxShadow: "0 8px 40px rgba(15,23,42,0.22)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+              {/* Badge */}
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "0.35rem 1rem",
+                  borderRadius: 999,
+                  background: "linear-gradient(90deg, #c9a227, #e6c040)",
+                  color: "#0f172a",
+                  fontWeight: 800,
+                  fontSize: "0.82rem",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ✅ พร้อมให้เช่าแล้ว
+              </span>
+              <div>
+                <div style={{ color: "#ffffff", fontWeight: 800, fontSize: "clamp(1.05rem, 2.2vw, 1.35rem)", lineHeight: 1.3 }}>
+                  โครงการที่แล้วเสร็จ พร้อมให้เช่าแล้ว วันนี้
+                </div>
+                <div style={{ color: "#93c5fd", fontSize: "0.9rem", marginTop: "0.3rem" }}>
+                  เยี่ยมชมสถานที่จริงได้เลย · ติดต่อสอบถามได้ตลอด 24 ชม.
+                </div>
+              </div>
+            </div>
+            <a
+              href="https://maps.app.goo.gl/ujm6nE1CU3JKJHbx6"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.75rem 1.75rem",
+                borderRadius: 999,
+                background: "linear-gradient(135deg, #c9a227 0%, #e6c040 100%)",
+                color: "#0f172a",
+                fontWeight: 700,
+                fontSize: "1rem",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                boxShadow: "0 4px 18px rgba(201,162,39,0.45)",
+              }}
+            >
+              🗺️ ดูแผนที่โครงการ
+            </a>
+          </div>
+
           {/* ── Service preview photos ── */}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
               gap: "1rem",
-              marginTop: "2.5rem",
+              marginTop: "1.25rem",
             }}
           >
             {[
@@ -1096,7 +1161,7 @@ export default function PageClient() {
               >
                 <img
                   src={src}
-                  alt="M-Factory"
+                  alt="M-Factory โครงการพร้อมให้เช่า"
                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                 />
               </div>
