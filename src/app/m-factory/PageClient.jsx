@@ -1228,8 +1228,37 @@ export default function PageClient() {
       <section id="resort" style={{ padding: "5.5rem 2rem", background: "#f8faff" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <SectionHeader badge={t.resortBadge} heading={t.resortHeading} />
+          {/* Pricing */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap", marginBottom: "1.75rem", marginTop: "-0.5rem" }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: "0.65rem",
+              padding: "0.75rem 1.5rem", borderRadius: 999,
+              background: "linear-gradient(135deg, #fff7ed, #fef3c7)",
+              border: "2px solid #f59e0b",
+              boxShadow: "0 4px 18px rgba(245,158,11,0.2)",
+            }}>
+              <span style={{ fontSize: "1.4rem" }}>🌅</span>
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#92400e", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>ค่าที่พัก ชั่วคราว</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#b45309" }}>เริ่มต้นเพียง <span style={{ color: "#d97706", fontSize: "1.35rem" }}>300</span> บาท</div>
+              </div>
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: "0.65rem",
+              padding: "0.75rem 1.5rem", borderRadius: 999,
+              background: "linear-gradient(135deg, #eff6ff, #dbeafe)",
+              border: "2px solid #3b82f6",
+              boxShadow: "0 4px 18px rgba(59,130,246,0.2)",
+            }}>
+              <span style={{ fontSize: "1.4rem" }}>🌙</span>
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#1e3a8a", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>ค้างคืน</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#1d4ed8" }}>เริ่มต้นเพียง <span style={{ color: "#2563eb", fontSize: "1.35rem" }}>800</span> บาท</div>
+              </div>
+            </div>
+          </div>
           {/* Book button below heading */}
-          <div style={{ textAlign: "center", marginBottom: "3rem", marginTop: "-0.5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <a
               href="https://lin.ee/xrAU8PC"
               target="_blank"
