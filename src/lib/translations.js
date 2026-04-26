@@ -50,6 +50,36 @@ export const translations = {
         description:
           "บริหารหน้าเข้าสู่ระบบลูกค้า, ดูสถานะระบบ, และอัปเดตช่องทางเข้าระบบจากศูนย์กลางเดียว",
       },
+      "ดูแลและบำรุงรักษาระบบ": {
+        highlight: "ดูแลและบำรุงรักษาระบบ",
+        title: "บริการดูแลระบบ",
+        description: "ดูแล ตรวจสอบ และบำรุงรักษาระบบให้ทำงานได้อย่างต่อเนื่องและมั่นคง",
+      },
+      "จดและต่ออายุโดเมน": {
+        highlight: "จดและต่ออายุโดเมน",
+        title: "บริการเช่าโดเมนรายปี",
+        description: "จดโดเมนใหม่และต่ออายุโดเมนรายปีในราคาที่เหมาะสม",
+      },
+      "โฆษณา Facebook/Google": {
+        highlight: "โฆษณา Facebook/Google",
+        title: "บริการยิงแอด",
+        description: "วางแผนและรันโฆษณาบน Facebook และ Google Ads อย่างมีประสิทธิภาพ",
+      },
+      "UI/UX Design": {
+        highlight: "UI/UX Design",
+        title: "บริการออกแบบหน้าเว็บ",
+        description: "ออกแบบ UI/UX สวยงามใช้งานง่าย ตอบโจทย์ผู้ใช้งานจริง",
+      },
+      "พัฒนาซอฟต์แวร์ตามความต้องการ": {
+        highlight: "พัฒนาซอฟต์แวร์ตามความต้องการ",
+        title: "บริการพัฒนาระบบ",
+        description: "พัฒนาซอฟต์แวร์ตามความต้องการเฉพาะของแต่ละองค์กร",
+      },
+      "บริการเสริมอื่นๆ": {
+        highlight: "บริการเสริมอื่นๆ",
+        title: "บริการอื่นๆ",
+        description: "บริการเสริมและสนับสนุนอื่นๆ ที่ตอบสนองความต้องการของลูกค้า",
+      },
     },
     showcaseKicker: "พอร์ทัลลูกค้า",
     showcaseTitle: "ผลงานและการพัฒนาการให้บริการด้านระบบของเรา",
@@ -138,6 +168,7 @@ export const translations = {
     footerSubtitle: "ลิขสิทธิ์ © 2026 GOEUN SERVER HUB",
     footerFrontend: "สงวนลิขสิทธิ์",
     footerBackend: "GOEUN SERVER HUB",
+    researchStatus: "กำลังพัฒนา",
     loadError: "โหลดข้อมูลจาก Python backend ไม่สำเร็จ จึงแสดงข้อมูลตัวอย่างแทนชั่วคราว",
     statusLabels: {
       online: "พร้อมใช้งาน",
@@ -218,6 +249,36 @@ export const translations = {
         title: "Server and Access Management",
         description:
           "Manage client login pages, monitor system status, and update entry points from one central hub.",
+      },
+      "ดูแลและบำรุงรักษาระบบ": {
+        highlight: "System Maintenance",
+        title: "System Administration",
+        description: "Monitor, maintain, and keep your systems running continuously and reliably.",
+      },
+      "จดและต่ออายุโดเมน": {
+        highlight: "Domain Registration",
+        title: "Annual Domain Service",
+        description: "Register new domains and renew existing ones at competitive prices.",
+      },
+      "โฆษณา Facebook/Google": {
+        highlight: "Facebook/Google Ads",
+        title: "Ad Campaign Service",
+        description: "Plan and run effective advertising campaigns on Facebook and Google Ads.",
+      },
+      "UI/UX Design": {
+        highlight: "UI/UX Design",
+        title: "Web Design Service",
+        description: "Beautiful and user-friendly UI/UX design tailored for real users.",
+      },
+      "พัฒนาซอฟต์แวร์ตามความต้องการ": {
+        highlight: "Custom Software Dev",
+        title: "System Development",
+        description: "Develop custom software tailored to each organization's specific needs.",
+      },
+      "บริการเสริมอื่นๆ": {
+        highlight: "Other Services",
+        title: "Additional Services",
+        description: "Supplementary and support services to meet all customer needs.",
       },
     },
     showcaseKicker: "Client Portals",
@@ -309,6 +370,7 @@ export const translations = {
     footerSubtitle: "Copyright © 2026 GOEUN SERVER HUB",
     footerFrontend: "All rights reserved",
     footerBackend: "GOEUN SERVER HUB",
+    researchStatus: "In Development",
     loadError: "Could not load data from the Python backend, so fallback content is shown for now.",
     statusLabels: {
       online: "Online",
@@ -326,7 +388,7 @@ export const translations = {
       },
       "green-retail-group": {
         name: "Green Retail Group",
-        description: "ระบบมอนิเตอริ่ง ผู้ใช้ Demo",
+        description: "Monitoring System — Demo User",
       },
       "green-retail-energy": {
         name: "Green Retail Group",
@@ -384,6 +446,36 @@ export const translations = {
         highlight: "统一入口",
         title: "服务器与权限管理",
         description: "集中管理客户登录页面、系统状态以及各个系统入口链接。",
+      },
+      "ดูแลและบำรุงรักษาระบบ": {
+        highlight: "系统运维",
+        title: "系统管理服务",
+        description: "监控、维护并保持您的系统持续稳定运行。",
+      },
+      "จดและต่ออายุโดเมน": {
+        highlight: "域名注册",
+        title: "年度域名服务",
+        description: "以合理价格注册新域名并续期现有域名。",
+      },
+      "โฆษณา Facebook/Google": {
+        highlight: "Facebook/Google 广告",
+        title: "广告投放服务",
+        description: "在 Facebook 和 Google Ads 上规划并运营高效广告活动。",
+      },
+      "UI/UX Design": {
+        highlight: "UI/UX 设计",
+        title: "网页设计服务",
+        description: "美观且用户友好的 UI/UX 设计，针对真实用户需求量身定制。",
+      },
+      "พัฒนาซอฟต์แวร์ตามความต้องการ": {
+        highlight: "定制软件开发",
+        title: "系统开发服务",
+        description: "根据各组织的具体需求开发定制软件解决方案。",
+      },
+      "บริการเสริมอื่นๆ": {
+        highlight: "其他服务",
+        title: "其他增值服务",
+        description: "提供补充性支持服务以满足客户多样化需求。",
       },
     },
     showcaseKicker: "客户入口",
@@ -469,6 +561,7 @@ export const translations = {
     footerSubtitle: "版权所有 © 2026 GOEUN SERVER HUB",
     footerFrontend: "保留所有权利",
     footerBackend: "GOEUN SERVER HUB",
+    researchStatus: "开发中",
     loadError: "无法从 Python backend 加载数据，当前暂时显示示例内容。",
     statusLabels: {
       online: "在线",
@@ -486,7 +579,7 @@ export const translations = {
       },
       "green-retail-group": {
         name: "Green Retail Group",
-        description: "ระบบมอนิเตอริ่ง ผู้ใช้ Demo",
+        description: "监控系统 Demo 用户",
       },
       "green-retail-energy": {
         name: "Green Retail Group",
@@ -544,6 +637,36 @@ export const translations = {
         highlight: "통합 접근",
         title: "서버 및 접근 권한 관리",
         description: "고객 로그인 페이지, 시스템 상태, 각 시스템 진입 링크를 하나의 허브에서 관리합니다.",
+      },
+      "ดูแลและบำรุงรักษาระบบ": {
+        highlight: "시스템 유지관리",
+        title: "시스템 관리 서비스",
+        description: "시스템을 모니터링하고 지속적으로 안정적인 운영을 유지합니다.",
+      },
+      "จดและต่ออายุโดเมน": {
+        highlight: "도메인 등록",
+        title: "연간 도메인 서비스",
+        description: "합리적인 가격으로 새 도메인을 등록하고 기존 도메인을 갱신합니다.",
+      },
+      "โฆษณา Facebook/Google": {
+        highlight: "Facebook/Google 광고",
+        title: "광고 캠페인 서비스",
+        description: "Facebook 및 Google Ads에서 효과적인 광고 캠페인을 기획하고 운영합니다.",
+      },
+      "UI/UX Design": {
+        highlight: "UI/UX 디자인",
+        title: "웹 디자인 서비스",
+        description: "실제 사용자를 위한 아름답고 사용하기 쉬운 UI/UX 디자인을 제공합니다.",
+      },
+      "พัฒนาซอฟต์แวร์ตามความต้องการ": {
+        highlight: "맞춤형 소프트웨어",
+        title: "시스템 개발 서비스",
+        description: "각 조직의 특정 요구에 맞춘 맞춤형 소프트웨어를 개발합니다.",
+      },
+      "บริการเสริมอื่นๆ": {
+        highlight: "기타 서비스",
+        title: "기타 부가 서비스",
+        description: "고객 요구를 충족하는 보조 및 지원 서비스를 제공합니다.",
       },
     },
     showcaseKicker: "고객 포털",
@@ -629,6 +752,7 @@ export const translations = {
     footerSubtitle: "저작권 © 2026 GOEUN SERVER HUB",
     footerFrontend: "판권 소유",
     footerBackend: "GOEUN SERVER HUB",
+    researchStatus: "개발 중",
     loadError: "Python backend에서 데이터를 불러오지 못해 현재는 예시 데이터를 표시합니다.",
     statusLabels: {
       online: "운영 중",
@@ -646,7 +770,7 @@ export const translations = {
       },
       "green-retail-group": {
         name: "Green Retail Group",
-        description: "ระบบมอนิเตอริ่ง ผู้ใช้ Demo",
+        description: "모니터링 시스템 Demo 사용자",
       },
       "green-retail-energy": {
         name: "Green Retail Group",
