@@ -23,7 +23,7 @@ export default function ResearchSection({ ui }) {
                   <p className="research-desc">{item.description}</p>
                   <div className="research-status">
                     <span className="research-dot" />
-                    กำลังพัฒนา
+                    {ui.researchStatus || "กำลังพัฒนา"}
                   </div>
                 </article>
               </div>
