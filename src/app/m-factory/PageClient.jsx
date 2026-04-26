@@ -155,6 +155,8 @@ const CONTENT = {
     addressName: "M-Factory & M-Resort",
     addressLine1: "16 ระแหง ซ.ขุนพินิจ อำเภอลาดหลุมแก้ว",
     addressLine2: "ปทุมธานี 12140 ประเทศไทย",
+    contactAddressLine1: "222 ซอย คลองโซน 6 ตำบล ลาดหลุมแก้ว",
+    contactAddressLine2: "อำเภอลาดหลุมแก้ว ปทุมธานี 12140 ไทย",
     mapsBtn: "ดูแผนที่ Google Maps",
     completedBadge: "✅ พร้อมให้เช่าแล้ว",
     completedTitle: "โครงการที่แล้วเสร็จ พร้อมให้เช่าแล้ว วันนี้",
@@ -233,6 +235,8 @@ const CONTENT = {
     addressName: "M-Factory & M-Resort",
     addressLine1: "16 Rahang, Soi Khunphinit, Lat Lum Kaeo",
     addressLine2: "Pathum Thani 12140, Thailand",
+    contactAddressLine1: "222 Soi Khlong Zone 6, Tambon Lat Lum Kaeo",
+    contactAddressLine2: "Lat Lum Kaeo, Pathum Thani 12140, Thailand",
     mapsBtn: "查看谷歌地图",
     completedBadge: "✅ 已竣工可出租",
     completedTitle: "已竣工项目 · 即日起可出租",
@@ -311,6 +315,8 @@ const CONTENT = {
     addressName: "M-Factory & M-Resort",
     addressLine1: "16 Rahang, Soi Khunphinit, Lat Lum Kaeo",
     addressLine2: "Pathum Thani 12140, Thailand",
+    contactAddressLine1: "222 Soi Khlong Zone 6, Tambon Lat Lum Kaeo",
+    contactAddressLine2: "Lat Lum Kaeo, Pathum Thani 12140, Thailand",
     mapsBtn: "View on Google Maps",
     completedBadge: "✅ Available for Rent Now",
     completedTitle: "Completed Project — Ready to Rent Today",
@@ -1435,9 +1441,9 @@ export default function PageClient() {
                   lineHeight: 1.75, marginBottom: "1.25rem",
                 }}
               >
-                {t.addressLine1}
+                {t.contactAddressLine1}
                 <br />
-                {t.addressLine2}
+                {t.contactAddressLine2}
               </div>
               <div style={{ borderRadius: "0.9rem", overflow: "hidden", marginBottom: "1.25rem", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <iframe
