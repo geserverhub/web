@@ -152,9 +152,9 @@ const CONTENT = {
     contactHeading: "ติดต่อ M-Factory",
     contactSub: "สนใจเช่าหรือซื้อพื้นที่ ติดต่อเราได้เลย",
     qrLabel: "สแกน QR เพื่อติดต่อผ่าน LINE",
-    addressName: "เอ็มรีสอร์ท",
-    addressLine1: "222 ซอย คลองโซน 6 ตำบล ลาดหลุมแก้ว",
-    addressLine2: "อำเภอลาดหลุมแก้ว ปทุมธานี 12140",
+    addressName: "M-Factory & M-Resort",
+    addressLine1: "16 ระแหง ซ.ขุนพินิจ อำเภอลาดหลุมแก้ว",
+    addressLine2: "ปทุมธานี 12140 ประเทศไทย",
     mapsBtn: "ดูแผนที่ Google Maps",
     footerText: "© 2026 M-Factory · ขาย-ให้เช่าโกดัง โรงงาน รีสอร์ทส่วนตัว",
     stats: [
@@ -226,9 +226,9 @@ const CONTENT = {
     contactHeading: "联系 M-Factory",
     contactSub: "有意租赁或购买场地？请立即联系我们",
     qrLabel: "扫描二维码通过LINE联系",
-    addressName: "M度假村",
-    addressLine1: "222 Soi Klong Zone 6, Lat Lum Kaeo Sub-district",
-    addressLine2: "Lat Lum Kaeo District, Pathum Thani 12140",
+    addressName: "M-Factory & M-Resort",
+    addressLine1: "16 Rahang, Soi Khunphinit, Lat Lum Kaeo",
+    addressLine2: "Pathum Thani 12140, Thailand",
     mapsBtn: "查看谷歌地图",
     footerText: "© 2026 M-Factory · 仓库 · 工厂 · 私人度假村",
     stats: [
@@ -300,9 +300,9 @@ const CONTENT = {
     contactHeading: "Contact M-Factory",
     contactSub: "Interested in renting or buying a space? Contact us today",
     qrLabel: "Scan QR to contact via LINE",
-    addressName: "M Resort",
-    addressLine1: "222 Soi Klong Zone 6, Lat Lum Kaeo Sub-district",
-    addressLine2: "Lat Lum Kaeo District, Pathum Thani 12140",
+    addressName: "M-Factory & M-Resort",
+    addressLine1: "16 Rahang, Soi Khunphinit, Lat Lum Kaeo",
+    addressLine2: "Pathum Thani 12140, Thailand",
     mapsBtn: "View on Google Maps",
     footerText: "© 2026 M-Factory · Warehouse · Factory · Private Resort",
     stats: [
@@ -1425,7 +1425,7 @@ export default function PageClient() {
                 {t.addressLine2}
               </div>
               <a
-                href="https://maps.app.goo.gl/dHVPQnj8as4Lo28w9"
+                href="https://maps.google.com/maps?q=13.99537020328643,100.38539160043001"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
