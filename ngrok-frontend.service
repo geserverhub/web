@@ -5,8 +5,8 @@ Wants=geserver-frontend.service
 
 [Service]
 Type=simple
-User=pavinee
-ExecStart=/usr/local/bin/ngrok start --all --config /home/pavinee/.config/ngrok/ngrok.yml
+User=goeunserverhub
+ExecStart=/usr/local/bin/ngrok start --all --config /home/goeunserverhub/.config/ngrok/ngrok.yml
 Restart=always
 RestartSec=10
 StandardOutput=journal

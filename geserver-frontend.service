@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=pavinee
-WorkingDirectory=/home/pavinee/GEserver/frontend
-EnvironmentFile=/home/pavinee/GEserver/.env
+User=goeunserverhub
+WorkingDirectory=/home/goeunserverhub/GEserverhub
+EnvironmentFile=/home/goeunserverhub/GEserverhub/.env.local
 ExecStart=/usr/bin/npm run start
 Restart=on-failure
 RestartSec=5

@@ -40,7 +40,7 @@ export default function LoginPage() {
     if (role === "SUPER_ADMIN" || role === "ADMIN") {
       router.push("/admin/clients");
     } else {
-      router.push("/mct-product");
+      router.push("/customer-dashboard");
     }
   }
 
