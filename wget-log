@@ -1,0 +1,10 @@
+--2026-05-02 07:00:02--  https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.iso
+Resolving releases.ubuntu.com (releases.ubuntu.com)... 91.189.91.108, 91.189.91.109, 91.189.91.107, ...
+Connecting to releases.ubuntu.com (releases.ubuntu.com)|91.189.91.108|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 4762707968 (4.4G) [application/x-iso9660-image]
+Saving to: ‘/home/goeunserverhub/ubuntu-22.04.5-desktop-amd64.iso’
+
+
+2026-05-02 07:36:11 (2.26 MB/s) - ‘/home/goeunserverhub/ubuntu-22.04.5-desktop-amd64.iso’ saved [4762707968/4762707968]
+
