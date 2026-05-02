@@ -121,6 +121,17 @@ export const fallbackClients = [
     thumbnail: "/uploads/logos/G-monitoring.png",
     system_url: "/energy-dashboard-login",
   },
+  {
+    id: 7,
+    name: "SP FOODS Co., Ltd.",
+    slug: "spfoods",
+    description: 'ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตและจำหน่ายอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี ครบวงจรด้านอุตสาหกรรมอาหาร ผสมผสานเทคโนโลยีร่วมกับอุตสาหกรรมอาหารและการเกษตร',
+    status: "online",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010***********",
+    thumbnail: "/uploads/logos/1776694124366-rd4x8l.jpg?v=20260502-spfoods-main",
+    system_url: "https://spfoodskorea.com/",
+  },
 ];
 
 export const filterOptions = [

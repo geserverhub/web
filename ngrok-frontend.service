@@ -1,12 +1,12 @@
 [Unit]
-Description=ngrok tunnel — GE Frontend (strong-dory-enabled.ngrok-free.app → port 3005)
+Description=ngrok tunnel — GE Frontend (port 3005)
 After=network.target geserver-frontend.service
 Wants=geserver-frontend.service
 
 [Service]
 Type=simple
 User=goeunserverhub
-ExecStart=/usr/local/bin/ngrok start --all --config /home/goeunserverhub/.config/ngrok/ngrok.yml
+ExecStart=/home/goeunserverhub/.local/bin/ngrok http 3005 --pooling-enabled --config /home/goeunserverhub/.config/ngrok/ngrok-service.yml
 Restart=always
 RestartSec=10
 StandardOutput=journal

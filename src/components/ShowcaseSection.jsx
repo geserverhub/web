@@ -14,7 +14,30 @@ export default function ShowcaseSection({
           </div>
 
           <div className="row g-4">
-            {filteredClients.map((client, index) => (
+            {filteredClients.map((client, index) => {
+              const isSpfoods = client.slug === "spfoods";
+              const displayPhone = isSpfoods ? "010***********" : client.contact_phone;
+              const visualStyle = client.thumbnail
+                ? {
+                    backgroundImage: `url(${client.thumbnail})`,
+                    backgroundSize: isSpfoods ? "100% auto" : "cover",
+                    backgroundPosition: isSpfoods ? "center top" : "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundColor: isSpfoods ? "#ffffff" : undefined,
+                  }
+                : {};
+              const overlayStyle = client.thumbnail
+                ? {
+                    background: isSpfoods
+                      ? "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.18) 100%)"
+                      : "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%)",
+                    position: "absolute",
+                    inset: 0,
+                    padding: "1.3rem",
+                  }
+                : {};
+
+              return (
               <div
                 key={client.slug}
                 className="col-12 col-md-6 col-lg-4"
@@ -22,10 +45,10 @@ export default function ShowcaseSection({
                 <article
                   data-reveal
                   data-delay={Math.min(index + 1, 6)}
-                  className="showcase-card">
-                  <div className="showcase-visual" style={client.thumbnail ? { backgroundImage: `url(${client.thumbnail})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}>
+                  className={`showcase-card ${isSpfoods ? "showcase-card-spfoods" : ""}`}>
+                  <div className="showcase-visual" style={visualStyle}>
                     {!client.thumbnail && <div className="showcase-glow" />}
-                    <div className="showcase-visual-content" style={client.thumbnail ? { background: "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%)", position:"absolute", inset:0, padding:"1.3rem" } : {}}>
+                    <div className="showcase-visual-content" style={overlayStyle}>
                       <span className="client-slug">{client.slug}</span>
                     </div>
                   </div>
@@ -34,7 +57,7 @@ export default function ShowcaseSection({
                     <p>{ui.clientDescriptions?.[client.slug]?.description || client.description}</p>
                     <div className="showcase-meta">
                       <span>{client.contact_email}</span>
-                      <span>{client.contact_phone}</span>
+                      <span>{displayPhone}</span>
                       {client.contact_fax && <span>{ui.faxLabel || "แฟกซ์:"} {client.contact_fax}</span>}
                     </div>
                     <div className="showcase-actions">
@@ -50,7 +73,8 @@ export default function ShowcaseSection({
                   </div>
                 </article>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredClients.length === 0 && (
