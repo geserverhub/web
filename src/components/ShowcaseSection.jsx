@@ -40,7 +40,7 @@ export default function ShowcaseSection({
               return (
               <div
                 key={client.slug}
-                className="col-12 col-md-6 col-lg-4"
+                className="col-12 col-md-6 col-lg-4 d-flex"
               >
                 <article
                   data-reveal
