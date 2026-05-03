@@ -34,10 +34,8 @@ const nextConfig = {
       { source: "/notifications", destination: "/energy-dashboard/notifications" },
       // SP FOODS API → Express backend at port 3001
       { source: "/sp-api/:path*", destination: "http://localhost:3001/:path*" },
-      // SP FOODS SPA root path
+      // SP FOODS SPA routing — serve index.html for /sp and all /sp/* except static assets
       { source: "/sp", destination: "/sp/index.html" },
-      { source: "/sp/", destination: "/sp/index.html" },
-      // SP FOODS SPA routing — serve index.html for all /sp/* except static assets
       { source: "/sp/:path((?!assets|logo\\.jpg|main-Photo\\.jpg).*)", destination: "/sp/index.html" },
     ];
   },
