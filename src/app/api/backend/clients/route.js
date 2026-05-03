@@ -12,7 +12,7 @@ const spFoodsCard = {
   status: "online",
   contact_email: "goeunserverhub@gmail.com",
   contact_phone: "+66 095-241-1833",
-  system_url: "/sp",
+  system_url: "https://spfoodskorea.com/",
   thumbnail: "/sp/main-Photo.jpg",
 };
 
@@ -25,7 +25,8 @@ function isSpFoodsCard(client) {
     slug === "spfoods" ||
     name.includes("sp foods") ||
     systemUrl === "/sp" ||
-    systemUrl.endsWith("/sp")
+    systemUrl.endsWith("/sp") ||
+    systemUrl.includes("spfoodskorea.com")
   );
 }
 
@@ -39,7 +40,7 @@ function normalizeSpFoodsCard(client = {}) {
     description: spFoodsCard.description,
     contact_email: spFoodsCard.contact_email,
     contact_phone: spFoodsCard.contact_phone,
-    system_url: "/sp",
+    system_url: "https://spfoodskorea.com/",
     thumbnail: "/sp/main-Photo.jpg",
   };
 }
@@ -51,7 +52,10 @@ export async function GET() {
     });
 
     if (rows.length === 0) {
-      return Response.json({ clients: fallbackClients });
+      const hasSpFoods = fallbackClients.some(isSpFoodsCard);
+      return Response.json({
+        clients: hasSpFoods ? fallbackClients : [spFoodsCard, ...fallbackClients],
+      });
     }
 
     const mapped = rows.map((c) => ({
