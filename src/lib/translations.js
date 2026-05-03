@@ -200,10 +200,6 @@ export const translations = {
         name: "คาโก้ ไทย-เกาหลี",
         description: "บริการส่งสินค้าทางเครื่องบิน ไทย ↔ เกาหลี ปลอดภัย รวดเร็ว พร้อมติดตามสถานะออนไลน์",
       },
-      "spfoods": {
-        name: "SP FOODS Co., Ltd.",
-        description: "ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตและจำหน่ายอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี ครบวงจรด้านอุตสาหกรรมอาหาร ผสมผสานเทคโนโลยีร่วมกับอุตสาหกรรมอาหารและการเกษตร",
-      },
     },
   },
   en: {
@@ -410,10 +406,6 @@ export const translations = {
         name: "Thai-Korean Cargo",
         description: "Air freight service Thailand ↔ Korea. Safe, fast, with online shipment tracking.",
       },
-      "spfoods": {
-        name: "SP FOODS Co., Ltd.",
-        description: "Producer and distributor of processed and frozen Thai food. The only certified Thai food manufacturer in Korea — integrating food industry and agricultural technology.",
-      },
     },
   },
   zh: {
@@ -609,10 +601,6 @@ export const translations = {
         name: "泰韩货运服务",
         description: "航空货运服务 泰国 ↔ 韩国，安全快速，支持在线追踪货物状态。",
       },
-      "spfoods": {
-        name: "SP FOODS Co., Ltd.",
-        description: "泰式加工食品与冷冻食品的生产与销售、进出口企业。韩国唯一经认证的泰国加工食品制造商，融合食品工业与农业科技。",
-      },
     },
   },
   ko: {
@@ -807,10 +795,6 @@ export const translations = {
       "cargo": {
         name: "태국-한국 카고 서비스",
         description: "항공 화물 서비스 태국 ↔ 한국. 안전하고 빠른 배송, 온라인 실시간 배송 추적.",
-      },
-      "spfoods": {
-        name: "SP FOODS Co., Ltd.",
-        description: "가공식품 및 냉동식품 생산·유통·수출입 전문 기업. 한국 유일의 정품 인증 태국 가공식품 제조업체로, 식품산업과 농업 기술을 융합합니다.",
       },
     },
   },

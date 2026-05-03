@@ -1525,7 +1525,6 @@ img {
 .showcase-card {
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100%;
   background: #ffffff;
   border: 1px solid rgba(37, 99, 235, 0.1);
@@ -1561,15 +1560,6 @@ img {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.15), transparent 32%),
     linear-gradient(145deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
-}
-
-.showcase-card-spfoods .showcase-visual {
-  min-height: 14rem;
-  padding: 0;
-}
-
-.showcase-card-spfoods .showcase-visual-content {
-  justify-content: flex-end;
 }
 
 .showcase-glow {
@@ -1638,9 +1628,11 @@ img {
 
 .showcase-body p {
   margin: 0;
-  display: block;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
