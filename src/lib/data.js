@@ -121,6 +121,17 @@ export const fallbackClients = [
     thumbnail: "/uploads/logos/G-monitoring.png",
     system_url: "/energy-dashboard-login",
   },
+  {
+    id: 7,
+    name: "SP FOODS",
+    slug: "spfoods",
+    description: "ระบบบริหารงานขาย บัญชี คลังสินค้า และสัญญาซื้อ-ขาย สำหรับ SP FOODS",
+    status: "online",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "+66 095-241-1833",
+    thumbnail: "/sp/logo.jpg",
+    system_url: "/sp",
+  },
 ];
 
 export const filterOptions = [

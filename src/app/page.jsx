@@ -20,6 +20,23 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import ResearchSection from "@/components/ResearchSection";
 
+const REQUIRED_CLIENT_SLUGS = ["spfoods"];
+
+function ensureRequiredClients(clients) {
+  const source = Array.isArray(clients) ? clients : [];
+  const bySlug = new Map(source.map((c) => [c.slug, c]));
+
+  fallbackClients
+    .filter((c) => REQUIRED_CLIENT_SLUGS.includes(c.slug))
+    .forEach((requiredClient) => {
+      if (!bySlug.has(requiredClient.slug)) {
+        bySlug.set(requiredClient.slug, requiredClient);
+      }
+    });
+
+  return Array.from(bySlug.values());
+}
+
 export default function Page() {
   const [profile, setProfile] = useState(fallbackProfile);
   const [services, setServices] = useState(fallbackServices);
@@ -85,7 +102,7 @@ export default function Page() {
         if (!active) return;
         setProfile(profilePayload.profile || fallbackProfile);
         setServices(servicesPayload.services || fallbackServices);
-        setClients(clientsPayload.clients || fallbackClients);
+        setClients(ensureRequiredClients(clientsPayload.clients || fallbackClients));
       } catch {
         // fallback data already set as initial state
       } finally {

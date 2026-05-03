@@ -200,6 +200,10 @@ export const translations = {
         name: "คาโก้ ไทย-เกาหลี",
         description: "บริการส่งสินค้าทางเครื่องบิน ไทย ↔ เกาหลี ปลอดภัย รวดเร็ว พร้อมติดตามสถานะออนไลน์",
       },
+      "spfoods": {
+        name: "SP FOODS",
+        description: "ระบบบริหารงานขาย บัญชี คลังสินค้า และสัญญาซื้อ-ขาย สำหรับ SP FOODS",
+      },
     },
   },
   en: {
@@ -406,6 +410,10 @@ export const translations = {
         name: "Thai-Korean Cargo",
         description: "Air freight service Thailand ↔ Korea. Safe, fast, with online shipment tracking.",
       },
+      "spfoods": {
+        name: "SP FOODS",
+        description: "Sales, accounting, inventory, and contract management system for SP FOODS.",
+      },
     },
   },
   zh: {
@@ -601,6 +609,10 @@ export const translations = {
         name: "泰韩货运服务",
         description: "航空货运服务 泰国 ↔ 韩国，安全快速，支持在线追踪货物状态。",
       },
+      "spfoods": {
+        name: "SP FOODS",
+        description: "面向 SP FOODS 的销售、会计、库存与合同管理系统。",
+      },
     },
   },
   ko: {
@@ -795,6 +807,10 @@ export const translations = {
       "cargo": {
         name: "태국-한국 카고 서비스",
         description: "항공 화물 서비스 태국 ↔ 한국. 안전하고 빠른 배송, 온라인 실시간 배송 추적.",
+      },
+      "spfoods": {
+        name: "SP FOODS",
+        description: "SP FOODS를 위한 영업, 회계, 재고 및 계약 관리 시스템",
       },
     },
   },
