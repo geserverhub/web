@@ -31,9 +31,7 @@ export default function ShowcaseSection({
                   </div>
                   <div className="showcase-body">
                     <h3>{ui.clientDescriptions?.[client.slug]?.name || client.name}</h3>
-                    <p style={client.slug === "sp" ? { whiteSpace: "pre-line" } : undefined}>
-                      {ui.clientDescriptions?.[client.slug]?.description || client.description}
-                    </p>
+                    <p>{ui.clientDescriptions?.[client.slug]?.description || client.description}</p>
                     <div className="showcase-meta">
                       <span>{client.contact_email}</span>
                       <span>{client.contact_phone}</span>
