@@ -226,6 +226,7 @@ enum Role {
   SUPER_ADMIN
   ADMIN
   CLIENT
+  PARTNER
 }
 
 enum Status {
@@ -298,6 +299,61 @@ enum NotificationChannel {
   EMAIL
   LINE
   PUSH
+}
+
+model PartnerTask {
+  id          String    @id @default(cuid())
+  title       String
+  type        String    @default("OPERATION") // TAX_FILING | OPERATION | DOCUMENT | OTHER
+  status      String    @default("PENDING")   // PENDING | IN_PROGRESS | COMPLETED | CANCELLED
+  priority    String    @default("NORMAL")    // LOW | NORMAL | HIGH | URGENT
+  brand       String    @default("MOMOGE SPACE")
+  dueDate     DateTime?
+  completedAt DateTime?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model PartnerTransaction {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  brand        String   @default("MOMOGE SPACE")
+  type         String   @default("SALE") // SALE | EXPENSE | REFUND
+  description  String?
+  customerName String?
+  amount       Decimal  @db.Decimal(14, 2)
+  currency     String   @default("KRW")
+  status       String   @default("COMPLETED") // COMPLETED | PENDING | CANCELLED
+  category     String?
+  notes        String?  @db.Text
+  receiptFile  String?  @db.Text
+  date         DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([date])
+  @@index([brand])
+}
+
+model PartnerProduct {
+  id        String   @id @default(cuid())
+  name      String
+  model     String?
+  brand     String?
+  costPrice Decimal? @db.Decimal(14, 2)
+  sellPrice Decimal? @db.Decimal(14, 2)
+  currency  String   @default("KRW")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
 }
 
 model CargoOrder {

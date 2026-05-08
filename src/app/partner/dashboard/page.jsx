@@ -8,7 +8,7 @@ const LANGS = {
   th: {
     loading: "⏳ กำลังโหลด...",
     signOut: "ออกจากระบบ",
-    tabs: { overview: "📊 ภาพรวม", transactions: "📋 รายการ", add: "➕ เพิ่มรายการ", tasks: "📝 งานดำเนินการ", vat: "🧾 ภาษีมูลค่าเพิ่ม", income: "💼 ภาษีรายได้สิ้นปี" },
+    tabs: { overview: "📊 ภาพรวม", transactions: "📋 รายการ", add: "➕ เพิ่มรายการ", products: "📦 สินค้า", tasks: "📝 งานดำเนินการ", vat: "🧾 ภาษีมูลค่าเพิ่ม", income: "💼 ภาษีรายได้สิ้นปี", print: "🖨️ พิมพ์รายงาน" },
     yearLabel: (y) => `ปี ${y}`,
     stats: {
       totalRevenue: "รายรับรวม",
@@ -26,6 +26,10 @@ const LANGS = {
     categoryCols: { name: "ประเภท", amount: "ยอดรวม (₩)", share: "สัดส่วน" },
     txTitle: (n) => `รายการทั้งหมด (${n} รายการ)`,
     txCols: { number: "เลขที่", date: "วันที่", type: "ประเภท", desc: "รายละเอียด", customer: "คู่ค้า", amount: "จำนวน", status: "สถานะ" },
+    uploadBtn: "📎 อัพโหลดไฟล์",
+    uploadFail: "อัพโหลดไฟล์ไม่สำเร็จ: ",
+    partnerIncomeTitle: "💼 รายได้สะสมรายบุคคล (ทุกปี)",
+    partnerIncomeNoData: "ยังไม่มีรายการรายได้ส่วนแบ่ง",
     noData: "ไม่มีข้อมูล",
     types: { SALE: "ขาย", EXPENSE: "ค่าใช้จ่าย", REFUND: "คืนเงิน", PROFIT_SHARE: "รายได้กำไรส่วนแบ่งรายบุคคล" },
     statuses: { COMPLETED: "สำเร็จ", PENDING: "รอดำเนินการ", CANCELLED: "ยกเลิก" },
@@ -64,6 +68,24 @@ const LANGS = {
       editSave: "บันทึก",
       editCancel: "ยกเลิก",
     },
+    products: {
+      sectionTitle: "📦 จัดการสินค้า / อุปกรณ์",
+      addTitle: "+ เพิ่มสินค้าใหม่",
+      fName: "ชื่อสินค้า *", fNamePh: "เช่น Meter CT",
+      fModel: "รุ่น (Model)", fModelPh: "เช่น SF-200A",
+      fBrand: "แบรนด์ / ผู้ผลิต", fBrandPh: "เช่น Shanghai Fangqiu",
+      fCostPrice: "ราคาทุน / หน่วย", fSellPrice: "ราคาขาย / หน่วย", fCurrency: "สกุลเงิน",
+      submit: "บันทึกสินค้า", submitting: "กำลังบันทึก...", success: "✅ เพิ่มสินค้าสำเร็จ",
+      listTitle: (n) => `รายการสินค้าทั้งหมด (${n})`,
+      noData: "ยังไม่มีสินค้า",
+      deleteConfirm: "ลบสินค้านี้?",
+      selectProduct: "— เลือกสินค้า —",
+      customOption: "✏️ ระบุเอง...",
+      customPh: "ระบุชื่อสินค้า / รุ่น",
+      saleItemsLabel: "รายชื่อ อุปกรณ์ที่ขาย",
+      saleItemsHint: "— ยังไม่มีสินค้า เพิ่มได้ที่แท็บ 📦 สินค้า",
+      addRow: "+ เพิ่มรายการ",
+    },
     vat: {
       title: "รายงานภาษีมูลค่าเพิ่ม 10%",
       subtitle: "กำหนดชำระ: เดือน 1 และ เดือน 7 ของทุกปี",
@@ -79,6 +101,31 @@ const LANGS = {
       total: "รวม",
       noData: "ยังไม่มีรายการขาย (KRW)",
       note: "VAT คำนวณจากยอดขาย (SALE) สกุลเงิน KRW × 10% ต่อรายการ",
+    },
+    print: {
+      printBtn: "🖨️ พิมพ์ / บันทึก PDF",
+      reportTypes: {
+        monthly:   "📅 รายบัญชีแต่ละเดือน",
+        annual:    "📊 รายงานบัญชีรวมทั้งปี",
+        vat:       "🧾 รายงานการชำระภาษีมูลค่าเพิ่ม",
+        income_tax:"💼 รายงานภาษีรายได้ รายบุคคล",
+      },
+      titleMonthly: (m, y) => `รายบัญชีเดือน ${m} — ปี ${y}`,
+      titleAnnual:  (y) => `รายงานบัญชีรวมทั้งปี ${y}`,
+      titleVat:     (y) => `รายงานการชำระภาษีมูลค่าเพิ่ม — ปี ${y}`,
+      titleIncome:  (y) => `รายงานภาษีรายได้รายบุคคล — ปี ${y}`,
+      sections: { summary: "สรุปภาพรวม", transactions: "รายการทั้งหมด", monthly: "ยอดรวมรายเดือน", vat: "ภาษีมูลค่าเพิ่ม (VAT 10%)", partnerIncome: "รายได้สะสมรายบุคคล" },
+      cols: { number: "เลขที่", date: "วันที่", type: "ประเภท", desc: "รายละเอียด", customer: "คู่ค้า", amount: "จำนวน", currency: "สกุลเงิน", status: "สถานะ" },
+      monthlyCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", vat: "VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
+      vatCols: { number: "เลขที่", date: "วันที่", desc: "รายละเอียด", customer: "คู่ค้า", amount: "ยอดรายรับ (₩)", vat: "VAT 10% (₩)", period: "รอบ" },
+      total: "รวม",
+      generatedOn: (d) => `พิมพ์เมื่อ ${d}`,
+      noData: "ไม่มีข้อมูล",
+      monthLabel: "เลือกเดือน",
+      perPersonTitle: "ภาษีเงินได้รายบุคคล",
+      perPersonShare: "กำไรส่วนบุคคล (₩)",
+      perPersonTax: "ภาษีรายบุคคล (₩)",
+      perPersonRate: "อัตราภาษีที่แท้จริง",
     },
     income: {
       title: "รายงานภาษีรายได้สิ้นปี",
@@ -112,7 +159,7 @@ const LANGS = {
   ko: {
     loading: "⏳ 로딩 중...",
     signOut: "로그아웃",
-    tabs: { overview: "📊 개요", transactions: "📋 거래내역", add: "➕ 거래추가", tasks: "📝 업무관리", vat: "🧾 부가세", income: "💼 종합소득세" },
+    tabs: { overview: "📊 개요", transactions: "📋 거래내역", add: "➕ 거래추가", products: "📦 상품목록", tasks: "📝 업무관리", vat: "🧾 부가세", income: "💼 종합소득세", print: "🖨️ 보고서 인쇄" },
     yearLabel: (y) => `${y}년`,
     stats: {
       totalRevenue: "총 매출",
@@ -130,6 +177,10 @@ const LANGS = {
     categoryCols: { name: "카테고리", amount: "합계 (₩)", share: "비율" },
     txTitle: (n) => `전체 거래내역 (${n}건)`,
     txCols: { number: "번호", date: "날짜", type: "유형", desc: "내용", customer: "거래처", amount: "금액", status: "상태" },
+    uploadBtn: "📎 파일 업로드",
+    uploadFail: "파일 업로드 실패: ",
+    partnerIncomeTitle: "💼 파트너별 누적 수익 (전체 기간)",
+    partnerIncomeNoData: "이익 분배 내역이 없습니다",
     noData: "데이터 없음",
     types: { SALE: "매출", EXPENSE: "지출", REFUND: "환불", PROFIT_SHARE: "개인 이익 분배 수익" },
     statuses: { COMPLETED: "완료", PENDING: "대기", CANCELLED: "취소" },
@@ -168,6 +219,24 @@ const LANGS = {
       editSave: "저장",
       editCancel: "취소",
     },
+    products: {
+      sectionTitle: "📦 상품 / 장비 관리",
+      addTitle: "+ 새 상품 추가",
+      fName: "상품명 *", fNamePh: "예: Meter CT",
+      fModel: "모델명", fModelPh: "예: SF-200A",
+      fBrand: "브랜드 / 제조사", fBrandPh: "예: Shanghai Fangqiu",
+      fCostPrice: "원가 / 단위", fSellPrice: "판매가 / 단위", fCurrency: "통화",
+      submit: "상품 저장", submitting: "저장 중...", success: "✅ 상품 추가 완료",
+      listTitle: (n) => `전체 상품 목록 (${n})`,
+      noData: "상품이 없습니다",
+      deleteConfirm: "이 상품을 삭제하시겠습니까?",
+      selectProduct: "— 상품 선택 —",
+      customOption: "✏️ 직접 입력...",
+      customPh: "상품명 / 모델 입력",
+      saleItemsLabel: "판매 상품 목록",
+      saleItemsHint: "— 상품이 없습니다. 📦 상품목록 탭에서 추가하세요",
+      addRow: "+ 항목 추가",
+    },
     vat: {
       title: "부가세 10% 보고서",
       subtitle: "납부 기한: 매년 1월 및 7월",
@@ -183,6 +252,31 @@ const LANGS = {
       total: "합계",
       noData: "KRW 매출 내역 없음",
       note: "부가세 = KRW 매출 (SALE) × 10% (건별 적용)",
+    },
+    print: {
+      printBtn: "🖨️ 인쇄 / PDF 저장",
+      reportTypes: {
+        monthly:   "📅 월별 거래내역",
+        annual:    "📊 연간 회계 보고서",
+        vat:       "🧾 부가세 납부 보고서",
+        income_tax:"💼 종합소득세 보고서 (개인별)",
+      },
+      titleMonthly: (m, y) => `${y}년 ${m}월 거래내역`,
+      titleAnnual:  (y) => `${y}년 연간 회계 보고서`,
+      titleVat:     (y) => `${y}년 부가세 납부 보고서`,
+      titleIncome:  (y) => `${y}년 개인 종합소득세 보고서`,
+      sections: { summary: "요약", transactions: "전체 거래내역", monthly: "월별 합계", vat: "부가세 (VAT 10%)", partnerIncome: "파트너별 누적 수익" },
+      cols: { number: "번호", date: "날짜", type: "유형", desc: "내용", customer: "거래처", amount: "금액", currency: "통화", status: "상태" },
+      monthlyCols: { month: "월", revenue: "매출 (₩)", expense: "지출 (₩)", net: "순이익 (₩)", vat: "VAT 10% (₩)", perPerson: "1인당 (₩)" },
+      vatCols: { number: "번호", date: "날짜", desc: "내용", customer: "거래처", amount: "매출 (₩)", vat: "부가세 10% (₩)", period: "기간" },
+      total: "합계",
+      generatedOn: (d) => `출력일: ${d}`,
+      noData: "데이터 없음",
+      monthLabel: "월 선택",
+      perPersonTitle: "개인 소득세",
+      perPersonShare: "1인당 소득 (₩)",
+      perPersonTax: "개인 소득세 (₩)",
+      perPersonRate: "실효세율",
     },
     income: {
       title: "종합소득세 연말정산 보고서",
@@ -278,6 +372,7 @@ export default function PartnerDashboard() {
 
   const [form, setForm] = useState({ type: "SALE", description: "", customerName: "", amount: "", currency: "KRW", category: "", status: "COMPLETED", date: new Date().toISOString().slice(0, 10), notes: "" });
   const [formState, setFormState] = useState("");
+  const [saleItems, setSaleItems] = useState([{ productId: "", customName: "" }]);
 
   const [editingTx, setEditingTx] = useState(null); // { id, field, value }
   const [editingTxSaving, setEditingTxSaving] = useState(false);
@@ -290,6 +385,21 @@ export default function PartnerDashboard() {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null); // { id, title, notes }
   const [editingTaskSaving, setEditingTaskSaving] = useState(false);
+
+  const [products, setProducts] = useState([]);
+  const [productForm, setProductForm] = useState({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW" });
+  const [productFormState, setProductFormState] = useState("");
+
+  const [printView, setPrintView] = useState("annual"); // "annual" | "monthly" | "vat" | "income_tax"
+  const [printMonth, setPrintMonth] = useState(new Date().getMonth() + 1); // 1-12
+  const [printDateFrom, setPrintDateFrom] = useState(`${new Date().getFullYear()}-01-01`);
+  const [printDateTo, setPrintDateTo] = useState(`${new Date().getFullYear()}-12-31`);
+
+  const [partnerNames, setPartnerNames] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("partnerNames") || "{}"); } catch { return {}; }
+  });
+  const [editingPartnerIdx, setEditingPartnerIdx] = useState(null); // 1 or 2
+  const [editingPartnerValue, setEditingPartnerValue] = useState("");
 
   const t = LANGS[lang];
 
@@ -314,8 +424,14 @@ export default function PartnerDashboard() {
     fetch("/api/partner/tasks").then(r => r.json()).then(d => setTasks(Array.isArray(d) ? d : []));
   };
 
+  const fetchProducts = () => {
+    if (status !== "authenticated") return;
+    fetch("/api/partner/products").then(r => r.json()).then(d => setProducts(Array.isArray(d) ? d : []));
+  };
+
   useEffect(fetchData, [year, status]);
   useEffect(fetchTasks, [status]);
+  useEffect(fetchProducts, [status]);
 
   async function handleAddTask(e) {
     e.preventDefault();
@@ -373,14 +489,25 @@ export default function PartnerDashboard() {
     e.preventDefault();
     setFormState("loading");
     try {
+      const descriptionForSubmit = form.type === "SALE"
+        ? saleItems
+            .map(i => {
+              if (i.productId === "__custom__") return i.customName.trim();
+              const p = products.find(p => p.id === i.productId);
+              return p ? `${p.name}${p.model ? ` (${p.model})` : ""}` : "";
+            })
+            .filter(Boolean)
+            .join("\n")
+        : form.description;
       const res = await fetch("/api/partner/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, amount: Number(form.amount.replace(/,/g, "")) }),
+        body: JSON.stringify({ ...form, description: descriptionForSubmit, amount: Number(form.amount.replace(/,/g, "")) }),
       });
       if (!res.ok) throw new Error();
       setFormState("success");
       setForm({ type: "SALE", description: "", customerName: "", amount: "", currency: "KRW", category: "", status: "COMPLETED", date: new Date().toISOString().slice(0, 10), notes: "" });
+      setSaleItems([{ productId: "", customName: "" }]);
       fetchData();
       setTimeout(() => setFormState(""), 3000);
     } catch {
@@ -435,10 +562,36 @@ export default function PartnerDashboard() {
       fetchData();
     } catch (err) {
       setUploadErrorId(tx.id);
-      alert("อัพโหลดไฟล์ไม่สำเร็จ: " + err.message);
+      alert(LANGS[lang].uploadFail + err.message);
     } finally {
       setUploadingTxId(null);
     }
+  }
+
+  async function handleAddProduct(e) {
+    e.preventDefault();
+    setProductFormState("loading");
+    try {
+      const res = await fetch("/api/partner/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productForm),
+      });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || "error"); }
+      setProductFormState("success");
+      setProductForm({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW" });
+      fetchProducts();
+      setTimeout(() => setProductFormState(""), 3000);
+    } catch (err) {
+      setProductFormState(err.message || "error");
+      setTimeout(() => setProductFormState(""), 4000);
+    }
+  }
+
+  async function handleDeleteProduct(id) {
+    if (!confirm(LANGS[lang].products.deleteConfirm)) return;
+    await fetch(`/api/partner/products/${id}`, { method: "DELETE" });
+    fetchProducts();
   }
 
   const S = {
@@ -469,7 +622,7 @@ export default function PartnerDashboard() {
     );
   }
 
-  const { summary, monthlyRevenue, recentTransactions, byCategory, profitShareTransactions } = data || {};
+  const { summary, monthlyRevenue, recentTransactions, byCategory, profitShareTransactions, partnerIncomeSummary } = data || {};
   const maxMonthRevenue = Math.max(...(monthlyRevenue || []).map(m => m.revenue), 1);
 
   return (
@@ -507,7 +660,7 @@ export default function PartnerDashboard() {
         {/* Tabs + Year */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
-            {["overview", "transactions", "add", "tasks", "vat", "income"].map(tabKey => (
+            {["overview", "transactions", "add", "products", "tasks", "vat", "income", "print"].map(tabKey => (
               <button key={tabKey} style={S.tabBtn(tab === tabKey)} onClick={() => setTab(tabKey)}>
                 {t.tabs[tabKey]}
               </button>
@@ -589,6 +742,33 @@ export default function PartnerDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Partner income cards */}
+            <div style={S.section}>
+              <div style={S.sectionTitle}>{t.partnerIncomeTitle}</div>
+              {!partnerIncomeSummary || partnerIncomeSummary.length === 0 ? (
+                <div style={{ color: "#4a5070", fontSize: 13, padding: "12px 0" }}>{t.partnerIncomeNoData}</div>
+              ) : (
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  {partnerIncomeSummary.map((p, i) => {
+                    const colors = ["#4ade80", "#60a5fa", "#a78bfa", "#fbbf24", "#f472b6"];
+                    const color = colors[i % colors.length];
+                    return (
+                      <div key={p.name} style={{ background: "#16181f", border: `1px solid ${color}33`, borderRadius: 12, padding: "18px 24px", flex: "1 1 180px", minWidth: 180 }}>
+                        <div style={{ fontSize: 20, marginBottom: 6 }}>👤</div>
+                        <div style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
+                        <div style={{ color, fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>₩{fmtNum(p.total, t.locale)}</div>
+                        {Object.entries(p.byCurrency || {}).map(([cur, amt]) => (
+                          <div key={cur} style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>
+                            {cur === "USD" ? "$" : cur === "THB" ? "฿" : cur}{fmtNum(amt, t.locale)} {cur}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {byCategory?.length > 0 && (
@@ -724,8 +904,8 @@ export default function PartnerDashboard() {
                                   <a href={tx.receiptFile} target="_blank" rel="noopener noreferrer" title="ดูบิล / ดูเอกสาร" style={{ fontSize: 14, textDecoration: "none", lineHeight: 1 }}>📄</a>
                                 )}
                                 {tx.status !== "COMPLETED" && (
-                                  <label title="อัพโหลดไฟล์" style={{ cursor: "pointer", lineHeight: 1, display: "inline-flex", alignItems: "center", gap: 3, background: "#1e293b", border: `1px solid ${uploadErrorId === tx.id ? "#f87171" : "#334155"}`, borderRadius: 4, padding: "2px 7px", fontSize: 11, color: uploadErrorId === tx.id ? "#f87171" : "#60a5fa", whiteSpace: "nowrap" }}>
-                                    📎 อัพโหลดไฟล์
+                                  <label title={t.uploadBtn} style={{ cursor: "pointer", lineHeight: 1, display: "inline-flex", alignItems: "center", gap: 3, background: "#1e293b", border: `1px solid ${uploadErrorId === tx.id ? "#f87171" : "#334155"}`, borderRadius: 4, padding: "2px 7px", fontSize: 11, color: uploadErrorId === tx.id ? "#f87171" : "#60a5fa", whiteSpace: "nowrap" }}>
+                                    {t.uploadBtn}
                                     <input
                                       type="file"
                                       accept=".pdf,.jpg,.jpeg,.png,.webp"
@@ -924,7 +1104,7 @@ export default function PartnerDashboard() {
                   {/* Type */}
                   <div>
                     <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>{t.form.type}</label>
-                    <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value, category: "" }))} style={INPUT_STYLE}>
+                    <select value={form.type} onChange={e => { setForm(f => ({ ...f, type: e.target.value, category: "" })); setSaleItems([{ productId: "", customName: "" }]); }} style={INPUT_STYLE}>
                       {Object.entries(t.types).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                   </div>
@@ -954,11 +1134,60 @@ export default function PartnerDashboard() {
                     <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>{t.form.date}</label>
                     <input type="date" required value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={{ ...INPUT_STYLE, maxWidth: 220 }} />
                   </div>
-                  {/* Description */}
-                  <div style={{ gridColumn: "1 / -1" }}>
-                    <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>{t.form.desc}</label>
-                    <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={INPUT_STYLE} />
-                  </div>
+                  {/* Description / Sale Items */}
+                  {form.type === "SALE" ? (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>
+                        {t.products.saleItemsLabel}
+                        {products.length === 0 && <span style={{ color: "#fbbf24", fontWeight: 400, marginLeft: 8 }}>{t.products.saleItemsHint}</span>}
+                      </label>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {saleItems.map((item, idx) => (
+                          <div key={idx} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                              <select
+                                value={item.productId}
+                                onChange={e => setSaleItems(items => items.map((it, i) => i === idx ? { ...it, productId: e.target.value, customName: "" } : it))}
+                                style={{ ...INPUT_STYLE, flex: 1 }}
+                              >
+                                <option value="">{t.products.selectProduct}</option>
+                                {products.map(p => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name}{p.model ? ` (${p.model})` : ""}{p.brand ? ` — ${p.brand}` : ""}
+                                  </option>
+                                ))}
+                                <option value="__custom__">{t.products.customOption}</option>
+                              </select>
+                              {saleItems.length > 1 && (
+                                <button type="button" onClick={() => setSaleItems(items => items.filter((_, i) => i !== idx))}
+                                  style={{ background: "#3b0000", border: "1px solid #7f1d1d", color: "#f87171", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 13, lineHeight: 1, flexShrink: 0 }}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                            {item.productId === "__custom__" && (
+                              <input
+                                type="text"
+                                value={item.customName}
+                                onChange={e => setSaleItems(items => items.map((it, i) => i === idx ? { ...it, customName: e.target.value } : it))}
+                                placeholder={t.products.customPh}
+                                style={{ ...INPUT_STYLE, marginLeft: 0 }}
+                              />
+                            )}
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => setSaleItems(items => [...items, { productId: "", customName: "" }])}
+                          style={{ alignSelf: "flex-start", background: "#0f172a", border: "1px dashed #334155", color: "#60a5fa", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
+                          {t.products.addRow}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>{t.form.desc}</label>
+                      <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={INPUT_STYLE} />
+                    </div>
+                  )}
                   {/* Customer / Supplier */}
                   <div>
                     <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>
@@ -992,6 +1221,90 @@ export default function PartnerDashboard() {
                 {formState === "success" && <div style={{ marginTop: 12, color: "#4ade80", fontSize: 13, textAlign: "center" }}>{t.form.success}</div>}
                 {formState === "error" && <div style={{ marginTop: 12, color: "#f87171", fontSize: 13, textAlign: "center" }}>{t.form.error}</div>}
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* PRODUCTS */}
+        {tab === "products" && (
+          <div style={S.section}>
+            <div style={S.sectionTitle}>{t.products.sectionTitle}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start", maxWidth: 960 }}>
+
+              {/* Add product form */}
+              <div style={{ background: "#16181f", border: "1px solid #1e2130", borderRadius: 12, padding: 24 }}>
+                <div style={{ color: "#e8eaf0", fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{t.products.addTitle}</div>
+                <form onSubmit={handleAddProduct}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fName}</label>
+                      <input required type="text" value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={t.products.fNamePh} style={INPUT_STYLE} />
+                    </div>
+                    <div>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fModel}</label>
+                      <input type="text" value={productForm.model} onChange={e => setProductForm(f => ({ ...f, model: e.target.value }))} placeholder={t.products.fModelPh} style={INPUT_STYLE} />
+                    </div>
+                    <div>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fBrand}</label>
+                      <input type="text" value={productForm.brand} onChange={e => setProductForm(f => ({ ...f, brand: e.target.value }))} placeholder={t.products.fBrandPh} style={INPUT_STYLE} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div>
+                        <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fCostPrice}</label>
+                        <input type="text" inputMode="numeric" value={productForm.costPrice} onChange={e => setProductForm(f => ({ ...f, costPrice: e.target.value }))} placeholder="0" style={INPUT_STYLE} />
+                      </div>
+                      <div>
+                        <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fSellPrice}</label>
+                        <input type="text" inputMode="numeric" value={productForm.sellPrice} onChange={e => setProductForm(f => ({ ...f, sellPrice: e.target.value }))} placeholder="0" style={INPUT_STYLE} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fCurrency}</label>
+                      <select value={productForm.currency} onChange={e => setProductForm(f => ({ ...f, currency: e.target.value }))} style={INPUT_STYLE}>
+                        <option value="KRW">₩ KRW</option>
+                        <option value="USD">$ USD</option>
+                        <option value="THB">฿ THB</option>
+                      </select>
+                    </div>
+                    <button type="submit" disabled={productFormState === "loading"}
+                      style={{ marginTop: 4, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: productFormState === "loading" ? 0.6 : 1 }}>
+                      {productFormState === "loading" ? t.products.submitting : t.products.submit}
+                    </button>
+                    {productFormState === "success" && <div style={{ color: "#4ade80", fontSize: 12, textAlign: "center" }}>{t.products.success}</div>}
+                    {productFormState && productFormState !== "loading" && productFormState !== "success" && (
+                      <div style={{ color: "#f87171", fontSize: 12, textAlign: "center" }}>❌ {productFormState}</div>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Product list */}
+              <div style={{ background: "#16181f", border: "1px solid #1e2130", borderRadius: 12, padding: 24 }}>
+                <div style={{ color: "#e8eaf0", fontWeight: 700, fontSize: 14, marginBottom: 16 }}>{t.products.listTitle(products.length)}</div>
+                {products.length === 0 ? (
+                  <div style={{ color: "#4a5070", fontSize: 13, textAlign: "center", padding: "24px 0" }}>{t.products.noData}</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {products.map(p => (
+                      <div key={p.id} style={{ background: "#1e2130", borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: "#e8eaf0", fontWeight: 600, fontSize: 13 }}>{p.name}{p.model ? <span style={{ color: "#60a5fa", marginLeft: 6 }}>({p.model})</span> : ""}</div>
+                          {p.brand && <div style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>{p.brand}</div>}
+                          <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap" }}>
+                            {p.costPrice && <span style={{ color: "#fbbf24", fontSize: 11 }}>ทุน {Number(p.costPrice).toLocaleString()} {p.currency}</span>}
+                            {p.sellPrice && <span style={{ color: "#4ade80", fontSize: 11 }}>ขาย {Number(p.sellPrice).toLocaleString()} {p.currency}</span>}
+                          </div>
+                        </div>
+                        <button onClick={() => handleDeleteProduct(p.id)}
+                          style={{ background: "#3b0000", border: "1px solid #7f1d1d", color: "#f87171", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
+                          🗑
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         )}
@@ -1225,10 +1538,39 @@ export default function PartnerDashboard() {
               <div style={{ background: "#16181f", border: "1px solid #4ade8033", borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#4ade80", letterSpacing: 1, marginBottom: 16, textTransform: "uppercase" }}>{t.income.perPersonTitle}</div>
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                  {[1, 2].map(person => (
+                  {[1, 2].map(person => {
+                    const defaultName = lang === "th" ? `คนที่ ${person}` : `${person}인`;
+                    const displayName = partnerNames[person] || defaultName;
+                    const isEditing = editingPartnerIdx === person;
+                    return (
                     <div key={person} style={{ flex: "1 1 200px", background: "#1a1d26", borderRadius: 10, padding: "16px 20px", border: "1px solid #2a2d3a" }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#8b8fa8", marginBottom: 12 }}>
-                        👤 {lang === "th" ? `คนที่ ${person}` : `${person}인`}
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#8b8fa8", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                        👤{" "}
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            value={editingPartnerValue}
+                            onChange={e => setEditingPartnerValue(e.target.value)}
+                            onBlur={() => {
+                              const val = editingPartnerValue.trim();
+                              const updated = { ...partnerNames, [person]: val || null };
+                              if (!val) delete updated[person];
+                              setPartnerNames(updated);
+                              localStorage.setItem("partnerNames", JSON.stringify(updated));
+                              setEditingPartnerIdx(null);
+                            }}
+                            onKeyDown={e => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") { setEditingPartnerIdx(null); } }}
+                            style={{ background: "#0f172a", border: "1px solid #60a5fa", borderRadius: 4, color: "#e8eaf0", fontSize: 12, padding: "2px 8px", fontWeight: 700, width: 130, outline: "none" }}
+                          />
+                        ) : (
+                          <span
+                            onClick={() => { setEditingPartnerIdx(person); setEditingPartnerValue(partnerNames[person] || ""); }}
+                            title="คลิกเพื่อเปลี่ยนชื่อ"
+                            style={{ cursor: "pointer", borderBottom: "1px dashed #4a5070", paddingBottom: 1 }}
+                          >
+                            {displayName} <span style={{ fontSize: 10, color: "#4a5070", marginLeft: 2 }}>✏️</span>
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
@@ -1245,7 +1587,7 @@ export default function PartnerDashboard() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ); })}
                 </div>
                 <div style={{ marginTop: 10, fontSize: 10, color: "#4a5070" }}>{t.income.perPersonNote}</div>
               </div>
@@ -1304,6 +1646,418 @@ export default function PartnerDashboard() {
               </div>
 
               <div style={{ marginTop: 10, fontSize: 11, color: "#4a5070", textAlign: "right" }}>{t.income.note}</div>
+            </div>
+          );
+        })()}
+
+        {/* PRINT REPORT */}
+        {tab === "print" && (() => {
+          const ko = LANGS["ko"];
+          const pr = ko.print;
+          const koLocale = "ko-KR";
+          const txAll = recentTransactions || [];
+          const today = new Date().toLocaleDateString(koLocale);
+
+          // Date-range filtered transactions (used by non-monthly reports)
+          const rangeFrom = new Date(printDateFrom);
+          const rangeTo = new Date(printDateTo + "T23:59:59");
+          const txFiltered = txAll.filter(tx => { const d = new Date(tx.date); return d >= rangeFrom && d <= rangeTo; });
+
+          // Recompute monthly aggregates from filtered tx
+          const filteredMonths = Array.from({ length: 12 }, (_, i) => {
+            const mTx = txFiltered.filter(tx => new Date(tx.date).getMonth() === i);
+            return {
+              month: i + 1,
+              revenue: mTx.filter(tx => ["SALE","PROFIT_SHARE"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
+              expense: mTx.filter(tx => tx.type === "EXPENSE" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
+            };
+          });
+
+          // shared helpers
+          function estimateTaxPrint(net) {
+            if (net <= 0) return 0;
+            const brackets = [[14e6,0.06],[50e6,0.15],[88e6,0.24],[150e6,0.35],[300e6,0.38],[500e6,0.40],[1e9,0.42],[Infinity,0.45]];
+            let tax = 0, prev = 0;
+            for (const [limit, rate] of brackets) {
+              if (net <= prev) break;
+              tax += (Math.min(net, limit) - prev) * rate;
+              prev = limit;
+            }
+            return Math.round(tax);
+          }
+
+          const ACCENT = "#1e40af";
+          const ACCENT2 = "#dbeafe";
+          const P = {
+            page: { background: "#fff", color: "#1e293b", fontFamily: "'Segoe UI', system-ui, sans-serif", fontSize: 13, padding: "20px 28px", maxWidth: 900, margin: "0 auto" },
+            h2: { fontSize: 12, fontWeight: 800, color: "#fff", background: ACCENT, margin: "24px 0 0", padding: "7px 14px", letterSpacing: 0.5, textTransform: "uppercase", borderRadius: "6px 6px 0 0" },
+            table: { width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 16, border: "1px solid #e2e8f0" },
+            th: { background: "#f8fafc", color: "#475569", padding: "8px 12px", textAlign: "left", fontWeight: 700, borderBottom: "2px solid #e2e8f0", fontSize: 11, letterSpacing: 0.3 },
+            td: { padding: "7px 12px", borderBottom: "1px solid #f1f5f9", color: "#334155", verticalAlign: "top" },
+            tdAlt: { padding: "7px 12px", borderBottom: "1px solid #f1f5f9", color: "#334155", background: "#f8fafc", verticalAlign: "top" },
+            card: { display: "inline-flex", flexDirection: "column", gap: 4, border: `1px solid ${ACCENT2}`, borderTop: `3px solid ${ACCENT}`, borderRadius: 8, padding: "12px 20px", marginRight: 12, marginBottom: 12, minWidth: 150, background: "#f8fbff" },
+            label: { fontSize: 10, color: "#64748b", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" },
+            value: { fontSize: 20, fontWeight: 800, color: "#0f172a" },
+            divider: { border: "none", borderTop: "1px solid #e2e8f0", margin: "16px 0" },
+          };
+
+          const statusBadge = (s) => {
+            const map = { COMPLETED: ["#dcfce7","#16a34a"], PENDING: ["#fef9c3","#a16207"], CANCELLED: ["#f3f4f6","#6b7280"] };
+            const [bg, col] = map[s] || ["#f3f4f6","#6b7280"];
+            return { background: bg, color: col, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" };
+          };
+          const typeBadge = (tp) => {
+            const map = { SALE: ["#dbeafe","#1d4ed8"], EXPENSE: ["#fee2e2","#dc2626"], REFUND: ["#ede9fe","#7c3aed"], PROFIT_SHARE: ["#dcfce7","#16a34a"] };
+            const [bg, col] = map[tp] || ["#f3f4f6","#6b7280"];
+            return { background: bg, color: col, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" };
+          };
+
+          function TxTable({ rows }) {
+            return (
+              <table style={P.table}>
+                <thead><tr>
+                  {[pr.cols.number, pr.cols.date, pr.cols.type, pr.cols.desc, pr.cols.customer, pr.cols.amount, pr.cols.currency, pr.cols.status].map(h => (
+                    <th key={h} style={{ ...P.th, textAlign: h === pr.cols.amount ? "right" : "left" }}>{h}</th>
+                  ))}
+                </tr></thead>
+                <tbody>
+                  {rows.length === 0 ? (
+                    <tr><td colSpan={8} style={{ ...P.td, textAlign: "center", color: "#94a3b8", padding: "20px" }}>{pr.noData}</td></tr>
+                  ) : rows.map((tx, i) => {
+                    const cell = i % 2 === 0 ? P.td : P.tdAlt;
+                    return (
+                      <tr key={tx.id}>
+                        <td style={{ ...cell, fontFamily: "monospace", fontSize: 10, color: "#64748b" }}>{tx.number}</td>
+                        <td style={{ ...cell, whiteSpace: "nowrap" }}>{new Date(tx.date).toLocaleDateString(koLocale)}</td>
+                        <td style={cell}><span style={typeBadge(tx.type)}>{ko.types[tx.type] || tx.type}</span></td>
+                        <td style={cell}>{tx.description || "-"}</td>
+                        <td style={cell}>{tx.customerName || "-"}</td>
+                        <td style={{ ...cell, textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{fmtNum(tx.amount, koLocale)}</td>
+                        <td style={{ ...cell, color: "#64748b", fontSize: 11 }}>{tx.currency}</td>
+                        <td style={cell}><span style={statusBadge(tx.status)}>{ko.statuses[tx.status] || tx.status}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            );
+          }
+
+          function SectionTitle({ children }) {
+            return <SectionTitle>{children}</SectionTitle>;
+          }
+
+          function ReportHeader({ title, dateRange }) {
+            return (
+              <div style={{ marginBottom: 28 }}>
+                {/* Top bar */}
+                <div style={{ background: ACCENT, borderRadius: 10, padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div>
+                    <div style={{ color: "#93c5fd", fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>BUSINESS FINANCIAL REPORT</div>
+                    <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.2 }}>GOEUN SERVER HUB</div>
+                    <div style={{ color: "#bfdbfe", fontSize: 13, fontWeight: 600, marginTop: 2 }}>지이 서버 허브 &nbsp;·&nbsp; 🚀 MOMOGE SPACE</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ color: "#bfdbfe", fontSize: 10, fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{pr.generatedOn(today)}</div>
+                    {dateRange && (
+                      <div style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
+                        {dateRange}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Report title */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 4, height: 28, background: ACCENT, borderRadius: 2, flexShrink: 0 }} />
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "#0f172a" }}>{title}</div>
+                </div>
+              </div>
+            );
+          }
+
+          function ReportFooter() {
+            return (
+              <div style={{ marginTop: 32, paddingTop: 12, borderTop: `2px solid ${ACCENT}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94a3b8", fontSize: 10 }}>
+                <div>GOEUN SERVER HUB &nbsp;·&nbsp; 지이 서버 허브 &nbsp;·&nbsp; MOMOGE SPACE</div>
+                <div>{pr.generatedOn(today)}</div>
+              </div>
+            );
+          }
+
+          // ── 1. รายบัญชีแต่ละเดือน ──
+          function ReportMonthly() {
+            const monthTx = txAll.filter(tx => new Date(tx.date).getMonth() + 1 === printMonth && new Date(tx.date).getFullYear() === year);
+            const rev = monthTx.filter(tx => ["SALE","PROFIT_SHARE"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
+            const exp = monthTx.filter(tx => tx.type === "EXPENSE" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
+            const net = rev - exp;
+            const vat = Math.round(Math.max(0, net) * 0.1);
+            const mLabel = new Date(year, printMonth - 1, 1).toLocaleString(koLocale, { month: "long" });
+            return (
+              <div style={P.page}>
+                <ReportHeader title={pr.titleMonthly(mLabel, year)} dateRange={`${year}년 ${mLabel}`} />
+                <div style={{ marginBottom: 16 }}>
+                  {[
+                    { label: ko.stats.totalRevenue, value: `₩${fmtNum(rev, koLocale)}` },
+                    { label: ko.stats.totalExpense, value: `₩${fmtNum(exp, koLocale)}` },
+                    { label: ko.stats.netProfit, value: `₩${fmtNum(net, koLocale)}` },
+                    { label: "VAT 10%", value: `₩${fmtNum(vat, koLocale)}` },
+                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={P.value}>{c.value}</div></div>)}
+                </div>
+                <SectionTitle>{pr.sections.transactions} ({monthTx.length})</SectionTitle>
+                <TxTable rows={monthTx} />
+                <ReportFooter />
+              </div>
+            );
+          }
+
+          // ── 2. รายงานบัญชีรวมทั้งปี ──
+          function ReportAnnual() {
+            const totalRev = filteredMonths.reduce((s, m) => s + m.revenue, 0);
+            const totalExp = filteredMonths.reduce((s, m) => s + m.expense, 0);
+            const totalNet = totalRev - totalExp;
+            const drLabel = `${new Date(printDateFrom).toLocaleDateString(koLocale)} ~ ${new Date(printDateTo).toLocaleDateString(koLocale)}`;
+            return (
+              <div style={P.page}>
+                <ReportHeader title={pr.titleAnnual(year)} dateRange={drLabel} />
+                <div style={{ marginBottom: 16 }}>
+                  {[
+                    { label: ko.stats.totalRevenue, value: `₩${fmtNum(totalRev, koLocale)}` },
+                    { label: ko.stats.totalExpense, value: `₩${fmtNum(totalExp, koLocale)}` },
+                    { label: ko.stats.netProfit, value: `₩${fmtNum(totalNet, koLocale)}` },
+                    { label: "VAT 10%", value: `₩${fmtNum(Math.round(Math.max(0,totalNet)*0.1), koLocale)}` },
+                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={P.value}>{c.value}</div></div>)}
+                </div>
+                <SectionTitle>{pr.sections.monthly}</SectionTitle>
+                <table style={P.table}>
+                  <thead><tr>
+                    {[pr.monthlyCols.month, pr.monthlyCols.revenue, pr.monthlyCols.expense, pr.monthlyCols.net, pr.monthlyCols.vat, pr.monthlyCols.perPerson].map(h => (
+                      <th key={h} style={{ ...P.th, textAlign: h === pr.monthlyCols.month ? "left" : "right" }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {filteredMonths.map(m => {
+                      const net = m.revenue - m.expense;
+                      const vat = Math.round(Math.max(0, net) * 0.1);
+                      const perPerson = Math.round((net - vat) / 2);
+                      const hasData = m.revenue > 0 || m.expense > 0;
+                      return (
+                        <tr key={m.month} style={{ opacity: hasData ? 1 : 0.4 }}>
+                          <td style={P.td}>{new Date(year, m.month - 1, 1).toLocaleString(koLocale, { month: "long" })}</td>
+                          <td style={{ ...P.td, textAlign: "right" }}>{m.revenue > 0 ? `₩${fmtNum(m.revenue, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right" }}>{m.expense > 0 ? `₩${fmtNum(m.expense, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{hasData ? `₩${fmtNum(net, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right" }}>{hasData ? `₩${fmtNum(vat, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{hasData ? `₩${fmtNum(perPerson, koLocale)}` : "-"}</td>
+                        </tr>
+                      );
+                    })}
+                    <tr style={{ fontWeight: 800, background: "#f8fafc" }}>
+                      <td style={P.td}>{pr.total}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalRev, koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalExp, koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalNet, koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(Math.max(0,totalNet)*0.1), koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round((totalNet-Math.max(0,totalNet)*0.1)/2), koLocale)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <SectionTitle>{pr.sections.transactions} ({txFiltered.length})</SectionTitle>
+                <TxTable rows={txFiltered} />
+                <ReportFooter />
+              </div>
+            );
+          }
+
+          // ── 3. รายงานภาษีมูลค่าเพิ่ม ──
+          function ReportVat() {
+            const drLabel = `${new Date(printDateFrom).toLocaleDateString(koLocale)} ~ ${new Date(printDateTo).toLocaleDateString(koLocale)}`;
+            const vatRows = txFiltered.filter(tx => tx.type === "SALE" && tx.status !== "CANCELLED" && tx.currency === "KRW");
+            const h1 = vatRows.filter(tx => new Date(tx.date).getMonth() < 6);
+            const h2 = vatRows.filter(tx => new Date(tx.date).getMonth() >= 6);
+            const sumVat = (rows) => rows.reduce((s, tx) => s + Math.round(Number(tx.amount) * 0.1), 0);
+            const sumRev = (rows) => rows.reduce((s, tx) => s + Number(tx.amount), 0);
+            function VatBlock({ label, rows }) {
+              return (
+                <>
+                  <SectionTitle>{label}</SectionTitle>
+                  <table style={P.table}>
+                    <thead><tr>
+                      {[pr.vatCols.number, pr.vatCols.date, pr.vatCols.desc, pr.vatCols.customer, pr.vatCols.amount, pr.vatCols.vat].map(h => (
+                        <th key={h} style={{ ...P.th, textAlign: [pr.vatCols.amount, pr.vatCols.vat].includes(h) ? "right" : "left" }}>{h}</th>
+                      ))}
+                    </tr></thead>
+                    <tbody>
+                      {rows.length === 0 ? (
+                        <tr><td colSpan={6} style={{ ...P.td, textAlign: "center", color: "#94a3b8" }}>{pr.noData}</td></tr>
+                      ) : rows.map(tx => (
+                        <tr key={tx.id}>
+                          <td style={{ ...P.td, fontFamily: "monospace", fontSize: 11 }}>{tx.number}</td>
+                          <td style={{ ...P.td, whiteSpace: "nowrap" }}>{new Date(tx.date).toLocaleDateString(koLocale)}</td>
+                          <td style={P.td}>{tx.description || "-"}</td>
+                          <td style={P.td}>{tx.customerName || "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right", fontFamily: "monospace" }}>₩{fmtNum(tx.amount, koLocale)}</td>
+                          <td style={{ ...P.td, textAlign: "right", fontFamily: "monospace", color: "#dc2626" }}>₩{fmtNum(Math.round(Number(tx.amount)*0.1), koLocale)}</td>
+                        </tr>
+                      ))}
+                      {rows.length > 0 && (
+                        <tr style={{ fontWeight: 800, background: "#fef2f2" }}>
+                          <td colSpan={4} style={{ ...P.td }}>{pr.total}</td>
+                          <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(sumRev(rows), koLocale)}</td>
+                          <td style={{ ...P.td, textAlign: "right", color: "#dc2626" }}>₩{fmtNum(sumVat(rows), koLocale)}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </>
+              );
+            }
+            return (
+              <div style={P.page}>
+                <ReportHeader title={pr.titleVat(year)} dateRange={drLabel} />
+                <div style={{ marginBottom: 16 }}>
+                  {[
+                    { label: "상반기 (1월–6월)", value: `₩${fmtNum(sumVat(h1), koLocale)}` },
+                    { label: "하반기 (7월–12월)", value: `₩${fmtNum(sumVat(h2), koLocale)}` },
+                    { label: "연간 부가세 합계", value: `₩${fmtNum(sumVat(vatRows), koLocale)}` },
+                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={{ ...P.value, color: "#dc2626" }}>{c.value}</div></div>)}
+                </div>
+                <VatBlock label={"상반기 (1월 – 6월)"} rows={h1} />
+                <VatBlock label={"하반기 (7월 – 12월)"} rows={h2} />
+                <ReportFooter />
+              </div>
+            );
+          }
+
+          // ── 4. รายงานภาษีรายได้รายบุคคล ──
+          function ReportIncomeTax() {
+            const totalRev = filteredMonths.reduce((s, m) => s + m.revenue, 0);
+            const totalExp = filteredMonths.reduce((s, m) => s + m.expense, 0);
+            const annualNet = Math.max(0, totalRev - totalExp);
+            const perNet = annualNet / 2;
+            const perTax = estimateTaxPrint(perNet);
+            const perRate = perNet > 0 ? ((perTax / perNet) * 100).toFixed(1) : "0.0";
+            const drLabel = `${new Date(printDateFrom).toLocaleDateString(koLocale)} ~ ${new Date(printDateTo).toLocaleDateString(koLocale)}`;
+            return (
+              <div style={P.page}>
+                <ReportHeader title={pr.titleIncome(year)} dateRange={drLabel} />
+                <div style={{ marginBottom: 16 }}>
+                  {[
+                    { label: ko.stats.netProfit, value: `₩${fmtNum(annualNet, koLocale)}` },
+                    { label: "VAT 공제 후", value: `₩${fmtNum(Math.round(annualNet*0.9), koLocale)}` },
+                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={P.value}>{c.value}</div></div>)}
+                </div>
+                <SectionTitle>{pr.perPersonTitle}</SectionTitle>
+                <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 16 }}>
+                  {[1, 2].map(person => {
+                    const pName = partnerNames[person] || (`${person}인`);
+                    return (
+                      <div key={person} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "16px 20px", minWidth: 200 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>👤 {pName}</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "#64748b" }}>{pr.perPersonShare}</span>
+                            <span style={{ fontWeight: 700 }}>₩{fmtNum(Math.round(perNet), koLocale)}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "#64748b" }}>{pr.perPersonRate}</span>
+                            <span style={{ fontWeight: 700 }}>{perRate}%</span>
+                          </div>
+                          <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontWeight: 700 }}>{pr.perPersonTax}</span>
+                            <span style={{ fontWeight: 800, fontSize: 16, color: "#dc2626" }}>₩{fmtNum(perTax, koLocale)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {partnerIncomeSummary?.length > 0 && (
+                  <>
+                    <SectionTitle>{pr.sections.partnerIncome}</SectionTitle>
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12, marginBottom: 16 }}>
+                      {partnerIncomeSummary.map(p => (
+                        <div key={p.name} style={P.card}>
+                          <div style={P.label}>👤 {p.name}</div>
+                          <div style={P.value}>₩{fmtNum(p.total, koLocale)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <ReportFooter />
+              </div>
+            );
+          }
+
+          const reportComponents = { monthly: ReportMonthly, annual: ReportAnnual, vat: ReportVat, income_tax: ReportIncomeTax };
+          const ActiveReport = reportComponents[printView];
+
+          return (
+            <div>
+              <style>{`
+                @media print {
+                  @page { margin: 15mm 12mm; size: A4 portrait; }
+                  body * { visibility: hidden !important; }
+                  #print-report, #print-report * { visibility: visible !important; }
+                  #print-report {
+                    position: fixed !important;
+                    top: 0 !important; left: 0 !important;
+                    width: 100% !important;
+                    background: #fff !important;
+                    color: #000 !important;
+                    z-index: 99999 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                  }
+                  #print-report table { page-break-inside: auto; }
+                  #print-report tr { page-break-inside: avoid; page-break-after: auto; }
+                  #print-report thead { display: table-header-group; }
+                }
+              `}</style>
+
+              {/* Report type selector */}
+              <div className="no-print" style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+                  {Object.entries(pr.reportTypes).map(([key, label]) => (
+                    <button key={key} onClick={() => setPrintView(key)}
+                      style={{ background: printView === key ? "linear-gradient(135deg,#2563eb,#1d4ed8)" : "#16181f", color: printView === key ? "#fff" : "#8b8fa8", border: `1px solid ${printView === key ? "#2563eb" : "#2a2d3a"}`, borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  {printView === "monthly" ? (
+                    <select value={printMonth} onChange={e => setPrintMonth(Number(e.target.value))}
+                      style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "7px 14px", fontSize: 13 }}>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                        <option key={m} value={m}>{new Date(year, m - 1, 1).toLocaleString(koLocale, { month: "long" })}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ color: "#8b8fa8", fontSize: 12, whiteSpace: "nowrap" }}>ระยะเวลา</span>
+                      <input type="date" value={printDateFrom} onChange={e => setPrintDateFrom(e.target.value)}
+                        style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "6px 10px", fontSize: 13 }} />
+                      <span style={{ color: "#8b8fa8", fontSize: 12 }}>~</span>
+                      <input type="date" value={printDateTo} onChange={e => setPrintDateTo(e.target.value)}
+                        style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "6px 10px", fontSize: 13 }} />
+                      <button onClick={() => { const y = year; setPrintDateFrom(`${y}-01-01`); setPrintDateTo(`${y}-12-31`); }}
+                        style={{ background: "#1e2130", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 6, padding: "5px 10px", fontSize: 11, cursor: "pointer" }}>
+                        ทั้งปี {year}
+                      </button>
+                    </div>
+                  )}
+                  <button onClick={() => window.print()}
+                    style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, padding: "9px 22px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    {pr.printBtn}
+                  </button>
+                  <span style={{ color: "#4a5070", fontSize: 12 }}>{pr.generatedOn(today)}</span>
+                </div>
+              </div>
+
+              <div id="print-report">
+                <ActiveReport />
+              </div>
             </div>
           );
         })()}
