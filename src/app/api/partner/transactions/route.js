@@ -72,6 +72,25 @@ export async function GET(req) {
       byCategory[key] = (byCategory[key] || 0) + Number(t.amount);
     }
 
+    // Partner income: all-time cumulative grouped by customerName (PROFIT_SHARE)
+    const allProfitShare = await prisma.partnerTransaction.findMany({
+      where: { type: "PROFIT_SHARE", status: { not: "CANCELLED" } },
+      select: { customerName: true, amount: true, currency: true, status: true },
+    });
+    const partnerIncomeMap = {};
+    for (const t of allProfitShare) {
+      const name = t.customerName || "ไม่ระบุ";
+      if (!partnerIncomeMap[name]) partnerIncomeMap[name] = { total: 0, byCurrency: {} };
+      if (t.currency === "KRW") {
+        partnerIncomeMap[name].total += Number(t.amount);
+      } else {
+        partnerIncomeMap[name].byCurrency[t.currency] = (partnerIncomeMap[name].byCurrency[t.currency] || 0) + Number(t.amount);
+      }
+    }
+    const partnerIncomeSummary = Object.entries(partnerIncomeMap)
+      .map(([name, data]) => ({ name, total: data.total, byCurrency: data.byCurrency }))
+      .sort((a, b) => b.total - a.total);
+
     return NextResponse.json({
       year,
       summary: {
@@ -92,6 +111,7 @@ export async function GET(req) {
         .map(([name, amount]) => ({ name, amount }))
         .sort((a, b) => b.amount - a.amount),
       profitShareTransactions: transactions.filter(t => t.type === "PROFIT_SHARE"),
+      partnerIncomeSummary,
     });
   } catch (err) {
     console.error("[GET /api/partner/transactions]", err);

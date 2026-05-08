@@ -1,0 +1,26 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "sshOptions": {
+                "port": 22,
+                "host": "3306",
+                "username": "geserverhub",
+                "password": "2350400018644"
+            },
+            "driver": "MySQL",
+            "name": "geserverhub",
+            "database": "geserverhub",
+            "username": "geserverhub",
+            "password": "2350400018644",
+            "connectionTimeout": 0
+        }
+    ]
+}

@@ -27,11 +27,18 @@ const authConfig: NextAuthConfig = {
 
       // Public auth pages — always accessible
       if (pathname === "/admin/login") return true;
+      if (pathname === "/partner/login") return true;
       if (pathname === "/auth/select") return true;
 
       if (pathname.startsWith("/admin")) {
         if (!isLoggedIn) return Response.redirect(new URL("/login", nextUrl));
         if (role !== "ADMIN" && role !== "SUPER_ADMIN")
+          return Response.redirect(new URL("/", nextUrl));
+      }
+
+      if (pathname.startsWith("/partner")) {
+        if (!isLoggedIn) return Response.redirect(new URL("/partner/login", nextUrl));
+        if (role !== "PARTNER" && role !== "SUPER_ADMIN" && role !== "ADMIN")
           return Response.redirect(new URL("/", nextUrl));
       }
 

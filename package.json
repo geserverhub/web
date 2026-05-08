@@ -33,5 +33,8 @@
   },
   "devDependencies": {
     "dotenv": "^16.6.1"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }
