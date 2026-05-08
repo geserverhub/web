@@ -18,7 +18,7 @@ const LANGS = {
       totalPending: "รอชำระ",
       pendingCount: (n) => `${n} รายการ`,
     },
-    monthlyTitle: (y) => `ยอดขายรายเดือน`,
+    monthlyTitle: () => `ยอดขายรายเดือน`,
     profitTitle: (y) => `กำไรสุทธิรายเดือน (หลังหัก VAT 10%) — ${y}`,
     profitCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
     vatNote: "สูตร: (รายรับ − รายจ่าย) × 90% ÷ 2",
@@ -317,6 +317,26 @@ function currencySymbol(code) {
   return { KRW: "₩", USD: "$", THB: "฿" }[code] || code;
 }
 
+const S = {
+  page: { minHeight: "100vh", background: "#0a0c12", color: "#e8eaf0", fontFamily: "system-ui, sans-serif" },
+  header: { background: "#16181f", borderBottom: "1px solid #1e2130", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  content: { padding: "24px", maxWidth: 1200, margin: "0 auto" },
+  section: { marginBottom: 32 },
+  sectionTitle: { color: "#8b8fa8", fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
+  th: { color: "#8b8fa8", fontWeight: 600, padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #1e2130", whiteSpace: "nowrap" },
+  td: { padding: "10px 12px", borderBottom: "1px solid #1a1d26", color: "#e8eaf0" },
+  tabBtn: (active) => ({
+    padding: "8px 18px", background: active ? "#16a34a" : "transparent",
+    color: active ? "#fff" : "#8b8fa8", border: `1px solid ${active ? "#16a34a" : "#2a2d3a"}`,
+    borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600,
+  }),
+  langBtn: (active) => ({
+    background: active ? "#23263a" : "transparent", border: `1px solid ${active ? "#4a5070" : "#2a2d40"}`,
+    borderRadius: 6, color: active ? "#e8eaf0" : "#4a5070", fontSize: 12, fontWeight: 700, padding: "4px 10px", cursor: "pointer",
+  }),
+};
+
 function StatCard({ icon, label, value, sub, color, extra }) {
   return (
     <div style={{ background: "#16181f", border: `1px solid ${color}33`, borderRadius: 12, padding: "20px 24px", flex: "1 1 180px", minWidth: 160 }}>
@@ -594,25 +614,6 @@ export default function PartnerDashboard() {
     fetchProducts();
   }
 
-  const S = {
-    page: { minHeight: "100vh", background: "#0a0c12", color: "#e8eaf0", fontFamily: "system-ui, sans-serif" },
-    header: { background: "#16181f", borderBottom: "1px solid #1e2130", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-    content: { padding: "24px", maxWidth: 1200, margin: "0 auto" },
-    section: { marginBottom: 32 },
-    sectionTitle: { color: "#8b8fa8", fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 },
-    table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
-    th: { color: "#8b8fa8", fontWeight: 600, padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #1e2130", whiteSpace: "nowrap" },
-    td: { padding: "10px 12px", borderBottom: "1px solid #1a1d26", color: "#e8eaf0" },
-    tabBtn: (active) => ({
-      padding: "8px 18px", background: active ? "#16a34a" : "transparent",
-      color: active ? "#fff" : "#8b8fa8", border: `1px solid ${active ? "#16a34a" : "#2a2d3a"}`,
-      borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600,
-    }),
-    langBtn: (active) => ({
-      background: active ? "#23263a" : "transparent", border: `1px solid ${active ? "#4a5070" : "#2a2d40"}`,
-      borderRadius: 6, color: active ? "#e8eaf0" : "#4a5070", fontSize: 12, fontWeight: 700, padding: "4px 10px", cursor: "pointer",
-    }),
-  };
 
   if (status === "loading" || status === "unauthenticated" || loading) {
     return (
@@ -1359,8 +1360,8 @@ export default function PartnerDashboard() {
 
               {/* Period summary cards */}
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 28 }}>
-                <PeriodCard label={t.vat.h1Label} due={t.vat.dueH1(year)} base={h1Base} vat={txH1Vat} active={today < dueH1} />
-                <PeriodCard label={t.vat.h2Label} due={t.vat.dueH2(year)} base={h2Base} vat={txH2Vat} active={today >= dueH1} />
+                {PeriodCard({ label: t.vat.h1Label, due: t.vat.dueH1(year), base: h1Base, vat: txH1Vat, active: today < dueH1 })}
+                {PeriodCard({ label: t.vat.h2Label, due: t.vat.dueH2(year), base: h2Base, vat: txH2Vat, active: today >= dueH1 })}
               </div>
 
               {/* Transaction list */}
@@ -1689,16 +1690,16 @@ export default function PartnerDashboard() {
           const ACCENT = "#1e40af";
           const ACCENT2 = "#dbeafe";
           const P = {
-            page: { background: "#fff", color: "#1e293b", fontFamily: "'Segoe UI', system-ui, sans-serif", fontSize: 13, padding: "20px 28px", maxWidth: 900, margin: "0 auto" },
+            page: { background: "#fff", color: "#0f172a", fontFamily: "'Segoe UI', system-ui, sans-serif", fontSize: 13, padding: "20px 28px", maxWidth: 900, margin: "0 auto" },
             h2: { fontSize: 12, fontWeight: 800, color: "#fff", background: ACCENT, margin: "24px 0 0", padding: "7px 14px", letterSpacing: 0.5, textTransform: "uppercase", borderRadius: "6px 6px 0 0" },
-            table: { width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 16, border: "1px solid #e2e8f0" },
-            th: { background: "#f8fafc", color: "#475569", padding: "8px 12px", textAlign: "left", fontWeight: 700, borderBottom: "2px solid #e2e8f0", fontSize: 11, letterSpacing: 0.3 },
-            td: { padding: "7px 12px", borderBottom: "1px solid #f1f5f9", color: "#334155", verticalAlign: "top" },
-            tdAlt: { padding: "7px 12px", borderBottom: "1px solid #f1f5f9", color: "#334155", background: "#f8fafc", verticalAlign: "top" },
+            table: { width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 16, border: "1px solid #cbd5e1" },
+            th: { background: "#e2e8f0", color: "#1e293b", padding: "8px 12px", textAlign: "left", fontWeight: 800, borderBottom: "2px solid #94a3b8", fontSize: 11, letterSpacing: 0.3 },
+            td: { padding: "7px 12px", borderBottom: "1px solid #e2e8f0", color: "#0f172a", verticalAlign: "top" },
+            tdAlt: { padding: "7px 12px", borderBottom: "1px solid #e2e8f0", color: "#0f172a", background: "#f1f5f9", verticalAlign: "top" },
             card: { display: "inline-flex", flexDirection: "column", gap: 4, border: `1px solid ${ACCENT2}`, borderTop: `3px solid ${ACCENT}`, borderRadius: 8, padding: "12px 20px", marginRight: 12, marginBottom: 12, minWidth: 150, background: "#f8fbff" },
-            label: { fontSize: 10, color: "#64748b", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" },
+            label: { fontSize: 10, color: "#334155", fontWeight: 800, letterSpacing: 0.5, textTransform: "uppercase" },
             value: { fontSize: 20, fontWeight: 800, color: "#0f172a" },
-            divider: { border: "none", borderTop: "1px solid #e2e8f0", margin: "16px 0" },
+            divider: { border: "none", borderTop: "1px solid #cbd5e1", margin: "16px 0" },
           };
 
           const statusBadge = (s) => {
@@ -1744,7 +1745,7 @@ export default function PartnerDashboard() {
           }
 
           function SectionTitle({ children }) {
-            return <SectionTitle>{children}</SectionTitle>;
+            return <h2 style={P.h2}>{children}</h2>;
           }
 
           function ReportHeader({ title, dateRange }) {
@@ -1777,7 +1778,7 @@ export default function PartnerDashboard() {
 
           function ReportFooter() {
             return (
-              <div style={{ marginTop: 32, paddingTop: 12, borderTop: `2px solid ${ACCENT}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94a3b8", fontSize: 10 }}>
+              <div style={{ marginTop: 32, paddingTop: 12, borderTop: `2px solid ${ACCENT}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#475569", fontSize: 10 }}>
                 <div>GOEUN SERVER HUB &nbsp;·&nbsp; 지이 서버 허브 &nbsp;·&nbsp; MOMOGE SPACE</div>
                 <div>{pr.generatedOn(today)}</div>
               </div>
