@@ -9,3 +9,8 @@ dist
 .env
 .env.local
 .env.*.local
+
+# Backup files (too large for git)
+backups/
+*.tar.gz
+*.sql
