@@ -2797,55 +2797,101 @@ export default function ClientsUsersClient({ session }) {
             </>)}
 
             {/* ── Sub 5: บันทึกค่าใช้จ่ายค่าส่ง ── */}
-            {cargoSubTab === "shipping-cost" && (<>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div style={{ fontSize: 13, color: "#8b8fa8" }}>บันทึกต้นทุนค่าส่งจริงที่บริษัทจ่ายออกไป (ค่าเครื่อง, ค่าขนส่งต่อ, ค่าจัดการ)</div>
-                <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 16px", fontWeight: 700, fontSize: 12 }} onClick={() => { setEditCargoId(null); setCargoForm({ senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", receiverAddress: "", direction: "TH_TO_KR", weightKg: "", sizeNote: "", itemDesc: "", currency: "THB", income: "", expense: "", status: "รับพัสดุเข้าคลังแล้ว", trackingCode: "", passportNo: "", notes: "", shippedAt: "", deliveredAt: "" }); setCargoModal(true); }}>+ เพิ่มรายการ</button>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {cargoOrders.map(o => {
-                  const e = cargoInlineEdits[o.id] || {};
-                  const expense = e.expense !== undefined ? e.expense : (o.expense ?? "");
-                  const notes = e.notes !== undefined ? e.notes : (o.notes ?? "");
-                  const dirty = (e.expense !== undefined && String(e.expense) !== String(o.expense ?? "")) || (e.notes !== undefined && e.notes !== (o.notes || ""));
-                  return (
-                    <div key={o.id} style={{ background: "#1e2130", borderRadius: 10, padding: "14px 16px", border: dirty ? "1px solid #f8717166" : "1px solid #2a2d3a" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-                        <span style={{ fontFamily: "monospace", fontSize: 12, color: "#facc15" }}>{o.number}</span>
-                        <span style={{ fontSize: 12, color: "#8b8fa8" }}>{o.senderName} → {o.receiverName} · {o.direction === "TH_TO_KR" ? "🇹🇭→🇰🇷" : "🇰🇷→🇹🇭"}</span>
-                        {Number(o.expense) > 0 && <span style={{ padding: "2px 10px", borderRadius: 99, background: "#2a1f1f", border: "1px solid #f8717144", color: "#f87171", fontSize: 11, fontWeight: 700 }}>ต้นทุนเดิม: {Number(o.expense).toLocaleString()} {o.currency}</span>}
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 10, alignItems: "flex-end" }}>
-                        <div>
-                          <div style={{ fontSize: 11, color: "#f87171", marginBottom: 4 }}>📤 ต้นทุน ({o.currency})</div>
-                          <input type="number" min="0" style={{ ...S.input, borderColor: "#f8717144" }} placeholder="0"
-                            value={expense}
-                            onChange={ev => setCargoInlineEdits(p => ({ ...p, [o.id]: { ...(p[o.id] || {}), expense: ev.target.value } }))} />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 4 }}>💬 หมายเหตุ</div>
-                          <input style={S.input} placeholder="ค่าเครื่องบิน, ค่าขนส่งต่อ..."
-                            value={notes}
-                            onChange={ev => setCargoInlineEdits(p => ({ ...p, [o.id]: { ...(p[o.id] || {}), notes: ev.target.value } }))} />
-                        </div>
-                        <button disabled={!dirty || savingCargoInline[o.id]} style={{ ...S.btn(dirty ? "#2a1f1f" : "#1a1d27", dirty ? "#f87171" : "#64748b"), padding: "9px 16px", fontWeight: 700, border: dirty ? "1px solid #f8717166" : "none" }}
-                          onClick={async () => {
-                            setSavingCargoInline(p => ({ ...p, [o.id]: true }));
-                            await fetch(`/api/admin/cargo/${o.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expense: Number(expense || 0), notes: notes }) });
-                            showToast("บันทึกค่าส่งแล้ว ✅");
-                            setCargoInlineEdits(p => { const n = { ...p }; delete n[o.id]; return n; });
-                            setSavingCargoInline(p => ({ ...p, [o.id]: false }));
-                            loadCargo();
-                          }}>
-                          {savingCargoInline[o.id] ? "⏳" : "💾 บันทึก"}
-                        </button>
-                      </div>
+            {cargoSubTab === "shipping-cost" && (() => {
+              const WAREHOUSE_RECEIVED = "รับพัสดุเข้าคลังแล้ว";
+              const dirLabel = d => d === "TH_TO_KR" ? "✈️🇹🇭→🇰🇷" : d === "SEA_KR_TO_TH" ? "🚢🇰🇷→🇹🇭" : "✈️🇰🇷→🇹🇭";
+              return (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>🖨️ รายการส่งสินค้า</div>
+                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>ข้อมูลพัสดุ · ผู้ส่ง · ผู้รับ · สถานะโกดัง</div>
                     </div>
-                  );
-                })}
-                {cargoOrders.length === 0 && <div style={{ padding: 32, textAlign: "center", color: "#64748b" }}>ยังไม่มีรายการ</div>}
-              </div>
-            </>)}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 14px", fontWeight: 700, fontSize: 12 }}
+                        onClick={() => { setEditCargoId(null); setCargoForm({ senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", receiverAddress: "", direction: "TH_TO_KR", weightKg: "", sizeNote: "", itemDesc: "", currency: "THB", income: "", expense: "", status: "รอดำเนินการ", trackingCode: "", passportNo: "", notes: "", shippedAt: "", deliveredAt: "" }); setCargoModal(true); }}>
+                        + เพิ่มรายการ
+                      </button>
+                      <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 14px", fontWeight: 700, fontSize: 12 }} onClick={loadCargo}>🔄 รีเฟรช</button>
+                    </div>
+                  </div>
+
+                  {cargoOrders.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: "center", color: "#64748b", background: "#1a1d27", borderRadius: 12, border: "2px dashed #2a2d3a" }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
+                      <div>ยังไม่มีรายการส่งสินค้า</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      {cargoOrders.map(o => {
+                        const warehouseReceived = o.status !== "รอดำเนินการ";
+                        const detail = cusDetails.find(d => d.customerId === o.customerId);
+                        const passportNo = o.passportNo || detail?.passportNo || "—";
+                        const customsNo = detail?.customsNo || "—";
+                        const isSaving = savingCargoInline[o.id];
+                        return (
+                          <div key={o.id} style={{ background: "#1e2130", borderRadius: 10, border: `1px solid ${warehouseReceived ? "#4ade8033" : "#2a2d3a"}`, overflow: "hidden" }}>
+                            {/* Header row */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#1a1d27", borderBottom: "1px solid #2a2d3a", flexWrap: "wrap" }}>
+                              <code style={{ fontSize: 13, fontWeight: 800, color: "#facc15" }}>{o.number}</code>
+                              <span style={{ fontSize: 12, color: "#64748b" }}>{dirLabel(o.direction)}</span>
+                              {o.createdAt && <span style={{ fontSize: 11, color: "#4a5070" }}>📅 {new Date(o.createdAt).toLocaleDateString("th-TH")}</span>}
+                              {o.weightKg && <span style={{ fontSize: 11, color: "#8b8fa8" }}>⚖️ {o.weightKg} kg</span>}
+                              {/* Warehouse status toggle */}
+                              <button type="button" disabled={isSaving}
+                                style={{ marginLeft: "auto", padding: "5px 14px", borderRadius: 7, border: `1px solid ${warehouseReceived ? "#4ade8066" : "#facc1566"}`, background: warehouseReceived ? "#0f2318" : "#1a1a0a", color: warehouseReceived ? "#4ade80" : "#facc15", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+                                onClick={async () => {
+                                  setSavingCargoInline(p => ({ ...p, [o.id]: true }));
+                                  const newStatus = warehouseReceived ? "รอดำเนินการ" : WAREHOUSE_RECEIVED;
+                                  await fetch(`/api/admin/cargo/${o.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
+                                  showToast(warehouseReceived ? "เปลี่ยนเป็น รอดำเนินการ" : "โกดังรับสินค้าแล้ว ✅");
+                                  setSavingCargoInline(p => ({ ...p, [o.id]: false }));
+                                  loadCargo();
+                                }}>
+                                {isSaving ? "⏳" : warehouseReceived ? "✅ โกดังรับแล้ว" : "⬜ ยังไม่รับ"}
+                              </button>
+                            </div>
+                            {/* Info grid */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, fontSize: 12 }}>
+                              <div style={{ padding: "10px 16px", borderRight: "1px solid #2a2d3a", borderBottom: "1px solid #2a2d3a" }}>
+                                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, marginBottom: 3 }}>📤 ผู้ส่ง / ผู้ติดต่อ</div>
+                                <div style={{ color: "#e2e8f0", fontWeight: 600 }}>{o.senderName || "—"}</div>
+                                {o.senderPhone && <div style={{ color: "#94a3b8", marginTop: 2 }}>📞 {o.senderPhone}</div>}
+                              </div>
+                              <div style={{ padding: "10px 16px", borderBottom: "1px solid #2a2d3a" }}>
+                                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, marginBottom: 3 }}>📬 ผู้รับปลายทาง</div>
+                                <div style={{ color: "#e2e8f0", fontWeight: 600 }}>{o.receiverName || "—"}</div>
+                                {o.receiverPhone && <div style={{ color: "#94a3b8", marginTop: 2 }}>📞 {o.receiverPhone}</div>}
+                              </div>
+                              {o.receiverAddress && (
+                                <div style={{ padding: "10px 16px", borderRight: "1px solid #2a2d3a", borderBottom: "1px solid #2a2d3a", gridColumn: "1/-1" }}>
+                                  <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, marginBottom: 3 }}>📍 ที่อยู่ผู้รับ</div>
+                                  <div style={{ color: "#8b8fa8" }}>{o.receiverAddress}</div>
+                                </div>
+                              )}
+                              <div style={{ padding: "10px 16px", borderRight: "1px solid #2a2d3a" }}>
+                                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, marginBottom: 3 }}>🛂 เลขพาสปอร์ต</div>
+                                <div style={{ color: "#fbbf24", fontFamily: "monospace", fontWeight: 700 }}>{passportNo}</div>
+                              </div>
+                              <div style={{ padding: "10px 16px" }}>
+                                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, marginBottom: 3 }}>🏛️ เลขศุลกากร</div>
+                                <div style={{ color: "#38bdf8", fontFamily: "monospace", fontWeight: 700 }}>{customsNo}</div>
+                              </div>
+                              {o.itemDesc && (
+                                <div style={{ padding: "10px 16px", gridColumn: "1/-1", borderTop: "1px solid #2a2d3a" }}>
+                                  <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, marginBottom: 3 }}>📋 รายการสินค้า</div>
+                                  <div style={{ color: "#8b8fa8" }}>{o.itemDesc}</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* ── Sub 6: สรุปบัญชีรายรับรายจ่าย ── */}
             {cargoSubTab === "ledger" && (() => {
