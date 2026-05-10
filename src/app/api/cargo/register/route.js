@@ -38,6 +38,16 @@ export async function POST(req) {
       },
     });
 
+    // Also create CargoCusDetail record linked to this customer
+    await prisma.cargoCusDetail.create({
+      data: {
+        name,
+        phone: phone || null,
+        email: email || null,
+        customerId: customer.id,
+      },
+    });
+
     return NextResponse.json({ ok: true, customer });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });

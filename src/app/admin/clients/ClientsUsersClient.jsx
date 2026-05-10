@@ -194,6 +194,18 @@ export default function ClientsUsersClient({ session }) {
   const [cargoSubTab, setCargoSubTab] = useState("add");
   const [cargoInlineEdits, setCargoInlineEdits] = useState({});
   const [savingCargoInline, setSavingCargoInline] = useState({});
+  const [shippingRates, setShippingRates] = useState(null);
+  const [savingRates, setSavingRates] = useState(false);
+  const [linkingCust, setLinkingCust] = useState(false);
+  const [cusDetails, setCusDetails] = useState([]);
+  const [cusDetailForm, setCusDetailForm] = useState({ name: "", phone: "", nationality: "TH", passportNo: "", passportExp: "", idCard: "", customsNo: "", notes: "", customerId: "", cargoOrderId: "" });
+  const [editCusDetailId, setEditCusDetailId] = useState(null);
+  const [cusDetailModal, setCusDetailModal] = useState(false);
+  const [savingCusDetail, setSavingCusDetail] = useState(false);
+  const [custPassportEdits, setCustPassportEdits] = useState({}); // { customerId: { passportNo, customsNo } }
+  const [savingCustPassport, setSavingCustPassport] = useState({});
+  const [custAddressEdits, setCustAddressEdits] = useState({}); // { customerId: address }
+  const [savingCustAddress, setSavingCustAddress] = useState({});
   const [cargoForm, setCargoForm] = useState({
     senderName: "", senderPhone: "", receiverName: "", receiverPhone: "",
     receiverAddress: "", direction: "TH_TO_KR", weightKg: "", sizeNote: "",
@@ -259,10 +271,19 @@ export default function ClientsUsersClient({ session }) {
     } catch { /* silent */ }
   }, []);
 
+  const loadCusDetails = useCallback(async () => {
+    try {
+      const d = await readJsonResponse(await fetch("/api/admin/cargo/cus-detail"));
+      setCusDetails(d.records || []);
+    } catch (err) {
+      console.error("[loadCusDetails]", err.message);
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
     setLoading(true);
-    Promise.allSettled([loadClients(), loadUsers(), loadInvoices(), loadReceipts(), loadServices(), loadExpenses(), loadCustomers(), loadCargo(), loadCargoCustomers()])
+    Promise.allSettled([loadClients(), loadUsers(), loadInvoices(), loadReceipts(), loadServices(), loadExpenses(), loadCustomers(), loadCargo(), loadCargoCustomers(), loadCusDetails()])
       .then((results) => {
         if (!active) return;
         const failed = results.filter((result) => result.status === "rejected");
@@ -278,7 +299,7 @@ export default function ClientsUsersClient({ session }) {
     return () => {
       active = false;
     };
-  }, [loadClients, loadUsers, loadInvoices, loadReceipts, loadServices, loadExpenses, loadCustomers, loadCargo, loadCargoCustomers]);
+  }, [loadClients, loadUsers, loadInvoices, loadReceipts, loadServices, loadExpenses, loadCustomers, loadCargo, loadCargoCustomers, loadCusDetails]);
 
   // ── Client Modal ──
   const openAddClient = () => {
@@ -1051,11 +1072,12 @@ export default function ClientsUsersClient({ session }) {
   };
 
   const printCargoInvoice = (o) => {
-    const dirLabel = o.direction === "TH_TO_KR" ? "🇹🇭 ไทย → เกาหลี 🇰🇷" : "🇰🇷 เกาหลี → ไทย 🇹🇭";
+    const dirLabel = o.direction === "TH_TO_KR" ? "🇹🇭 ไทย → เกาหลี 🇰🇷" : o.direction === "SEA_KR_TO_TH" ? "🇰🇷 เกาหลี → ไทย 🇹🇭 (ทางเรือ)" : "🇰🇷 เกาหลี → ไทย 🇹🇭";
     const sym = o.currency === "KRW" ? "₩" : o.currency === "USD" ? "$" : "฿";
     const fmt = n => Number(n || 0).toLocaleString("th-TH");
-    const profit = Number(o.income || 0) - Number(o.expense || 0);
+    const amount = Number(o.income || 0);
     const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) : "—";
+    const dueDate = o.createdAt ? new Date(new Date(o.createdAt).getTime() + 24*60*60*1000).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) : "—";
     const win = window.open("", "_blank");
     if (!win) { showToast("กรุณาอนุญาต popup", false); return; }
     win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
@@ -2474,7 +2496,7 @@ export default function ClientsUsersClient({ session }) {
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#facc15" }}>✈️ คาโก้ ส่งสินค้าไทย-เกาหลี ทางเครื่อง</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#facc15" }}>✈️🚢 คาโก้ ส่งสินค้าไทย-เกาหลี ทางเรือและทางเครื่อง</div>
                 <div style={{ fontSize: 12, color: "#8b8fa8", marginTop: 2 }}>항공 화물 서비스 · {cargoOrders.length} รายการ</div>
               </div>
             </div>
@@ -2486,9 +2508,11 @@ export default function ClientsUsersClient({ session }) {
                 { key: "status",        icon: "🔄", label: "อัพเดตสถานะ" },
                 { key: "weight",        icon: "⚖️", label: "น้ำหนัก & ค่าใช้จ่าย" },
                 { key: "payment",       icon: "💰", label: "ยืนยันชำระเงิน" },
-                { key: "shipping-cost", icon: "📤", label: "บันทึกค่าส่ง" },
+                { key: "shipping-cost", icon: "🖨️", label: "พิมพ์รายการส่งขนส่ง" },
                 { key: "ledger",        icon: "📊", label: "สรุปบัญชี" },
                 { key: "customers",     icon: "👤", label: "ลูกค้าลงทะเบียน" },
+                { key: "rates",         icon: "💲", label: "อัพเดตค่าขนส่ง" },
+                { key: "cust-info",     icon: "🪪", label: "ข้อมูลศุลกากร" },
               ].map(st => (
                 <button key={st.key} onClick={() => setCargoSubTab(st.key)} style={{ padding: "8px 14px", borderRadius: 8, border: cargoSubTab === st.key ? "none" : "1px solid #2a2d3a", background: cargoSubTab === st.key ? "#facc15" : "#1e2130", color: cargoSubTab === st.key ? "#000" : "#8b8fa8", fontWeight: cargoSubTab === st.key ? 800 : 500, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
                   {st.icon} {st.label}
@@ -2499,25 +2523,49 @@ export default function ClientsUsersClient({ session }) {
             {/* ── Shared Stats (all sub-tabs) ── */}
             {(() => {
               const _total = cargoOrders.length;
-              const _income = cargoOrders.reduce((s, o) => s + Number(o.income || 0), 0);
-              const _expense = cargoOrders.reduce((s, o) => s + Number(o.expense || 0), 0);
               const _done = cargoOrders.filter(o => o.status === "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว").length;
-              const _profit = _income - _expense;
+              const _thbIncome  = cargoOrders.filter(o => (o.currency || "THB") === "THB").reduce((s, o) => s + Number(o.income || 0), 0);
+              const _krwIncome  = cargoOrders.filter(o => o.currency === "KRW").reduce((s, o) => s + Number(o.income || 0), 0);
+              const _thbExpense = cargoOrders.filter(o => (o.currency || "THB") === "THB").reduce((s, o) => s + Number(o.expense || 0), 0);
+              const _krwExpense = cargoOrders.filter(o => o.currency === "KRW").reduce((s, o) => s + Number(o.expense || 0), 0);
+              const _thbProfit  = _thbIncome - _thbExpense;
+              const _krwProfit  = _krwIncome - _krwExpense;
+
+              const MoneyCell = ({ thb, krw, sign = false }) => (
+                <div style={{ marginTop: 3 }}>
+                  {(thb !== 0 || !krw) && <div style={{ fontWeight: 800, fontSize: 15 }}>{sign && thb >= 0 ? "+" : ""}{thb < 0 ? "-" : ""}฿{Math.abs(thb).toLocaleString()}</div>}
+                  {krw !== 0 && <div style={{ fontWeight: 800, fontSize: 15, marginTop: 2 }}>{sign && krw >= 0 ? "+" : ""}{krw < 0 ? "-" : ""}₩{Math.abs(krw).toLocaleString()}</div>}
+                  {thb === 0 && krw === 0 && <div style={{ fontWeight: 800, fontSize: 15 }}>฿0</div>}
+                </div>
+              );
+
               return (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 16 }}>
-                  {[
-                    { label: "รายการทั้งหมด", val: _total, color: "#facc15", icon: "📦" },
-                    { label: "จัดส่งสำเร็จ", val: _done, color: "#60a5fa", icon: "✅" },
-                    { label: "รายรับรวม", val: `฿${_income.toLocaleString()}`, color: "#4ade80", icon: "💰" },
-                    { label: "ต้นทุนรวม", val: `฿${_expense.toLocaleString()}`, color: "#f87171", icon: "📤" },
-                    { label: "กำไรสุทธิ", val: `${_profit >= 0 ? "+" : ""}฿${_profit.toLocaleString()}`, color: _profit >= 0 ? "#4ade80" : "#f87171", icon: "📈" },
-                  ].map((s, i) => (
-                    <div key={i} style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: "12px 14px" }}>
-                      <div style={{ fontSize: 18 }}>{s.icon}</div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: s.color, marginTop: 3 }}>{s.val}</div>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", marginTop: 2 }}>{s.label}</div>
-                    </div>
-                  ))}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10, marginBottom: 16 }}>
+                  <div style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 18 }}>📦</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: "#facc15", marginTop: 3 }}>{_total}</div>
+                    <div style={{ fontSize: 11, color: "#8b8fa8", marginTop: 2 }}>รายการทั้งหมด</div>
+                  </div>
+                  <div style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 18 }}>✅</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: "#60a5fa", marginTop: 3 }}>{_done}</div>
+                    <div style={{ fontSize: 11, color: "#8b8fa8", marginTop: 2 }}>จัดส่งสำเร็จ</div>
+                  </div>
+                  <div style={{ background: "#1a1d27", border: "1px solid #166534", borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 18 }}>💰</div>
+                    <div style={{ color: "#4ade80" }}><MoneyCell thb={_thbIncome} krw={_krwIncome} /></div>
+                    <div style={{ fontSize: 11, color: "#8b8fa8", marginTop: 2 }}>รายรับรวม</div>
+                  </div>
+                  <div style={{ background: "#1a1d27", border: "1px solid #7f1d1d", borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 18 }}>📤</div>
+                    <div style={{ color: "#f87171" }}><MoneyCell thb={_thbExpense} krw={_krwExpense} /></div>
+                    <div style={{ fontSize: 11, color: "#8b8fa8", marginTop: 2 }}>ต้นทุนรวม</div>
+                  </div>
+                  <div style={{ background: "#1a1d27", border: `1px solid ${_thbProfit >= 0 && _krwProfit >= 0 ? "#166534" : "#7f1d1d"}`, borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 18 }}>📈</div>
+                    <div style={{ color: _thbProfit >= 0 ? "#4ade80" : "#f87171" }}><MoneyCell thb={_thbProfit} krw={_krwProfit} sign /></div>
+                    <div style={{ fontSize: 11, color: "#8b8fa8", marginTop: 2 }}>กำไรสุทธิ</div>
+                  </div>
                 </div>
               );
             })()}
@@ -2549,7 +2597,7 @@ export default function ClientsUsersClient({ session }) {
                           <td style={{ padding: "8px 10px", color: "#facc15", fontFamily: "monospace", fontSize: 11 }}>{o.number}</td>
                           <td style={{ padding: "8px 10px", color: "#e2e8f0" }}>{o.senderName}<br/><span style={{ fontSize: 11, color: "#64748b" }}>{o.senderPhone || ""}</span></td>
                           <td style={{ padding: "8px 10px", color: "#e2e8f0" }}>{o.receiverName}<br/><span style={{ fontSize: 11, color: "#64748b" }}>{o.receiverPhone || ""}</span></td>
-                          <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 7px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: o.direction === "TH_TO_KR" ? "#1a1a0a" : "#0a1a2a", color: o.direction === "TH_TO_KR" ? "#facc15" : "#60a5fa" }}>{o.direction === "TH_TO_KR" ? "🇹🇭→🇰🇷" : "🇰🇷→🇹🇭"}</span></td>
+                          <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 7px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: o.direction === "TH_TO_KR" ? "#1a1a0a" : o.direction === "SEA_KR_TO_TH" ? "#0a1a2e" : "#0a1a2a", color: o.direction === "TH_TO_KR" ? "#facc15" : o.direction === "SEA_KR_TO_TH" ? "#38bdf8" : "#60a5fa" }}>{o.direction === "TH_TO_KR" ? "✈️🇹🇭→🇰🇷" : o.direction === "SEA_KR_TO_TH" ? "🚢🇰🇷→🇹🇭" : "✈️🇰🇷→🇹🇭"}</span></td>
                           <td style={{ padding: "8px 10px", color: "#e2e8f0" }}>{o.weightKg ? `${o.weightKg} kg` : "—"}</td>
                           <td style={{ padding: "8px 10px", color: "#4ade80", fontWeight: 700 }}>{Number(o.income || 0).toLocaleString()} {o.currency}</td>
                           <td style={{ padding: "8px 10px", color: "#f87171" }}>{Number(o.expense || 0).toLocaleString()} {o.currency}</td>
@@ -2593,7 +2641,7 @@ export default function ClientsUsersClient({ session }) {
                         <span style={{ color: "#64748b" }}>→</span>
                         <select value={curStatus} style={{ ...S.input, maxWidth: 300, borderColor: dirty ? "#facc15" : "#2a2d3a" }}
                           onChange={e => setCargoInlineEdits(prev => ({ ...prev, [o.id]: { ...(prev[o.id] || {}), status: e.target.value } }))}>
-                          {["รับพัสดุเข้าคลังแล้ว", "กำลังรีแพ็คพัสดุ", "พัสดุกำลังเตรียมขึ้นเครื่อง", "พัสดุกำลังดำเนินการศุลกากร", "พัสดุกำลังจัดส่งไปยังปลายทาง", "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว", "มีปัญหา"].map(s => <option key={s} value={s}>{s}</option>)}
+                          {["รอดำเนินการ", "รับพัสดุเข้าคลังแล้ว", "กำลังรีแพ็คพัสดุ", "พัสดุกำลังเตรียมขึ้นเครื่อง", "พัสดุกำลังดำเนินการศุลกากร", "พัสดุกำลังจัดส่งไปยังปลายทาง", "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว", "มีปัญหา"].map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         <button disabled={!dirty || savingCargoInline[o.id]} style={{ ...S.btn(dirty ? "#1a1a0a" : "#1e2130", dirty ? "#facc15" : "#64748b"), padding: "8px 14px", fontWeight: 700, border: dirty ? "1px solid #ca8a04" : "none" }}
                           onClick={async () => {
@@ -2852,7 +2900,220 @@ export default function ClientsUsersClient({ session }) {
             })()}
 
             {/* ── CUSTOMERS sub-tab ── */}
+            {/* ── RATES sub-tab ── */}
+            {cargoSubTab === "rates" && (() => {
+              const loadRates = async () => {
+                const d = await fetch("/api/admin/shipping-rates").then(r => r.json());
+                setShippingRates(d);
+              };
+              if (!shippingRates) { loadRates(); return <div style={{ padding: 32, textAlign: "center", color: "#8b8fa8" }}>⏳ กำลังโหลด...</div>; }
+
+              const mkEmpty = () => Array.from({ length: 20 }, (_, i) => ({ kg: i + 1, price: null }));
+
+              const RateTable = ({ routeKey, title, currencies, allowDisplayToggle }) => {
+                const route = shippingRates[routeKey] || { displayCurrency: currencies[0], rates: {} };
+                const displayCur = route.displayCurrency || currencies[0];
+                const symMap = { KRW: "₩", THB: "฿" };
+                return (
+                  <div style={{ background: "#1a1d27", borderRadius: 10, padding: "16px", border: "1px solid #2a2d3a", marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0" }}>{title}</div>
+                      {allowDisplayToggle && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, color: "#8b8fa8" }}>แสดงลูกค้าเป็น:</span>
+                          {currencies.map(cur => (
+                            <button key={cur} type="button"
+                              onClick={() => setShippingRates(p => ({ ...p, [routeKey]: { ...route, displayCurrency: cur } }))}
+                              style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${displayCur === cur ? "#facc15" : "#2a2d3a"}`, background: displayCur === cur ? "#1a1a0a" : "#1e2130", color: displayCur === cur ? "#facc15" : "#64748b", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                              {symMap[cur]} {cur}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {currencies.map(cur => {
+                      const rateArr = route.rates?.[cur] || mkEmpty();
+                      const sym = symMap[cur];
+                      const isDisplay = displayCur === cur;
+                      return (
+                        <div key={cur} style={{ marginBottom: 12 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: isDisplay ? "#facc15" : "#64748b", marginBottom: 6 }}>
+                            {sym} {cur} {isDisplay ? "← แสดงลูกค้า" : ""}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 }}>
+                            {rateArr.map((row, idx) => (
+                              <div key={row.kg} style={{ background: "#1e2130", borderRadius: 6, padding: "7px 9px", border: `1px solid ${isDisplay ? "#facc1533" : "#2a2d3a"}` }}>
+                                <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>{row.kg} กก.</div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                  <span style={{ fontSize: 10, color: "#64748b" }}>{sym}</span>
+                                  <input type="number" min="0" step="1" placeholder="—"
+                                    value={row.price ?? ""}
+                                    onChange={e => {
+                                      const newArr = [...rateArr];
+                                      newArr[idx] = { ...newArr[idx], price: e.target.value === "" ? null : Number(e.target.value) };
+                                      setShippingRates(p => ({
+                                        ...p,
+                                        [routeKey]: { ...route, rates: { ...route.rates, [cur]: newArr } }
+                                      }));
+                                    }}
+                                    style={{ ...S.input, padding: "4px 6px", fontSize: 12, fontWeight: 700, color: row.price ? "#4ade80" : "#64748b" }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              };
+
+              return (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>💲 อัพเดตค่าขนส่งทุกเส้นทาง</div>
+                    <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 16px", fontWeight: 700, fontSize: 12 }} onClick={loadRates}>🔄 รีเฟรช</button>
+                  </div>
+
+                  <RateTable routeKey="air_th_kr" title="✈️ ไทย → เกาหลี 🇹🇭→🇰🇷" currencies={["KRW","THB"]} allowDisplayToggle={true} />
+                  <RateTable routeKey="air_kr_th" title="✈️ เกาหลี → ไทย 🇰🇷→🇹🇭" currencies={["KRW","THB"]} allowDisplayToggle={true} />
+                  <RateTable routeKey="sea_kr_th" title="🚢 เรือ เกาหลี → ไทย 🇰🇷→🇹🇭" currencies={["KRW","THB"]} allowDisplayToggle={true} />
+
+                  <button disabled={savingRates}
+                    style={{ ...S.btn("#0f2318", "#4ade80"), border: "1px solid #166534", padding: "11px 28px", fontWeight: 800, fontSize: 14 }}
+                    onClick={async () => {
+                      setSavingRates(true);
+                      try {
+                        await fetch("/api/admin/shipping-rates", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(shippingRates) });
+                        showToast("บันทึกค่าขนส่งแล้ว ✅");
+                      } catch { showToast("เกิดข้อผิดพลาด", false); }
+                      finally { setSavingRates(false); }
+                    }}>
+                    {savingRates ? "⏳ กำลังบันทึก..." : "💾 บันทึกค่าขนส่งทั้งหมด"}
+                  </button>
+                  <span style={{ fontSize: 12, color: "#4a5070", marginLeft: 12 }}>แสดงในหน้า /cargo/track ทันที</span>
+                </>
+              );
+            })()}
+
+            {/* ── CUST-INFO sub-tab (CargoCusDetail) ── */}
+            {cargoSubTab === "cust-info" && (() => {
+              if (cusDetails.length === 0 && cargoOrders.length > 0) loadCusDetails();
+              const headers = ["ชื่อ", "เบอร์", "สัญชาติ", "เลขพาสปอร์ต", "หมดอายุ", "เลขบัตร/ทะเบียน", "เลขศุลกากร", "ลูกค้าลงทะเบียน", "ผูก CargoOrder", "หมายเหตุ", "บันทึกเมื่อ", ""];
+              const openAdd = () => { setEditCusDetailId(null); setCusDetailForm({ name: "", phone: "", nationality: "TH", passportNo: "", passportExp: "", idCard: "", customsNo: "", notes: "", customerId: "", cargoOrderId: "" }); setCusDetailModal(true); };
+              const openEdit = r => { setEditCusDetailId(r.id); setCusDetailForm({ name: r.name, phone: r.phone || "", nationality: r.nationality || "TH", passportNo: r.passportNo || "", passportExp: r.passportExp ? r.passportExp.slice(0, 10) : "", idCard: r.idCard || "", customsNo: r.customsNo || "", notes: r.notes || "", customerId: r.customerId || "", cargoOrderId: r.cargoOrderId || "" }); setCusDetailModal(true); };
+              return (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>🪪 ข้อมูลศุลกากร (CargoCusDetail)</div>
+                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{cusDetails.length} รายการ</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button style={{ ...S.btn("#1a2a1a", "#4ade80"), border: "1px solid #166534", padding: "8px 14px", fontWeight: 700, fontSize: 12 }} onClick={openAdd}>+ เพิ่มข้อมูลศุลกากร</button>
+                      <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 14px", fontWeight: 700, fontSize: 12 }} onClick={loadCusDetails}>🔄 รีเฟรช</button>
+                    </div>
+                  </div>
+                  {cusDetails.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: "center", color: "#64748b", background: "#1a1d27", borderRadius: 12, border: "2px dashed #2a2d3a" }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>🪪</div>
+                      <div>ยังไม่มีข้อมูลศุลกากร — กด "+ เพิ่มข้อมูลศุลกากร" เพื่อบันทึก</div>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                        <thead>
+                          <tr style={{ background: "#1a1d27" }}>
+                            {headers.map((h, i) => <th key={i} style={{ padding: "8px 10px", textAlign: "left", color: "#8b8fa8", fontWeight: 700, fontSize: 10, whiteSpace: "nowrap", borderBottom: "2px solid #2a2d3a", borderRight: "1px solid #2a2d3a" }}>{h}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cusDetails.map((r, i) => (
+                            <tr key={r.id} style={{ borderBottom: "1px solid #2a2d3a", background: i % 2 === 0 ? "#1a1d27" : "#1e2130" }}>
+                              <td style={{ padding: "7px 10px", color: "#e2e8f0", fontWeight: 700, whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.name}</td>
+                              <td style={{ padding: "7px 10px", color: "#60a5fa", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.phone || "—"}</td>
+                              <td style={{ padding: "7px 10px", color: "#8b8fa8", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.nationality || "—"}</td>
+                              <td style={{ padding: "7px 10px", color: "#fbbf24", fontFamily: "monospace", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.passportNo || "—"}</td>
+                              <td style={{ padding: "7px 10px", color: r.passportExp && new Date(r.passportExp) < new Date() ? "#f87171" : "#8b8fa8", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.passportExp ? new Date(r.passportExp).toLocaleDateString("th-TH") : "—"}</td>
+                              <td style={{ padding: "7px 10px", color: "#a78bfa", fontFamily: "monospace", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.idCard || "—"}</td>
+                              <td style={{ padding: "7px 10px", color: "#38bdf8", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.customsNo || "—"}</td>
+                              <td style={{ padding: "7px 10px", whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.customer ? <span style={{ color: "#4ade80", fontWeight: 700 }}>✅ {r.customer.name}</span> : <span style={{ color: "#4a5070" }}>—</span>}</td>
+                              <td style={{ padding: "7px 10px", color: "#facc15", fontFamily: "monospace", fontSize: 10, whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{r.cargoOrder?.number || "—"}</td>
+                              <td style={{ padding: "7px 10px", color: "#64748b", maxWidth: 140, borderRight: "1px solid #2a2d3a" }}>{r.notes || "—"}</td>
+                              <td style={{ padding: "7px 10px", color: "#4a5070", fontSize: 10, whiteSpace: "nowrap", borderRight: "1px solid #2a2d3a" }}>{new Date(r.createdAt).toLocaleDateString("th-TH")}</td>
+                              <td style={{ padding: "5px 8px", whiteSpace: "nowrap" }}>
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  <button style={S.btn("#1e2d3d", "#60a5fa")} onClick={() => openEdit(r)}>✏️</button>
+                                  <button style={S.btn("#2a1f1f", "#f87171")} onClick={async () => { if (!confirm("ลบรายการนี้?")) return; await fetch(`/api/admin/cargo/cus-detail?id=${r.id}`, { method: "DELETE" }); showToast("ลบแล้ว"); loadCusDetails(); }}>🗑️</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Modal เพิ่ม/แก้ไข */}
+                  {cusDetailModal && (
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                      <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 500, border: "1px solid #2a2d3a", maxHeight: "90vh", overflowY: "auto" }}>
+                        <h5 style={{ margin: "0 0 20px", color: "#fbbf24" }}>{editCusDetailId ? "✏️ แก้ไขข้อมูลศุลกากร" : "🪪 เพิ่มข้อมูลศุลกากร"}</h5>
+                        <div style={{ display: "grid", gap: 12 }}>
+                          {[["ชื่อ *", "name", "text"], ["เบอร์โทร", "phone", "tel"], ["สัญชาติ (TH/KR)", "nationality", "text"], ["เลขพาสปอร์ต", "passportNo", "text"], ["วันหมดอายุพาสปอร์ต", "passportExp", "date"], ["เลขบัตร/ทะเบียน", "idCard", "text"], ["เลขศุลกากร", "customsNo", "text"]].map(([label, key, type]) => (
+                            <div key={key}>
+                              <label style={S.label}>{label}</label>
+                              <input style={S.input} type={type} value={cusDetailForm[key]} onChange={e => setCusDetailForm(p => ({ ...p, [key]: e.target.value }))} />
+                            </div>
+                          ))}
+                          <div>
+                            <label style={S.label}>ผูก CargoOrder</label>
+                            <select style={S.input} value={cusDetailForm.cargoOrderId} onChange={e => setCusDetailForm(p => ({ ...p, cargoOrderId: e.target.value }))}>
+                              <option value="">— ไม่ผูก —</option>
+                              {cargoOrders.map(o => <option key={o.id} value={o.id}>{o.number} · {o.receiverName}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={S.label}>ผูกลูกค้าลงทะเบียน</label>
+                            <select style={S.input} value={cusDetailForm.customerId} onChange={e => setCusDetailForm(p => ({ ...p, customerId: e.target.value }))}>
+                              <option value="">— ไม่ผูก —</option>
+                              {cargoCustomers.map(c => <option key={c.id} value={c.id}>{c.name} {c.phone ? `(${c.phone})` : ""}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={S.label}>หมายเหตุ</label>
+                            <textarea style={{ ...S.input, height: 70, resize: "vertical" }} value={cusDetailForm.notes} onChange={e => setCusDetailForm(p => ({ ...p, notes: e.target.value }))} />
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+                          <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setCusDetailModal(false)}>ยกเลิก</button>
+                          <button disabled={savingCusDetail} style={S.btn("#1a2a1a", "#4ade80")} onClick={async () => {
+                            if (!cusDetailForm.name.trim()) { showToast("กรุณากรอกชื่อ", false); return; }
+                            setSavingCusDetail(true);
+                            try {
+                              const method = editCusDetailId ? "PUT" : "POST";
+                              const body = { ...cusDetailForm, ...(editCusDetailId && { id: editCusDetailId }) };
+                              await readJsonResponse(await fetch("/api/admin/cargo/cus-detail", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }));
+                              showToast(editCusDetailId ? "แก้ไขแล้ว ✅" : "เพิ่มแล้ว ✅");
+                              setCusDetailModal(false);
+                              loadCusDetails();
+                            } catch (err) { showToast("เกิดข้อผิดพลาด: " + err.message, false); }
+                            finally { setSavingCusDetail(false); }
+                          }}>
+                            {savingCusDetail ? "⏳ กำลังบันทึก..." : "💾 บันทึก"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
             {cargoSubTab === "customers" && (() => {
+              // Load cusDetails if not yet loaded
+              if (cusDetails.length === 0) loadCusDetails();
               return (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -2860,7 +3121,7 @@ export default function ClientsUsersClient({ session }) {
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>👤 ลูกค้าลงทะเบียน</div>
                       <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>ผู้ใช้ที่ลงทะเบียนผ่านหน้า cargo/track · 총 {cargoCustomers.length} คน</div>
                     </div>
-                    <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 14px", fontWeight: 700, fontSize: 12 }} onClick={loadCargoCustomers}>🔄 รีเฟรช</button>
+                    <button style={{ ...S.btn("#1a1a0a", "#facc15"), border: "1px solid #ca8a04", padding: "8px 14px", fontWeight: 700, fontSize: 12 }} onClick={() => { loadCargoCustomers(); loadCusDetails(); }}>🔄 รีเฟรช</button>
                   </div>
 
                   {cargoCustomers.length === 0 ? (
@@ -2870,32 +3131,132 @@ export default function ClientsUsersClient({ session }) {
                     </div>
                   ) : (
                     <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed" }}>
+                        <colgroup>
+                          <col style={{ width: 32 }} />
+                          <col style={{ width: 130 }} />
+                          <col style={{ width: 120 }} />
+                          <col style={{ width: 170 }} />
+                          <col style={{ width: 140 }} />
+                          <col style={{ width: 140 }} />
+                          <col style={{ width: 220 }} />
+                          <col style={{ width: 130 }} />
+                          <col style={{ width: 90 }} />
+                        </colgroup>
                         <thead>
                           <tr style={{ background: "#1e2130" }}>
-                            {["#", "ชื่อ", "เบอร์โทร", "อีเมล", "วันที่ลงทะเบียน", ""].map((h, i) => (
-                              <th key={i} style={{ padding: "9px 10px", textAlign: "left", color: "#8b8fa8", fontWeight: 700, fontSize: 11, borderBottom: "1px solid #2a2d3a", whiteSpace: "nowrap" }}>{h}</th>
+                            {["#", "ชื่อ", "เบอร์โทร", "อีเมล", "เลขพาสปอร์ต", "เลขศุลกากร", "ที่อยู่", "วันที่", ""].map((h, i) => (
+                              <th key={i} style={{ padding: "9px 10px", textAlign: "left", color: "#8b8fa8", fontWeight: 700, fontSize: 11, borderBottom: "1px solid #2a2d3a", overflow: "hidden" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {cargoCustomers.map((c, i) => (
-                            <tr key={c.id} style={{ borderBottom: "1px solid #2a2d3a", background: i % 2 === 0 ? "#1a1d27" : "#1e2130" }}>
-                              <td style={{ padding: "9px 10px", color: "#64748b" }}>{i + 1}</td>
-                              <td style={{ padding: "9px 10px", color: "#e2e8f0", fontWeight: 600 }}>{c.name}</td>
-                              <td style={{ padding: "9px 10px", color: "#94a3b8" }}>{c.phone || <span style={{ color: "#4a5070" }}>—</span>}</td>
-                              <td style={{ padding: "9px 10px", color: "#94a3b8" }}>{c.email || <span style={{ color: "#4a5070" }}>—</span>}</td>
-                              <td style={{ padding: "9px 10px", color: "#64748b", fontSize: 11 }}>{new Date(c.createdAt).toLocaleString("th-TH", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
-                              <td style={{ padding: "9px 10px" }}>
-                                <button onClick={async () => {
-                                  if (!confirm(`ลบ ${c.name}?`)) return;
-                                  const res = await fetch(`/api/admin/cargo/customers?id=${c.id}`, { method: "DELETE" });
-                                  if (res.ok) { showToast("ลบแล้ว"); loadCargoCustomers(); }
-                                  else showToast("ลบไม่ได้", false);
-                                }} style={{ ...S.btn("#2a1f1f", "#f87171"), fontSize: 11, padding: "4px 10px" }}>🗑️ ลบ</button>
-                              </td>
-                            </tr>
-                          ))}
+                          {cargoCustomers.map((c, i) => {
+                            // Find linked CargoCusDetail for this customer
+                            const detail = cusDetails.find(d => d.customerId === c.id);
+                            const edit = custPassportEdits[c.id] || {};
+                            const passportVal = edit.passportNo !== undefined ? edit.passportNo : (detail?.passportNo || "");
+                            const customsVal = edit.customsNo !== undefined ? edit.customsNo : (detail?.customsNo || "");
+                            const isDirty = edit.passportNo !== undefined || edit.customsNo !== undefined;
+                            const isSaving = savingCustPassport[c.id];
+
+                            const savePassport = async () => {
+                              setSavingCustPassport(p => ({ ...p, [c.id]: true }));
+                              const payload = { name: c.name, phone: c.phone, email: c.email, address: c.address, customerId: c.id, passportNo: passportVal || null, customsNo: customsVal || null };
+                              try {
+                                if (detail) {
+                                  await fetch("/api/admin/cargo/cus-detail", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: detail.id, ...payload }) });
+                                } else {
+                                  await fetch("/api/admin/cargo/cus-detail", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                                }
+                                showToast("บันทึกแล้ว ✅");
+                                setCustPassportEdits(p => { const n = { ...p }; delete n[c.id]; return n; });
+                                loadCusDetails();
+                              } catch { showToast("เกิดข้อผิดพลาด", false); }
+                              finally { setSavingCustPassport(p => ({ ...p, [c.id]: false })); }
+                            };
+
+                            return (
+                              <tr key={c.id} style={{ borderBottom: "1px solid #2a2d3a", background: i % 2 === 0 ? "#1a1d27" : "#1e2130" }}>
+                                <td style={{ padding: "9px 10px", color: "#64748b" }}>{i + 1}</td>
+                                <td style={{ padding: "9px 10px", color: "#e2e8f0", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</td>
+                                <td style={{ padding: "9px 10px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.phone || <span style={{ color: "#4a5070" }}>—</span>}</td>
+                                <td style={{ padding: "9px 10px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11 }}>{c.email || <span style={{ color: "#4a5070" }}>—</span>}</td>
+                                {/* Passport inline edit */}
+                                <td style={{ padding: "6px 8px", borderLeft: "1px solid #2a2d3a" }}>
+                                  <input
+                                    style={{ ...S.input, padding: "5px 8px", fontSize: 11, fontFamily: "monospace", color: "#fbbf24", borderColor: isDirty && edit.passportNo !== undefined ? "#fbbf2466" : "#2a2d3a", width: "100%", boxSizing: "border-box" }}
+                                    placeholder="AA0000000"
+                                    value={passportVal}
+                                    onChange={e => setCustPassportEdits(p => ({ ...p, [c.id]: { ...(p[c.id] || {}), passportNo: e.target.value } }))}
+                                  />
+                                </td>
+                                {/* Customs No inline edit */}
+                                <td style={{ padding: "6px 8px", borderLeft: "1px solid #2a2d3a" }}>
+                                  <input
+                                    style={{ ...S.input, padding: "5px 8px", fontSize: 11, fontFamily: "monospace", color: "#38bdf8", borderColor: isDirty && edit.customsNo !== undefined ? "#38bdf866" : "#2a2d3a", width: "100%", boxSizing: "border-box" }}
+                                    placeholder="เลขศุลกากร"
+                                    value={customsVal}
+                                    onChange={e => setCustPassportEdits(p => ({ ...p, [c.id]: { ...(p[c.id] || {}), customsNo: e.target.value } }))}
+                                  />
+                                </td>
+                                {/* Address inline edit */}
+                                {(() => {
+                                  const addrVal = custAddressEdits[c.id] !== undefined ? custAddressEdits[c.id] : (c.address || "");
+                                  const addrDirty = custAddressEdits[c.id] !== undefined && custAddressEdits[c.id] !== (c.address || "");
+                                  const addrSaving = savingCustAddress[c.id];
+                                  return (
+                                    <td style={{ padding: "6px 8px", borderLeft: "1px solid #2a2d3a" }}>
+                                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                        <input
+                                          style={{ ...S.input, padding: "5px 8px", fontSize: 11, color: "#8b8fa8", borderColor: addrDirty ? "#60a5fa66" : "#2a2d3a", width: "100%", boxSizing: "border-box" }}
+                                          placeholder="บ้านเลขที่ ถนน เมือง..."
+                                          value={addrVal}
+                                          onChange={e => setCustAddressEdits(p => ({ ...p, [c.id]: e.target.value }))}
+                                        />
+                                        {addrDirty && (
+                                          <button disabled={addrSaving}
+                                            style={{ ...S.btn("#0f1830", "#60a5fa"), padding: "3px 10px", fontSize: 10, border: "1px solid #1e3a5f", width: "100%" }}
+                                            onClick={async () => {
+                                              setSavingCustAddress(p => ({ ...p, [c.id]: true }));
+                                              try {
+                                                await fetch("/api/admin/cargo/customers", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: c.id, address: addrVal }) });
+                                                // Sync address to CargoCusDetail
+                                                const det = cusDetails.find(d => d.customerId === c.id);
+                                                if (det) await fetch("/api/admin/cargo/cus-detail", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: det.id, name: c.name, phone: c.phone, email: c.email, address: addrVal, customerId: c.id }) });
+                                                else await fetch("/api/admin/cargo/cus-detail", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: c.name, phone: c.phone, email: c.email, address: addrVal, customerId: c.id }) });
+                                                showToast("บันทึกที่อยู่แล้ว ✅");
+                                                setCustAddressEdits(p => { const n = { ...p }; delete n[c.id]; return n; });
+                                                loadCargoCustomers(); loadCusDetails();
+                                              } catch { showToast("เกิดข้อผิดพลาด", false); }
+                                              finally { setSavingCustAddress(p => ({ ...p, [c.id]: false })); }
+                                            }}>
+                                            {addrSaving ? "⏳" : "💾"}
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
+                                  );
+                                })()}
+                                <td style={{ padding: "9px 10px", color: "#64748b", fontSize: 10, overflow: "hidden" }}>{new Date(c.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })}</td>
+                                <td style={{ padding: "6px 8px" }}>
+                                  <div style={{ display: "flex", gap: 4 }}>
+                                    {isDirty && (
+                                      <button disabled={isSaving} onClick={savePassport} style={{ ...S.btn("#0f2318", "#4ade80"), padding: "4px 10px", fontSize: 11, border: "1px solid #166534" }}>
+                                        {isSaving ? "⏳" : "💾 บันทึก"}
+                                      </button>
+                                    )}
+                                    <button onClick={async () => {
+                                      if (!confirm(`ลบ ${c.name}?`)) return;
+                                      const res = await fetch(`/api/admin/cargo/customers?id=${c.id}`, { method: "DELETE" });
+                                      if (res.ok) { showToast("ลบแล้ว"); loadCargoCustomers(); }
+                                      else showToast("ลบไม่ได้", false);
+                                    }} style={{ ...S.btn("#2a1f1f", "#f87171"), fontSize: 11, padding: "4px 10px" }}>🗑️</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

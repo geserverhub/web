@@ -200,8 +200,10 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  client   Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  receipts Receipt[]
+  client          Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  receipts        Receipt[]
+  cargoOrders     CargoOrder[]
+  cargoCusDetails CargoCusDetail[]
 
   @@index([clientId])
   @@index([name])
@@ -328,12 +330,50 @@ model CargoOrder {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  statusLogs   CargoStatusLog[]
-  transactions CargoTransaction[]
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  statusLogs      CargoStatusLog[]
+  transactions    CargoTransaction[]
+  cusDetails      CargoCusDetail[]
 
   @@index([status])
   @@index([direction])
   @@index([createdAt])
+  @@index([customerId])
+}
+
+// ── Cargo Customer Detail (ข้อมูลศุลกากร) ────────────────────────
+model CargoCusDetail {
+  id           String    @id @default(cuid())
+
+  // ข้อมูลตัวตน
+  name         String
+  phone        String?
+  email        String?
+  address      String?   @db.Text
+  nationality  String?   // สัญชาติ เช่น TH, KR
+
+  // ข้อมูลศุลกากร
+  passportNo   String?   // เลขพาสปอร์ต
+  passportExp  DateTime? // วันหมดอายุพาสปอร์ต
+  idCard       String?   // เลขบัตรประชาชน / เลขทะเบียนเกาหลี
+  customsNo    String?   // เลขศุลกากร / Personal Clearance Code
+
+  // ความสัมพันธ์
+  customerId   String?
+  customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cargoOrderId String?
+  cargoOrder   CargoOrder? @relation(fields: [cargoOrderId], references: [id], onDelete: SetNull)
+
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([customerId])
+  @@index([cargoOrderId])
+  @@index([passportNo])
+  @@index([idCard])
 }
 
 // ── Cargo Status History ─────────────────────────────────────────

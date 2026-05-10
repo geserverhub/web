@@ -22,6 +22,22 @@ export async function GET(req) {
   }
 }
 
+// PATCH /api/admin/cargo/customers — update address
+export async function PATCH(req) {
+  const session = await auth();
+  if (!session?.user || !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const { id, address } = await req.json();
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    await prisma.customer.update({ where: { id }, data: { address: address || null } });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 // DELETE /api/admin/cargo/customers?id=xxx
 export async function DELETE(req) {
   const session = await auth();

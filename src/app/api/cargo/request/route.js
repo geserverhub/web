@@ -19,7 +19,8 @@ export async function POST(req) {
 
     const senderName = (body.senderName || "").trim();
     const receiverName = (body.receiverName || "").trim();
-    const direction = body.direction === "KR_TO_TH" ? "KR_TO_TH" : "TH_TO_KR";
+    const VALID_DIRS = ["TH_TO_KR", "KR_TO_TH", "SEA_KR_TO_TH"];
+    const direction = VALID_DIRS.includes(body.direction) ? body.direction : "TH_TO_KR";
 
     if (!senderName || !receiverName) {
       return NextResponse.json({ error: "กรุณากรอกชื่อผู้ส่งและผู้รับ" }, { status: 400 });
@@ -35,13 +36,23 @@ export async function POST(req) {
       attempts++;
     }
 
+    // Auto-link to registered customer by receiver phone
+    const receiverPhone = (body.receiverPhone || "").trim() || null;
+    let customerId = null;
+    if (receiverPhone) {
+      const normalised = receiverPhone.replace(/[-\s]/g, "");
+      const allCustomers = await prisma.customer.findMany({ select: { id: true, phone: true } });
+      const matched = allCustomers.find(c => c.phone && c.phone.replace(/[-\s]/g, "") === normalised);
+      if (matched) customerId = matched.id;
+    }
+
     const order = await prisma.cargoOrder.create({
       data: {
         number,
         senderName,
         senderPhone: (body.senderPhone || "").trim() || null,
         receiverName,
-        receiverPhone: (body.receiverPhone || "").trim() || null,
+        receiverPhone,
         receiverAddress: (body.receiverAddress || "").trim() || null,
         direction,
         itemDesc: (body.itemDesc || "").trim() || null,
@@ -52,6 +63,7 @@ export async function POST(req) {
         income: 0,
         expense: 0,
         currency: "THB",
+        ...(customerId && { customerId }),
       },
     });
 
