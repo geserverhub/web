@@ -891,88 +891,86 @@ export default function CargoTrackPage() {
           ) : shipmentsList.length === 0 ? (
             <div style={{ textAlign: "center", padding: 32, color: "#4a5070", fontSize: 12 }}>ยังไม่มีรายการส่งสินค้า</div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {shipmentsList.map((shipment, idx) => {
-                const STATUS_ANIM = {
-                  "รอดำเนินการ":                              { icon: "⏳", cls: "anim-bounce",  color: "#a3e635", label: "รอดำเนินการ" },
-                  "รับพัสดุเข้าคลังแล้ว":                    { icon: "📦", cls: "anim-shake",   color: "#facc15", label: "รับพัสดุเข้าคลัง" },
-                  "กำลังรีแพ็คพัสดุ":                         { icon: "🔄", cls: "anim-spin",    color: "#fb923c", label: "กำลังรีแพ็ค" },
-                  "พัสดุกำลังเตรียมขึ้นเครื่อง":              { icon: "🛫", cls: "anim-flyLR",   color: "#a78bfa", label: "เตรียมขึ้นเครื่อง" },
-                  "พัสดุกำลังดำเนินการศุลกากร":               { icon: "🏛️", cls: "anim-pulse",   color: "#38bdf8", label: "ดำเนินการศุลกากร" },
-                  "พัสดุกำลังจัดส่งไปยังปลายทาง":            { icon: "✈️", cls: "anim-flyLR",   color: "#60a5fa", label: "อยู่ระหว่างจัดส่ง" },
-                  "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว": { icon: "✅", cls: "anim-pop",     color: "#4ade80", label: "จัดส่งสำเร็จ!" },
-                  "มีปัญหา":                                   { icon: "⚠️", cls: "anim-shake",   color: "#f87171", label: "มีปัญหา" },
-                };
-                const anim = STATUS_ANIM[shipment.status] || { icon: "📦", cls: "", color: "#8b8fa8", label: shipment.status };
+                const STEPS = [
+                  { key: "รอดำเนินการ",                              icon: "⏳", label: "รอดำเนินการ",       cls: "anim-bounce", color: "#a3e635" },
+                  { key: "รับพัสดุเข้าคลังแล้ว",                    icon: "📦", label: "รับพัสดุ",           cls: "anim-shake",  color: "#facc15" },
+                  { key: "กำลังรีแพ็คพัสดุ",                         icon: "🔄", label: "รีแพ็ค",             cls: "anim-spin",   color: "#fb923c" },
+                  { key: "พัสดุกำลังเตรียมขึ้นเครื่อง",              icon: "🛫", label: "เตรียมขึ้นเครื่อง", cls: "anim-flyLR",  color: "#a78bfa" },
+                  { key: "พัสดุกำลังดำเนินการศุลกากร",               icon: "🏛️", label: "ศุลกากร",            cls: "anim-pulse",  color: "#38bdf8" },
+                  { key: "พัสดุกำลังจัดส่งไปยังปลายทาง",            icon: "✈️", label: "กำลังจัดส่ง",        cls: "anim-flyLR",  color: "#60a5fa" },
+                  { key: "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว", icon: "✅", label: "ถึงแล้ว!",            cls: "anim-pop",    color: "#4ade80" },
+                ];
+                const curIdx = shipment.status === "มีปัญหา" ? -1 : STEPS.findIndex(s => s.key === shipment.status);
+                const curStep = curIdx >= 0 ? STEPS[curIdx] : { icon: "⚠️", cls: "anim-shake", color: "#f87171", label: "มีปัญหา" };
+                const pct = curIdx < 0 ? 0 : Math.round((curIdx / (STEPS.length - 1)) * 100);
+
                 return (
-                <div key={shipment.id || idx} style={{ background: "#1e2130", borderRadius: 10, border: `1px solid ${anim.color}33`, overflow: "hidden" }}>
-                  {/* Animated Status Hero */}
-                  <div style={{ background: `linear-gradient(135deg, ${anim.color}15, #16181f)`, padding: "16px 14px", borderBottom: `1px solid ${anim.color}33`, display: "flex", alignItems: "center", gap: 14 }}>
-                    <span className={anim.cls} style={{ fontSize: 36, lineHeight: 1 }}>{anim.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, color: anim.color, fontWeight: 700, marginBottom: 2 }}>{anim.label}</div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: "#facc15", fontFamily: "monospace" }}>{shipment.number}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>📅 {new Date(shipment.createdAt).toLocaleDateString("th-TH")}</div>
-                    </div>
-                    <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 10, fontWeight: 700, background: anim.color + "22", color: anim.color, border: `1px solid ${anim.color}55` }}>
-                      {shipment.direction === "TH_TO_KR" ? "✈️🇹🇭→🇰🇷" : shipment.direction === "SEA_KR_TO_TH" ? "🚢🇰🇷→🇹🇭" : "✈️🇰🇷→🇹🇭"}
-                    </span>
-                  </div>
-
-                  {/* Content */}
-                  <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    {/* Sender Info */}
-                    <div>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>📤 ผู้ส่ง</div>
-                      <div style={{ fontSize: 12, color: "#e2e8f0", fontWeight: 600, marginBottom: 4 }}>{shipment.senderName}</div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>📞 {shipment.senderPhone}</div>
-                      {shipment.senderAddress && <div style={{ fontSize: 10, color: "#64748b", marginTop: 4, lineHeight: 1.4 }}>📍 {shipment.senderAddress}</div>}
-                    </div>
-
-                    {/* Recipient Info */}
-                    <div>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>📬 ผู้รับปลายทาง</div>
-                      <div style={{ fontSize: 12, color: "#e2e8f0", fontWeight: 600, marginBottom: 4 }}>{shipment.receiverName}</div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>📞 {shipment.receiverPhone}</div>
-                      {shipment.receiverAddress && <div style={{ fontSize: 10, color: "#64748b", marginTop: 4, lineHeight: 1.4 }}>📍 {shipment.receiverAddress}</div>}
-                    </div>
-
-                    {/* Customs/Passport */}
-                    <div>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>🛂 เลขศุลกากร / พาสปอร์ต</div>
-                      <div style={{ fontSize: 12, color: "#a78bfa", fontFamily: "monospace", fontWeight: 600 }}>{shipment.customsNo || shipment.passportNo || "—"}</div>
-                    </div>
-
-                    {/* Costs Info */}
-                    <div>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>💰 ต้นทุนที่ส่ง</div>
-                      <div style={{ fontSize: 12, color: "#60a5fa", fontWeight: 600 }}>
-                        {shipment.cost ? (
-                          <>
-                            {shipment.currency || "THB"} {Number(shipment.cost).toLocaleString()}
-                          </>
-                        ) : "—"}
+                  <div key={shipment.id || idx} style={{ background: "#16181f", borderRadius: 14, border: `1px solid ${curStep.color}44`, overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ padding: "14px 16px", borderBottom: `1px solid ${curStep.color}33`, display: "flex", alignItems: "center", gap: 12 }}>
+                      <span className={curStep.cls} style={{ fontSize: 28 }}>{curStep.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 10, color: curStep.color, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{curStep.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: "#facc15", fontFamily: "monospace" }}>{shipment.number}</div>
+                      </div>
+                      <div style={{ fontSize: 10, color: "#64748b" }}>
+                        {shipment.direction === "TH_TO_KR" ? "✈️🇹🇭→🇰🇷" : shipment.direction === "SEA_KR_TO_TH" ? "🚢🇰🇷→🇹🇭" : "✈️🇰🇷→🇹🇭"}
+                        <div style={{ textAlign: "right", marginTop: 2 }}>📅 {new Date(shipment.createdAt).toLocaleDateString("th-TH")}</div>
                       </div>
                     </div>
+
+                    {/* Animated Progress Track */}
+                    <div style={{ padding: "20px 16px 12px", overflowX: "auto" }}>
+                      <div style={{ position: "relative", minWidth: 480 }}>
+                        {/* Track line */}
+                        <div style={{ position: "absolute", top: 17, left: "3%", right: "3%", height: 4, background: "#2a2d3a", borderRadius: 4 }} />
+                        {/* Progress fill */}
+                        <div style={{ position: "absolute", top: 17, left: "3%", width: `${pct * 0.94}%`, height: 4, background: `linear-gradient(90deg, #facc15, ${curStep.color})`, borderRadius: 4, transition: "width 1s ease" }} />
+                        {/* Moving package icon */}
+                        {curIdx >= 0 && (
+                          <div style={{ position: "absolute", top: 0, left: `calc(3% + ${pct * 0.94}% - 12px)`, fontSize: 22, zIndex: 10, transition: "left 1s ease", filter: "drop-shadow(0 0 6px " + curStep.color + ")" }}>
+                            <span className={curStep.cls}>📦</span>
+                          </div>
+                        )}
+                        {/* Steps */}
+                        <div style={{ display: "flex", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+                          {STEPS.map((step, i) => {
+                            const done = curIdx >= 0 && i <= curIdx;
+                            const active = i === curIdx;
+                            return (
+                              <div key={step.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: `${100/STEPS.length}%` }}>
+                                <div style={{
+                                  width: 34, height: 34, borderRadius: "50%",
+                                  background: done ? step.color + "33" : "#1a1d27",
+                                  border: `2px solid ${done ? step.color : "#2a2d3a"}`,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: active ? 18 : 14,
+                                  boxShadow: active ? `0 0 12px ${step.color}` : "none",
+                                  transition: "all 0.5s",
+                                }}>
+                                  {active ? <span className={step.cls}>{step.icon}</span> : <span style={{ opacity: done ? 1 : 0.3 }}>{step.icon}</span>}
+                                </div>
+                                <div style={{ fontSize: 9, color: done ? step.color : "#4a5070", marginTop: 5, textAlign: "center", fontWeight: done ? 700 : 400, lineHeight: 1.3 }}>
+                                  {step.label}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Info row */}
+                    <div style={{ padding: "10px 16px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11 }}>
+                      <div style={{ color: "#64748b" }}>📤 <span style={{ color: "#e2e8f0" }}>{shipment.senderName || "—"}</span></div>
+                      <div style={{ color: "#64748b" }}>📬 <span style={{ color: "#e2e8f0" }}>{shipment.receiverName || "—"}</span></div>
+                      {shipment.itemDesc && <div style={{ gridColumn: "1/-1", color: "#64748b" }}>📋 <span style={{ color: "#8b8fa8" }}>{shipment.itemDesc}</span></div>}
+                      {shipment.trackingCode && <div style={{ gridColumn: "1/-1", color: "#64748b" }}>🏷️ <span style={{ color: "#a78bfa", fontFamily: "monospace", fontWeight: 700 }}>{shipment.trackingCode}</span></div>}
+                    </div>
                   </div>
-
-                  {/* Item Description */}
-                  {shipment.itemDesc && (
-                    <div style={{ padding: "0 16px 12px", borderTop: "1px solid #2a2d3a", paddingTop: "12px" }}>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 4 }}>📋 รายการสินค้า</div>
-                      <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.6 }}>{shipment.itemDesc}</div>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {shipment.note && (
-                    <div style={{ padding: "0 16px 14px", borderTop: "1px solid #2a2d3a", paddingTop: "12px" }}>
-                      <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 4 }}>💬 หมายเหตุ</div>
-                      <div style={{ fontSize: 11, color: "#d1d5db" }}>{shipment.note}</div>
-                    </div>
-                  )}
-                </div>
-              );
+                );
               })}
             </div>
           )}
