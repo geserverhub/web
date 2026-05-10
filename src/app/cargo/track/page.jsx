@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const STATUS_STEPS = [
   { key: "รอดำเนินการ", label: "รอดำเนินการ", sub: "처리 대기", icon: "⏳" },
@@ -98,24 +98,29 @@ export default function CargoTrackPage() {
   };
 
   const loadShipments = async () => {
+    if (!cargoUser?.phone) { setShipmentsError("กรุณาเข้าระบบก่อน"); return; }
     setShipmentsLoading(true);
     setShipmentsError("");
     try {
-      const res = await fetch("/api/cargo/shipments", {
-        headers: cargoUser ? { Authorization: `Bearer ${cargoUser.id}` } : {}
-      });
+      const res = await fetch(`/api/cargo/track?phone=${encodeURIComponent(cargoUser.phone)}`);
       const d = await res.json();
-      if (res.ok && Array.isArray(d)) {
-        setShipmentsList(d);
+      if (res.ok) {
+        setShipmentsList(d.orders || (d.order ? [d.order] : []));
       } else {
-        setShipmentsError(d.error || "ไม่สามารถโหลดรายการได้");
+        setShipmentsError(d.error || "ไม่พบรายการ");
       }
-    } catch (err) {
+    } catch {
       setShipmentsError("เชื่อมต่อไม่ได้");
     } finally {
       setShipmentsLoading(false);
     }
   };
+
+  // Load profile once on mount if already logged in
+  useEffect(() => {
+    if (cargoUser?.id) loadProfile(cargoUser.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const doLogin = async () => {
     if (!loginPhone.trim()) return;
@@ -135,13 +140,8 @@ export default function CargoTrackPage() {
     finally { setLoginLoading(false); }
   };
 
-  // Load shipments when tab changes to shipments-list
-  if (tab === "shipments-list" && shipmentsList.length === 0 && !shipmentsLoading) {
-    loadShipments();
-  }
-
-  // Auto-load profile if user is logged in
-  if (cargoUser && !profileData && !profileLoading) loadProfile(cargoUser.id);
+  // Auto-load shipments when tab switches
+  if (tab === "shipments-list" && cargoUser && shipmentsList.length === 0 && !shipmentsLoading && !shipmentsError) loadShipments();
 
   // Load shipping rates once
   if (ratesData === null) {
@@ -322,13 +322,15 @@ export default function CargoTrackPage() {
             🔐 เข้าระบบ
           </button>
         )}
-        <button onClick={() => { setShowReg(true); setRegDone(false); setRegError(""); }} style={{ padding: "9px 20px", background: "#1e2130", border: "1px solid #2a2d3a", borderRadius: 8, color: "#8b8fa8", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans Thai',sans-serif" }}>
-          👤 ลงทะเบียน
-        </button>
+        {!cargoUser && (
+          <button onClick={() => { setShowReg(true); setRegDone(false); setRegError(""); }} style={{ padding: "9px 20px", background: "#1e2130", border: "1px solid #2a2d3a", borderRadius: 8, color: "#8b8fa8", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans Thai',sans-serif" }}>
+            👤 ลงทะเบียน
+          </button>
+        )}
       </div>
 
       <div style={{ width: "100%", maxWidth: 520, display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        {[["track","🔍 ตรวจสอบสถานะ"],["request","📬 แจ้งส่งสินค้า"],["shipments-list","📦 รายการส่งสินค้า"], ...(cargoUser ? [["profile","👤 ข้อมูลของฉัน"]] : [])].map(([key, label]) => (
+        {[["track","🔍 ตรวจสอบสถานะ"],["request","📬 แจ้งส่งสินค้า"], ...(cargoUser ? [["shipments-list","📦 สถานะการจัดส่ง"],["profile","👤 ข้อมูลของฉัน"]] : [])].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: "11px 8px", borderRadius: 10, border: `1px solid ${tab === key ? "#facc15" : "#2a2d3a"}`, background: tab === key ? "#facc1515" : "#16181f", color: tab === key ? "#facc15" : "#64748b", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Noto Sans Thai',sans-serif" }}>
             {label}
           </button>
@@ -847,13 +849,27 @@ export default function CargoTrackPage() {
         </div>
       )}
 
-      {/* SHIPMENTS LIST TAB */}
-      {tab === "shipments-list" && (
+      {/* SHIPMENTS LIST TAB — user's own orders only */}
+      {tab === "shipments-list" && cargoUser && (
         <div style={{ ...cardStyle, width: "100%", maxWidth: 720 }}>
+          <style>{`
+            @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+            @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+            @keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-10deg)} 75%{transform:rotate(10deg)} }
+            @keyframes flyLR { 0%,100%{transform:translateX(0)} 50%{transform:translateX(8px)} }
+            @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+            @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
+            .anim-spin { animation: spin 1.4s linear infinite; display:inline-block; }
+            .anim-bounce { animation: bounce 0.9s ease-in-out infinite; display:inline-block; }
+            .anim-shake { animation: shake 0.7s ease-in-out infinite; display:inline-block; }
+            .anim-flyLR { animation: flyLR 1s ease-in-out infinite; display:inline-block; }
+            .anim-pulse { animation: pulse 1.2s ease-in-out infinite; display:inline-block; }
+            .anim-pop { animation: pop 1.5s ease-in-out infinite; display:inline-block; }
+          `}</style>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#e2e8f0" }}>📦 รายการส่งสินค้า</div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>บันทึกต้นทุนค่าส่งจริงที่บริษัทจ่ายออกไป</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#e2e8f0" }}>📦 สถานะการจัดส่งของฉัน</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>👤 {cargoUser?.name} · 📞 {cargoUser?.phone}</div>
             </div>
             <button onClick={() => loadShipments()} style={{ background: "#facc1515", border: "1px solid #facc1540", color: "#facc15", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>🔄 รีเฟรช</button>
           </div>
@@ -876,19 +892,31 @@ export default function CargoTrackPage() {
             <div style={{ textAlign: "center", padding: 32, color: "#4a5070", fontSize: 12 }}>ยังไม่มีรายการส่งสินค้า</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {shipmentsList.filter(s => warehouseStatusFilter === "all" || (warehouseStatusFilter === "received" && s.warehouseReceived) || (warehouseStatusFilter === "pending" && !s.warehouseReceived)).map((shipment, idx) => (
-                <div key={shipment.id || idx} style={{ background: "#1e2130", borderRadius: 10, border: "1px solid #2a2d3a", overflow: "hidden" }}>
-                  {/* Header */}
-                  <div style={{ background: "#16181f", padding: "12px 14px", borderBottom: "1px solid #2a2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: "#facc15", fontFamily: "monospace" }}>{shipment.trackingNo || shipment.number || `CGO-${idx + 1}`}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>📅 {new Date(shipment.dateCreated || shipment.createdAt).toLocaleDateString("th-TH")}</div>
+              {shipmentsList.map((shipment, idx) => {
+                const STATUS_ANIM = {
+                  "รอดำเนินการ":                              { icon: "⏳", cls: "anim-bounce",  color: "#a3e635", label: "รอดำเนินการ" },
+                  "รับพัสดุเข้าคลังแล้ว":                    { icon: "📦", cls: "anim-shake",   color: "#facc15", label: "รับพัสดุเข้าคลัง" },
+                  "กำลังรีแพ็คพัสดุ":                         { icon: "🔄", cls: "anim-spin",    color: "#fb923c", label: "กำลังรีแพ็ค" },
+                  "พัสดุกำลังเตรียมขึ้นเครื่อง":              { icon: "🛫", cls: "anim-flyLR",   color: "#a78bfa", label: "เตรียมขึ้นเครื่อง" },
+                  "พัสดุกำลังดำเนินการศุลกากร":               { icon: "🏛️", cls: "anim-pulse",   color: "#38bdf8", label: "ดำเนินการศุลกากร" },
+                  "พัสดุกำลังจัดส่งไปยังปลายทาง":            { icon: "✈️", cls: "anim-flyLR",   color: "#60a5fa", label: "อยู่ระหว่างจัดส่ง" },
+                  "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว": { icon: "✅", cls: "anim-pop",     color: "#4ade80", label: "จัดส่งสำเร็จ!" },
+                  "มีปัญหา":                                   { icon: "⚠️", cls: "anim-shake",   color: "#f87171", label: "มีปัญหา" },
+                };
+                const anim = STATUS_ANIM[shipment.status] || { icon: "📦", cls: "", color: "#8b8fa8", label: shipment.status };
+                return (
+                <div key={shipment.id || idx} style={{ background: "#1e2130", borderRadius: 10, border: `1px solid ${anim.color}33`, overflow: "hidden" }}>
+                  {/* Animated Status Hero */}
+                  <div style={{ background: `linear-gradient(135deg, ${anim.color}15, #16181f)`, padding: "16px 14px", borderBottom: `1px solid ${anim.color}33`, display: "flex", alignItems: "center", gap: 14 }}>
+                    <span className={anim.cls} style={{ fontSize: 36, lineHeight: 1 }}>{anim.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: anim.color, fontWeight: 700, marginBottom: 2 }}>{anim.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: "#facc15", fontFamily: "monospace" }}>{shipment.number}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>📅 {new Date(shipment.createdAt).toLocaleDateString("th-TH")}</div>
                     </div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <span style={{ padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700, background: shipment.warehouseReceived ? "#0f2318" : "#2a1f1f", color: shipment.warehouseReceived ? "#4ade80" : "#f87171", border: `1px solid ${shipment.warehouseReceived ? "#4ade80" : "#f87171"}44` }}>
-                        {shipment.warehouseReceived ? "✅ รับแล้ว" : "⏳ รอรับ"}
-                      </span>
-                    </div>
+                    <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 10, fontWeight: 700, background: anim.color + "22", color: anim.color, border: `1px solid ${anim.color}55` }}>
+                      {shipment.direction === "TH_TO_KR" ? "✈️🇹🇭→🇰🇷" : shipment.direction === "SEA_KR_TO_TH" ? "🚢🇰🇷→🇹🇭" : "✈️🇰🇷→🇹🇭"}
+                    </span>
                   </div>
 
                   {/* Content */}
@@ -944,7 +972,8 @@ export default function CargoTrackPage() {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>

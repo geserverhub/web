@@ -261,14 +261,14 @@ export default function ClientsUsersClient({ session }) {
     try {
       const d = await readJsonResponse(await fetch("/api/admin/cargo"));
       setCargoOrders(d.orders || []);
-    } catch { /* silent */ }
+    } catch (err) { console.error("[loadCargo]", err.message); showToast("โหลด cargo ไม่สำเร็จ: " + err.message, false); }
   }, []);
 
   const loadCargoCustomers = useCallback(async () => {
     try {
       const d = await readJsonResponse(await fetch("/api/admin/cargo/customers"));
       setCargoCustomers(d.customers || []);
-    } catch { /* silent */ }
+    } catch (err) { console.error("[loadCargoCustomers]", err.message); }
   }, []);
 
   const loadCusDetails = useCallback(async () => {
@@ -1078,6 +1078,9 @@ export default function ClientsUsersClient({ session }) {
     const amount = Number(o.income || 0);
     const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) : "—";
     const dueDate = o.createdAt ? new Date(new Date(o.createdAt).getTime() + 24*60*60*1000).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) : "—";
+    const detail = cusDetails.find(d => d.cargoOrderId === o.id || d.customerId === o.customerId);
+    const passportNo = o.passportNo || detail?.passportNo || "—";
+    const customsNo = detail?.customsNo || "—";
     const win = window.open("", "_blank");
     if (!win) { showToast("กรุณาอนุญาต popup", false); return; }
     win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
@@ -1097,7 +1100,7 @@ export default function ClientsUsersClient({ session }) {
   .badge { display:inline-block; padding:3px 12px; border-radius:99px; font-size:12px; font-weight:700; background:#fef9c3; color:#92400e; }
   .income { color:#15803d; font-weight:800; font-size:16px; }
   .expense { color:#dc2626; font-weight:700; }
-  .profit { font-weight:900; font-size:18px; color:${profit >= 0 ? "#15803d" : "#dc2626"}; }
+  .amount-due { font-weight:900; font-size:20px; color:#15803d; }
   .footer { margin-top:40px; text-align:center; font-size:11px; color:#94a3b8; }
   .print-btn { display:block; margin:16px auto; padding:10px 32px; background:#facc15; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
 </style></head><body>
@@ -1107,23 +1110,24 @@ export default function ClientsUsersClient({ session }) {
   <div class="sub">GOEUN SERVER HUB · บริการส่งสินค้าไทย-เกาหลี ทางเครื่องบิน</div>
   <hr class="divider"/>
   <table style="margin-bottom:16px">
-    <tr><th>เลขที่พัสดุ</th><td><strong style="font-family:monospace">${o.number}</strong></td><th>วันที่รับ</th><td>${dateStr}</td></tr>
+    <tr><th>เลขที่คำขอส่งสินค้า</th><td><strong style="font-family:monospace">${o.number}</strong></td><th>วันที่รับ</th><td>${dateStr}</td></tr>
     <tr><th>เส้นทาง</th><td colspan="3">${dirLabel}</td></tr>
     <tr><th>ผู้ส่ง</th><td>${o.senderName}${o.senderPhone ? " · " + o.senderPhone : ""}</td><th>ผู้รับ</th><td>${o.receiverName}${o.receiverPhone ? " · " + o.receiverPhone : ""}</td></tr>
     ${o.receiverAddress ? `<tr><th>ที่อยู่ผู้รับ</th><td colspan="3">${o.receiverAddress}</td></tr>` : ""}
     <tr><th>รายการสินค้า</th><td colspan="3">${o.itemDesc || "—"}</td></tr>
     <tr><th>น้ำหนัก</th><td>${o.weightKg ? o.weightKg + " kg" : "—"}</td><th>ขนาด/บรรจุ</th><td>${o.sizeNote || "—"}</td></tr>
+    <tr><th>🛂 เลขพาสปอร์ต</th><td style="font-family:monospace;font-weight:700">${passportNo}</td><th>🏛️ เลขศุลกากร</th><td style="font-family:monospace;font-weight:700">${customsNo}</td></tr>
     ${o.trackingCode ? `<tr><th>Tracking Code</th><td colspan="3" style="font-family:monospace">${o.trackingCode}</td></tr>` : ""}
     ${o.notes ? `<tr><th>หมายเหตุ</th><td colspan="3">${o.notes}</td></tr>` : ""}
   </table>
   <hr class="divider"/>
   <table>
-    <tr><th style="width:33%">💰 รายรับ (ค่าส่งที่เก็บลูกค้า)</th><th style="width:33%">📤 ต้นทุน (ค่าส่งจริง)</th><th>กำไร</th></tr>
-    <tr>
-      <td class="income">${sym}${fmt(o.income)}</td>
-      <td class="expense">${sym}${fmt(o.expense)}</td>
-      <td class="profit">${sym}${fmt(profit)}</td>
-    </tr>
+    <tr><th colspan="2">💳 แจ้งยอดชำระค่าขนส่ง</th></tr>
+    <tr><th>ยอดที่ต้องชำระ</th><td class="amount-due">${sym}${fmt(amount)}</td></tr>
+    <tr><th>กำหนดชำระภายใน</th><td style="font-weight:700;color:#dc2626">${dueDate}</td></tr>
+    <tr><th>ธนาคาร</th><td>[ชื่อธนาคาร]</td></tr>
+    <tr><th>ชื่อบัญชี</th><td>[ชื่อบัญชี]</td></tr>
+    <tr><th>เลขบัญชี</th><td style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:2px">[เลขบัญชี]</td></tr>
   </table>
   <div class="footer">© GOEUN SERVER HUB · พิมพ์เมื่อ ${new Date().toLocaleString("th-TH")}</div>
 </div></body></html>`);
@@ -2533,9 +2537,8 @@ export default function ClientsUsersClient({ session }) {
 
               const MoneyCell = ({ thb, krw, sign = false }) => (
                 <div style={{ marginTop: 3 }}>
-                  {(thb !== 0 || !krw) && <div style={{ fontWeight: 800, fontSize: 15 }}>{sign && thb >= 0 ? "+" : ""}{thb < 0 ? "-" : ""}฿{Math.abs(thb).toLocaleString()}</div>}
-                  {krw !== 0 && <div style={{ fontWeight: 800, fontSize: 15, marginTop: 2 }}>{sign && krw >= 0 ? "+" : ""}{krw < 0 ? "-" : ""}₩{Math.abs(krw).toLocaleString()}</div>}
-                  {thb === 0 && krw === 0 && <div style={{ fontWeight: 800, fontSize: 15 }}>฿0</div>}
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>{sign && thb >= 0 ? "+" : ""}{thb < 0 ? "-" : ""}฿{Math.abs(thb).toLocaleString()}</div>
+                  <div style={{ fontWeight: 800, fontSize: 13, marginTop: 2, opacity: krw === 0 ? 0.45 : 1 }}>{sign && krw >= 0 ? "+" : ""}{krw < 0 ? "-" : ""}₩{Math.abs(krw).toLocaleString()}</div>
                 </div>
               );
 
@@ -2634,29 +2637,46 @@ export default function ClientsUsersClient({ session }) {
                       <div style={{ fontFamily: "monospace", fontSize: 12, color: "#facc15", minWidth: 150 }}>{o.number}</div>
                       <div style={{ flex: 1, minWidth: 180 }}>
                         <div style={{ fontSize: 13, color: "#e2e8f0" }}>{o.senderName} → {o.receiverName}</div>
-                        <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{o.direction === "TH_TO_KR" ? "🇹🇭→🇰🇷" : "🇰🇷→🇹🇭"} · {new Date(o.createdAt).toLocaleDateString("th-TH")}</div>
+                        <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
+                          {o.direction === "TH_TO_KR" ? "✈️ 🇹🇭 ไทย → เกาหลี 🇰🇷" : o.direction === "SEA_KR_TO_TH" ? "🚢 🇰🇷 เกาหลี → ไทย 🇹🇭" : "✈️ 🇰🇷 เกาหลี → ไทย 🇹🇭"}
+                          {" · "}{new Date(o.createdAt).toLocaleDateString("th-TH")}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700, color: SC[o.status] || "#8b8fa8", background: (SC[o.status] || "#8b8fa8") + "22", border: `1px solid ${(SC[o.status] || "#8b8fa8")}44`, whiteSpace: "nowrap" }}>เดิม: {o.status}</span>
-                        <span style={{ color: "#64748b" }}>→</span>
-                        <select value={curStatus} style={{ ...S.input, maxWidth: 300, borderColor: dirty ? "#facc15" : "#2a2d3a" }}
-                          onChange={e => setCargoInlineEdits(prev => ({ ...prev, [o.id]: { ...(prev[o.id] || {}), status: e.target.value } }))}>
-                          {["รอดำเนินการ", "รับพัสดุเข้าคลังแล้ว", "กำลังรีแพ็คพัสดุ", "พัสดุกำลังเตรียมขึ้นเครื่อง", "พัสดุกำลังดำเนินการศุลกากร", "พัสดุกำลังจัดส่งไปยังปลายทาง", "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว", "มีปัญหา"].map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <button disabled={!dirty || savingCargoInline[o.id]} style={{ ...S.btn(dirty ? "#1a1a0a" : "#1e2130", dirty ? "#facc15" : "#64748b"), padding: "8px 14px", fontWeight: 700, border: dirty ? "1px solid #ca8a04" : "none" }}
-                          onClick={async () => {
-                            setSavingCargoInline(p => ({ ...p, [o.id]: true }));
-                            const shippedAt = curStatus === "พัสดุกำลังเตรียมขึ้นเครื่อง" && !o.shippedAt ? new Date().toISOString().slice(0,10) : undefined;
-                            const deliveredAt = curStatus === "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว" && !o.deliveredAt ? new Date().toISOString().slice(0,10) : undefined;
-                            const body = { status: curStatus, ...(shippedAt && { shippedAt }), ...(deliveredAt && { deliveredAt }) };
-                            await fetch(`/api/admin/cargo/${o.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-                            showToast("อัปเดตสถานะแล้ว ✅");
-                            setCargoInlineEdits(p => { const n = { ...p }; delete n[o.id]; return n; });
-                            setSavingCargoInline(p => ({ ...p, [o.id]: false }));
-                            loadCargo();
-                          }}>
-                          {savingCargoInline[o.id] ? "⏳" : "💾 บันทึก"}
-                        </button>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700, color: SC[o.status] || "#8b8fa8", background: (SC[o.status] || "#8b8fa8") + "22", border: `1px solid ${(SC[o.status] || "#8b8fa8")}44`, whiteSpace: "nowrap" }}>เดิม: {o.status}</span>
+                          <span style={{ color: "#64748b" }}>→</span>
+                          <select value={curStatus} style={{ ...S.input, maxWidth: 300, borderColor: dirty ? "#facc15" : "#2a2d3a" }}
+                            onChange={e => setCargoInlineEdits(prev => ({ ...prev, [o.id]: { ...(prev[o.id] || {}), status: e.target.value } }))}>
+                            {["รอดำเนินการ", "รับพัสดุเข้าคลังแล้ว", "กำลังรีแพ็คพัสดุ", "พัสดุกำลังเตรียมขึ้นเครื่อง", "พัสดุกำลังดำเนินการศุลกากร", "พัสดุกำลังจัดส่งไปยังปลายทาง", "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว", "มีปัญหา"].map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                          <button disabled={!dirty || savingCargoInline[o.id]} style={{ ...S.btn(dirty ? "#1a1a0a" : "#1e2130", dirty ? "#facc15" : "#64748b"), padding: "8px 14px", fontWeight: 700, border: dirty ? "1px solid #ca8a04" : "none" }}
+                            onClick={async () => {
+                              setSavingCargoInline(p => ({ ...p, [o.id]: true }));
+                              const shippedAt = curStatus === "พัสดุกำลังเตรียมขึ้นเครื่อง" && !o.shippedAt ? new Date().toISOString().slice(0,10) : undefined;
+                              const deliveredAt = curStatus === "พัสดุจัดส่งหน้าบ้านผู้รับเรียบร้อยแล้ว" && !o.deliveredAt ? new Date().toISOString().slice(0,10) : undefined;
+                              const trackingCode = (cargoInlineEdits[o.id] || {}).trackingCode;
+                              const body = { status: curStatus, ...(shippedAt && { shippedAt }), ...(deliveredAt && { deliveredAt }), ...(trackingCode !== undefined && { trackingCode }) };
+                              await fetch(`/api/admin/cargo/${o.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+                              showToast("อัปเดตสถานะแล้ว ✅");
+                              setCargoInlineEdits(p => { const n = { ...p }; delete n[o.id]; return n; });
+                              setSavingCargoInline(p => ({ ...p, [o.id]: false }));
+                              loadCargo();
+                            }}>
+                            {savingCargoInline[o.id] ? "⏳" : "💾 บันทึก"}
+                          </button>
+                        </div>
+                        {curStatus === "พัสดุกำลังเตรียมขึ้นเครื่อง" && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 11, color: "#a78bfa", whiteSpace: "nowrap" }}>🏷️ เลขที่จัดส่งพัสดุ (Tracking)</span>
+                            <input
+                              style={{ ...S.input, maxWidth: 240, borderColor: "#a78bfa66", fontFamily: "monospace", color: "#a78bfa" }}
+                              placeholder="เช่น 1234567890KR"
+                              value={(cargoInlineEdits[o.id] || {}).trackingCode ?? (o.trackingCode || "")}
+                              onChange={ev => setCargoInlineEdits(p => ({ ...p, [o.id]: { ...(p[o.id] || {}), trackingCode: ev.target.value, status: curStatus } }))}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -2838,18 +2858,25 @@ export default function ClientsUsersClient({ session }) {
                               {o.createdAt && <span style={{ fontSize: 11, color: "#4a5070" }}>📅 {new Date(o.createdAt).toLocaleDateString("th-TH")}</span>}
                               {o.weightKg && <span style={{ fontSize: 11, color: "#8b8fa8" }}>⚖️ {o.weightKg} kg</span>}
                               {/* Warehouse status toggle */}
-                              <button type="button" disabled={isSaving}
-                                style={{ marginLeft: "auto", padding: "5px 14px", borderRadius: 7, border: `1px solid ${warehouseReceived ? "#4ade8066" : "#facc1566"}`, background: warehouseReceived ? "#0f2318" : "#1a1a0a", color: warehouseReceived ? "#4ade80" : "#facc15", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
-                                onClick={async () => {
-                                  setSavingCargoInline(p => ({ ...p, [o.id]: true }));
-                                  const newStatus = warehouseReceived ? "รอดำเนินการ" : WAREHOUSE_RECEIVED;
-                                  await fetch(`/api/admin/cargo/${o.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
-                                  showToast(warehouseReceived ? "เปลี่ยนเป็น รอดำเนินการ" : "โกดังรับสินค้าแล้ว ✅");
-                                  setSavingCargoInline(p => ({ ...p, [o.id]: false }));
-                                  loadCargo();
-                                }}>
-                                {isSaving ? "⏳" : warehouseReceived ? "✅ โกดังรับแล้ว" : "⬜ ยังไม่รับ"}
-                              </button>
+                              <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                                <button type="button"
+                                  style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #1e3a5f", background: "#0f1830", color: "#7eb8f7", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+                                  onClick={() => printCargoInvoice(o)}>
+                                  🖨️ พิมพ์
+                                </button>
+                                <button type="button" disabled={isSaving}
+                                  style={{ padding: "5px 14px", borderRadius: 7, border: `1px solid ${warehouseReceived ? "#4ade8066" : "#facc1566"}`, background: warehouseReceived ? "#0f2318" : "#1a1a0a", color: warehouseReceived ? "#4ade80" : "#facc15", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+                                  onClick={async () => {
+                                    setSavingCargoInline(p => ({ ...p, [o.id]: true }));
+                                    const newStatus = warehouseReceived ? "รอดำเนินการ" : WAREHOUSE_RECEIVED;
+                                    await fetch(`/api/admin/cargo/${o.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
+                                    showToast(warehouseReceived ? "เปลี่ยนเป็น รอดำเนินการ" : "โกดังรับสินค้าแล้ว ✅");
+                                    setSavingCargoInline(p => ({ ...p, [o.id]: false }));
+                                    loadCargo();
+                                  }}>
+                                  {isSaving ? "⏳" : warehouseReceived ? "✅ โกดังรับแล้ว" : "⬜ ยังไม่รับ"}
+                                </button>
+                              </div>
                             </div>
                             {/* Info grid */}
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, fontSize: 12 }}>

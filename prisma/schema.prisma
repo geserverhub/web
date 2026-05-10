@@ -20,10 +20,14 @@ model User {
   updatedAt     DateTime  @updatedAt
   clientId      String?
 
-  accounts Account[]
-  sessions Session[]
-  client   Client?   @relation(fields: [clientId], references: [id])
-  invoices Invoice[]
+  accounts            Account[]
+  sessions            Session[]
+  client              Client?              @relation(fields: [clientId], references: [id])
+  invoices            Invoice[]
+  notifications       Notification[]
+  partnerTasks        PartnerTask[]
+  partnerTransactions PartnerTransaction[]
+  partnerProducts     PartnerProduct[]
 
   @@index([email])
   @@index([clientId])
@@ -84,11 +88,12 @@ model Client {
   createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
 
-  users    User[]
-  services ClientService[]
-  invoices Invoice[]
-  receipts Receipt[]
+  users     User[]
+  services  ClientService[]
+  invoices  Invoice[]
+  receipts  Receipt[]
   customers Customer[]
+  expenses  Expense[]
 
   @@index([slug])
   @@index([status])
@@ -221,8 +226,12 @@ model Notification {
   error     String?
   createdAt DateTime            @default(now())
 
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([sent])
   @@index([type])
+  @@index([userId])
 }
 
 enum Role {
@@ -267,8 +276,12 @@ model Expense {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   @@index([category])
   @@index([date])
+  @@index([clientId])
 }
 
 model Product {
@@ -547,9 +560,13 @@ model PartnerTask {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([type])
   @@index([status])
   @@index([dueDate])
+  @@index([userId])
 }
 
 model PartnerTransaction {
@@ -569,10 +586,14 @@ model PartnerTransaction {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  userId       String?
+  user         User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([type])
   @@index([status])
   @@index([date])
   @@index([brand])
+  @@index([userId])
 }
 
 model PartnerProduct {
@@ -586,5 +607,9 @@ model PartnerProduct {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([name])
+  @@index([userId])
 }

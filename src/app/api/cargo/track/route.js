@@ -25,16 +25,19 @@ export async function GET(req) {
       updatedAt: true,
     };
 
-    // Find all orders matching receiver phone (normalise stored values)
+    // Find all orders matching receiver OR sender phone
     const allOrders = await prisma.cargoOrder.findMany({
-      where: { receiverPhone: { not: null } },
-      select: { ...select, receiverPhone: true },
+      select: { ...select, receiverPhone: true, senderPhone: true },
       orderBy: { createdAt: "desc" },
     });
 
     const matched = allOrders
-      .filter(o => (o.receiverPhone || "").replace(/[-\s]/g, "") === phone)
-      .map(({ receiverPhone: _p, ...o }) => o);
+      .filter(o => {
+        const rp = (o.receiverPhone || "").replace(/[-\s]/g, "");
+        const sp = (o.senderPhone || "").replace(/[-\s]/g, "");
+        return rp === phone || sp === phone;
+      })
+      .map(({ receiverPhone: _r, senderPhone: _s, ...o }) => o);
 
     if (matched.length === 0) {
       return NextResponse.json({ error: "ไม่พบข้อมูลพัสดุสำหรับเบอร์โทรนี้" }, { status: 404 });
