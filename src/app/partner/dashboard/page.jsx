@@ -634,7 +634,7 @@ export default function PartnerDashboard() {
           <span style={{ fontSize: 20 }}>🤝</span>
           <div>
             <div style={{ fontWeight: 800, fontSize: 15, color: "#e8eaf0" }}>Partner Dashboard</div>
-            <div style={{ fontSize: 11, color: "#8b8fa8" }}>GOEUN SERVER HUB</div>
+            <div style={{ fontSize: 11, color: "#8b8fa8" }}>GE SERVER HUB</div>
           </div>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 5,
@@ -1755,7 +1755,7 @@ export default function PartnerDashboard() {
                 <div style={{ background: ACCENT, borderRadius: 10, padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div>
                     <div style={{ color: "#93c5fd", fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>BUSINESS FINANCIAL REPORT</div>
-                    <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.2 }}>GOEUN SERVER HUB</div>
+                    <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.2 }}>GE SERVER HUB</div>
                     <div style={{ color: "#bfdbfe", fontSize: 13, fontWeight: 600, marginTop: 2 }}>지이 서버 허브 &nbsp;·&nbsp; 🚀 MOMOGE SPACE</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -1779,7 +1779,7 @@ export default function PartnerDashboard() {
           function ReportFooter() {
             return (
               <div style={{ marginTop: 32, paddingTop: 12, borderTop: `2px solid ${ACCENT}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#475569", fontSize: 10 }}>
-                <div>GOEUN SERVER HUB &nbsp;·&nbsp; 지이 서버 허브 &nbsp;·&nbsp; MOMOGE SPACE</div>
+                <div>GE SERVER HUB &nbsp;·&nbsp; 지이 서버 허브 &nbsp;·&nbsp; MOMOGE SPACE</div>
                 <div>{pr.generatedOn(today)}</div>
               </div>
             );
@@ -2058,6 +2058,163 @@ export default function PartnerDashboard() {
 
               <div id="print-report">
                 <ActiveReport />
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* LEDGER REMOVED — data belongs to admin (GOEUN SERVER HUB), not partner (GE SERVER HUB) */}
+        {tab === "ledger_disabled" && (() => {
+          const CURRENCIES = ["THB", "KRW", "USD"];
+          const symMap = { THB: "฿", KRW: "₩", USD: "$" };
+          const sym = "";
+          const fmt = n => Math.abs(n).toLocaleString("th-TH");
+
+          if (ledgerLoading || !ledgerData) {
+            return <div style={{ color: "#8b8fa8", padding: 40, textAlign: "center" }}>⏳ กำลังโหลดข้อมูลบัญชี...</div>;
+          }
+
+          const PAID_STATUSES_INV = ["PAID"];
+          const PAID_STATUSES_EXP = ["แนบใบเสร็จแล้ว", "PAID"];
+
+          const allReceipts = ledgerData.receipts || [];
+          const allInvoices = ledgerData.invoices || [];
+          const allExpenses = ledgerData.expenses || [];
+
+          const curReceipts = allReceipts.filter(r => (r.currency || "THB") === ledgerCurrency);
+          const curInvoices = allInvoices.filter(i => (i.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_INV.includes(i.status)));
+          const curExpenses = allExpenses.filter(e => (e.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_EXP.includes(e.status)));
+
+          const rows = [
+            ...curReceipts.map(r => ({
+              id: r.id, date: new Date(r.issuedAt), type: "income",
+              ref: r.number, desc: r.customerName || "—",
+              detail: "ออกใบเสร็จแล้ว",
+              income: Number(r.total), expense: 0,
+            })),
+            ...curInvoices.map(i => ({
+              id: i.id, date: new Date(i.createdAt), type: "income",
+              ref: i.number, desc: "—",
+              detail: { PENDING: "รอชำระ", PAID: "ชำระแล้ว", OVERDUE: "เกินกำหนด", CANCELLED: "ยกเลิก" }[i.status] || i.status,
+              income: Number(i.amount), expense: 0,
+            })),
+            ...curExpenses.map(e => ({
+              id: e.id, date: new Date(e.date), type: "expense",
+              ref: e.number, desc: e.category,
+              detail: e.status || "รอชำระ",
+              income: 0, expense: Number(e.amount),
+            })),
+          ].sort((a, b) => a.date - b.date);
+
+          let running = 0;
+          const ledgerRows = rows.map(r => {
+            running += r.income - r.expense;
+            return { ...r, running };
+          });
+
+          const totalIncome = curReceipts.reduce((s, r) => s + Number(r.total), 0)
+            + curInvoices.reduce((s, i) => s + Number(i.amount), 0);
+          const totalExpense = curExpenses.reduce((s, e) => s + Number(e.amount), 0);
+          const netProfit = totalIncome - totalExpense;
+          const isProfit = netProfit >= 0;
+
+          return (
+            <div style={{ background: "#16181f", borderRadius: 12, padding: 28, border: "1px solid #2a2d3a" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GE SERVER HUB</div>
+                  <h5 style={{ margin: 0, color: "#4ade80", fontSize: 17 }}>📒 บัญชีรายรับ-รายจ่าย</h5>
+                </div>
+                <button onClick={fetchLedger} style={{ background: "#1e2130", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 6, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>🔄 รีโหลด</button>
+              </div>
+
+              {/* Currency toggle */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                {CURRENCIES.map(cur => (
+                  <button key={cur} onClick={() => setLedgerCurrency(cur)}
+                    style={{ padding: "7px 20px", borderRadius: 6, border: ledgerCurrency === cur ? "1px solid #4ade80" : "1px solid #2a2d3a", background: ledgerCurrency === cur ? "#0f2318" : "#1e2130", color: ledgerCurrency === cur ? "#4ade80" : "#8b8fa8", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    {symMap[cur]} {cur}
+                  </button>
+                ))}
+              </div>
+
+              {/* Paid-only toggle */}
+              <div style={{ marginBottom: 20 }}>
+                <button onClick={() => setLedgerPaidOnly(p => !p)}
+                  style={{ padding: "5px 14px", borderRadius: 6, border: ledgerPaidOnly ? "1px solid #4ade80" : "1px solid #2a2d3a", background: ledgerPaidOnly ? "#0f2318" : "#1e2130", color: ledgerPaidOnly ? "#4ade80" : "#8b8fa8", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                  {ledgerPaidOnly ? "✅" : "⬜"} แสดงเฉพาะ ชำระแล้ว / แนบใบเสร็จแล้ว
+                </button>
+              </div>
+
+              {/* Summary cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+                {[
+                  { label: "💰 รายรับรวม", value: totalIncome, color: "#4ade80", bg: "#0f2318", border: "#166534", isCount: false },
+                  { label: "💸 รายจ่ายรวม", value: totalExpense, color: "#f87171", bg: "#1f0f0f", border: "#7f1d1d", isCount: false },
+                  { label: isProfit ? "📈 กำไรสุทธิ" : "📉 ขาดทุนสุทธิ", value: netProfit, color: isProfit ? "#4ade80" : "#f87171", bg: isProfit ? "#0f2318" : "#1f0f0f", border: isProfit ? "#166534" : "#7f1d1d", isCount: false },
+                  { label: "📋 รายการทั้งหมด", value: rows.length, color: "#7eb8f7", bg: "#0f1830", border: "#1e3a5f", isCount: true },
+                ].map(({ label, value, color, bg, border, isCount }) => (
+                  <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "16px 14px", textAlign: "center" }}>
+                    <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 6 }}>{label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color }}>{isCount ? value : `${sym}${fmt(value)}`}</div>
+                    {!isCount && <div style={{ fontSize: 11, color: "#4a5070", marginTop: 2 }}>{ledgerCurrency}</div>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Profit banner */}
+              <div style={{ background: isProfit ? "#052e16" : "#450a0a", border: `1px solid ${isProfit ? "#166534" : "#7f1d1d"}`, borderRadius: 8, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ color: isProfit ? "#4ade80" : "#f87171", fontWeight: 700, fontSize: 15 }}>
+                  {isProfit ? "📈 กำไร" : "📉 ขาดทุน"}: {sym}{fmt(netProfit)} {ledgerCurrency}
+                </span>
+                <span style={{ color: "#8b8fa8", fontSize: 12 }}>
+                  รายรับ {sym}{fmt(totalIncome)} − รายจ่าย {sym}{fmt(totalExpense)}
+                </span>
+              </div>
+
+              {/* Ledger table */}
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: "#11131a", borderBottom: "1px solid #2a2d3a" }}>
+                      {["#", "วันที่", "เลขที่อ้างอิง", "รายการ / รายละเอียด", `รายรับ (${ledgerCurrency})`, `รายจ่าย (${ledgerCurrency})`, "คงเหลือสะสม"].map((h, i) => (
+                        <th key={h} style={{ padding: "10px 12px", color: "#8b8fa8", fontWeight: 700, fontSize: 11, textAlign: i >= 4 ? "right" : "left", whiteSpace: "nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ledgerRows.length === 0 ? (
+                      <tr><td colSpan={7} style={{ textAlign: "center", padding: 32, color: "#4a5070" }}>ไม่มีรายการในสกุลเงินนี้</td></tr>
+                    ) : ledgerRows.map((r, idx) => (
+                      <tr key={r.id} style={{ borderBottom: "1px solid #1a1d2a", background: idx % 2 === 0 ? "transparent" : "#0d0f14" }}>
+                        <td style={{ padding: "9px 12px", color: "#4a5070", fontSize: 11 }}>{idx + 1}</td>
+                        <td style={{ padding: "9px 12px", color: "#8b8fa8", whiteSpace: "nowrap", fontSize: 12 }}>{r.date.toLocaleDateString("th-TH")}</td>
+                        <td style={{ padding: "9px 12px", color: "#7eb8f7", fontSize: 11, whiteSpace: "nowrap" }}>{r.ref}</td>
+                        <td style={{ padding: "9px 12px" }}>
+                          <div style={{ color: "#e8eaf0", fontWeight: 600 }}>{r.desc}</div>
+                          <div style={{ fontSize: 11, color: r.type === "income" ? "#4ade80" : "#f87171", marginTop: 2 }}>
+                            {r.type === "income" ? "💰 รายรับ" : "💸 รายจ่าย"} · {r.detail}
+                          </div>
+                        </td>
+                        <td style={{ padding: "9px 12px", textAlign: "right", color: "#4ade80", fontWeight: 700 }}>{r.income > 0 ? `+${sym}${fmt(r.income)}` : "—"}</td>
+                        <td style={{ padding: "9px 12px", textAlign: "right", color: "#f87171", fontWeight: 700 }}>{r.expense > 0 ? `-${sym}${fmt(r.expense)}` : "—"}</td>
+                        <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 800, color: r.running >= 0 ? "#4ade80" : "#f87171", whiteSpace: "nowrap" }}>
+                          {r.running >= 0 ? "+" : ""}{sym}{fmt(r.running)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {ledgerRows.length > 0 && (
+                    <tfoot>
+                      <tr style={{ borderTop: "2px solid #2a2d3a", background: "#11131a" }}>
+                        <td colSpan={4} style={{ padding: "10px 12px", fontWeight: 700, color: "#8b8fa8" }}>รวมทั้งหมด</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 800, color: "#4ade80" }}>+{sym}{fmt(totalIncome)}</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 800, color: "#f87171" }}>-{sym}{fmt(totalExpense)}</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 800, color: isProfit ? "#4ade80" : "#f87171" }}>{isProfit ? "+" : ""}{sym}{fmt(netProfit)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
               </div>
             </div>
           );

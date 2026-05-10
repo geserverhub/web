@@ -155,6 +155,7 @@ model Receipt {
   currency  String   @default("THB")
   issuedAt  DateTime @default(now())
   subtotal  Decimal  @db.Decimal(10, 2)
+  vatRate   Decimal? @db.Decimal(5, 2)
   total     Decimal  @db.Decimal(10, 2)
   notes     String?  @db.Text
   createdAt DateTime @default(now())

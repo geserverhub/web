@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const STATUS_OPTS = ["ONLINE", "MAINTENANCE", "COMING_SOON", "OFFLINE"];
 const ROLE_OPTS = ["CLIENT", "ADMIN", "SUPER_ADMIN"];
-const EXPENSE_CATEGORIES = ["ค่าแรง/เงินเดือน", "ค่าอุปกรณ์/ซอฟต์แวร์", "ค่าโฆษณา", "ค่าเช่าเซิร์ฟเวอร์/โดเมน", "ค่าสาธารณูปโภค", "ค่าบริการภายนอก", "อื่นๆ"];
+const EXPENSE_CATEGORIES = ["ค่าแรง/เงินเดือน", "ค่าอุปกรณ์/ซอฟต์แวร์", "ค่าโฆษณา", "ค่าเช่าเซิร์ฟเวอร์/โดเมน", "ค่าสาธารณูปโภค", "ค่าบริการภายนอก", "ค่าภาษีมูลค่าเพิ่ม", "อื่นๆ"];
 
 const STATUS_BADGE = {
   ONLINE:       { bg: "#14532d", color: "#4ade80", label: "Online" },
@@ -103,6 +103,9 @@ export default function ClientsUsersClient({ session }) {
   });
   const [savingUser, setSavingUser] = useState(false);
   const [showUserPassword, setShowUserPassword] = useState(false);
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [savingNewClient, setSavingNewClient] = useState(false);
 
   // invoice modal
   const [invoiceModal, setInvoiceModal] = useState(false);
@@ -125,6 +128,7 @@ export default function ClientsUsersClient({ session }) {
     customerEmail: "",
     currency: "THB",
     issuedAt: new Date().toISOString().slice(0, 10),
+    vatRate: "",
     notes: "",
     items: [createEmptyReceiptItem()],
   });
@@ -154,6 +158,12 @@ export default function ClientsUsersClient({ session }) {
   const [expenseForm, setExpenseForm] = useState({ category: "", amount: "", currency: "THB", status: "รอชำระ", notes: "", date: "", receiptNumber: "", receiptFile: "" });
   const [expenseFileInputs, setExpenseFileInputs] = useState([]); // File objects array
   const [savingExpense, setSavingExpense] = useState(false);
+  const [vatBillMode, setVatBillMode] = useState(false);
+  const [vatBillPeriod, setVatBillPeriod] = useState("1-6");
+  const [vatBillYear, setVatBillYear] = useState(new Date().getFullYear());
+  const [vatBillCurrency, setVatBillCurrency] = useState("KRW");
+  const [incomeTaxBillMode, setIncomeTaxBillMode] = useState(false);
+  const [incomeTaxYear, setIncomeTaxYear] = useState(new Date().getFullYear());
 
   // ledger modal
   const [ledgerModal, setLedgerModal] = useState(false);
@@ -346,6 +356,26 @@ export default function ClientsUsersClient({ session }) {
     }
   };
 
+  // ── Inline Add Client ──
+  const saveNewClient = async () => {
+    if (!newClientName.trim()) return;
+    setSavingNewClient(true);
+    try {
+      const slug = newClientName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + "-" + Date.now();
+      const d = await readJsonResponse(await fetch("/api/admin/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newClientName.trim(), slug, status: "ONLINE" }),
+      }));
+      await loadClients();
+      setUserForm(p => ({ ...p, clientId: d.client?.id || "" }));
+      setNewClientName("");
+      setShowAddClient(false);
+    } catch (err) {
+      showToast("เพิ่มบริษัทไม่สำเร็จ: " + err.message, false);
+    } finally { setSavingNewClient(false); }
+  };
+
   // ── User Modal ──
   const openAddUser = () => {
     setEditUserId(null);
@@ -417,6 +447,7 @@ export default function ClientsUsersClient({ session }) {
       customerEmail: receipt.customerEmail || "",
       currency: receipt.currency || "THB",
       issuedAt: receipt.issuedAt ? new Date(receipt.issuedAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      vatRate: receipt.vatRate != null ? String(receipt.vatRate) : "",
       notes: receipt.notes || "",
       items: (receipt.items || []).length > 0
         ? receipt.items.map(item => ({
@@ -533,6 +564,7 @@ export default function ClientsUsersClient({ session }) {
             customerEmail: receiptForm.customerEmail.trim(),
             currency: receiptForm.currency,
             issuedAt: receiptForm.issuedAt,
+            vatRate: receiptForm.vatRate !== "" ? receiptForm.vatRate : null,
             notes: receiptForm.notes,
             items,
           }),
@@ -550,6 +582,7 @@ export default function ClientsUsersClient({ session }) {
             customerEmail: receiptForm.customerEmail.trim(),
             currency: receiptForm.currency,
             issuedAt: receiptForm.issuedAt,
+            vatRate: receiptForm.vatRate !== "" ? receiptForm.vatRate : null,
             notes: receiptForm.notes,
             items,
           }),
@@ -1191,6 +1224,9 @@ export default function ClientsUsersClient({ session }) {
       const subtotal = Number(item.quantity) * Number(item.unitPrice);
       return sum + (subtotal * (Number(item.discountPercent || 0) / 100)) + Number(item.discountAmount || 0);
     }, 0));
+    const netAfterDiscount = roundMoney(grossTotal - discountTotal);
+    const vatRate = receipt.vatRate != null ? Number(receipt.vatRate) : 0;
+    const vatAmount = vatRate > 0 ? roundMoney(netAfterDiscount * vatRate / 100) : 0;
     const rows = (receipt.items || []).map((item, idx) => {
       const subtotal = roundMoney(Number(item.quantity) * Number(item.unitPrice));
       const percentLabel = Number(item.discountPercent || 0) > 0 ? `${Number(item.discountPercent).toLocaleString("th-TH")}%` : "";
@@ -1600,8 +1636,12 @@ export default function ClientsUsersClient({ session }) {
             <div class="total-card">
               <div class="total-line"><span>ยอดก่อนหักส่วนลด</span><strong>${Number(receipt.subtotal || grossTotal).toLocaleString("th-TH")}</strong></div>
               <div class="total-line"><span>ส่วนลดรวม</span><strong>${discountTotal.toLocaleString("th-TH")}</strong></div>
+              ${vatRate > 0 ? `
+              <div class="total-line"><span>ยอดก่อน VAT</span><strong>${netAfterDiscount.toLocaleString("th-TH")}</strong></div>
+              <div class="total-line"><span>VAT ${vatRate}%</span><strong>${vatAmount.toLocaleString("th-TH")}</strong></div>
+              ` : ""}
               <div class="grand-total">
-                <span class="label">รวมทั้งสิ้น</span>
+                <span class="label">รวมทั้งสิ้น${vatRate > 0 ? " (รวม VAT)" : ""}</span>
                 <div class="value">${Number(receipt.total).toLocaleString("th-TH")} ${receipt.currency || "THB"}</div>
               </div>
             </div>
@@ -1649,12 +1689,19 @@ export default function ClientsUsersClient({ session }) {
       colRef: "\ucc38\uc870\ubc88\ud638",
       colDesc: "\ud56d\ubaa9 / \uc0c1\uc138",
       colIncome: "\uc218\uc785",
+      colVat: "VAT",
       colExpense: "\uc9c0\ucd9c",
       colBalance: "\ub204\uacc4\uc794\uc561",
       footerTotal: "\ud569\uacc4",
       footerItems: "\uac74",
       noData: "\ub370\uc774\ud130 \uc5c6\uc74c",
       printBtn: "\ud83d\udda8\ufe0f \uc778\uc1c4",
+      vatPeriod1: "1\uc6d4~6\uc6d4",
+      vatPeriod2: "7\uc6d4~12\uc6d4",
+      vatPayPeriod1: "\ub0a9\ubd80: 7\uc6d4",
+      vatPayPeriod2: "\ub0a9\ubd80: 1\uc6d4",
+      incomeTaxLabel: "\ud83d\udcbc \uc885\ud569\uc18c\ub4dd\uc138",
+      marginalLabel: "\ucd5c\uace0\uc138\uc728",
       statusMap: { PENDING: "\ubbf8\uacb0\uc81c", PAID: "\uacb0\uc81c\uc644\ub8cc", OVERDUE: "\uc5f0\uccb4", CANCELLED: "\ucd94\uc18c", "\u0e23\u0e2d\u0e0a\u0e33\u0e23\u0e30": "\ubbf8\uacb0\uc81c", "\u0e41\u0e19\u0e1a\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27": "\uc601\uc218\uc99d\ucca8\ubd80", "\u0e0a\u0e33\u0e23\u0e30\u0e41\u0e25\u0e49\u0e27": "\uacb0\uc81c\uc644\ub8cc", "\u0e40\u0e01\u0e34\u0e19\u0e01\u0e33\u0e2b\u0e19\u0e14": "\uc5f0\uccb4", "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01": "\ucd94\uc18c" },
       categoryMap: { "\u0e04\u0e48\u0e32\u0e40\u0e0a\u0e48\u0e32\u0e40\u0e0b\u0e34\u0e23\u0e4c\u0e1f\u0e40\u0e27\u0e2d\u0e23\u0e4c/\u0e42\u0e14\u0e40\u0e21\u0e19": "\uc11c\ubc84/\ub3c4\uba54\uc778 \uc784\ub300\ub8cc", "\u0e04\u0e48\u0e32\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e20\u0e32\u0e22\u0e19\u0e2d\u0e01": "\uc678\ubd80 \uc11c\ube44\uc2a4 \ube44\uc6a9", "\u0e04\u0e48\u0e32\u0e08\u0e49\u0e32\u0e07\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "\uc9c1\uc6d0 \uae09\uc5ec", "\u0e04\u0e48\u0e32\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22\u0e2a\u0e33\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "\uc0ac\ubb34\uc2e4 \ube44\uc6a9", "\u0e04\u0e48\u0e32\u0e02\u0e19\u0e2a\u0e48\u0e07": "\uc6b4\uc1a1\ube44", "\u0e04\u0e48\u0e32\u0e27\u0e31\u0e2a\u0e14\u0e38": "\uc790\uc7ac\ube44", "\u0e04\u0e48\u0e32\u0e42\u0e06\u0e29\u0e13\u0e32": "\uad11\uace0\ube44", "\u0e2d\u0e37\u0e48\u0e19\u0e46": "\uae30\ud0c0" },
     } : currency === "USD" ? {
@@ -1674,12 +1721,19 @@ export default function ClientsUsersClient({ session }) {
       colRef: "Reference",
       colDesc: "Item / Detail",
       colIncome: "Income",
+      colVat: "VAT",
       colExpense: "Expense",
       colBalance: "Running Balance",
       footerTotal: "Total",
       footerItems: "items",
       noData: "No records",
       printBtn: "\ud83d\udda8\ufe0f Print",
+      vatPeriod1: "Jan\u2013Jun",
+      vatPeriod2: "Jul\u2013Dec",
+      vatPayPeriod1: "Pay: Jul",
+      vatPayPeriod2: "Pay: Jan",
+      incomeTaxLabel: "\ud83d\udcbc Income Tax",
+      marginalLabel: "Top rate",
       statusMap: { PENDING: "Pending", PAID: "Paid", OVERDUE: "Overdue", CANCELLED: "Cancelled", "\u0e23\u0e2d\u0e0a\u0e33\u0e23\u0e30": "Pending", "\u0e41\u0e19\u0e1a\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27": "Receipt Attached", "\u0e0a\u0e33\u0e23\u0e30\u0e41\u0e25\u0e49\u0e27": "Paid", "\u0e40\u0e01\u0e34\u0e19\u0e01\u0e33\u0e2b\u0e19\u0e14": "Overdue", "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01": "Cancelled" },
       categoryMap: { "\u0e04\u0e48\u0e32\u0e40\u0e0a\u0e48\u0e32\u0e40\u0e0b\u0e34\u0e23\u0e4c\u0e1f\u0e40\u0e27\u0e2d\u0e23\u0e4c/\u0e42\u0e14\u0e40\u0e21\u0e19": "Server/Domain Rental", "\u0e04\u0e48\u0e32\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e20\u0e32\u0e22\u0e19\u0e2d\u0e01": "External Service Fee", "\u0e04\u0e48\u0e32\u0e08\u0e49\u0e32\u0e07\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "Employee Wages", "\u0e04\u0e48\u0e32\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22\u0e2a\u0e33\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19": "Office Expenses", "\u0e04\u0e48\u0e32\u0e02\u0e19\u0e2a\u0e48\u0e07": "Transport", "\u0e04\u0e48\u0e32\u0e27\u0e31\u0e2a\u0e14\u0e38": "Materials", "\u0e04\u0e48\u0e32\u0e42\u0e06\u0e29\u0e13\u0e32": "Advertising", "\u0e2d\u0e37\u0e48\u0e19\u0e46": "Others" },
     } : {
@@ -1699,12 +1753,19 @@ export default function ClientsUsersClient({ session }) {
       colRef: "\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48\u0e2d\u0e49\u0e32\u0e07\u0e2d\u0e34\u0e07",
       colDesc: "\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23/\u0e23\u0e32\u0e22\u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14",
       colIncome: "\u0e23\u0e32\u0e22\u0e23\u0e31\u0e1a",
+      colVat: "VAT",
       colExpense: "\u0e23\u0e32\u0e22\u0e08\u0e48\u0e32\u0e22",
       colBalance: "\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e2a\u0e30\u0e2a\u0e21",
       footerTotal: "\u0e23\u0e27\u0e21\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14",
       footerItems: "\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23",
       noData: "\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23",
       printBtn: "\ud83d\udda8\ufe0f \u0e1e\u0e34\u0e21\u0e1e\u0e4c",
+      vatPeriod1: "\u0e21.\u0e04.\u2013\u0e21\u0e34.\u0e22.",
+      vatPeriod2: "\u0e01.\u0e04.\u2013\u0e18.\u0e04.",
+      vatPayPeriod1: "\u0e0a\u0e33\u0e23\u0e30 \u0e01.\u0e04.",
+      vatPayPeriod2: "\u0e0a\u0e33\u0e23\u0e30 \u0e21.\u0e04.",
+      incomeTaxLabel: "\ud83d\udcbc \u0e20\u0e32\u0e29\u0e35\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49\u0e2a\u0e34\u0e49\u0e19\u0e1b\u0e35",
+      marginalLabel: "\u0e02\u0e31\u0e49\u0e19\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14",
       statusMap: { PENDING: "\u0e23\u0e2d\u0e0a\u0e33\u0e23\u0e30", PAID: "\u0e0a\u0e33\u0e23\u0e30\u0e41\u0e25\u0e49\u0e27", OVERDUE: "\u0e40\u0e01\u0e34\u0e19\u0e01\u0e33\u0e2b\u0e19\u0e14", CANCELLED: "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01" },
       categoryMap: {},
     };
@@ -1712,11 +1773,19 @@ export default function ClientsUsersClient({ session }) {
     const fmt = n => Math.abs(n).toLocaleString(L.locale);
     const PAID_INV = ["PAID"];
     const PAID_EXP = ["\u0e41\u0e19\u0e1a\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27", "PAID"];
+    const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+    const curReceipts = receipts.filter(r => (r.currency || "THB") === currency && r.clientId === goeunClientId);
     const curInvoices = invoices.filter(i => (i.currency || "THB") === currency && (!paidOnly || PAID_INV.includes(i.status)));
     const curExpenses = expenses.filter(e => (e.currency || "THB") === currency && (!paidOnly || PAID_EXP.includes(e.status)));
     const rows = [
-      ...curInvoices.map(i => ({ date: new Date(i.createdAt), type: "income", ref: i.number, desc: i.client?.name || clients.find(c => c.id === i.clientId)?.name || "\u2014", detail: L.statusMap[i.status] || i.status, income: Number(i.amount), expense: 0 })),
-      ...curExpenses.map(e => ({ date: new Date(e.date), type: "expense", ref: e.number, desc: L.categoryMap[e.category] || e.category, detail: L.statusMap[e.status] || e.status || L.statusMap["PENDING"], income: 0, expense: Number(e.amount) })),
+      ...curReceipts.map(r => {
+        const vatRate = r.vatRate ? Number(r.vatRate) : 0;
+        const total = Number(r.total);
+        const vat = vatRate > 0 ? Math.round(total * vatRate / (100 + vatRate) * 100) / 100 : 0;
+        return { date: new Date(r.issuedAt), type: "income", ref: r.number, desc: r.customerName || "\u2014", detail: L.statusMap["PAID"] || "\u0e2d\u0e2d\u0e01\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e47\u0e08\u0e41\u0e25\u0e49\u0e27", income: total, vat, expense: 0 };
+      }),
+      ...curInvoices.map(i => ({ date: new Date(i.createdAt), type: "income", ref: i.number, desc: i.client?.name || clients.find(c => c.id === i.clientId)?.name || "\u2014", detail: L.statusMap[i.status] || i.status, income: Number(i.amount), vat: 0, expense: 0 })),
+      ...curExpenses.map(e => ({ date: new Date(e.date), type: "expense", ref: e.number, desc: L.categoryMap[e.category] || e.category, detail: L.statusMap[e.status] || e.status || L.statusMap["PENDING"], income: 0, vat: 0, expense: Number(e.amount) })),
     ].sort((a, b) => a.date - b.date).filter(r => {
       if (!filterMode || filterMode === "all") return true;
       if (filterMode === "number") return !filterRef || r.ref.toLowerCase().includes(filterRef.toLowerCase());
@@ -1725,8 +1794,32 @@ export default function ClientsUsersClient({ session }) {
       return true;
     });
     let running = 0;
-    const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0);
+    const totalIncome = curReceipts.reduce((s, r) => s + Number(r.total), 0)
+      + curInvoices.reduce((s, i) => s + Number(i.amount), 0);
+    const totalVatPrint = rows.reduce((s, r) => s + (r.vat || 0), 0);
     const totalExpense = curExpenses.reduce((s, e) => s + Number(e.amount), 0);
+
+    // VAT period split (1-6 → pay July, 7-12 → pay Jan next year)
+    const calcVatPrint = r => { const vr = Number(r.vatRate||0); return vr > 0 ? Math.round(Number(r.total)*vr/(100+vr)*100)/100 : 0; };
+    const vat16Print = curReceipts.filter(r => { const m = new Date(r.issuedAt).getMonth()+1; return m >= 1 && m <= 6; }).reduce((s,r) => s + calcVatPrint(r), 0);
+    const vat712Print = curReceipts.filter(r => { const m = new Date(r.issuedAt).getMonth()+1; return m >= 7 && m <= 12; }).reduce((s,r) => s + calcVatPrint(r), 0);
+
+    // Income tax estimate (single person, Korean progressive brackets)
+    const netProfitNum = totalIncome - totalExpense;
+    function estTaxPrint(net) {
+      if (net <= 0) return 0;
+      const brackets = [[14e6,0.06],[50e6,0.15],[88e6,0.24],[150e6,0.35],[300e6,0.38],[500e6,0.40],[1e9,0.42],[Infinity,0.45]];
+      let tax = 0, prev = 0;
+      for (const [limit, rate] of brackets) {
+        if (net <= prev) break;
+        tax += (Math.min(net, limit) - prev) * rate;
+        prev = limit;
+      }
+      return Math.round(tax);
+    }
+    const incomeTaxAmt = currency === "KRW" ? estTaxPrint(Math.max(0, netProfitNum)) : null;
+    const incomeTaxRate = (incomeTaxAmt !== null && netProfitNum > 0) ? (incomeTaxAmt / netProfitNum * 100).toFixed(1) : null;
+    const marginalRatePrint = netProfitNum <= 0 ? 0 : netProfitNum <= 14e6 ? 6 : netProfitNum <= 50e6 ? 15 : netProfitNum <= 88e6 ? 24 : netProfitNum <= 150e6 ? 35 : netProfitNum <= 300e6 ? 38 : netProfitNum <= 500e6 ? 40 : netProfitNum <= 1e9 ? 42 : 45;
     const netProfit = totalIncome - totalExpense;
     const isProfit = netProfit >= 0;
     const profitBg = isProfit ? "#e8f5e9" : "#fdecea";
@@ -1744,6 +1837,7 @@ export default function ClientsUsersClient({ session }) {
       const refColor = r.type === "income" ? "#1a4a9e" : "#8b1a1a";
       const typeLabel = r.type === "income" ? L.incomeRow : L.expenseRow;
       const incCell = r.income > 0 ? "+" + sym + fmt(r.income) : "\u2014";
+      const vatCell = r.vat > 0 ? sym + fmt(r.vat) : "\u2014";
       const expCell = r.expense > 0 ? "-" + sym + fmt(r.expense) : "\u2014";
       return "<tr>" +
         "<td style='text-align:center;color:#888'>" + (idx + 1) + "</td>" +
@@ -1751,6 +1845,7 @@ export default function ClientsUsersClient({ session }) {
         "<td><code style='font-size:11px;color:" + refColor + "'>" + r.ref + "</code></td>" +
         "<td>" + r.desc + "<br/><span style='font-size:11px;color:#666'>" + typeLabel + " \u00b7 " + r.detail + "</span></td>" +
         "<td style='text-align:right;color:green;font-weight:700'>" + incCell + "</td>" +
+        "<td style='text-align:right;color:#b8860b;font-size:11px'>" + vatCell + "</td>" +
         "<td style='text-align:right;color:#c0392b;font-weight:700'>" + expCell + "</td>" +
         "<td style='text-align:right;font-weight:800;color:" + runColor + "'>" + runSign + sym + fmt(running) + "</td>" +
         "</tr>";
@@ -1763,14 +1858,18 @@ export default function ClientsUsersClient({ session }) {
       "body{font-family:'Sarabun','Malgun Gothic',Arial,sans-serif;padding:24px;color:#111;font-size:13px}" +
       "h2{margin-bottom:4px}.sub{color:#555;margin-bottom:12px;font-size:12px}" +
       ".summary{display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap}" +
-      ".card{border:1px solid #ccc;border-radius:6px;padding:12px 20px;text-align:center;min-width:140px}" +
-      ".card .label{font-size:11px;color:#888}.card .val{font-size:18px;font-weight:800}" +
+      ".card{border:1px solid #ccc;border-radius:6px;padding:12px 16px;text-align:center;min-width:120px}" +
+      ".card .label{font-size:11px;color:#888;margin-bottom:4px}.card .val{font-size:18px;font-weight:800}" +
+      ".card .sub{font-size:10px;color:#888;margin-top:3px}" +
+      ".vat-split{font-size:11px;text-align:left;margin-top:6px}" +
+      ".vat-split div{padding:3px 0;border-bottom:1px solid #eee}" +
       ".profit-banner{padding:10px 16px;border-radius:6px;font-weight:700;font-size:14px;margin-bottom:16px;" +
       "background:" + profitBg + ";color:" + profitColor + ";border:1px solid " + profitBorder + "}" +
       "table{width:100%;border-collapse:collapse}" +
       "th{background:#1a1a2e;color:#fff;padding:8px 10px;text-align:left;font-size:12px}" +
       "td{padding:7px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top}" +
       "tr:nth-child(even) td{background:#fafafa}" +
+      "tfoot{display:table-row-group}" +
       "tfoot td{font-weight:800;background:#f0f0f0;border-top:2px solid #333}" +
       "@media print{button{display:none}}" +
       "</style></head><body>" +
@@ -1781,13 +1880,20 @@ export default function ClientsUsersClient({ session }) {
         "<div class='card'><div class='label'>" + L.incomeTotal + "</div><div class='val' style='color:green'>" + sym + fmt(totalIncome) + "</div><div class='label'>" + currency + "</div></div>" +
         "<div class='card'><div class='label'>" + L.expenseTotal + "</div><div class='val' style='color:#c0392b'>" + sym + fmt(totalExpense) + "</div><div class='label'>" + currency + "</div></div>" +
         "<div class='card'><div class='label'>" + profitLabel + "</div><div class='val' style='color:" + profitValColor + "'>" + profitSign + sym + netProfitFmt + "</div><div class='label'>" + currency + "</div></div>" +
+        "<div class='card' style='border-color:#b8860b'><div class='label'>🧾 VAT</div>" +
+          "<div class='vat-split'>" +
+          "<div>" + L.vatPeriod1 + " <strong style='color:#b8860b'>" + sym + fmt(vat16Print) + "</strong> <span style='color:#888;font-size:10px'>→ " + L.vatPayPeriod1 + "</span></div>" +
+          "<div>" + L.vatPeriod2 + " <strong style='color:#b8860b'>" + sym + fmt(vat712Print) + "</strong> <span style='color:#888;font-size:10px'>→ " + L.vatPayPeriod2 + "</span></div>" +
+          "</div></div>" +
+        (incomeTaxRate !== null ? "<div class='card' style='border-color:#7c3aed'><div class='label'>" + L.incomeTaxLabel + "</div><div class='val' style='color:#7c3aed'>" + incomeTaxRate + "%</div><div class='sub'>" + L.marginalLabel + " " + marginalRatePrint + "% · " + sym + fmt(incomeTaxAmt) + "</div></div>" : "") +
       "</div>" +
       "<div class='profit-banner'>" + profitBannerLabel + ": " + profitSign + sym + netProfitFmt + " " + currency + " &nbsp;|&nbsp; " + L.incomeTotal + " " + sym + fmt(totalIncome) + " &minus; " + L.expenseTotal + " " + sym + fmt(totalExpense) + "</div>" +
       "<table><thead><tr><th>" + L.colNo + "</th><th>" + L.colDate + "</th><th>" + L.colRef + "</th><th>" + L.colDesc + "</th>" +
-      "<th style='text-align:right'>" + L.colIncome + "</th><th style='text-align:right'>" + L.colExpense + "</th><th style='text-align:right'>" + L.colBalance + "</th></tr></thead>" +
-      "<tbody>" + (tableRows || "<tr><td colspan='7' style='text-align:center;padding:24px;color:#888'>" + L.noData + "</td></tr>") + "</tbody>" +
+      "<th style='text-align:right'>" + L.colIncome + "</th><th style='text-align:right'>" + L.colVat + "</th><th style='text-align:right'>" + L.colExpense + "</th><th style='text-align:right'>" + L.colBalance + "</th></tr></thead>" +
+      "<tbody>" + (tableRows || "<tr><td colspan='8' style='text-align:center;padding:24px;color:#888'>" + L.noData + "</td></tr>") + "</tbody>" +
       "<tfoot><tr><td colspan='4'>" + L.footerTotal + " (" + rows.length + " " + L.footerItems + ")</td>" +
       "<td style='text-align:right;color:green'>+" + sym + fmt(totalIncome) + "</td>" +
+      "<td style='text-align:right;color:#b8860b'>" + (totalVatPrint > 0 ? sym + fmt(totalVatPrint) : "—") + "</td>" +
       "<td style='text-align:right;color:#c0392b'>-" + sym + fmt(totalExpense) + "</td>" +
       "<td style='text-align:right;color:" + profitValColor + "'>" + profitSign + sym + netProfitFmt + "</td></tr></tfoot></table>" +
       "<br/><button onclick='window.print()' style='padding:8px 20px;font-size:14px;cursor:pointer'>" + L.printBtn + "</button>" +
@@ -2898,6 +3004,8 @@ export default function ClientsUsersClient({ session }) {
         const PAID_STATUSES_INV = ["PAID"];
         const PAID_STATUSES_EXP = ["แนบใบเสร็จแล้ว", "PAID"];
         const curInvoices = invoices.filter(i => (i.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_INV.includes(i.status)));
+        const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+        const curReceipts = receipts.filter(r => (r.currency || "THB") === ledgerCurrency && r.clientId === goeunClientId);
         const curExpenses = expenses.filter(e => (e.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_EXP.includes(e.status)));
 
         // Build combined ledger rows sorted by date
@@ -2906,15 +3014,32 @@ export default function ClientsUsersClient({ session }) {
             id: i.id, date: new Date(i.createdAt), type: "income",
             ref: i.number, desc: i.client?.name || "—",
             detail: { PENDING: "รอชำระ", PAID: "ชำระแล้ว", OVERDUE: "เกินกำหนด", CANCELLED: "ยกเลิก" }[i.status] || i.status,
-            income: Number(i.amount), expense: 0,
+            income: Number(i.amount), vat: 0, expense: 0,
           })),
+          ...curReceipts.map(r => {
+            const vatRate = r.vatRate ? Number(r.vatRate) : 0;
+            const total = Number(r.total);
+            const vat = vatRate > 0 ? Math.round(total * vatRate / (100 + vatRate) * 100) / 100 : 0;
+            return {
+              id: r.id, date: new Date(r.issuedAt), type: "income",
+              ref: r.number, desc: r.customerName || "—",
+              detail: "ออกใบเสร็จแล้ว",
+              income: total, vat, expense: 0,
+            };
+          }),
           ...curExpenses.map(e => ({
             id: e.id, date: new Date(e.date), type: "expense",
             ref: e.number, desc: e.category,
             detail: e.status || "รอชำระ",
-            income: 0, expense: Number(e.amount),
+            income: 0, vat: 0, expense: Number(e.amount),
           })),
-        ].sort((a, b) => a.date - b.date);
+        ].sort((a, b) => a.date - b.date).filter(r => {
+          if (!ledgerFilterFrom && !ledgerFilterTo) return true;
+          const d = r.date.toISOString().slice(0, 10);
+          if (ledgerFilterFrom && d < ledgerFilterFrom) return false;
+          if (ledgerFilterTo && d > ledgerFilterTo) return false;
+          return true;
+        });
 
         // Compute running balance
         let running = 0;
@@ -2923,10 +3048,43 @@ export default function ClientsUsersClient({ session }) {
           return { ...r, running };
         });
 
-        const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0);
+        const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0)
+          + curReceipts.reduce((s, r) => s + Number(r.total), 0);
+        const totalVat = rows.reduce((s, r) => s + (r.vat || 0), 0);
         const totalExpense = curExpenses.reduce((s, e) => s + Number(e.amount), 0);
+
+        // VAT split by billing period (use all curReceipts, not date-filtered rows)
+        const calcVat = r => { const vr = Number(r.vatRate||0); return vr > 0 ? Math.round(Number(r.total)*vr/(100+vr)*100)/100 : 0; };
+        const vat16 = curReceipts.filter(r => { const m = new Date(r.issuedAt).getMonth()+1; return m >= 1 && m <= 6; }).reduce((s,r) => s + calcVat(r), 0);
+        const vat712 = curReceipts.filter(r => { const m = new Date(r.issuedAt).getMonth()+1; return m >= 7 && m <= 12; }).reduce((s,r) => s + calcVat(r), 0);
         const netProfit = totalIncome - totalExpense;
         const isProfit = netProfit >= 0;
+
+        // Korean progressive income tax estimate (per person, split 2 ways)
+        function estimateKrwTax(net) {
+          if (net <= 0) return 0;
+          const brackets = [[14e6,0.06],[50e6,0.15],[88e6,0.24],[150e6,0.35],[300e6,0.38],[500e6,0.40],[1e9,0.42],[Infinity,0.45]];
+          let tax = 0, prev = 0;
+          for (const [limit, rate] of brackets) {
+            if (net <= prev) break;
+            tax += (Math.min(net, limit) - prev) * rate;
+            prev = limit;
+          }
+          return Math.round(tax);
+        }
+        const taxableNet = Math.max(0, netProfit);
+        const estIncomeTax = ledgerCurrency === "KRW" ? estimateKrwTax(taxableNet) : null;
+        const effectiveTaxRate = (estIncomeTax !== null && taxableNet > 0)
+          ? (estIncomeTax / taxableNet * 100).toFixed(1)
+          : null;
+        const marginalRate = taxableNet <= 0 ? 0
+          : taxableNet <= 14e6 ? 6
+          : taxableNet <= 50e6 ? 15
+          : taxableNet <= 88e6 ? 24
+          : taxableNet <= 150e6 ? 35
+          : taxableNet <= 300e6 ? 38
+          : taxableNet <= 500e6 ? 40
+          : taxableNet <= 1e9 ? 42 : 45;
 
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 24, overflowY: "auto" }}>
@@ -2947,15 +3105,27 @@ export default function ClientsUsersClient({ session }) {
                     onClick={() => setLedgerCurrency(cur)}>{symMap[cur]} {cur}</button>
                 ))}
               </div>
-              {/* Paid-only filter toggle */}
-              <div style={{ marginBottom: 20 }}>
-                <button onClick={() => setLedgerPaidOnly(p => !p)} style={{ ...S.btn(ledgerPaidOnly ? "#0f2318" : "#1e2130", ledgerPaidOnly ? "#4ade80" : "#8b8fa8"), border: ledgerPaidOnly ? "1px solid #4ade80" : "1px solid #2a2d3a", fontSize: 12, padding: "5px 14px" }}>
+              {/* Filters row */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "flex-end" }}>
+                <button onClick={() => setLedgerPaidOnly(p => !p)} style={{ ...S.btn(ledgerPaidOnly ? "#0f2318" : "#1e2130", ledgerPaidOnly ? "#4ade80" : "#8b8fa8"), border: ledgerPaidOnly ? "1px solid #4ade80" : "1px solid #2a2d3a", fontSize: 12, padding: "5px 14px", whiteSpace: "nowrap" }}>
                   {ledgerPaidOnly ? "✅" : "⬜"} แสดงเฉพาะ ชำระแล้ว / แนบใบเสร็จแล้ว
                 </button>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flex: 1, minWidth: 260 }}>
+                  <span style={{ fontSize: 12, color: "#8b8fa8", whiteSpace: "nowrap" }}>📅 จาก</span>
+                  <input type="date" value={ledgerFilterFrom} onChange={e => setLedgerFilterFrom(e.target.value)}
+                    style={{ ...S.input, fontSize: 12, padding: "5px 10px", flex: 1 }} />
+                  <span style={{ fontSize: 12, color: "#8b8fa8", whiteSpace: "nowrap" }}>ถึง</span>
+                  <input type="date" value={ledgerFilterTo} onChange={e => setLedgerFilterTo(e.target.value)}
+                    style={{ ...S.input, fontSize: 12, padding: "5px 10px", flex: 1 }} />
+                  {(ledgerFilterFrom || ledgerFilterTo) && (
+                    <button onClick={() => { setLedgerFilterFrom(""); setLedgerFilterTo(""); }}
+                      style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>✕</button>
+                  )}
+                </div>
               </div>
 
               {/* Summary cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24, "@media(maxWidth:900px)": { gridTemplateColumns: "1fr 1fr 1fr" } }}>
                 {[
                   { label: "💰 รายรับรวม", value: totalIncome, color: "#4ade80", bg: "#0f2318", border: "#166534" },
                   { label: "💸 รายจ่ายรวม", value: totalExpense, color: "#f87171", bg: "#1f0f0f", border: "#7f1d1d" },
@@ -2970,6 +3140,36 @@ export default function ClientsUsersClient({ session }) {
                     {!isCount && <div style={{ fontSize: 11, color: "#4a5070", marginTop: 2 }}>{ledgerCurrency}</div>}
                   </div>
                 ))}
+                {/* VAT 2-period card */}
+                <div style={{ background: "#1a1500", border: "1px solid #78350f", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 8 }}>🧾 VAT แบ่งงวด</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ background: "#1f1800", borderRadius: 6, padding: "5px 8px" }}>
+                      <div style={{ fontSize: 9, color: "#92400e", fontWeight: 700, marginBottom: 2 }}>งวด ม.ค.–มิ.ย. → ชำระ ก.ค.</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: vat16 > 0 ? "#fbbf24" : "#4a5070" }}>{sym}{fmt(vat16)}</div>
+                    </div>
+                    <div style={{ background: "#1f1800", borderRadius: 6, padding: "5px 8px" }}>
+                      <div style={{ fontSize: 9, color: "#92400e", fontWeight: 700, marginBottom: 2 }}>งวด ก.ค.–ธ.ค. → ชำระ ม.ค.</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: vat712 > 0 ? "#fbbf24" : "#4a5070" }}>{sym}{fmt(vat712)}</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Income Tax card */}
+                <div style={{ background: "#1a0f2e", border: "1px solid #581c87", borderRadius: 10, padding: "16px 14px", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 6 }}>💼 ภาษีรายได้สิ้นปี</div>
+                  {effectiveTaxRate !== null ? (
+                    <>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: "#c084fc" }}>{effectiveTaxRate}%</div>
+                      <div style={{ fontSize: 10, color: "#a78bfa", marginTop: 3 }}>
+                        ขั้นสูงสุด {marginalRate}% · ₩{fmt(estIncomeTax)}
+                      </div>
+                    </>
+                  ) : taxableNet <= 0 ? (
+                    <div style={{ fontSize: 14, color: "#4a5070", marginTop: 4 }}>ไม่มีกำไร</div>
+                  ) : (
+                    <div style={{ fontSize: 14, color: "#4a5070", marginTop: 4 }}>คำนวณเฉพาะ KRW</div>
+                  )}
+                </div>
               </div>
 
               {/* Profit/Loss banner */}
@@ -2987,14 +3187,14 @@ export default function ClientsUsersClient({ session }) {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["#", "วันที่", "เลขที่อ้างอิง", "รายการ / รายละเอียด", `รายรับ (${ledgerCurrency})`, `รายจ่าย (${ledgerCurrency})`, `คงเหลือสะสม`].map(h => (
+                      {["#", "วันที่", "เลขที่อ้างอิง", "รายการ / รายละเอียด", `รายรับ (${ledgerCurrency})`, `VAT`, `รายจ่าย (${ledgerCurrency})`, `คงเหลือสะสม`].map(h => (
                         <th key={h} style={{ ...S.th, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {ledgerRows.length === 0 ? (
-                      <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", color: "#4a5070", padding: 32 }}>ไม่มีรายการในสกุลเงินนี้</td></tr>
+                      <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "#4a5070", padding: 32 }}>ไม่มีรายการในสกุลเงินนี้</td></tr>
                     ) : ledgerRows.map((r, idx) => (
                       <tr key={r.id} style={{ background: idx % 2 === 0 ? "transparent" : "#0f111633" }}>
                         <td style={{ ...S.td, color: "#4a5070", fontSize: 11, textAlign: "center" }}>{idx + 1}</td>
@@ -3011,6 +3211,9 @@ export default function ClientsUsersClient({ session }) {
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 700, color: "#4ade80" }}>
                           {r.income > 0 ? `+${sym}${fmt(r.income)}` : <span style={{ color: "#2a2d3a" }}>—</span>}
                         </td>
+                        <td style={{ ...S.td, textAlign: "right", fontSize: 11, color: r.vat > 0 ? "#fbbf24" : "#2a2d3a" }}>
+                          {r.vat > 0 ? `${sym}${fmt(r.vat)}` : "—"}
+                        </td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 700, color: "#f87171" }}>
                           {r.expense > 0 ? `-${sym}${fmt(r.expense)}` : <span style={{ color: "#2a2d3a" }}>—</span>}
                         </td>
@@ -3024,6 +3227,7 @@ export default function ClientsUsersClient({ session }) {
                       <tr style={{ borderTop: "2px solid #2a2d3a", background: "#1e2130" }}>
                         <td colSpan={4} style={{ ...S.td, fontWeight: 700, color: "#8b8fa8" }}>รวมทั้งหมด</td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 800, color: "#4ade80" }}>+{sym}{fmt(totalIncome)}</td>
+                        <td style={{ ...S.td, textAlign: "right", fontWeight: 700, color: "#fbbf24" }}>{totalVat > 0 ? `${sym}${fmt(totalVat)}` : "—"}</td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 800, color: "#f87171" }}>-{sym}{fmt(totalExpense)}</td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 800, color: isProfit ? "#4ade80" : "#f87171" }}>
                           {isProfit ? "+" : "-"}{sym}{fmt(netProfit)}
@@ -3079,7 +3283,21 @@ export default function ClientsUsersClient({ session }) {
                   ))}
                 </div>
                 <div style={{ marginTop: 10, background: "#1a1d27", borderRadius: 8, padding: "10px 14px", border: "1px solid #2a2d3a", fontSize: 13, color: "#8b8fa8" }}>
-                  {(() => { const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency).length; const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency).length; const ti = invoices.filter(i=>(i.currency||"THB")===ledgerCurrency).reduce((s,i)=>s+Number(i.amount),0); const te = expenses.filter(e=>(e.currency||"THB")===ledgerCurrency).reduce((s,e)=>s+Number(e.amount),0); const sym={THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||""; return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{ci} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce} รายการ</span> · {ti-te >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{(ti-te).toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(ti-te).toLocaleString("th-TH")}</span>}</>; })()}
+                  {(() => {
+                    const goeunId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+                    const PAID_STATUSES_INV = ["PAID"];
+                    const PAID_STATUSES_EXP = ["แนบใบเสร็จแล้ว", "PAID"];
+                    const cr = receipts.filter(r => (r.currency||"THB") === ledgerCurrency && r.clientId === goeunId);
+                    const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_INV.includes(i.status)));
+                    const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_EXP.includes(e.status)));
+                    const tr = cr.reduce((s,r) => s + Number(r.total), 0);
+                    const ti = ci.reduce((s,i) => s + Number(i.amount), 0);
+                    const te = ce.reduce((s,e) => s + Number(e.amount), 0);
+                    const totalIn = tr + ti;
+                    const net = totalIn - te;
+                    const sym = {THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||"";
+                    return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{cr.length + ci.length} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce.length} รายการ</span> · {net >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{net.toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(net).toLocaleString("th-TH")}</span>}</>;
+                  })()}
                 </div>
                 {/* Ledger search filter */}
                 <div style={{ marginTop: 12 }}>
@@ -3219,6 +3437,185 @@ export default function ClientsUsersClient({ session }) {
           <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 460, border: "1px solid #2a2d3a" }}>
             <h5 style={{ margin: "0 0 20px", color: "#f87171" }}>{editExpenseId ? "✏️ แก้ไขค่าใช้จ่าย" : "📝 สร้างบันทึกค่าใช้จ่าย"}</h5>
             <div style={{ display: "grid", gap: 14 }}>
+
+              {/* VAT Billing Helper */}
+              {!editExpenseId && (() => {
+                const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+                const [monthFrom, monthTo] = vatBillPeriod === "1-6" ? [1, 6] : [7, 12];
+                const dateFrom = new Date(`${vatBillYear}-${String(monthFrom).padStart(2, "0")}-01`);
+                const dateTo = new Date(`${vatBillYear}-${String(monthTo).padStart(2, "0")}-${monthTo === 6 ? 30 : 31}`);
+                const periodReceipts = receipts.filter(r =>
+                  r.clientId === goeunClientId &&
+                  (r.currency || "THB") === vatBillCurrency &&
+                  new Date(r.issuedAt) >= dateFrom &&
+                  new Date(r.issuedAt) <= dateTo &&
+                  r.vatRate && Number(r.vatRate) > 0
+                );
+                const vatTotal = periodReceipts.reduce((s, r) => {
+                  const vr = Number(r.vatRate);
+                  const total = Number(r.total);
+                  return s + Math.round(total * vr / (100 + vr) * 100) / 100;
+                }, 0);
+                const symMap = { THB: "฿", KRW: "₩", USD: "$" };
+                const sym = symMap[vatBillCurrency] || "";
+                const periodLabel = vatBillPeriod === "1-6" ? "ม.ค. – มิ.ย." : "ก.ค. – ธ.ค.";
+                return (
+                  <div style={{ background: "#0f1a2e", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: vatBillMode ? 12 : 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24" }}>🧾 ดึงยอด VAT มาสร้างบิลชำระภาษี</span>
+                      <button type="button" onClick={() => setVatBillMode(p => !p)}
+                        style={{ background: vatBillMode ? "#78350f" : "#1e3a5f", border: "none", color: vatBillMode ? "#fbbf24" : "#7eb8f7", borderRadius: 6, padding: "3px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
+                        {vatBillMode ? "▲ ซ่อน" : "▼ เปิด"}
+                      </button>
+                    </div>
+                    {vatBillMode && (
+                      <>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                          <div>
+                            <label style={{ ...S.label, marginBottom: 4 }}>งวด</label>
+                            <select style={{ ...S.input, fontSize: 12 }} value={vatBillPeriod} onChange={e => setVatBillPeriod(e.target.value)}>
+                              <option value="1-6">ม.ค. – มิ.ย. (งวด 1)</option>
+                              <option value="7-12">ก.ค. – ธ.ค. (งวด 2)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ ...S.label, marginBottom: 4 }}>ปี</label>
+                            <select style={{ ...S.input, fontSize: 12 }} value={vatBillYear} onChange={e => setVatBillYear(Number(e.target.value))}>
+                              {[new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(y => (
+                                <option key={y} value={y}>{y}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ ...S.label, marginBottom: 4 }}>สกุลเงิน</label>
+                            <select style={{ ...S.input, fontSize: 12 }} value={vatBillCurrency} onChange={e => setVatBillCurrency(e.target.value)}>
+                              <option value="KRW">₩ KRW</option>
+                              <option value="THB">฿ THB</option>
+                              <option value="USD">$ USD</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div style={{ background: "#1a1500", border: "1px solid #78350f", borderRadius: 6, padding: "10px 14px", marginBottom: 10 }}>
+                          <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 4 }}>
+                            VAT รวมจากใบเสร็จ {periodLabel} {vatBillYear} ({periodReceipts.length} ใบ)
+                          </div>
+                          <div style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24" }}>
+                            {sym}{vatTotal.toLocaleString("th-TH")}
+                          </div>
+                          {periodReceipts.length === 0 && (
+                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>ไม่พบใบเสร็จที่มี VAT ในงวดนี้</div>
+                          )}
+                        </div>
+                        <button type="button"
+                          disabled={vatTotal <= 0}
+                          onClick={() => {
+                            const dueDate = vatBillPeriod === "1-6"
+                              ? `${vatBillYear}-07-15`
+                              : `${vatBillYear + 1}-01-15`;
+                            setExpenseForm(p => ({
+                              ...p,
+                              category: "ค่าภาษีมูลค่าเพิ่ม",
+                              amount: String(Math.round(vatTotal * 100) / 100),
+                              currency: vatBillCurrency,
+                              date: dueDate,
+                              notes: `VAT งวด ${periodLabel} ${vatBillYear} (${periodReceipts.length} ใบเสร็จ)`,
+                            }));
+                            setVatBillMode(false);
+                          }}
+                          style={{ ...S.btn(vatTotal > 0 ? "#78350f" : "#1e2130", vatTotal > 0 ? "#fbbf24" : "#4a5070"), fontSize: 12, padding: "6px 16px", opacity: vatTotal > 0 ? 1 : 0.5 }}>
+                          ✅ ใช้ยอดนี้ → กรอกในฟอร์ม
+                        </button>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Income Tax Billing Helper — KRW only */}
+              {!editExpenseId && (() => {
+                const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+                const yearStart = new Date(`${incomeTaxYear}-01-01`);
+                const yearEnd = new Date(`${incomeTaxYear + 1}-01-01`);
+                const yearReceipts = receipts.filter(r =>
+                  r.clientId === goeunClientId &&
+                  r.currency === "KRW" &&
+                  new Date(r.issuedAt) >= yearStart &&
+                  new Date(r.issuedAt) < yearEnd
+                );
+                const yearExpenses = expenses.filter(e =>
+                  e.currency === "KRW" &&
+                  new Date(e.date) >= yearStart &&
+                  new Date(e.date) < yearEnd
+                );
+                const totalInc = yearReceipts.reduce((s, r) => s + Number(r.total), 0);
+                const totalExp = yearExpenses.reduce((s, e) => s + Number(e.amount), 0);
+                const netProfit = totalInc - totalExp;
+                function calcKrwTax(net) {
+                  if (net <= 0) return 0;
+                  const brackets = [[14e6,0.06],[50e6,0.15],[88e6,0.24],[150e6,0.35],[300e6,0.38],[500e6,0.40],[1e9,0.42],[Infinity,0.45]];
+                  let tax = 0, prev = 0;
+                  for (const [limit, rate] of brackets) {
+                    if (net <= prev) break;
+                    tax += (Math.min(net, limit) - prev) * rate;
+                    prev = limit;
+                  }
+                  return Math.round(tax);
+                }
+                const totalTax = calcKrwTax(Math.max(0, netProfit));
+                const effectiveRate = netProfit > 0 ? ((totalTax / netProfit) * 100).toFixed(1) : "0.0";
+                return (
+                  <div style={{ background: "#0f0f1e", border: "1px solid #581c87", borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: incomeTaxBillMode ? 12 : 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#c084fc" }}>💼 ดึงยอดภาษีรายได้สิ้นปี (KRW)</span>
+                      <button type="button" onClick={() => setIncomeTaxBillMode(p => !p)}
+                        style={{ background: incomeTaxBillMode ? "#581c87" : "#1e1a3a", border: "none", color: "#c084fc", borderRadius: 6, padding: "3px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
+                        {incomeTaxBillMode ? "▲ ซ่อน" : "▼ เปิด"}
+                      </button>
+                    </div>
+                    {incomeTaxBillMode && (
+                      <>
+                        <div style={{ marginBottom: 10 }}>
+                          <label style={{ ...S.label, marginBottom: 4 }}>ปีภาษี</label>
+                          <select style={{ ...S.input, fontSize: 12, maxWidth: 140 }} value={incomeTaxYear} onChange={e => setIncomeTaxYear(Number(e.target.value))}>
+                            {[new Date().getFullYear() - 1, new Date().getFullYear() - 2, new Date().getFullYear() - 3].map(y => (
+                              <option key={y} value={y}>{y} (ยื่นภาษีปี {y + 1})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div style={{ background: "#1a0f2e", border: "1px solid #7c3aed", borderRadius: 6, padding: "10px 14px", marginBottom: 10 }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11, color: "#8b8fa8", marginBottom: 8 }}>
+                            <div>รายรับรวม KRW {incomeTaxYear}: <strong style={{ color: "#4ade80" }}>₩{totalInc.toLocaleString("th-TH")}</strong></div>
+                            <div>รายจ่ายรวม KRW {incomeTaxYear}: <strong style={{ color: "#f87171" }}>₩{totalExp.toLocaleString("th-TH")}</strong></div>
+                            <div>กำไรสุทธิ: <strong style={{ color: netProfit >= 0 ? "#4ade80" : "#f87171" }}>₩{Math.abs(netProfit).toLocaleString("th-TH")}</strong></div>
+                          </div>
+                          <div style={{ borderTop: "1px solid #2a1f4a", paddingTop: 8 }}>
+                            <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 4 }}>
+                              ประมาณการภาษีรายได้ (อัตราก้าวหน้าเกาหลี · อัตราแท้จริง {effectiveRate}%)
+                            </div>
+                            <div style={{ fontSize: 20, fontWeight: 800, color: "#c084fc" }}>₩{totalTax.toLocaleString("th-TH")}</div>
+                          </div>
+                        </div>
+                        <button type="button" disabled={totalTax <= 0}
+                          onClick={() => {
+                            setExpenseForm(p => ({
+                              ...p,
+                              category: "อื่นๆ",
+                              amount: String(totalTax),
+                              currency: "KRW",
+                              date: `${incomeTaxYear + 1}-05-31`,
+                              notes: `ภาษีรายได้สิ้นปี ${incomeTaxYear} · กำไรสุทธิ ₩${netProfit.toLocaleString("th-TH")} · อัตรา ${effectiveRate}%`,
+                            }));
+                            setIncomeTaxBillMode(false);
+                          }}
+                          style={{ ...S.btn(totalTax > 0 ? "#4c1d95" : "#1e2130", totalTax > 0 ? "#c084fc" : "#4a5070"), fontSize: 12, padding: "6px 16px", opacity: totalTax > 0 ? 1 : 0.5 }}>
+                          ✅ ใช้ยอดนี้ → ₩{totalTax.toLocaleString("th-TH")}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
               <div>
                 <label style={S.label}>หมวดหมู่ *</label>
                 <select style={S.input} value={expenseForm.category} onChange={e => setExpenseForm(p => ({ ...p, category: e.target.value }))}>
@@ -3525,10 +3922,33 @@ export default function ClientsUsersClient({ session }) {
               </div>
               <div>
                 <label style={S.label}>ผูกกับบริษัท</label>
-                <select style={S.input} value={userForm.clientId} onChange={e => setUserForm(p => ({ ...p, clientId: e.target.value }))}>
-                  <option value="">— ไม่ผูกกับบริษัทใด —</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <select style={{ ...S.input, flex: 1 }} value={userForm.clientId} onChange={e => setUserForm(p => ({ ...p, clientId: e.target.value }))}>
+                    <option value="">— ไม่ผูกกับบริษัทใด —</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <button type="button" title="เพิ่มบริษัทใหม่"
+                    style={{ ...S.btn("#15304d", "#7eb8f7"), padding: "0 14px", whiteSpace: "nowrap", fontSize: 18, minWidth: 40 }}
+                    onClick={() => { setShowAddClient(p => !p); setNewClientName(""); }}>
+                    +
+                  </button>
+                </div>
+                {showAddClient && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <input
+                      style={{ ...S.input, flex: 1 }}
+                      placeholder="ชื่อบริษัทใหม่ เช่น ABC Co., Ltd."
+                      value={newClientName}
+                      onChange={e => setNewClientName(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && saveNewClient()}
+                      autoFocus
+                    />
+                    <button type="button" style={S.btn("#1e3a5f", "#7eb8f7")} onClick={saveNewClient} disabled={savingNewClient}>
+                      {savingNewClient ? "..." : "บันทึก"}
+                    </button>
+                    <button type="button" style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setShowAddClient(false)}>ยกเลิก</button>
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
@@ -3734,15 +4154,47 @@ export default function ClientsUsersClient({ session }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <button type="button" style={S.btn("#15304d", "#7eb8f7")} onClick={addReceiptItemRow}>+ เพิ่มรายการ</button>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 12, color: "#8b8fa8" }}>
-                    ก่อนลด {receiptForm.items.reduce((sum, item) => sum + calcReceiptItem(item).subtotal, 0).toLocaleString("th-TH")} ·
-                    ส่วนลด {receiptForm.items.reduce((sum, item) => sum + calcReceiptItem(item).totalDiscount, 0).toLocaleString("th-TH")}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#8b8fa8" }}>รวมทั้งสิ้น</div>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: "#5ecb8a" }}>
-                    {receiptForm.items.reduce((sum, item) => sum + calcReceiptItem(item).netTotal, 0).toLocaleString("th-TH")} {receiptForm.currency}
-                  </div>
+                  {(() => {
+                    const netAfterDiscount = receiptForm.items.reduce((sum, item) => sum + calcReceiptItem(item).netTotal, 0);
+                    const vatPct = Math.max(0, Math.min(100, Number(receiptForm.vatRate) || 0));
+                    const vatAmount = Math.round(netAfterDiscount * vatPct / 100 * 100) / 100;
+                    const grandTotal = Math.round((netAfterDiscount + vatAmount) * 100) / 100;
+                    return (
+                      <>
+                        <div style={{ fontSize: 12, color: "#8b8fa8" }}>
+                          ก่อนลด {receiptForm.items.reduce((sum, item) => sum + calcReceiptItem(item).subtotal, 0).toLocaleString("th-TH")} ·
+                          ส่วนลด {receiptForm.items.reduce((sum, item) => sum + calcReceiptItem(item).totalDiscount, 0).toLocaleString("th-TH")}
+                        </div>
+                        {vatPct > 0 && (
+                          <div style={{ fontSize: 12, color: "#8b8fa8" }}>
+                            ก่อน VAT {netAfterDiscount.toLocaleString("th-TH")} · VAT {vatPct}% = {vatAmount.toLocaleString("th-TH")}
+                          </div>
+                        )}
+                        <div style={{ fontSize: 12, color: "#8b8fa8" }}>รวมทั้งสิ้น</div>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: "#5ecb8a" }}>
+                          {grandTotal.toLocaleString("th-TH")} {receiptForm.currency}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#11131a", border: "1px solid #2a2d3a", borderRadius: 8, padding: "12px 16px" }}>
+                <label style={{ ...S.label, margin: 0, whiteSpace: "nowrap", minWidth: 80 }}>VAT (%)</label>
+                <input
+                  style={{ ...S.inputNum, width: 120 }}
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="เช่น 7"
+                  value={receiptForm.vatRate}
+                  onChange={e => setReceiptForm(p => ({ ...p, vatRate: e.target.value }))}
+                />
+                <span style={{ fontSize: 12, color: "#8b8fa8" }}>
+                  {receiptForm.vatRate ? `VAT ${receiptForm.vatRate}% คำนวณบนยอดหลังหักส่วนลด` : "ไม่มี VAT (เว้นว่างไว้)"}
+                </span>
               </div>
 
               <div>

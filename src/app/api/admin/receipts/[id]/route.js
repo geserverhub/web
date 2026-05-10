@@ -38,7 +38,7 @@ export async function PUT(req, { params }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { customerName, customerAddress, customerPhone, customerEmail, currency, issuedAt, notes } = body;
+    const { customerName, customerAddress, customerPhone, customerEmail, currency, issuedAt, notes, vatRate } = body;
     const items = normalizeReceiptItems(body.items);
 
     if (!String(customerName || "").trim()) {
@@ -49,7 +49,10 @@ export async function PUT(req, { params }) {
     }
 
     const subtotal = roundMoney(items.reduce((sum, item) => sum + item.subtotal, 0));
-    const total = roundMoney(items.reduce((sum, item) => sum + item.amount, 0));
+    const netAfterDiscount = roundMoney(items.reduce((sum, item) => sum + item.amount, 0));
+    const parsedVatRate = vatRate !== undefined && vatRate !== "" && vatRate !== null ? Math.max(0, Math.min(100, Number(vatRate))) : null;
+    const vatAmount = parsedVatRate ? roundMoney(netAfterDiscount * parsedVatRate / 100) : 0;
+    const total = roundMoney(netAfterDiscount + vatAmount);
 
     // Replace items: delete old, create new
     await prisma.receiptItem.deleteMany({ where: { receiptId: id } });
@@ -65,6 +68,7 @@ export async function PUT(req, { params }) {
         issuedAt: issuedAt ? new Date(`${issuedAt}T00:00:00`) : undefined,
         notes: notes || null,
         subtotal,
+        vatRate: parsedVatRate,
         total,
         items: {
           create: items.map((item) => ({

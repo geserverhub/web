@@ -2,6 +2,8 @@
   "name": "goeun-server-hub-frontend",
   "private": true,
   "scripts": {
+    "clean": "rm -rf .next",
+    "predev": "npm run clean",
     "dev": "next dev -p 3005",
     "build": "next build",
     "start": "next start -p 3005"

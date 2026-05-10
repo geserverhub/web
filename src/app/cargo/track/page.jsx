@@ -331,7 +331,8 @@ export default function CargoTrackPage() {
       {tab === "request" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0", marginBottom: 4 }}>📬 แจ้งส่งสินค้า</div>
-          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 20 }}>화물 발송 신청 · กรอกข้อมูลเพื่อแจ้งจัดส่ง</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>화물 발송 신청 · กรอกข้อมูลเพื่อแจ้งจัดส่ง</div>
+          <div style={{ fontSize: 12, color: "#facc15", marginBottom: 16 }}>กรุณาคลิกเลือกเส้นทางการจัดส่งที่ต้องการ · ที่อยู่ในการส่งสินค้ามาโกดัง จะแสดงเมื่อคลิก</div>
 
           {reqDone ? (
             <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -392,7 +393,7 @@ export default function CargoTrackPage() {
           ) : (
             <form onSubmit={handleReqSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <label style={labelStyle}>🛫 เส้นทาง *</label>
+                <label style={labelStyle}>🛫 เส้นทาง เครื่องบิน *</label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {[["TH_TO_KR","🇹🇭 ไทย → เกาหลี 🇰🇷"],["KR_TO_TH","🇰🇷 เกาหลี → ไทย 🇹🇭"]].map(([val, label]) => (
                     <button key={val} type="button" onClick={() => handleReqChange("direction", val)}
@@ -401,6 +402,20 @@ export default function CargoTrackPage() {
                     </button>
                   ))}
                 </div>
+                {reqForm.direction === "TH_TO_KR" && (
+                  <div style={{ marginTop: 10, background: "#1a2010", border: "1px solid #4ade80", borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, marginBottom: 6 }}>📦 ส่งสินค้ามาที่ (ที่อยู่โกดังในไทย)</div>
+                    <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.7 }}>
+                      <strong>Sbai (GE-SERVERHUB)</strong><br />
+                      เลขที่ 270 ถนนเลียบคลองสอง 22<br />
+                      แขวงบางชัน เขตคลองสามวา<br />
+                      จังหวัด กรุงเทพมหานคร 10510
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 13, color: "#facc15", fontWeight: 700 }}>
+                      📞 โทร. 095-389-9313
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ borderTop: "1px solid #2a2d3a", paddingTop: 14 }}>

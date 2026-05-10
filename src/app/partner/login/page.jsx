@@ -74,7 +74,7 @@ export default function PartnerLoginPage() {
 
     setLoading(false);
 
-    if (role === "PARTNER" || role === "SUPER_ADMIN" || role === "ADMIN") {
+    if (role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN") {
       router.push("/partner/dashboard");
     } else {
       await signOut({ redirect: false });
