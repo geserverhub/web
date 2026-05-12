@@ -28,6 +28,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
+    if (user.role !== 'CLIENT' && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า' }, { status: 403 });
+    }
+
     const token = randomUUID();
 
     return NextResponse.json({

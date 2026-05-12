@@ -28,18 +28,21 @@ const authConfig: NextAuthConfig = {
       // Public auth pages — always accessible
       if (pathname === "/admin/login") return true;
       if (pathname === "/partner/login") return true;
+      if (pathname === "/customer-dashboard-login") return true;
       if (pathname === "/auth/select") return true;
 
+      // ระบบผู้ดูแล — ADMIN / SUPER_ADMIN เท่านั้น
       if (pathname.startsWith("/admin")) {
-        if (!isLoggedIn) return Response.redirect(new URL("/login", nextUrl));
+        if (!isLoggedIn) return Response.redirect(new URL("/admin/login", nextUrl));
         if (role !== "ADMIN" && role !== "SUPER_ADMIN")
-          return Response.redirect(new URL("/", nextUrl));
+          return Response.redirect(new URL("/admin/login", nextUrl));
       }
 
+      // พอร์ทัลพาร์ทเนอร์ — PARTNER / ADMIN / SUPER_ADMIN
       if (pathname.startsWith("/partner")) {
         if (!isLoggedIn) return Response.redirect(new URL("/partner/login", nextUrl));
-        if (role !== "PARTNER" && role !== "SUPER_ADMIN" && role !== "ADMIN")
-          return Response.redirect(new URL("/", nextUrl));
+        if (role !== "PARTNER" && role !== "ADMIN" && role !== "SUPER_ADMIN")
+          return Response.redirect(new URL("/partner/login", nextUrl));
       }
 
       if (pathname.startsWith("/mct-product")) {

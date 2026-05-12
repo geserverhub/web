@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-const CARGO_CLIENT_ID = "cargob1e1e0b3415111f1bf0a00155d839b3a";
+const CARGO_CLIENT_ID = "cmozi3vuj0000jhbm7hqvhdhe";
 
 // POST /api/cargo/register
 // Body: { name, email, phone }
@@ -35,6 +35,16 @@ export async function POST(req) {
         name,
         email: email || null,
         phone: phone || null,
+      },
+    });
+
+    // Also create CargoCusDetail record linked to this customer
+    await prisma.cargoCusDetail.create({
+      data: {
+        name,
+        phone: phone || null,
+        email: email || null,
+        customerId: customer.id,
       },
     });
 

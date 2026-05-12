@@ -20,10 +20,14 @@ model User {
   updatedAt     DateTime  @updatedAt
   clientId      String?
 
-  accounts Account[]
-  sessions Session[]
-  client   Client?   @relation(fields: [clientId], references: [id])
-  invoices Invoice[]
+  accounts            Account[]
+  sessions            Session[]
+  client              Client?              @relation(fields: [clientId], references: [id])
+  invoices            Invoice[]
+  notifications       Notification[]
+  partnerTasks        PartnerTask[]
+  partnerTransactions PartnerTransaction[]
+  partnerProducts     PartnerProduct[]
 
   @@index([email])
   @@index([clientId])
@@ -84,11 +88,12 @@ model Client {
   createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
 
-  users    User[]
-  services ClientService[]
-  invoices Invoice[]
-  receipts Receipt[]
+  users     User[]
+  services  ClientService[]
+  invoices  Invoice[]
+  receipts  Receipt[]
   customers Customer[]
+  expenses  Expense[]
 
   @@index([slug])
   @@index([status])
@@ -155,6 +160,7 @@ model Receipt {
   currency  String   @default("THB")
   issuedAt  DateTime @default(now())
   subtotal  Decimal  @db.Decimal(10, 2)
+  vatRate   Decimal? @db.Decimal(5, 2)
   total     Decimal  @db.Decimal(10, 2)
   notes     String?  @db.Text
   createdAt DateTime @default(now())
@@ -199,8 +205,10 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  client   Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  receipts Receipt[]
+  client          Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  receipts        Receipt[]
+  cargoOrders     CargoOrder[]
+  cargoCusDetails CargoCusDetail[]
 
   @@index([clientId])
   @@index([name])
@@ -218,8 +226,12 @@ model Notification {
   error     String?
   createdAt DateTime            @default(now())
 
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([sent])
   @@index([type])
+  @@index([userId])
 }
 
 enum Role {
@@ -264,8 +276,12 @@ model Expense {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   @@index([category])
   @@index([date])
+  @@index([clientId])
 }
 
 model Product {
@@ -301,61 +317,6 @@ enum NotificationChannel {
   PUSH
 }
 
-model PartnerTask {
-  id          String    @id @default(cuid())
-  title       String
-  type        String    @default("OPERATION") // TAX_FILING | OPERATION | DOCUMENT | OTHER
-  status      String    @default("PENDING")   // PENDING | IN_PROGRESS | COMPLETED | CANCELLED
-  priority    String    @default("NORMAL")    // LOW | NORMAL | HIGH | URGENT
-  brand       String    @default("MOMOGE SPACE")
-  dueDate     DateTime?
-  completedAt DateTime?
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([type])
-  @@index([status])
-  @@index([dueDate])
-}
-
-model PartnerTransaction {
-  id           String   @id @default(cuid())
-  number       String   @unique
-  brand        String   @default("MOMOGE SPACE")
-  type         String   @default("SALE") // SALE | EXPENSE | REFUND
-  description  String?
-  customerName String?
-  amount       Decimal  @db.Decimal(14, 2)
-  currency     String   @default("KRW")
-  status       String   @default("COMPLETED") // COMPLETED | PENDING | CANCELLED
-  category     String?
-  notes        String?  @db.Text
-  receiptFile  String?  @db.Text
-  date         DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([type])
-  @@index([status])
-  @@index([date])
-  @@index([brand])
-}
-
-model PartnerProduct {
-  id        String   @id @default(cuid())
-  name      String
-  model     String?
-  brand     String?
-  costPrice Decimal? @db.Decimal(14, 2)
-  sellPrice Decimal? @db.Decimal(14, 2)
-  currency  String   @default("KRW")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-}
-
 model CargoOrder {
   id            String   @id @default(cuid())
   number        String   @unique
@@ -382,7 +343,273 @@ model CargoOrder {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  statusLogs      CargoStatusLog[]
+  transactions    CargoTransaction[]
+  cusDetails      CargoCusDetail[]
+
   @@index([status])
   @@index([direction])
   @@index([createdAt])
+  @@index([customerId])
+}
+
+// ── Cargo Customer Detail (ข้อมูลศุลกากร) ────────────────────────
+model CargoCusDetail {
+  id           String    @id @default(cuid())
+
+  // ข้อมูลตัวตน
+  name         String
+  phone        String?
+  email        String?
+  address      String?   @db.Text
+  nationality  String?   // สัญชาติ เช่น TH, KR
+
+  // ข้อมูลศุลกากร
+  passportNo   String?   // เลขพาสปอร์ต
+  passportExp  DateTime? // วันหมดอายุพาสปอร์ต
+  idCard       String?   // เลขบัตรประชาชน / เลขทะเบียนเกาหลี
+  customsNo    String?   // เลขศุลกากร / Personal Clearance Code
+
+  // ความสัมพันธ์
+  customerId   String?
+  customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cargoOrderId String?
+  cargoOrder   CargoOrder? @relation(fields: [cargoOrderId], references: [id], onDelete: SetNull)
+
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([customerId])
+  @@index([cargoOrderId])
+  @@index([passportNo])
+  @@index([idCard])
+}
+
+// ── Cargo Status History ─────────────────────────────────────────
+model CargoStatusLog {
+  id         String   @id @default(cuid())
+  orderId    String
+  status     String
+  note       String?  @db.Text
+  createdBy  String?  // admin username or system
+  createdAt  DateTime @default(now())
+
+  order CargoOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// ── Cargo Income / Expense Transactions ──────────────────────────
+model CargoTransaction {
+  id         String                  @id @default(cuid())
+  orderId    String
+  type       CargoTransactionType    // INCOME | EXPENSE
+  category   String?                 // e.g. "ค่าขนส่ง", "ค่าอากร", "ค่าคืนเงิน"
+  amount     Decimal                 @db.Decimal(10, 2)
+  currency   String                  @default("THB")
+  note       String?                 @db.Text
+  receiptRef String?                 // เลขที่ใบเสร็จ/อ้างอิง
+  createdBy  String?
+  createdAt  DateTime                @default(now())
+
+  order CargoOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum CargoTransactionType {
+  INCOME
+  EXPENSE
+}
+
+// ── M-Group Shop Orders ─────────────────────────────────────────
+model MGroupOrder {
+  id              String           @id @default(cuid())
+  number          String           @unique
+  customerName    String
+  customerPhone   String?
+  customerEmail   String?
+  shippingAddress String?          @db.Text
+  note            String?          @db.Text
+  subtotal        Decimal          @db.Decimal(10, 2)
+  total           Decimal          @db.Decimal(10, 2)
+  currency        String           @default("THB")
+  status          MGroupOrderStatus @default(PENDING_PAYMENT)
+  paymentSlipUrl  String?          @db.Text
+  slipName        String?
+  paidAt          DateTime?
+  confirmedAt     DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  items MGroupOrderItem[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([customerPhone])
+}
+
+model MGroupOrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   Int?
+  sku         String?
+  name        String
+  unitPrice   Decimal @db.Decimal(10, 2)
+  qty         Int
+  amount      Decimal @db.Decimal(10, 2)
+
+  order   MGroupOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ── M-Factory / M-Resort Inquiries ──────────────────────────────
+model MFactoryInquiry {
+  id          String   @id @default(cuid())
+  type        String   @default("factory") // "factory" | "resort" | "sale"
+  name        String
+  phone       String?
+  email       String?
+  message     String?  @db.Text
+  lang        String   @default("th")
+  source      String?  // which section triggered (e.g. "contact", "gallery_cta")
+  status      String   @default("new") // "new" | "in_progress" | "done"
+  respondedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ── M-Resort Bookings ────────────────────────────────────────────
+model ResortBooking {
+  id           String              @id @default(cuid())
+  number       String              @unique
+  guestName    String
+  guestPhone   String?
+  guestEmail   String?
+  checkIn      DateTime
+  checkOut     DateTime?
+  stayType     ResortStayType      @default(OVERNIGHT)
+  adults       Int                 @default(1)
+  children     Int                 @default(0)
+  pricePerNight Decimal?           @db.Decimal(10, 2)
+  totalPrice   Decimal?            @db.Decimal(10, 2)
+  currency     String              @default("THB")
+  status       ResortBookingStatus @default(PENDING)
+  paymentSlipUrl String?           @db.Text
+  note         String?             @db.Text
+  paidAt       DateTime?
+  confirmedAt  DateTime?
+  checkedInAt  DateTime?
+  checkedOutAt DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([status])
+  @@index([checkIn])
+  @@index([guestPhone])
+}
+
+enum MGroupOrderStatus {
+  PENDING_PAYMENT
+  CONFIRMING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ResortStayType {
+  HOURLY
+  OVERNIGHT
+}
+
+enum ResortBookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+model PartnerTask {
+  id          String    @id @default(cuid())
+  title       String
+  type        String    @default("OPERATION") // TAX_FILING | OPERATION | DOCUMENT | OTHER
+  status      String    @default("PENDING")   // PENDING | IN_PROGRESS | COMPLETED | CANCELLED
+  priority    String    @default("NORMAL")    // LOW | NORMAL | HIGH | URGENT
+  brand       String    @default("MOMOGE SPACE")
+  dueDate     DateTime?
+  completedAt DateTime?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([dueDate])
+  @@index([userId])
+}
+
+model PartnerTransaction {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  brand        String   @default("MOMOGE SPACE")
+  type         String   @default("SALE") // SALE | EXPENSE | REFUND
+  description  String?
+  customerName String?
+  amount       Decimal  @db.Decimal(14, 2)
+  currency     String   @default("KRW")
+  status       String   @default("COMPLETED") // COMPLETED | PENDING | CANCELLED
+  category     String?
+  notes        String?  @db.Text
+  receiptFile  String?  @db.Text
+  date         DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId       String?
+  user         User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([date])
+  @@index([brand])
+  @@index([userId])
+}
+
+model PartnerProduct {
+  id        String   @id @default(cuid())
+  name      String
+  model     String?
+  brand     String?
+  costPrice Decimal? @db.Decimal(14, 2)
+  sellPrice Decimal? @db.Decimal(14, 2)
+  currency  String   @default("KRW")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([name])
+  @@index([userId])
 }

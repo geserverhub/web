@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-const CARGO_CLIENT_ID = "cargob1e1e0b3415111f1bf0a00155d839b3a";
+const CARGO_CLIENT_ID = "cmozi3vuj0000jhbm7hqvhdhe";
 
 // GET /api/admin/cargo/customers
 export async function GET(req) {
@@ -17,6 +17,22 @@ export async function GET(req) {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json({ customers });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// PATCH /api/admin/cargo/customers — update address
+export async function PATCH(req) {
+  const session = await auth();
+  if (!session?.user || !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const { id, address } = await req.json();
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    await prisma.customer.update({ where: { id }, data: { address: address || null } });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

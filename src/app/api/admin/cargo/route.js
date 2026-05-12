@@ -28,7 +28,10 @@ export async function GET(req) {
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
-    const orders = await prisma.cargoOrder.findMany({ orderBy: { createdAt: "desc" } });
+    const orders = await prisma.cargoOrder.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { customer: { select: { id: true, name: true, phone: true, email: true } } },
+    });
     return NextResponse.json({ orders });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
