@@ -31,10 +31,10 @@ const LANGS = {
     partnerIncomeTitle: "💼 รายได้สะสมรายบุคคล (ทุกปี)",
     partnerIncomeNoData: "ยังไม่มีรายการรายได้ส่วนแบ่ง",
     noData: "ไม่มีข้อมูล",
-    types: { SALE: "ขาย", EXPENSE: "ค่าใช้จ่าย", REFUND: "คืนเงิน", PROFIT_SHARE: "รายได้กำไรส่วนแบ่งรายบุคคล" },
+    types: { SALE: "ขาย", EXPENSE: "ค่าใช้จ่าย", REFUND: "คืนเงิน", PROFIT_SHARE: "รายได้กำไรส่วนแบ่งรายบุคคล", PARTNER_INVESTMENT: "รายรับการลงทุนจาก partner" },
     statuses: { COMPLETED: "สำเร็จ", PENDING: "รอดำเนินการ", CANCELLED: "ยกเลิก" },
     statusColors: { COMPLETED: "#4ade80", PENDING: "#fbbf24", CANCELLED: "#6b7280" },
-    typeColors: { SALE: "#60a5fa", EXPENSE: "#f87171", REFUND: "#a78bfa", PROFIT_SHARE: "#22c55e" },
+    typeColors: { SALE: "#60a5fa", EXPENSE: "#f87171", REFUND: "#a78bfa", PROFIT_SHARE: "#22c55e", PARTNER_INVESTMENT: "#f59e0b" },
     form: {
       title: "เพิ่มรายการใหม่",
       type: "ประเภท", desc: "รายละเอียด", customer: "ชื่อคู่ค้า", supplier: "ชื่อซัพพลายเออร์", amount: "จำนวนเงิน",
@@ -45,6 +45,7 @@ const LANGS = {
         EXPENSE: ["ค่าอาหาร", "ค่าที่พัก", "ค่าขนส่ง", "ค่าอุปกรณ์", "ค่าบริการ", "อื่นๆ"],
         REFUND: ["คืนเงิน", "ปรับราคา", "อื่นๆ"],
         PROFIT_SHARE: ["แบ่งกำไร", "โบนัส", "อื่นๆ"],
+        PARTNER_INVESTMENT: ["เงินลงทุน", "เงินปันผล", "ดอกเบี้ย", "อื่นๆ"],
       },
       selectCategory: "เลือกหมวดหมู่",
       submit: "บันทึก", submitting: "กำลังบันทึก...", success: "✅ บันทึกสำเร็จ", error: "❌ เกิดข้อผิดพลาด",
@@ -182,10 +183,10 @@ const LANGS = {
     partnerIncomeTitle: "💼 파트너별 누적 수익 (전체 기간)",
     partnerIncomeNoData: "이익 분배 내역이 없습니다",
     noData: "데이터 없음",
-    types: { SALE: "매출", EXPENSE: "지출", REFUND: "환불", PROFIT_SHARE: "개인 이익 분배 수익" },
+    types: { SALE: "매출", EXPENSE: "지출", REFUND: "환불", PROFIT_SHARE: "개인 이익 분배 수익", PARTNER_INVESTMENT: "파트너 투자 수익" },
     statuses: { COMPLETED: "완료", PENDING: "대기", CANCELLED: "취소" },
     statusColors: { COMPLETED: "#4ade80", PENDING: "#fbbf24", CANCELLED: "#6b7280" },
-    typeColors: { SALE: "#60a5fa", EXPENSE: "#f87171", REFUND: "#a78bfa", PROFIT_SHARE: "#22c55e" },
+    typeColors: { SALE: "#60a5fa", EXPENSE: "#f87171", REFUND: "#a78bfa", PROFIT_SHARE: "#22c55e", PARTNER_INVESTMENT: "#f59e0b" },
     form: {
       title: "거래 추가",
       type: "유형", desc: "내용", customer: "거래처명", supplier: "공급업체명", amount: "금액",
@@ -196,6 +197,7 @@ const LANGS = {
         EXPENSE: ["식비", "숙박비", "교통비", "장비비", "서비스비", "기타"],
         REFUND: ["환불", "가격조정", "기타"],
         PROFIT_SHARE: ["이익분배", "보너스", "기타"],
+        PARTNER_INVESTMENT: ["투자금", "배당금", "이자", "기타"],
       },
       selectCategory: "카테고리 선택",
       submit: "저장", submitting: "저장 중...", success: "✅ 저장 완료", error: "❌ 오류 발생",
@@ -1668,7 +1670,7 @@ export default function PartnerDashboard() {
             const mTx = txFiltered.filter(tx => new Date(tx.date).getMonth() === i);
             return {
               month: i + 1,
-              revenue: mTx.filter(tx => ["SALE","PROFIT_SHARE"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
+              revenue: mTx.filter(tx => ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
               expense: mTx.filter(tx => tx.type === "EXPENSE" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
             };
           });
@@ -1707,7 +1709,7 @@ export default function PartnerDashboard() {
             return { background: bg, color: col, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" };
           };
           const typeBadge = (tp) => {
-            const map = { SALE: ["#dbeafe","#1d4ed8"], EXPENSE: ["#fee2e2","#dc2626"], REFUND: ["#ede9fe","#7c3aed"], PROFIT_SHARE: ["#dcfce7","#16a34a"] };
+            const map = { SALE: ["#dbeafe","#1d4ed8"], EXPENSE: ["#fee2e2","#dc2626"], REFUND: ["#ede9fe","#7c3aed"], PROFIT_SHARE: ["#dcfce7","#16a34a"], PARTNER_INVESTMENT: ["#fef3c7","#d97706"] };
             const [bg, col] = map[tp] || ["#f3f4f6","#6b7280"];
             return { background: bg, color: col, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" };
           };
@@ -1787,7 +1789,7 @@ export default function PartnerDashboard() {
           // ── 1. รายบัญชีแต่ละเดือน ──
           function ReportMonthly() {
             const monthTx = txAll.filter(tx => new Date(tx.date).getMonth() + 1 === printMonth && new Date(tx.date).getFullYear() === year);
-            const rev = monthTx.filter(tx => ["SALE","PROFIT_SHARE"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
+            const rev = monthTx.filter(tx => ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
             const exp = monthTx.filter(tx => tx.type === "EXPENSE" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
             const net = rev - exp;
             const vat = Math.round(Math.max(0, net) * 0.1);

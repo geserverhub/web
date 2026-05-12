@@ -25,7 +25,7 @@ export async function GET(req) {
       orderBy: { date: "desc" },
     });
 
-    const revenueTypes = new Set(["SALE", "PROFIT_SHARE"]);
+    const revenueTypes = new Set(["SALE", "PROFIT_SHARE", "PARTNER_INVESTMENT"]);
     const sales    = transactions.filter(t => revenueTypes.has(t.type) && t.status !== "CANCELLED");
     const expenses = transactions.filter(t => t.type === "EXPENSE" && t.status !== "CANCELLED");
     const pending  = transactions.filter(t => t.status === "PENDING");
@@ -134,7 +134,7 @@ export async function POST(req) {
     }
 
     const txType = type || "SALE";
-    const prefix = { SALE: "SAL", EXPENSE: "EXP", REFUND: "REF", PROFIT_SHARE: "PSH" }[txType] || "TXN";
+    const prefix = { SALE: "SAL", EXPENSE: "EXP", REFUND: "REF", PROFIT_SHARE: "PSH", PARTNER_INVESTMENT: "PIN" }[txType] || "TXN";
     const count = await prisma.partnerTransaction.count({ where: { type: txType } });
     const now = new Date();
     const yyyy = now.getFullYear();
