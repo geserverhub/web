@@ -90,7 +90,11 @@ export default function PaymentsClient({ session, clients, initialInvoices, init
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, currency: "THB" }),
       }));
-      showToast(`บันทึกการชำระเงินสำเร็จ — ${d.invoice?.number}`);
+      const r = d.reminder;
+      const note = r
+        ? ` | แจ้งเตือน: PUSH ${r.pushSent || 0}${(r.lineSent || 0) > 0 ? `, LINE ${r.lineSent}` : ""}`
+        : "";
+      showToast(`บันทึกการชำระเงินสำเร็จ — ${d.invoice?.number}${note}`);
       setForm({ clientId: "", amount: "", status: "PAID", dueDate: "", notes: "", receiptNumber: "" });
       reload();
     } catch (err) {
@@ -113,12 +117,16 @@ export default function PaymentsClient({ session, clients, initialInvoices, init
   const saveEdit = async () => {
     setSaving(true);
     try {
-      await readJsonResponse(await fetch(`/api/admin/invoices/${editId}`, {
+      const d = await readJsonResponse(await fetch(`/api/admin/invoices/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editForm),
       }));
-      showToast("อัพเดตสำเร็จ");
+      const r = d.reminder;
+      const note = r
+        ? ` (แจ้งเตือน: PUSH ${r.pushSent || 0}${(r.lineSent || 0) > 0 ? `, LINE ${r.lineSent}` : ""})`
+        : "";
+      showToast(`อัพเดตสำเร็จ${note}`);
       setEditModal(false);
       reload();
     } catch (err) {

@@ -90,7 +90,7 @@ export default function ClientsUsersClient({ session }) {
   const [selectedClientEditId, setSelectedClientEditId] = useState("");
   const [clientForm, setClientForm] = useState({
     name: "", nameTh: "", slug: "", description: "", status: "COMING_SOON",
-    contactEmail: "", contactPhone: "", address: "", systemUrl: "", logoUrl: "", serviceIds: [],
+    contactEmail: "", contactPhone: "", address: "", systemUrl: "", logoUrl: "", lineUserId: "", serviceIds: [],
   });
   const [savingClient, setSavingClient] = useState(false);
   const [uploadingClientLogo, setUploadingClientLogo] = useState(false);
@@ -154,6 +154,18 @@ export default function ClientsUsersClient({ session }) {
   const [expenseForm, setExpenseForm] = useState({ category: "", amount: "", currency: "THB", status: "รอชำระ", notes: "", date: "", receiptNumber: "", receiptFile: "" });
   const [expenseFileInputs, setExpenseFileInputs] = useState([]); // File objects array
   const [savingExpense, setSavingExpense] = useState(false);
+
+  // partner transactions (for ledger)
+  const [partnerTxns, setPartnerTxns] = useState([]);
+
+  const [kpiOpen, setKpiOpen] = useState(false);
+
+  // payment notification modal
+  const [paymentNotiModal, setPaymentNotiModal] = useState(false);
+  const [sendingNoti, setSendingNoti] = useState(false);
+  const [notiResult, setNotiResult] = useState(null);
+  const [recentNotis, setRecentNotis] = useState([]);
+  const [productMenuOpen, setProductMenuOpen] = useState(false);
 
   // ledger modal
   const [ledgerModal, setLedgerModal] = useState(false);
@@ -229,6 +241,11 @@ export default function ClientsUsersClient({ session }) {
     setExpenses(d.expenses || []);
   }, []);
 
+  const loadPartnerTxns = useCallback(async () => {
+    const d = await readJsonResponse(await fetch("/api/admin/partner-transactions"));
+    setPartnerTxns(d.transactions || []);
+  }, []);
+
   const loadCustomers = useCallback(async () => {
     const url = filterCustomerClientId ? `/api/admin/customers?clientId=${filterCustomerClientId}` : "/api/admin/customers";
     const d = await readJsonResponse(await fetch(url));
@@ -252,7 +269,7 @@ export default function ClientsUsersClient({ session }) {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    Promise.allSettled([loadClients(), loadUsers(), loadInvoices(), loadReceipts(), loadServices(), loadExpenses(), loadCustomers(), loadCargo(), loadCargoCustomers()])
+    Promise.allSettled([loadClients(), loadUsers(), loadInvoices(), loadReceipts(), loadServices(), loadExpenses(), loadCustomers(), loadCargo(), loadCargoCustomers(), loadPartnerTxns()])
       .then((results) => {
         if (!active) return;
         const failed = results.filter((result) => result.status === "rejected");
@@ -268,12 +285,12 @@ export default function ClientsUsersClient({ session }) {
     return () => {
       active = false;
     };
-  }, [loadClients, loadUsers, loadInvoices, loadReceipts, loadServices, loadExpenses, loadCustomers, loadCargo, loadCargoCustomers]);
+  }, [loadClients, loadUsers, loadInvoices, loadReceipts, loadServices, loadExpenses, loadCustomers, loadCargo, loadCargoCustomers, loadPartnerTxns]);
 
   // ── Client Modal ──
   const openAddClient = () => {
     setEditClientId(null);
-    setClientForm({ name: "", nameTh: "", slug: "", description: "", status: "COMING_SOON", contactEmail: "", contactPhone: "", address: "", systemUrl: "", logoUrl: "", serviceIds: [] });
+    setClientForm({ name: "", nameTh: "", slug: "", description: "", status: "COMING_SOON", contactEmail: "", contactPhone: "", address: "", systemUrl: "", logoUrl: "", lineUserId: "", serviceIds: [] });
     setClientModal(true);
   };
   const openClientEditPicker = () => {
@@ -288,7 +305,7 @@ export default function ClientsUsersClient({ session }) {
     setEditClientId(c.id);
     setClientForm({
       name: c.name, nameTh: c.nameTh || "", slug: c.slug, description: c.description || "", status: c.status,
-      contactEmail: c.contactEmail || "", contactPhone: c.contactPhone || "", address: c.address || "", systemUrl: c.systemUrl || "", logoUrl: c.logoUrl || "",
+      contactEmail: c.contactEmail || "", contactPhone: c.contactPhone || "", address: c.address || "", systemUrl: c.systemUrl || "", logoUrl: c.logoUrl || "", lineUserId: c.lineUserId || "",
       serviceIds: (c.services || []).map(cs => cs.serviceId || cs.service?.id).filter(Boolean),
     });
     setClientModal(true);
@@ -1834,15 +1851,63 @@ export default function ClientsUsersClient({ session }) {
           <Link href="/admin/products" style={{ color: "#8b8fa8", fontSize: 13, textDecoration: "none" }}>สินค้า</Link>
           <span style={{ color: "#7eb8f7", fontSize: 13, fontWeight: 600 }}>ลูกค้า &amp; Users</span>
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span style={{ color: "#8b8fa8", fontSize: 13 }}>{session.user.name || session.user.email}</span>
-          <Link href="/admin/payments" style={{ ...S.btn("#1a2e1a", "#4ade80"), textDecoration: "none", padding: "6px 14px" }}>
-            💰 บันทึกการชำระเงิน
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ color: "#8b8fa8", fontSize: 12 }}>{session.user.name || session.user.email}</span>
+
+          {/* Quick nav links */}
+          <Link href="/partner/dashboard"
+            style={{ ...S.btn("#1e2130", "#8b8fa8"), textDecoration: "none", padding: "5px 11px", fontSize: 12, border: "1px solid #2a2d3a" }}>
+            👥 Partner
           </Link>
-          <Link href="/mct-product" style={{ ...S.btn("#1e2336", "#7eb8f7"), textDecoration: "none", padding: "6px 14px" }}>
-            📦 จัดการสินค้า
-          </Link>
-          <button style={S.btn("#2a1f1f", "#f87171")} onClick={() => signOut({ callbackUrl: "/login" })}>ออกจากระบบ</button>
+
+          {/* Payment notification */}
+          <button style={{ ...S.btn("#1a2e1a", "#4ade80"), padding: "5px 11px", fontSize: 12 }}
+            onClick={async () => {
+              setPaymentNotiModal(true);
+              setNotiResult(null);
+              try {
+                const d = await (await fetch("/api/admin/notifications")).json();
+                setRecentNotis(d.notifications || []);
+              } catch { setRecentNotis([]); }
+            }}>
+            💰 แจ้งเตือนค่าบริการ
+          </button>
+
+          {/* Product management dropdown */}
+          <div style={{ position: "relative" }}>
+            <button style={{ ...S.btn("#1e2336", "#7eb8f7"), padding: "5px 11px", fontSize: 12 }}
+              onClick={() => setProductMenuOpen(p => !p)}>
+              📦 จัดการสินค้า {productMenuOpen ? "▴" : "▾"}
+            </button>
+            {productMenuOpen && (
+              <>
+                {/* invisible overlay to catch outside clicks */}
+                <div style={{ position: "fixed", inset: 0, zIndex: 490 }}
+                  onClick={() => setProductMenuOpen(false)} />
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#1e2130", border: "1px solid #3b4160", borderRadius: 10, zIndex: 500, minWidth: 230, boxShadow: "0 8px 24px rgba(0,0,0,.5)", overflow: "hidden" }}>
+                  {[
+                    { label: "MCT Product", icon: "📦", href: "/mct-product", color: "#7eb8f7" },
+                    { label: "สินค้า มาร์ท", icon: "🛍️", href: "/mart", color: "#f472b6" },
+                    { label: "M-Factory", icon: "🏭", href: "/m-factory", color: "#fb923c" },
+                    { label: "SP Foods", icon: "🍜", href: "/spfoods", color: "#4ade80" },
+                    { label: "Admin Products", icon: "⚙️", href: "/admin/products", color: "#a78bfa" },
+                  ].map(item => (
+                    <Link key={item.href} href={item.href}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", color: item.color, textDecoration: "none", fontSize: 13, fontWeight: 600, borderBottom: "1px solid #2a2d3a" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#262a3a"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      onClick={() => setProductMenuOpen(false)}>
+                      <span>{item.icon} {item.label}</span>
+                      <span style={{ fontSize: 10, color: "#4a5070", fontWeight: 400 }}>{item.href}</span>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <button style={{ ...S.btn("#2a1f1f", "#f87171"), padding: "5px 11px", fontSize: 12 }}
+            onClick={() => signOut({ callbackUrl: "/login" })}>ออกจากระบบ</button>
         </div>
       </nav>
 
@@ -1855,7 +1920,7 @@ export default function ClientsUsersClient({ session }) {
 
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "28px 20px" }}>
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: 12 }}>
           {[
             { label: "ลูกค้าทั้งหมด", value: clients.length, color: "#7eb8f7",
               onClick: () => { setTab("clients"); setFilterClientStatus(""); setClientSearch(""); } },
@@ -1871,7 +1936,7 @@ export default function ClientsUsersClient({ session }) {
               onClick: () => { setTab("invoices"); setFilterInvoiceStatus("OVERDUE"); } },
           ].map(s => (
             <div key={s.label} onClick={s.onClick} style={{ ...S.card, textAlign: "center", cursor: "pointer", transition: "border-color .15s",
-              borderColor: "#2a2d3a", ":hover": { borderColor: s.color } }}
+              borderColor: "#2a2d3a" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = s.color}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#2a2d3a"}>
               <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -1879,6 +1944,130 @@ export default function ClientsUsersClient({ session }) {
             </div>
           ))}
         </div>
+
+        {/* KPI toggle button */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+          <button onClick={() => setKpiOpen(p => !p)}
+            style={{ ...S.btn(kpiOpen ? "#1a0f2e" : "#1e2130", kpiOpen ? "#c084fc" : "#8b8fa8"), border: kpiOpen ? "1px solid #7c3aed" : "1px solid #2a2d3a", padding: "6px 16px", fontSize: 13 }}>
+            📊 {kpiOpen ? "ซ่อน" : "แสดง"}วัดผล KPI
+          </button>
+        </div>
+
+        {/* KPI Panel */}
+        {kpiOpen && (() => {
+          const now = new Date();
+          const y = now.getFullYear(), m = now.getMonth();
+          const msStart = new Date(y, m, 1).getTime();
+          const msYearStart = new Date(y, 0, 1).getTime();
+
+          const paidInvoices = invoices.filter(i => i.status === "PAID");
+          const pendingInvoices = invoices.filter(i => i.status === "PENDING");
+          const overdueInvoices = invoices.filter(i => i.status === "OVERDUE");
+          const paymentRate = invoices.length ? Math.round(paidInvoices.length / invoices.length * 100) : 0;
+          const onlineRate = clients.length ? Math.round(clients.filter(c => c.status === "ONLINE").length / clients.length * 100) : 0;
+
+          // แยก THB และ KRW ตลอด
+          const thbPaidInv = paidInvoices.filter(i => (i.currency || "THB") === "THB");
+          const krwPaidInv = paidInvoices.filter(i => i.currency === "KRW");
+          const thbExpenses = expenses.filter(e => (e.currency || "THB") === "THB");
+          const krwExpenses = expenses.filter(e => e.currency === "KRW");
+
+          const revMonth    = thbPaidInv.filter(i => new Date(i.updatedAt || i.createdAt).getTime() >= msStart).reduce((s, i) => s + Number(i.amount), 0);
+          const revYear     = thbPaidInv.filter(i => new Date(i.updatedAt || i.createdAt).getTime() >= msYearStart).reduce((s, i) => s + Number(i.amount), 0);
+          const revMonthKrw = krwPaidInv.filter(i => new Date(i.updatedAt || i.createdAt).getTime() >= msStart).reduce((s, i) => s + Number(i.amount), 0);
+          const revYearKrw  = krwPaidInv.filter(i => new Date(i.updatedAt || i.createdAt).getTime() >= msYearStart).reduce((s, i) => s + Number(i.amount), 0);
+
+          const pendingThb = [...pendingInvoices, ...overdueInvoices].filter(i => (i.currency || "THB") === "THB").reduce((s, i) => s + Number(i.amount), 0);
+          const pendingKrw = [...pendingInvoices, ...overdueInvoices].filter(i => i.currency === "KRW").reduce((s, i) => s + Number(i.amount), 0);
+
+          const expMonthThbList = thbExpenses.filter(e => new Date(e.date || e.createdAt).getTime() >= msStart);
+          const expMonthKrwList = krwExpenses.filter(e => new Date(e.date || e.createdAt).getTime() >= msStart);
+          const expMonth    = expMonthThbList.reduce((s, e) => s + Number(e.amount), 0);
+          const expMonthKrw = expMonthKrwList.reduce((s, e) => s + Number(e.amount), 0);
+
+          const newClientsMonth = clients.filter(c => new Date(c.createdAt).getTime() >= msStart).length;
+          const thbPaid = thbPaidInv.reduce((s, i) => s + Number(i.amount), 0);
+          const krwPaid = krwPaidInv.reduce((s, i) => s + Number(i.amount), 0);
+
+          const KpiCard = ({ icon, label, value, sub, color = "#7eb8f7", bar, barColor = "#3b82f6" }) => (
+            <div style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 6 }}>{icon} {label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color }}>{value}</div>
+              {sub && <div style={{ fontSize: 11, color: "#4a5070", marginTop: 3 }}>{sub}</div>}
+              {bar !== undefined && (
+                <div style={{ marginTop: 8, background: "#2a2d3a", borderRadius: 4, height: 5, overflow: "hidden" }}>
+                  <div style={{ width: `${Math.min(bar, 100)}%`, height: "100%", background: barColor, borderRadius: 4, transition: "width .5s" }} />
+                </div>
+              )}
+            </div>
+          );
+
+          const fmt = n => Number(n).toLocaleString("th-TH");
+          const monthTH = now.toLocaleDateString("th-TH", { month: "long" });
+
+          return (
+            <div style={{ background: "#16181f", border: "1px solid #7c3aed44", borderRadius: 12, padding: "20px 20px 16px", marginBottom: 20 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#c084fc", marginBottom: 16 }}>📊 วัดผล KPI — {now.toLocaleDateString("th-TH", { month: "long", year: "numeric" })}</div>
+
+              {/* Row 1: Operation KPIs */}
+              <div style={{ fontSize: 11, color: "#4a5070", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>ประสิทธิภาพระบบ</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, marginBottom: 16 }}>
+                <KpiCard icon="✅" label="อัตราชำระเงิน" value={`${paymentRate}%`}
+                  sub={`${paidInvoices.length} / ${invoices.length} รายการ`} color="#4ade80"
+                  bar={paymentRate} barColor="#22c55e" />
+                <KpiCard icon="🏢" label="ลูกค้า ONLINE" value={`${onlineRate}%`}
+                  sub={`${clients.filter(c => c.status === "ONLINE").length} / ${clients.length} ราย`} color="#4ade80"
+                  bar={onlineRate} barColor="#22c55e" />
+                <KpiCard icon="⚠️" label="ยอดค้างชำระ" value={`฿${fmt(pendingThb)}`}
+                  sub={`${pendingInvoices.length + overdueInvoices.length} รายการ${pendingKrw > 0 ? ` · ₩${pendingKrw.toLocaleString("ko-KR")}` : ""}`} color="#f87171" />
+                <KpiCard icon="🆕" label={`ลูกค้าใหม่ (${monthTH})`} value={newClientsMonth}
+                  sub="รายใหม่เดือนนี้" color="#7eb8f7" />
+              </div>
+
+              {/* Row 2: Revenue KPIs — THB */}
+              <div style={{ fontSize: 11, color: "#4a5070", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>รายได้ & ค่าใช้จ่าย (THB)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, marginBottom: expMonthKrw > 0 || revMonthKrw > 0 ? 10 : 16 }}>
+                <KpiCard icon="💰" label={`รายรับเดือนนี้ (THB)`} value={`฿${fmt(revMonth)}`}
+                  sub={`ชำระแล้ว ${monthTH}`} color="#4ade80" />
+                <KpiCard icon="📈" label="รายรับปีนี้ (THB)" value={`฿${fmt(revYear)}`}
+                  sub={`ปี ${y + 543}`} color="#4ade80" />
+                <KpiCard icon="📤" label="ค่าใช้จ่ายเดือนนี้ (THB)" value={`฿${fmt(expMonth)}`}
+                  sub={`${expMonthThbList.length} รายการ`} color="#f87171" />
+                <KpiCard icon="📊" label="กำไรเดือนนี้ (THB)" value={`${revMonth - expMonth >= 0 ? "+" : ""}฿${fmt(revMonth - expMonth)}`}
+                  sub="รายรับ − ค่าใช้จ่าย THB" color={revMonth - expMonth >= 0 ? "#4ade80" : "#f87171"} />
+              </div>
+
+              {/* Row 2b: KRW Revenue & Expense (แสดงเฉพาะถ้ามีข้อมูล) */}
+              {(revMonthKrw > 0 || expMonthKrw > 0) && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, marginBottom: 16 }}>
+                  {revMonthKrw > 0 && <KpiCard icon="💰" label={`รายรับเดือนนี้ (KRW)`} value={`₩${revMonthKrw.toLocaleString("ko-KR")}`}
+                    sub={`ชำระแล้ว ${monthTH}`} color="#fbbf24" />}
+                  {revYearKrw > 0 && <KpiCard icon="📈" label="รายรับปีนี้ (KRW)" value={`₩${revYearKrw.toLocaleString("ko-KR")}`}
+                    sub={`ปี ${y + 543}`} color="#fbbf24" />}
+                  {expMonthKrw > 0 && <KpiCard icon="📤" label="ค่าใช้จ่ายเดือนนี้ (KRW)" value={`₩${expMonthKrw.toLocaleString("ko-KR")}`}
+                    sub={`${expMonthKrwList.length} รายการ`} color="#f87171" />}
+                  {(revMonthKrw > 0 || expMonthKrw > 0) && <KpiCard icon="📊" label="กำไรเดือนนี้ (KRW)" value={`${revMonthKrw - expMonthKrw >= 0 ? "+" : ""}₩${Math.abs(revMonthKrw - expMonthKrw).toLocaleString("ko-KR")}`}
+                    sub="รายรับ − ค่าใช้จ่าย KRW" color={revMonthKrw - expMonthKrw >= 0 ? "#fbbf24" : "#f87171"} />}
+                </div>
+              )}
+
+              {/* Row 3: Multi-currency */}
+              {(thbPaid > 0 || krwPaid > 0) && (
+                <>
+                  <div style={{ fontSize: 11, color: "#4a5070", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>รายรับสะสมแยกสกุลเงิน</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10, marginBottom: 8 }}>
+                    {thbPaid > 0 && <KpiCard icon="🇹🇭" label="รวม THB (ชำระแล้ว)" value={`฿${fmt(thbPaid)}`} color="#4ade80" />}
+                    {krwPaid > 0 && <KpiCard icon="🇰🇷" label="รวม KRW (ชำระแล้ว)" value={`₩${krwPaid.toLocaleString("ko-KR")}`} color="#fbbf24" />}
+                  </div>
+                </>
+              )}
+
+              <div style={{ fontSize: 11, color: "#4a5070", textAlign: "right", marginTop: 4 }}>
+                อัพเดตจากข้อมูลในระบบ ณ {now.toLocaleTimeString("th-TH")}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
@@ -2897,8 +3086,16 @@ export default function ClientsUsersClient({ session }) {
 
         const PAID_STATUSES_INV = ["PAID"];
         const PAID_STATUSES_EXP = ["แนบใบเสร็จแล้ว", "PAID"];
+        const PARTNER_INCOME_TYPES = new Set(["SALE", "PROFIT_SHARE", "PARTNER_INVESTMENT"]);
         const curInvoices = invoices.filter(i => (i.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_INV.includes(i.status)));
         const curExpenses = expenses.filter(e => (e.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_EXP.includes(e.status)));
+        const curPartnerIncome = partnerTxns.filter(t =>
+          (t.currency || "KRW") === ledgerCurrency &&
+          PARTNER_INCOME_TYPES.has(t.type) &&
+          (!ledgerPaidOnly || t.status === "COMPLETED")
+        );
+        const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+        const curReceipts = receipts.filter(r => (r.currency || "THB") === ledgerCurrency && r.clientId === goeunClientId);
 
         // Build combined ledger rows sorted by date
         const rows = [
@@ -2906,14 +3103,31 @@ export default function ClientsUsersClient({ session }) {
             id: i.id, date: new Date(i.createdAt), type: "income",
             ref: i.number, desc: i.client?.name || "—",
             detail: { PENDING: "รอชำระ", PAID: "ชำระแล้ว", OVERDUE: "เกินกำหนด", CANCELLED: "ยกเลิก" }[i.status] || i.status,
-            income: Number(i.amount), expense: 0,
+            income: Number(i.amount), vat: 0, expense: 0,
           })),
           ...curExpenses.map(e => ({
             id: e.id, date: new Date(e.date), type: "expense",
             ref: e.number, desc: e.category,
             detail: e.status || "รอชำระ",
-            income: 0, expense: Number(e.amount),
+            income: 0, vat: 0, expense: Number(e.amount),
           })),
+          ...curPartnerIncome.map(t => ({
+            id: `pt-${t.id}`, date: new Date(t.date), type: "income",
+            ref: t.number, desc: t.customerName || t.brand || "—",
+            detail: { SALE: "ขาย", PROFIT_SHARE: "แบ่งกำไร", PARTNER_INVESTMENT: "การลงทุน" }[t.type] || t.type,
+            income: Number(t.amount), vat: 0, expense: 0,
+          })),
+          ...curReceipts.map(r => {
+            const vr = r.vatRate ? Number(r.vatRate) : 0;
+            const total = Number(r.total);
+            const vat = vr > 0 ? Math.round(total * vr / (100 + vr) * 100) / 100 : 0;
+            return {
+              id: `rc-${r.id}`, date: new Date(r.issuedAt), type: "income",
+              ref: r.number, desc: r.customerName || "—",
+              detail: "ออกใบเสร็จแล้ว",
+              income: total, vat, expense: 0,
+            };
+          }),
         ].sort((a, b) => a.date - b.date);
 
         // Compute running balance
@@ -2923,10 +3137,32 @@ export default function ClientsUsersClient({ session }) {
           return { ...r, running };
         });
 
-        const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0);
+        const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0)
+          + curPartnerIncome.reduce((s, t) => s + Number(t.amount), 0)
+          + curReceipts.reduce((s, r) => s + Number(r.total), 0);
         const totalExpense = curExpenses.reduce((s, e) => s + Number(e.amount), 0);
         const netProfit = totalIncome - totalExpense;
         const isProfit = netProfit >= 0;
+
+        const totalVat = rows.reduce((s, r) => s + (r.vat || 0), 0);
+        const calcVat = r => { const vr = Number(r.vatRate || 0); return vr > 0 ? Math.round(Number(r.total) * vr / (100 + vr) * 100) / 100 : 0; };
+        const vat16 = curReceipts.filter(r => { const m = new Date(r.issuedAt).getMonth() + 1; return m >= 1 && m <= 6; }).reduce((s, r) => s + calcVat(r), 0);
+        const vat712 = curReceipts.filter(r => { const m = new Date(r.issuedAt).getMonth() + 1; return m >= 7 && m <= 12; }).reduce((s, r) => s + calcVat(r), 0);
+
+        function estimateKrwTax(net) {
+          if (net <= 0) return 0;
+          const brackets = [[14e6, 0.06], [50e6, 0.15], [88e6, 0.24], [150e6, 0.35], [300e6, 0.38], [500e6, 0.40], [1e9, 0.42], [Infinity, 0.45]];
+          let tax = 0, prev = 0;
+          for (const [limit, rate] of brackets) {
+            if (net <= prev) break;
+            tax += (Math.min(net, limit) - prev) * rate;
+            prev = limit;
+          }
+          return Math.round(tax);
+        }
+        const incomeTaxAmt = ledgerCurrency === "KRW" ? estimateKrwTax(Math.max(0, netProfit)) : null;
+        const incomeTaxRate = (incomeTaxAmt !== null && netProfit > 0) ? (incomeTaxAmt / netProfit * 100).toFixed(1) : null;
+        const marginalRate = netProfit <= 0 ? 0 : netProfit <= 14e6 ? 6 : netProfit <= 50e6 ? 15 : netProfit <= 88e6 ? 24 : netProfit <= 150e6 ? 35 : netProfit <= 300e6 ? 38 : netProfit <= 500e6 ? 40 : netProfit <= 1e9 ? 42 : 45;
 
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 24, overflowY: "auto" }}>
@@ -2955,7 +3191,7 @@ export default function ClientsUsersClient({ session }) {
               </div>
 
               {/* Summary cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24 }}>
                 {[
                   { label: "💰 รายรับรวม", value: totalIncome, color: "#4ade80", bg: "#0f2318", border: "#166534" },
                   { label: "💸 รายจ่ายรวม", value: totalExpense, color: "#f87171", bg: "#1f0f0f", border: "#7f1d1d" },
@@ -2970,6 +3206,34 @@ export default function ClientsUsersClient({ session }) {
                     {!isCount && <div style={{ fontSize: 11, color: "#4a5070", marginTop: 2 }}>{ledgerCurrency}</div>}
                   </div>
                 ))}
+                {/* VAT split card */}
+                <div style={{ background: "#1a1500", border: "1px solid #78350f", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 8 }}>🧾 VAT แบ่งงวด</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ background: "#1f1800", borderRadius: 6, padding: "5px 8px" }}>
+                      <div style={{ fontSize: 9, color: "#92400e", fontWeight: 700, marginBottom: 2 }}>ม.ค.–มิ.ย. → ชำระ ก.ค.</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: vat16 > 0 ? "#fbbf24" : "#4a5070" }}>{sym}{fmt(vat16)}</div>
+                    </div>
+                    <div style={{ background: "#1f1800", borderRadius: 6, padding: "5px 8px" }}>
+                      <div style={{ fontSize: 9, color: "#92400e", fontWeight: 700, marginBottom: 2 }}>ก.ค.–ธ.ค. → ชำระ ม.ค.</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: vat712 > 0 ? "#fbbf24" : "#4a5070" }}>{sym}{fmt(vat712)}</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Income tax estimate card (KRW only) */}
+                <div style={{ background: "#1a0f2e", border: "1px solid #581c87", borderRadius: 10, padding: "16px 14px", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 6 }}>💼 ภาษีรายได้สิ้นปี</div>
+                  {incomeTaxRate !== null ? (
+                    <>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#c084fc" }}>{incomeTaxRate}%</div>
+                      <div style={{ fontSize: 10, color: "#7c3aed", marginTop: 3 }}>ขั้นสูงสุด {marginalRate}% · {sym}{fmt(incomeTaxAmt)}</div>
+                    </>
+                  ) : netProfit <= 0 ? (
+                    <div style={{ fontSize: 14, color: "#4a5070", marginTop: 4 }}>ไม่มีกำไร</div>
+                  ) : (
+                    <div style={{ fontSize: 14, color: "#4a5070", marginTop: 4 }}>คำนวณเฉพาะ KRW</div>
+                  )}
+                </div>
               </div>
 
               {/* Profit/Loss banner */}
@@ -2987,14 +3251,14 @@ export default function ClientsUsersClient({ session }) {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      {["#", "วันที่", "เลขที่อ้างอิง", "รายการ / รายละเอียด", `รายรับ (${ledgerCurrency})`, `รายจ่าย (${ledgerCurrency})`, `คงเหลือสะสม`].map(h => (
+                      {["#", "วันที่", "เลขที่อ้างอิง", "รายการ / รายละเอียด", `รายรับ (${ledgerCurrency})`, "VAT", `รายจ่าย (${ledgerCurrency})`, `คงเหลือสะสม`].map(h => (
                         <th key={h} style={{ ...S.th, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {ledgerRows.length === 0 ? (
-                      <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", color: "#4a5070", padding: 32 }}>ไม่มีรายการในสกุลเงินนี้</td></tr>
+                      <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "#4a5070", padding: 32 }}>ไม่มีรายการในสกุลเงินนี้</td></tr>
                     ) : ledgerRows.map((r, idx) => (
                       <tr key={r.id} style={{ background: idx % 2 === 0 ? "transparent" : "#0f111633" }}>
                         <td style={{ ...S.td, color: "#4a5070", fontSize: 11, textAlign: "center" }}>{idx + 1}</td>
@@ -3011,6 +3275,9 @@ export default function ClientsUsersClient({ session }) {
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 700, color: "#4ade80" }}>
                           {r.income > 0 ? `+${sym}${fmt(r.income)}` : <span style={{ color: "#2a2d3a" }}>—</span>}
                         </td>
+                        <td style={{ ...S.td, textAlign: "right", fontSize: 11, color: r.vat > 0 ? "#fbbf24" : "#2a2d3a" }}>
+                          {r.vat > 0 ? `${sym}${fmt(r.vat)}` : "—"}
+                        </td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 700, color: "#f87171" }}>
                           {r.expense > 0 ? `-${sym}${fmt(r.expense)}` : <span style={{ color: "#2a2d3a" }}>—</span>}
                         </td>
@@ -3024,6 +3291,7 @@ export default function ClientsUsersClient({ session }) {
                       <tr style={{ borderTop: "2px solid #2a2d3a", background: "#1e2130" }}>
                         <td colSpan={4} style={{ ...S.td, fontWeight: 700, color: "#8b8fa8" }}>รวมทั้งหมด</td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 800, color: "#4ade80" }}>+{sym}{fmt(totalIncome)}</td>
+                        <td style={{ ...S.td, textAlign: "right", fontWeight: 700, color: "#fbbf24" }}>{totalVat > 0 ? `${sym}${fmt(totalVat)}` : "—"}</td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 800, color: "#f87171" }}>-{sym}{fmt(totalExpense)}</td>
                         <td style={{ ...S.td, textAlign: "right", fontWeight: 800, color: isProfit ? "#4ade80" : "#f87171" }}>
                           {isProfit ? "+" : "-"}{sym}{fmt(netProfit)}
@@ -3036,6 +3304,207 @@ export default function ClientsUsersClient({ session }) {
 
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
                 <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setLedgerModal(false)}>ปิด</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── PAYMENT NOTIFICATION MODAL ── */}
+      {paymentNotiModal && (() => {
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        const overdue = invoices.filter(i => i.status === "OVERDUE");
+        const pendingThisMonth = invoices.filter(i => {
+          if (i.status !== "PENDING") return false;
+          if (!i.dueDate) return true;
+          const d = new Date(i.dueDate);
+          return d.getFullYear() === thisYear && d.getMonth() === thisMonth;
+        });
+        const pendingNextMonth = invoices.filter(i => {
+          if (i.status !== "PENDING") return false;
+          if (!i.dueDate) return false;
+          const d = new Date(i.dueDate);
+          const nm = (thisMonth + 1) % 12;
+          const ny = thisMonth === 11 ? thisYear + 1 : thisYear;
+          return d.getFullYear() === ny && d.getMonth() === nm;
+        });
+
+        const monthTH = now.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+
+        const sendReminders = async (ids, all) => {
+          setSendingNoti(true);
+          setNotiResult(null);
+          try {
+            const body = all ? { sendAll: true } : { invoiceIds: ids };
+            const d = await (await fetch("/api/admin/notifications", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            })).json();
+            setNotiResult({ ok: true, msg: d.message || `ส่งแจ้งเตือน ${d.sent} รายการ`, lineSent: d.lineSent || 0, lineReady: d.lineReady });
+            const r = await (await fetch("/api/admin/notifications")).json();
+            setRecentNotis(r.notifications || []);
+          } catch (e) {
+            setNotiResult({ ok: false, msg: e.message });
+          } finally { setSendingNoti(false); }
+        };
+
+        const InvoiceRow = ({ inv }) => (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: "#1a1d27", borderRadius: 6, marginBottom: 6 }}>
+            <div>
+              <code style={{ fontSize: 11, color: "#7eb8f7" }}>{inv.number}</code>
+              <span style={{ fontSize: 12, color: "#8b8fa8", marginLeft: 8 }}>{inv.client?.name || "—"}</span>
+              {inv.dueDate && <span style={{ fontSize: 11, color: "#4a5070", marginLeft: 8 }}>ครบ {new Date(inv.dueDate).toLocaleDateString("th-TH")}</span>}
+              {inv.client?.lineUserId
+                ? <span style={{ marginLeft: 8, fontSize: 10, background: "#052e16", color: "#4ade80", border: "1px solid #166534", borderRadius: 4, padding: "1px 6px" }}>LINE ✓</span>
+                : <span style={{ marginLeft: 8, fontSize: 10, background: "#1a1400", color: "#78350f", border: "1px solid #78350f", borderRadius: 4, padding: "1px 6px" }}>LINE —</span>
+              }
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontWeight: 700, color: inv.status === "OVERDUE" ? "#f87171" : "#fbbf24", fontSize: 13 }}>
+                {Number(inv.amount).toLocaleString("th-TH")} {inv.currency || "THB"}
+              </span>
+              <button style={{ ...S.btn("#1e2130", "#4ade80"), fontSize: 11, padding: "3px 10px" }}
+                onClick={() => sendReminders([inv.id])}>ส่ง</button>
+            </div>
+          </div>
+        );
+
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 24, overflowY: "auto" }}>
+            <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 820, border: "1px solid #2a2d3a", marginTop: 16 }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GOEUN SERVER HUB</div>
+                  <h5 style={{ margin: 0, color: "#4ade80", fontSize: 17 }}>💰 แจ้งเตือนค่าบริการรายเดือน — {monthTH}</h5>
+                </div>
+                <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setPaymentNotiModal(false)}>✕</button>
+              </div>
+
+              {/* Summary pills */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                {[
+                  { label: "🔴 เกินกำหนด", count: overdue.length, color: "#f87171", bg: "#1f0f0f", border: "#7f1d1d" },
+                  { label: "🟡 ครบกำหนดเดือนนี้", count: pendingThisMonth.length, color: "#fbbf24", bg: "#1a1400", border: "#78350f" },
+                  { label: "🔵 เดือนหน้า", count: pendingNextMonth.length, color: "#7eb8f7", bg: "#0f1830", border: "#1e3a5f" },
+                ].map(p => (
+                  <div key={p.label} style={{ background: p.bg, border: `1px solid ${p.border}`, borderRadius: 8, padding: "8px 16px", display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 13, color: "#8b8fa8" }}>{p.label}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: p.color }}>{p.count}</span>
+                    <span style={{ fontSize: 11, color: "#4a5070" }}>รายการ</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Send all buttons */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+                <button style={{ ...S.btn("#1f0f0f", "#f87171"), border: "1px solid #7f1d1d", padding: "8px 18px", fontSize: 13 }}
+                  disabled={sendingNoti || overdue.length === 0}
+                  onClick={() => sendReminders(overdue.map(i => i.id))}>
+                  {sendingNoti ? "⏳ กำลังส่ง..." : `🔔 ส่งแจ้งเตือนเกินกำหนด (${overdue.length})`}
+                </button>
+                <button style={{ ...S.btn("#1a1400", "#fbbf24"), border: "1px solid #78350f", padding: "8px 18px", fontSize: 13 }}
+                  disabled={sendingNoti || pendingThisMonth.length === 0}
+                  onClick={() => sendReminders(pendingThisMonth.map(i => i.id))}>
+                  {sendingNoti ? "⏳ กำลังส่ง..." : `🔔 ส่งแจ้งเตือนเดือนนี้ (${pendingThisMonth.length})`}
+                </button>
+                <button style={{ ...S.btn("#0a0f1a", "#a78bfa"), border: "1px solid #4c1d95", padding: "8px 18px", fontSize: 13 }}
+                  disabled={sendingNoti}
+                  onClick={() => sendReminders(null, true)}>
+                  📣 ส่งทั้งหมดที่ค้างชำระ
+                </button>
+              </div>
+
+              {notiResult && (
+                <div style={{ background: notiResult.ok ? "#052e16" : "#450a0a", border: `1px solid ${notiResult.ok ? "#166534" : "#7f1d1d"}`, borderRadius: 8, padding: "10px 16px", marginBottom: 16, fontSize: 13 }}>
+                  <div style={{ color: notiResult.ok ? "#4ade80" : "#f87171", fontWeight: 600 }}>
+                    {notiResult.ok ? "✅" : "❌"} {notiResult.msg}
+                  </div>
+                  {notiResult.ok && (
+                    <div style={{ marginTop: 6, display: "flex", gap: 12 }}>
+                      <span style={{ color: "#7eb8f7", fontSize: 12 }}>📱 PUSH (in-app): ✓</span>
+                      {notiResult.lineSent > 0
+                        ? <span style={{ color: "#4ade80", fontSize: 12 }}>💚 LINE: ส่งสำเร็จ {notiResult.lineSent} รายการ</span>
+                        : notiResult.lineReady
+                          ? <span style={{ color: "#fbbf24", fontSize: 12 }}>LINE: ลูกค้ายังไม่มี LINE User ID</span>
+                          : <span style={{ color: "#78350f", fontSize: 12 }}>LINE: ยังไม่ได้ตั้งค่า Token</span>
+                      }
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Overdue */}
+              {overdue.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f87171", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>🔴 เกินกำหนดชำระ</div>
+                  {overdue.map(inv => <InvoiceRow key={inv.id} inv={inv} />)}
+                </div>
+              )}
+
+              {/* This month */}
+              {pendingThisMonth.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>🟡 ครบกำหนดเดือนนี้</div>
+                  {pendingThisMonth.map(inv => <InvoiceRow key={inv.id} inv={inv} />)}
+                </div>
+              )}
+
+              {/* Next month */}
+              {pendingNextMonth.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#7eb8f7", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>🔵 ครบกำหนดเดือนหน้า</div>
+                  {pendingNextMonth.map(inv => <InvoiceRow key={inv.id} inv={inv} />)}
+                </div>
+              )}
+
+              {overdue.length === 0 && pendingThisMonth.length === 0 && pendingNextMonth.length === 0 && (
+                <div style={{ textAlign: "center", padding: 32, color: "#4a5070" }}>✅ ไม่มีรายการค้างชำระในขณะนี้</div>
+              )}
+
+              {/* ตั้งค่าแจ้งเตือนรายเดือน */}
+              <div style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#c084fc", marginBottom: 10 }}>⚙️ ตั้งค่าแจ้งเตือนอัตโนมัติรายเดือน</div>
+                <div style={{ fontSize: 12, color: "#8b8fa8", lineHeight: 1.7 }}>
+                  ระบบจะส่งแจ้งเตือนในระบบให้กับลูกค้าที่มียอดค้างชำระ โดยอัตโนมัติทุกวันที่ 1 ของเดือน<br />
+                  <span style={{ color: "#4ade80" }}>✅ PUSH (in-app)</span> — บันทึกแจ้งเตือนในระบบ<br />
+                  {clients.some(c => c.lineUserId)
+                    ? <span style={{ color: "#4ade80" }}>✅ LINE Messaging API</span>
+                    : <span style={{ color: "#fbbf24" }}>⚠️ LINE: ยังไม่มีลูกค้าที่ตั้งค่า LINE User ID</span>
+                  }
+                  {" — "}<strong style={{ color: "#7eb8f7" }}>ใส่ LINE User ID ในหน้าแก้ไขลูกค้า + ตั้ง LINE_CHANNEL_ACCESS_TOKEN ใน .env</strong>
+                  <br />
+                  <span style={{ color: "#4a5070" }}>ตัวอย่างในไฟล์ <code>.env</code> หรือ <code>.env.local</code>: </span>
+                  <code style={{ color: "#4ade80" }}>LINE_CHANNEL_ACCESS_TOKEN=YOUR_LINE_CHANNEL_ACCESS_TOKEN</code>
+                </div>
+                <Link href="/admin/payments" style={{ display: "inline-block", marginTop: 10, ...S.btn("#1e2336", "#7eb8f7"), textDecoration: "none", padding: "6px 14px", fontSize: 12 }}>
+                  ➕ เพิ่ม / แก้ไข Invoice →
+                </Link>
+              </div>
+
+              {/* Recent notifications */}
+              {recentNotis.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#8b8fa8", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>📋 ประวัติการแจ้งเตือนล่าสุด</div>
+                  <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                    {recentNotis.slice(0, 20).map(n => (
+                      <div key={n.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", borderBottom: "1px solid #2a2d3a", fontSize: 12 }}>
+                        <div>
+                          <span style={{ color: "#7eb8f7" }}>{n.recipient}</span>
+                          <span style={{ color: "#4a5070", marginLeft: 8 }}>{n.subject}</span>
+                        </div>
+                        <span style={{ color: "#4a5070", whiteSpace: "nowrap" }}>{new Date(n.createdAt).toLocaleDateString("th-TH")}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+                <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setPaymentNotiModal(false)}>ปิด</button>
               </div>
             </div>
           </div>
@@ -3079,7 +3548,7 @@ export default function ClientsUsersClient({ session }) {
                   ))}
                 </div>
                 <div style={{ marginTop: 10, background: "#1a1d27", borderRadius: 8, padding: "10px 14px", border: "1px solid #2a2d3a", fontSize: 13, color: "#8b8fa8" }}>
-                  {(() => { const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency).length; const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency).length; const ti = invoices.filter(i=>(i.currency||"THB")===ledgerCurrency).reduce((s,i)=>s+Number(i.amount),0); const te = expenses.filter(e=>(e.currency||"THB")===ledgerCurrency).reduce((s,e)=>s+Number(e.amount),0); const sym={THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||""; return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{ci} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce} รายการ</span> · {ti-te >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{(ti-te).toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(ti-te).toLocaleString("th-TH")}</span>}</>; })()}
+                  {(() => { const PTYPES = new Set(["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"]); const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency).length + partnerTxns.filter(t => (t.currency||"KRW") === ledgerCurrency && PTYPES.has(t.type) && t.status !== "CANCELLED").length; const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency).length; const ti = invoices.filter(i=>(i.currency||"THB")===ledgerCurrency).reduce((s,i)=>s+Number(i.amount),0) + partnerTxns.filter(t=>(t.currency||"KRW")===ledgerCurrency && PTYPES.has(t.type) && t.status!=="CANCELLED").reduce((s,t)=>s+Number(t.amount),0); const te = expenses.filter(e=>(e.currency||"THB")===ledgerCurrency).reduce((s,e)=>s+Number(e.amount),0); const sym={THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||""; return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{ci} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce} รายการ</span> · {ti-te >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{(ti-te).toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(ti-te).toLocaleString("th-TH")}</span>}</>; })()}
                 </div>
                 {/* Ledger search filter */}
                 <div style={{ marginTop: 12 }}>
@@ -3407,6 +3876,14 @@ export default function ClientsUsersClient({ session }) {
                 <label style={S.label}>URL ระบบลูกค้า</label>
                 <input style={S.input} placeholder="https://..." value={clientForm.systemUrl}
                   onChange={e => setClientForm(p => ({ ...p, systemUrl: e.target.value }))} />
+              </div>
+              <div>
+                <label style={S.label}>LINE User ID (สำหรับแจ้งเตือนทาง LINE)</label>
+                <input style={S.input} placeholder="Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value={clientForm.lineUserId}
+                  onChange={e => setClientForm(p => ({ ...p, lineUserId: e.target.value }))} />
+                <div style={{ fontSize: 11, color: "#4a5070", marginTop: 4 }}>
+                  ได้จาก LINE Developers → Webhook events (follow event) หรือให้ลูกค้าแชท bot แล้วดู User ID
+                </div>
               </div>
               <div>
                 <label style={S.label}>โลโก้สำหรับหัวบิล (อัปโหลดไฟล์)</label>

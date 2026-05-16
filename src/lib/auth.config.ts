@@ -3,12 +3,14 @@ import type { NextAuthConfig } from "next-auth";
 declare module "next-auth" {
   interface User {
     role?: string;
+    clientId?: string | null;
   }
   interface Session {
-    user: User & { role?: string };
+    user: User & { role?: string; clientId?: string | null };
   }
   interface JWT {
     role?: string;
+    clientId?: string | null;
   }
 }
 

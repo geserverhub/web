@@ -40,7 +40,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { name, slug, description, status, contactEmail, contactPhone, address, systemUrl, logoUrl, serviceIds } = body;
+    const { name, slug, description, status, contactEmail, contactPhone, address, systemUrl, logoUrl, lineUserId, serviceIds } = body;
 
     if (!name || !slug) {
       return NextResponse.json({ error: "name และ slug จำเป็น" }, { status: 400 });
@@ -60,6 +60,7 @@ export async function POST(req) {
         address: address || null,
         systemUrl: systemUrl || null,
         logoUrl: logoUrl || null,
+        lineUserId: lineUserId || null,
         ...(Array.isArray(serviceIds) && serviceIds.length > 0 && {
           services: {
             create: serviceIds.map(serviceId => ({ serviceId })),

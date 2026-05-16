@@ -318,6 +318,31 @@ img {
   white-space: nowrap;
 }
 
+/* Route caption under button/link labels */
+.btn-path-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+}
+
+.btn-path-stack.center {
+  align-items: center;
+}
+
+.btn-path-label {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.btn-path-caption {
+  margin-top: 0.18rem;
+  font-size: 0.68rem;
+  opacity: 0.72;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 /* ══════════════════════════════════════════
    Hero — Trip.com style
 ══════════════════════════════════════════ */

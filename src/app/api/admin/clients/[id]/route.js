@@ -14,7 +14,7 @@ export async function PUT(req, { params }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, nameTh, description, status, contactEmail, contactPhone, address, systemUrl, logoUrl, serviceIds } = body;
+    const { name, nameTh, description, status, contactEmail, contactPhone, address, systemUrl, logoUrl, lineUserId, serviceIds } = body;
 
     // Sync services if provided
     if (Array.isArray(serviceIds)) {
@@ -39,6 +39,7 @@ export async function PUT(req, { params }) {
         ...(address !== undefined && { address }),
         ...(systemUrl !== undefined && { systemUrl }),
         ...(logoUrl !== undefined && { logoUrl }),
+        ...(lineUserId !== undefined && { lineUserId: lineUserId || null }),
       },
     });
     return NextResponse.json({ client });

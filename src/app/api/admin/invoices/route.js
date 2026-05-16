@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { sendInvoiceReminders } from "@/lib/invoiceReminders";
 
 function isSuperAdmin(session) {
   return session?.user?.role === "SUPER_ADMIN";
@@ -94,7 +95,13 @@ export async function POST(req) {
       },
       include: { client: { select: { id: true, name: true } } },
     });
-    return NextResponse.json({ invoice }, { status: 201 });
+
+    let reminder = null;
+    if (["PENDING", "OVERDUE"].includes(invoice.status)) {
+      reminder = await sendInvoiceReminders({ invoiceIds: [invoice.id], sendAll: false });
+    }
+
+    return NextResponse.json({ invoice, reminder }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/invoices]", err);
     return NextResponse.json({ error: err.message || "เกิดข้อผิดพลาดในเซิร์ฟเวอร์" }, { status: 500 });

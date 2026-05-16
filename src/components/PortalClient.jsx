@@ -23,10 +23,13 @@ export default function PortalClient({ client, products, session }) {
   const filtered = products.filter((p) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
+    const name = String(p?.name || "").toLowerCase();
+    const category = String(p?.category || "").toLowerCase();
+    const sku = String(p?.sku || "").toLowerCase();
     return (
-      p.name.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q)
+      name.includes(q) ||
+      category.includes(q) ||
+      sku.includes(q)
     );
   });
 

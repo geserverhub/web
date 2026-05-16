@@ -25,6 +25,9 @@ export default function CargoAdminPage() {
     totalRevenue: 0,
     totalCost: 0,
     netProfit: 0,
+    krwRevenue: 0,
+    krwCost: 0,
+    krwProfit: 0,
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -55,14 +58,22 @@ export default function CargoAdminPage() {
         // Calculate stats
         const total = Array.isArray(data) ? data.length : data.shipments?.length || 0;
         const delivered = (Array.isArray(data) ? data : data.shipments || []).filter(s => s.status === "delivered").length;
-        const totalRev = (Array.isArray(data) ? data : data.shipments || []).reduce((sum, s) => sum + (Number(s.revenue) || 0), 0);
-        const totalCst = (Array.isArray(data) ? data : data.shipments || []).reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
+        const list = Array.isArray(data) ? data : data.shipments || [];
+        const thbList = list.filter(s => (s.currency || "THB") === "THB");
+        const krwList = list.filter(s => s.currency === "KRW");
+        const totalRev = thbList.reduce((sum, s) => sum + (Number(s.revenue) || 0), 0);
+        const totalCst = thbList.reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
+        const krwRev = krwList.reduce((sum, s) => sum + (Number(s.revenue) || 0), 0);
+        const krwCst = krwList.reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
         setStats({
           totalShipments: total,
           delivered: delivered,
           totalRevenue: totalRev,
           totalCost: totalCst,
           netProfit: totalRev - totalCst,
+          krwRevenue: krwRev,
+          krwCost: krwCst,
+          krwProfit: krwRev - krwCst,
         });
       } else {
         setError(data.error || "Failed to load shipments");
@@ -198,13 +209,13 @@ export default function CargoAdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 16 }}>
           {[
             { icon: "📦", label: "รายการทั้งหมด", value: stats.totalShipments, color: "#facc15" },
             { icon: "✅", label: "จัดส่งสำเร็จ", value: stats.delivered, color: "#4ade80" },
             { icon: "💰", label: "รายรับรวม", value: `฿${stats.totalRevenue.toLocaleString()}`, color: "#60a5fa" },
             { icon: "📤", label: "ต้นทุนรวม", value: `฿${stats.totalCost.toLocaleString()}`, color: "#f87171" },
-            { icon: "📈", label: "กำไรสุทธิ", value: `+฿${stats.netProfit.toLocaleString()}`, color: "#a78bfa", highlight: stats.netProfit >= 0 },
+            { icon: "📈", label: "กำไรสุทธิ", value: `${stats.netProfit >= 0 ? "+" : ""}฿${stats.netProfit.toLocaleString()}`, color: stats.netProfit >= 0 ? "#a78bfa" : "#f87171" },
           ].map((stat, i) => (
             <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,.1)", border: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: 20, marginBottom: 8 }}>{stat.icon}</div>
@@ -213,6 +224,23 @@ export default function CargoAdminPage() {
             </div>
           ))}
         </div>
+        {/* KRW Stats */}
+        {(stats.krwRevenue > 0 || stats.krwCost > 0) && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
+            {[
+              { icon: "💰", label: "รายรับรวม (KRW)", value: `₩${stats.krwRevenue.toLocaleString()}`, color: "#60a5fa" },
+              { icon: "📤", label: "ต้นทุนรวม (KRW)", value: `₩${stats.krwCost.toLocaleString()}`, color: "#f87171" },
+              { icon: stats.krwProfit >= 0 ? "📈" : "📉", label: "กำไรสุทธิ (KRW)", value: `${stats.krwProfit >= 0 ? "+" : ""}₩${stats.krwProfit.toLocaleString()}`, color: stats.krwProfit >= 0 ? "#a78bfa" : "#f87171" },
+            ].map((stat, i) => (
+              <div key={i} style={{ background: "#fffbeb", borderRadius: 12, padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,.1)", border: "1px solid #fde68a" }}>
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{stat.icon}</div>
+                <div style={{ fontSize: 12, color: "#92400e", marginBottom: 6 }}>{stat.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: stat.color }}>{stat.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!(stats.krwRevenue > 0 || stats.krwCost > 0) && <div style={{ marginBottom: 32 }} />}
 
         {/* Menu Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 32 }}>

@@ -33,6 +33,7 @@ export default function MctProductClient({ session, companyName }) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
@@ -46,24 +47,59 @@ export default function MctProductClient({ session, companyName }) {
   const imgRef = useRef();
   const importRef = useRef();
 
+  const safeJson = async (res) => {
+    const text = await res.text();
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      return { error: text || "Invalid server response" };
+    }
+  };
+
+  const apiFetch = useCallback(async (url, options = {}) => {
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch {
+      throw new Error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+    }
+
+    const data = await safeJson(res);
+    if (!res.ok) {
+      throw new Error(data?.error || `Request failed (${res.status})`);
+    }
+    return data;
+  }, []);
+
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   };
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 320);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    const qs = new URLSearchParams({
-      all: "1", limit: "200",
-      ...(tab !== "all" ? { category: tab } : {}),
-      ...(search ? { search } : {}),
-    });
-    const res = await fetch(`/api/products?${qs}`);
-    const data = await res.json();
-    setProducts(data.products || []);
-    setTotal(data.total || 0);
-    setLoading(false);
-  }, [tab, search]);
+    try {
+      const qs = new URLSearchParams({
+        all: "1", limit: "200",
+        ...(tab !== "all" ? { category: tab } : {}),
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+      });
+      const data = await apiFetch(`/api/products?${qs}`);
+      setProducts(Array.isArray(data.products) ? data.products : []);
+      setTotal(Number(data.total || 0));
+    } catch (err) {
+      setProducts([]);
+      setTotal(0);
+      showToast(err.message || "โหลดสินค้าไม่สำเร็จ", "danger");
+    } finally {
+      setLoading(false);
+    }
+  }, [tab, debouncedSearch, apiFetch]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -101,35 +137,49 @@ export default function MctProductClient({ session, companyName }) {
       promotionPrice: form.promotionPrice ? parseFloat(form.promotionPrice) : null,
     };
     const res = editId
-      ? await fetch(`/api/products/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-      : await fetch("/api/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    setSaving(false);
-    if (res.ok) {
+      ? `/api/products/${editId}`
+      : "/api/products";
+    try {
+      await apiFetch(res, {
+        method: editId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
       setModalOpen(false);
       showToast(editId ? "แก้ไขสินค้าสำเร็จ" : "เพิ่มสินค้าสำเร็จ");
-      fetchProducts();
-    } else {
-      const d = await res.json();
-      showToast(d.error || "เกิดข้อผิดพลาด", "danger");
+      await fetchProducts();
+    } catch (err) {
+      showToast(err.message || "เกิดข้อผิดพลาด", "danger");
+    } finally {
+      setSaving(false);
     }
   }
 
   async function handleDelete(id) {
     if (!confirm("ยืนยันลบสินค้านี้?")) return;
     setDeleting(id);
-    await fetch(`/api/products/${id}`, { method: "DELETE" });
-    setDeleting(null);
-    showToast("ลบสินค้าแล้ว", "warning");
-    fetchProducts();
+    try {
+      await apiFetch(`/api/products/${id}`, { method: "DELETE" });
+      showToast("ลบสินค้าแล้ว", "warning");
+      await fetchProducts();
+    } catch (err) {
+      showToast(err.message || "ลบสินค้าไม่สำเร็จ", "danger");
+    } finally {
+      setDeleting(null);
+    }
   }
 
   async function handleToggleActive(p) {
-    await fetch(`/api/products/${p.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ active: !p.active }),
-    });
-    fetchProducts();
+    try {
+      await apiFetch(`/api/products/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !p.active }),
+      });
+      await fetchProducts();
+    } catch (err) {
+      showToast(err.message || "เปลี่ยนสถานะไม่สำเร็จ", "danger");
+    }
   }
 
   async function handleImgUpload(file) {
@@ -137,15 +187,16 @@ export default function MctProductClient({ session, companyName }) {
     setImgUploading(true);
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    setImgUploading(false);
-    if (res.ok) {
-      const { url } = await res.json();
+    try {
+      const data = await apiFetch("/api/upload", { method: "POST", body: fd });
+      const url = data?.url;
+      if (!url) throw new Error("ไม่พบ URL รูปภาพจากเซิร์ฟเวอร์");
       setForm((f) => ({ ...f, img: url }));
       showToast("อัพโหลดรูปสำเร็จ");
-    } else {
-      const d = await res.json();
-      showToast(d.error || "อัพโหลดรูปไม่สำเร็จ", "danger");
+    } catch (err) {
+      showToast(err.message || "อัพโหลดรูปไม่สำเร็จ", "danger");
+    } finally {
+      setImgUploading(false);
     }
   }
 
@@ -155,15 +206,16 @@ export default function MctProductClient({ session, companyName }) {
     setImportResult(null);
     const fd = new FormData();
     fd.append("file", importFile);
-    const res = await fetch("/api/products/import", { method: "POST", body: fd });
-    const data = await res.json();
-    setImporting(false);
-    setImportResult(data);
-    if (res.ok) {
+    try {
+      const data = await apiFetch("/api/products/import", { method: "POST", body: fd });
+      setImportResult({ ...data, ok: true });
       showToast(`นำเข้าสำเร็จ: เพิ่ม ${data.created} | อัพเดต ${data.updated} | ข้าม ${data.skipped}`);
-      fetchProducts();
-    } else {
-      showToast(data.error || "นำเข้าไม่สำเร็จ", "danger");
+      await fetchProducts();
+    } catch (err) {
+      setImportResult({ ok: false, error: err.message || "นำเข้าไม่สำเร็จ" });
+      showToast(err.message || "นำเข้าไม่สำเร็จ", "danger");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -188,11 +240,17 @@ export default function MctProductClient({ session, companyName }) {
           <span className="small" style={{ color: "#8b8fa8" }}>{session?.user?.name || session?.user?.email}</span>
           {session?.user?.role === "SUPER_ADMIN" && (
             <Link href="/admin/clients" className="btn btn-sm" style={{ background: "#1e2336", color: "#a78bfa", border: "1px solid #3b2d5a" }}>
-              👥 จัดการลูกค้า
+              <span className="btn-path-stack">
+                <span className="btn-path-label">👥 จัดการลูกค้า</span>
+                <span className="btn-path-caption">/admin/clients</span>
+              </span>
             </Link>
           )}
           <Link href="/m-group" target="_blank" className="btn btn-sm" style={{ background: "#1e2336", color: "#7eb8f7", border: "1px solid #2e3450" }}>
-            🛒 ดูหน้าสินค้า
+            <span className="btn-path-stack">
+              <span className="btn-path-label">🛒 ดูหน้าสินค้า</span>
+              <span className="btn-path-caption">/m-group</span>
+            </span>
           </Link>
           <button className="btn btn-sm" style={{ background: "#2a1f1f", color: "#f87171", border: "1px solid #4a2222" }}
             onClick={() => signOut({ callbackUrl: "/login" })}>
@@ -218,6 +276,18 @@ export default function MctProductClient({ session, companyName }) {
           <div className="btn-group">
             <button className={`btn btn-sm ${view === "list" ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => setView("list")}>📋 รายการสินค้า</button>
             <button className={`btn btn-sm ${view === "import" ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => setView("import")}>📥 นำเข้าจากไฟล์</button>
+            <Link href="/mct-product/customers" className="btn btn-sm btn-outline-secondary">
+              <span className="btn-path-stack center">
+                <span className="btn-path-label">👥 บัญชีลูกค้า</span>
+                <span className="btn-path-caption">/mct-product/customers</span>
+              </span>
+            </Link>
+            <Link href="/mct-product/market" className="btn btn-sm btn-outline-secondary">
+              <span className="btn-path-stack center">
+                <span className="btn-path-label">🛍️ มาร์ทซื้อ-ขาย</span>
+                <span className="btn-path-caption">/mct-product/market</span>
+              </span>
+            </Link>
           </div>
         </div>
 

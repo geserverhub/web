@@ -84,6 +84,7 @@ model Client {
   address      String?  @db.Text
   systemUrl          String?
   logoUrl            String?
+  lineUserId         String?
   domainRegisteredAt DateTime?
   createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
@@ -94,6 +95,7 @@ model Client {
   receipts  Receipt[]
   customers Customer[]
   expenses  Expense[]
+  mgroupOrders MGroupOrder[]
 
   @@index([slug])
   @@index([status])
@@ -311,6 +313,34 @@ model Product {
   @@index([active])
 }
 
+model MartProduct {
+  id             Int      @id @default(autoincrement())
+  sku            String   @unique
+  category       String
+  name           String
+  nameEn         String?
+  nameZh         String?
+  currency       String   @default("THB")
+  price          Decimal  @db.Decimal(10, 2)
+  priceWholesale Decimal? @db.Decimal(10, 2)
+  unit           String   @default("ชิ้น")
+  minOrder       Int      @default(1)
+  minWholesale   Int      @default(10)
+  desc           String?  @db.Text
+  img            String?
+  stock          Int      @default(0)
+  sold           Int      @default(0)
+  active         Boolean  @default(true)
+  promotion      String?
+  promotionPrice Decimal? @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([category])
+  @@index([active])
+  @@index([sku])
+}
+
 enum NotificationChannel {
   EMAIL
   LINE
@@ -433,6 +463,7 @@ enum CargoTransactionType {
 model MGroupOrder {
   id              String           @id @default(cuid())
   number          String           @unique
+  clientId        String?
   customerName    String
   customerPhone   String?
   customerEmail   String?
@@ -452,8 +483,10 @@ model MGroupOrder {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   items MGroupOrderItem[]
 
+  @@index([clientId])
   @@index([status])
   @@index([createdAt])
   @@index([customerPhone])

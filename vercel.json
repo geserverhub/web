@@ -3,6 +3,12 @@
   "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/cron/monthly-invoice-reminders",
+      "schedule": "0 1 1 * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/customer-dashboard-login",

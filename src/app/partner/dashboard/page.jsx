@@ -8,7 +8,7 @@ const LANGS = {
   th: {
     loading: "⏳ กำลังโหลด...",
     signOut: "ออกจากระบบ",
-    tabs: { overview: "📊 ภาพรวม", transactions: "📋 รายการ", add: "➕ เพิ่มรายการ", products: "📦 สินค้า", tasks: "📝 งานดำเนินการ", vat: "🧾 ภาษีมูลค่าเพิ่ม", income: "💼 ภาษีรายได้สิ้นปี", print: "🖨️ พิมพ์รายงาน" },
+    tabs: { overview: "📊 ภาพรวม", transactions: "📋 รายการ", add: "➕ เพิ่มรายการ", products: "📦 สินค้า", tasks: "📝 งานดำเนินการ", vat: "🧾 ภาษีมูลค่าเพิ่ม", income: "💼 ภาษีรายได้สิ้นปี", kpi: "🎯 KPI", print: "🖨️ พิมพ์รายงาน" },
     yearLabel: (y) => `ปี ${y}`,
     stats: {
       totalRevenue: "รายรับรวม",
@@ -23,6 +23,38 @@ const LANGS = {
     profitCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
     vatNote: "สูตร: (รายรับ − รายจ่าย) × 90% ÷ 2",
     categoryTitle: "รายรับแยกตามประเภท",
+    kpi: {
+      title: (y) => `🎯 KPI — ปี ${y}`,
+      activeMonths: (n) => `เดือนที่มีข้อมูล ${n} เดือน`,
+      sec1: "📈 ประสิทธิภาพรายรับ",
+      sec2: "💸 ประสิทธิภาพค่าใช้จ่าย & กำไร",
+      sec3: "🧾 VAT & ภาษี",
+      sec4: "📅 รายรับ vs ค่าใช้จ่าย รายเดือน",
+      totalRev: "รายรับรวมปีนี้",
+      avgRev: "รายรับเฉลี่ย/เดือน",
+      avgRevSub: (n) => `จาก ${n} เดือนที่มีข้อมูล`,
+      bestMonth: "เดือนที่ดีที่สุด",
+      momGrowth: "เติบโต MoM",
+      momSub: "เทียบเดือนก่อน",
+      noMom: "ยังไม่มีเดือนก่อน",
+      totalExp: "ค่าใช้จ่ายรวมปีนี้",
+      totalExpSub: (v) => `เฉลี่ย ₩${v}/เดือน`,
+      expRatio: "อัตราค่าใช้จ่าย",
+      expRatioSub: "ค่าใช้จ่าย ÷ รายรับ",
+      netProfit: "กำไรสุทธิ",
+      perPerson: "กำไรต่อคน (หลัง VAT)",
+      perPersonSub: "(กำไรสุทธิ × 90%) ÷ 2",
+      vat16: "VAT งวด ม.ค.–มิ.ย.",
+      vat16sub: "ชำระ ก.ค.",
+      vat712: "VAT งวด ก.ค.–ธ.ค.",
+      vat712sub: "ชำระ ม.ค.",
+      taxEst: "ภาษีเงินได้ (est.)",
+      taxRate: "อัตราภาษีรวม",
+      taxRateSub: "tax ÷ กำไรส่วนบุคคล",
+      marginalRate: (r) => `อัตราสูงสุด ${r}%`,
+      legendRev: "รายรับ",
+      legendExp: "ค่าใช้จ่าย",
+    },
     categoryCols: { name: "ประเภท", amount: "ยอดรวม (₩)", share: "สัดส่วน" },
     txTitle: (n) => `รายการทั้งหมด (${n} รายการ)`,
     txCols: { number: "เลขที่", date: "วันที่", type: "ประเภท", desc: "รายละเอียด", customer: "คู่ค้า", amount: "จำนวน", status: "สถานะ" },
@@ -160,7 +192,7 @@ const LANGS = {
   ko: {
     loading: "⏳ 로딩 중...",
     signOut: "로그아웃",
-    tabs: { overview: "📊 개요", transactions: "📋 거래내역", add: "➕ 거래추가", products: "📦 상품목록", tasks: "📝 업무관리", vat: "🧾 부가세", income: "💼 종합소득세", print: "🖨️ 보고서 인쇄" },
+    tabs: { overview: "📊 개요", transactions: "📋 거래내역", add: "➕ 거래추가", products: "📦 상품목록", tasks: "📝 업무관리", vat: "🧾 부가세", income: "💼 종합소득세", kpi: "🎯 KPI", print: "🖨️ 보고서 인쇄" },
     yearLabel: (y) => `${y}년`,
     stats: {
       totalRevenue: "총 매출",
@@ -175,6 +207,38 @@ const LANGS = {
     profitCols: { month: "월", revenue: "매출 (₩)", expense: "지출 (₩)", net: "순이익 (₩)", afterVat: "VAT 10% 후 (₩)", perPerson: "1인당 (₩)" },
     vatNote: "공식: (매출 − 지출) × 90% ÷ 2",
     categoryTitle: "카테고리별 매출",
+    kpi: {
+      title: (y) => `🎯 KPI — ${y}년`,
+      activeMonths: (n) => `데이터 있는 달: ${n}개월`,
+      sec1: "📈 매출 성과",
+      sec2: "💸 지출 & 수익 성과",
+      sec3: "🧾 부가세 & 세금",
+      sec4: "📅 월별 매출 vs 지출",
+      totalRev: "연간 총 매출",
+      avgRev: "월평균 매출",
+      avgRevSub: (n) => `${n}개월 기준`,
+      bestMonth: "최고 매출 월",
+      momGrowth: "전월 대비 성장",
+      momSub: "전월 비교",
+      noMom: "이전 달 데이터 없음",
+      totalExp: "연간 총 지출",
+      totalExpSub: (v) => `월평균 ₩${v}`,
+      expRatio: "지출 비율",
+      expRatioSub: "지출 ÷ 매출",
+      netProfit: "순이익",
+      perPerson: "1인당 순이익 (VAT 후)",
+      perPersonSub: "(순이익 × 90%) ÷ 2",
+      vat16: "부가세 1월–6월",
+      vat16sub: "납부: 7월",
+      vat712: "부가세 7월–12월",
+      vat712sub: "납부: 1월",
+      taxEst: "종합소득세 (추정)",
+      taxRate: "세율 합계",
+      taxRateSub: "세금 ÷ 개인 수익",
+      marginalRate: (r) => `최고 세율 ${r}%`,
+      legendRev: "매출",
+      legendExp: "지출",
+    },
     categoryCols: { name: "카테고리", amount: "합계 (₩)", share: "비율" },
     txTitle: (n) => `전체 거래내역 (${n}건)`,
     txCols: { number: "번호", date: "날짜", type: "유형", desc: "내용", customer: "거래처", amount: "금액", status: "상태" },
@@ -662,7 +726,7 @@ export default function PartnerDashboard() {
         {/* Tabs + Year */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
-            {["overview", "transactions", "add", "products", "tasks", "vat", "income", "print"].map(tabKey => (
+            {["overview", "transactions", "add", "products", "tasks", "vat", "income", "kpi", "print"].map(tabKey => (
               <button key={tabKey} style={S.tabBtn(tab === tabKey)} onClick={() => setTab(tabKey)}>
                 {t.tabs[tabKey]}
               </button>
@@ -1648,6 +1712,133 @@ export default function PartnerDashboard() {
               </div>
 
               <div style={{ marginTop: 10, fontSize: 11, color: "#4a5070", textAlign: "right" }}>{t.income.note}</div>
+            </div>
+          );
+        })()}
+
+        {/* KPI */}
+        {tab === "kpi" && (() => {
+          if (!summary || !monthlyRevenue) return <div style={{ ...S.section, color: "#8b8fa8", textAlign: "center", padding: 40 }}>กำลังโหลดข้อมูล...</div>;
+
+          const fmtW = n => Math.abs(Math.round(n)).toLocaleString("ko-KR");
+          const months = monthlyRevenue.filter(m => m.revenue > 0 || m.expense > 0);
+          const activeMonths = months.length || 1;
+
+          // Revenue metrics
+          const totalRev = summary.totalRevenue || 0;
+          const totalExp = summary.totalExpense || 0;
+          const netProfit = summary.netProfit || 0;
+          const avgMonthRev = totalRev / activeMonths;
+          const avgMonthExp = totalExp / activeMonths;
+          const profitMargin = totalRev > 0 ? (netProfit / totalRev * 100) : 0;
+          const expenseRatio = totalRev > 0 ? (totalExp / totalRev * 100) : 0;
+
+          // MoM growth (current vs prev month)
+          const nowM = new Date().getMonth() + 1;
+          const curM = monthlyRevenue.find(m => m.month === nowM) || { revenue: 0, expense: 0 };
+          const prevM = monthlyRevenue.find(m => m.month === nowM - 1) || { revenue: 0, expense: 0 };
+          const momGrowth = prevM.revenue > 0 ? ((curM.revenue - prevM.revenue) / prevM.revenue * 100) : null;
+
+          // Best month
+          const bestMonth = [...monthlyRevenue].sort((a, b) => b.revenue - a.revenue)[0];
+          const bestMonthName = bestMonth ? new Date(year, bestMonth.month - 1, 1).toLocaleString(t.locale, { month: "long" }) : "—";
+
+          // VAT (10% of net profit)
+          const vat16 = months.filter(m => m.month >= 1 && m.month <= 6).reduce((s, m) => s + Math.max(0, (m.revenue - m.expense) * 0.1), 0);
+          const vat712 = months.filter(m => m.month >= 7 && m.month <= 12).reduce((s, m) => s + Math.max(0, (m.revenue - m.expense) * 0.1), 0);
+
+          // Income tax (Korean progressive)
+          const perPersonNet = Math.max(0, netProfit * 0.9 / 2);
+          function krTax(net) {
+            if (net <= 0) return 0;
+            const b = [[14e6,.06],[50e6,.15],[88e6,.24],[150e6,.35],[300e6,.38],[500e6,.40],[1e9,.42],[Infinity,.45]];
+            let t = 0, p = 0;
+            for (const [lim, r] of b) { if (net <= p) break; t += (Math.min(net, lim) - p) * r; p = lim; }
+            return Math.round(t);
+          }
+          const taxAmt = krTax(perPersonNet);
+          const taxRate = perPersonNet > 0 ? (taxAmt / perPersonNet * 100).toFixed(1) : "0";
+          const marginal = perPersonNet <= 0 ? 0 : perPersonNet <= 14e6 ? 6 : perPersonNet <= 50e6 ? 15 : perPersonNet <= 88e6 ? 24 : perPersonNet <= 150e6 ? 35 : perPersonNet <= 300e6 ? 38 : perPersonNet <= 500e6 ? 40 : perPersonNet <= 1e9 ? 42 : 45;
+
+          const K = ({ icon, label, value, sub, color = "#7eb8f7", bar, barColor }) => (
+            <div style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ fontSize: 11, color: "#8b8fa8", marginBottom: 5 }}>{icon} {label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color }}>{value}</div>
+              {sub && <div style={{ fontSize: 11, color: "#4a5070", marginTop: 3 }}>{sub}</div>}
+              {bar !== undefined && (
+                <div style={{ marginTop: 8, background: "#2a2d3a", borderRadius: 4, height: 5 }}>
+                  <div style={{ width: `${Math.min(Math.abs(bar), 100)}%`, height: "100%", background: barColor || "#3b82f6", borderRadius: 4 }} />
+                </div>
+              )}
+            </div>
+          );
+
+          const SectionLabel = ({ children }) => (
+            <div style={{ fontSize: 11, color: "#4a5070", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, marginTop: 4 }}>{children}</div>
+          );
+
+          return (
+            <div style={S.section}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ ...S.sectionTitle, color: "#a78bfa" }}>{t.kpi.title(year)}</div>
+                <div style={{ fontSize: 11, color: "#4a5070" }}>{t.kpi.activeMonths(activeMonths)}</div>
+              </div>
+
+              <SectionLabel>{t.kpi.sec1}</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 16 }}>
+                <K icon="💰" label={t.kpi.totalRev} value={`₩${fmtW(totalRev)}`} sub={t.stats.saleCount(summary.saleCount || 0)} color="#4ade80" />
+                <K icon="📊" label={t.kpi.avgRev} value={`₩${fmtW(avgMonthRev)}`} sub={t.kpi.avgRevSub(activeMonths)} color="#4ade80" />
+                <K icon="🏆" label={t.kpi.bestMonth} value={`₩${fmtW(bestMonth?.revenue || 0)}`} sub={bestMonthName} color="#fbbf24" />
+                {momGrowth !== null
+                  ? <K icon={momGrowth >= 0 ? "📈" : "📉"} label={t.kpi.momGrowth} value={`${momGrowth >= 0 ? "+" : ""}${momGrowth.toFixed(1)}%`} sub={t.kpi.momSub} color={momGrowth >= 0 ? "#4ade80" : "#f87171"} bar={Math.min(Math.abs(momGrowth), 100)} barColor={momGrowth >= 0 ? "#22c55e" : "#ef4444"} />
+                  : <K icon="📊" label={t.kpi.momGrowth} value="—" sub={t.kpi.noMom} color="#4a5070" />
+                }
+              </div>
+
+              <SectionLabel>{t.kpi.sec2}</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 16 }}>
+                <K icon="💸" label={t.kpi.totalExp} value={`₩${fmtW(totalExp)}`} sub={t.kpi.totalExpSub(fmtW(avgMonthExp))} color="#f87171" />
+                <K icon="📉" label={t.kpi.expRatio} value={`${expenseRatio.toFixed(1)}%`} sub={t.kpi.expRatioSub} color="#f87171" bar={expenseRatio} barColor="#ef4444" />
+                <K icon="📈" label={t.kpi.netProfit} value={`₩${fmtW(netProfit)}`} sub={`Margin ${profitMargin.toFixed(1)}%`} color={netProfit >= 0 ? "#4ade80" : "#f87171"} bar={Math.min(profitMargin, 100)} barColor="#22c55e" />
+                <K icon="👤" label={t.kpi.perPerson} value={`₩${fmtW(perPersonNet)}`} sub={t.kpi.perPersonSub} color="#a78bfa" />
+              </div>
+
+              <SectionLabel>{t.kpi.sec3}</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 16 }}>
+                <K icon="🧾" label={t.kpi.vat16} value={`₩${fmtW(vat16)}`} sub={t.kpi.vat16sub} color="#fbbf24" />
+                <K icon="🧾" label={t.kpi.vat712} value={`₩${fmtW(vat712)}`} sub={t.kpi.vat712sub} color="#fbbf24" />
+                <K icon="💼" label={t.kpi.taxEst} value={`₩${fmtW(taxAmt)}`} sub={t.kpi.marginalRate(marginal)} color="#c084fc" />
+                <K icon="📋" label={t.kpi.taxRate} value={`${taxRate}%`} sub={t.kpi.taxRateSub} color="#c084fc" bar={Number(taxRate)} barColor="#9333ea" />
+              </div>
+
+              <SectionLabel>{t.kpi.sec4}</SectionLabel>
+              <div style={{ background: "#16181f", border: "1px solid #2a2d3a", borderRadius: 12, padding: "16px", overflowX: "auto" }}>
+                <div style={{ display: "flex", gap: 6, alignItems: "flex-end", minWidth: 600 }}>
+                  {monthlyRevenue.map(m => {
+                    const maxV = Math.max(...monthlyRevenue.map(x => Math.max(x.revenue, x.expense)), 1);
+                    const revH = Math.round(m.revenue / maxV * 120);
+                    const expH = Math.round(m.expense / maxV * 120);
+                    const net = m.revenue - m.expense;
+                    const mName = new Date(year, m.month - 1, 1).toLocaleString(t.locale, { month: "short" });
+                    return (
+                      <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                        <div style={{ fontSize: 9, color: net >= 0 ? "#4ade80" : "#f87171", fontWeight: 700 }}>
+                          {net !== 0 ? `${net >= 0 ? "+" : ""}₩${fmtW(net)}` : ""}
+                        </div>
+                        <div style={{ width: "100%", display: "flex", gap: 2, alignItems: "flex-end", height: 120 }}>
+                          <div style={{ flex: 1, background: "#22c55e44", borderRadius: "3px 3px 0 0", height: revH, border: "1px solid #22c55e66" }} title={`${t.kpi.legendRev} ₩${fmtW(m.revenue)}`} />
+                          <div style={{ flex: 1, background: "#ef444444", borderRadius: "3px 3px 0 0", height: expH, border: "1px solid #ef444466" }} title={`${t.kpi.legendExp} ₩${fmtW(m.expense)}`} />
+                        </div>
+                        <div style={{ fontSize: 9, color: "#8b8fa8" }}>{mName}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 8, fontSize: 10, color: "#8b8fa8" }}>
+                  <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#22c55e44", border: "1px solid #22c55e66", borderRadius: 2, marginRight: 4 }} />{t.kpi.legendRev}</span>
+                  <span><span style={{ display: "inline-block", width: 10, height: 10, background: "#ef444444", border: "1px solid #ef444466", borderRadius: 2, marginRight: 4 }} />{t.kpi.legendExp}</span>
+                </div>
+              </div>
             </div>
           );
         })()}

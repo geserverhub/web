@@ -16,7 +16,8 @@ const BG         = "#f9fafb";
 
 const STATUS_CONFIG = {
   pending_payment: { label: { th: "รอชำระเงิน", en: "Pending Payment", zh: "待付款" }, color: "#b45309", bg: "#fef3c7" },
-  paid:            { label: { th: "ชำระเงินแล้ว", en: "Paid", zh: "已付款" }, color: "#065f46", bg: "#d1fae5" },
+  confirming:      { label: { th: "กำลังตรวจสอบสลิป", en: "Confirming", zh: "确认中" }, color: "#1d4ed8", bg: "#dbeafe" },
+  confirmed:       { label: { th: "ยืนยันชำระแล้ว", en: "Confirmed", zh: "已确认" }, color: "#065f46", bg: "#d1fae5" },
   processing:      { label: { th: "กำลังเตรียมสินค้า", en: "Processing", zh: "备货中" }, color: "#1d4ed8", bg: "#dbeafe" },
   shipped:         { label: { th: "จัดส่งแล้ว", en: "Shipped", zh: "已发货" }, color: "#7c3aed", bg: "#ede9fe" },
   delivered:       { label: { th: "ได้รับสินค้าแล้ว", en: "Delivered", zh: "已签收" }, color: "#15803d", bg: "#dcfce7" },
@@ -203,6 +204,9 @@ export default function OrdersPage() {
                 }}>
                   <div style={{ display: "flex", align: "center", gap: 12, flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 800, color: DARK_GREEN, fontSize: 15 }}>{order.id}</span>
+                    {order.number && order.number !== order.id && (
+                      <span style={{ color: GRAY, fontSize: 12 }}>({order.number})</span>
+                    )}
                     <span style={{ color: GRAY, fontSize: 13 }}>{formatDate(order.createdAt)}</span>
                   </div>
                   <StatusBadge status={order.status} lang={lang} />

@@ -56,7 +56,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.log("[auth] password valid:", valid);
           if (!valid) return null;
 
-          return { id: user.id, email: user.email, name: user.name, role: user.role };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            clientId: user.clientId || null,
+          };
         } catch (err) {
           console.error("[auth] authorize error:", err.message);
           return null;
@@ -69,6 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.clientId = user.clientId || null;
       }
       return token;
     },
@@ -76,6 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.clientId = token.clientId || null;
       }
       return session;
     },

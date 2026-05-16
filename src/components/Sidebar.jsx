@@ -75,7 +75,10 @@ export default function Sidebar({ ui, profile }) {
         {NAV_ITEMS.map((item) => (
           <a key={item.href} href={item.href} className="agency-sidebar-item">
             <span className="agency-sidebar-icon">{item.icon}</span>
-            <span>{(ui && ui[item.labelKey]) || item.defaultLabel}</span>
+            <span className="btn-path-stack">
+              <span className="btn-path-label">{(ui && ui[item.labelKey]) || item.defaultLabel}</span>
+              <span className="btn-path-caption">{item.href}</span>
+            </span>
           </a>
         ))}
       </nav>
@@ -91,7 +94,10 @@ export default function Sidebar({ ui, profile }) {
               <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
           </span>
-          <span>{(ui && ui.navLogin) || "เข้าสู่ระบบ"}</span>
+          <span className="btn-path-stack">
+            <span className="btn-path-label">{(ui && ui.navLogin) || "เข้าสู่ระบบ"}</span>
+            <span className="btn-path-caption">/auth/select</span>
+          </span>
         </a>
       </div>
     </aside>
