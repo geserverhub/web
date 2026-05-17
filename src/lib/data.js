@@ -69,7 +69,7 @@ export const fallbackClients = [
   {
     id: 2,
     name: "MOMOGE SPACE",
-    slug: "green-retail-group",
+    slug: "MOMOGE SPACE",
     description: "AI SMART ENERGY MONITORING PLATFORM Demo",
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
@@ -113,7 +113,7 @@ export const fallbackClients = [
   {
     id: 6,
     name: "MOMOGE SPACE",
-    slug: "green-retail-energy",
+    slug: "MOMOGE SPACE",
     description: "AI SMART ENERGY MONITORING PLATFORM ระบบมอนิเตอริ่งพลังงานอัจฉริยะ",
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
