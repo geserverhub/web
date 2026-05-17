@@ -1,9 +1,6 @@
 import { statusClassName } from "@/lib/data";
 
-export default function ShowcaseSection({
-  ui,
-  filteredClients,
-}) {
+export default function ShowcaseSection({ ui, filteredClients }) {
   return (
     <section className="agency-section agency-section-light" id="showcase">
       <div className="container-xxl agency-shell">
@@ -14,42 +11,55 @@ export default function ShowcaseSection({
           </div>
 
           <div className="row g-4">
-            {filteredClients.map((client, index) => (
-              <div
-                key={client.slug}
-                className="col-12 col-md-6 col-lg-4"
-              >
-                <article
-                  data-reveal
-                  data-delay={Math.min(index + 1, 6)}
-                  className="showcase-card">
-                  <div className="showcase-visual" style={client.thumbnail ? { backgroundImage: `url(${client.thumbnail})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}>
-                    {!client.thumbnail && <div className="showcase-glow" />}
-                    <div className="showcase-visual-content" style={client.thumbnail ? { background: "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%)", position:"absolute", inset:0, padding:"1.3rem" } : {}}>
+            {filteredClients.map((client, index) => {
+              const name = ui.clientDescriptions?.[client.slug]?.name || client.name;
+              const description = ui.clientDescriptions?.[client.slug]?.description || client.description;
+              return (
+                <div key={client.slug} className="col-12 col-md-6 col-lg-4">
+                  <article
+                    data-reveal
+                    data-delay={Math.min(index + 1, 6)}
+                    className="showcase-card"
+                  >
+                    {/* Image area with title overlay */}
+                    <div
+                      className="showcase-visual"
+                      style={client.thumbnail ? {
+                        backgroundImage: `url(${client.thumbnail})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      } : {}}
+                    >
+                      {!client.thumbnail && <div className="showcase-glow" />}
+                      <div className="showcase-visual-content">
+                        <span className={`status-pill ${statusClassName(client.status)}`} />
+                        <h3 className="showcase-card-title">{name}</h3>
+                      </div>
                     </div>
-                  </div>
-                  <div className="showcase-body">
-                    <h3>{ui.clientDescriptions?.[client.slug]?.name || client.name}</h3>
-                    <p>{ui.clientDescriptions?.[client.slug]?.description || client.description}</p>
-                    <div className="showcase-meta">
-                      {client.contact_email && <span>{client.contact_email}</span>}
-                      {client.contact_phone && <span>{client.contact_phone}</span>}
-                      {client.contact_fax && <span>{ui.faxLabel || "แฟกซ์:"} {client.contact_fax}</span>}
+
+                    {/* Body */}
+                    <div className="showcase-body">
+                      <p>{description}</p>
+                      <div className="showcase-meta">
+                        {client.contact_email && <span>✉ {client.contact_email}</span>}
+                        {client.contact_phone && <span>📞 {client.contact_phone}</span>}
+                        {client.contact_fax && <span>{ui.faxLabel || "แฟกซ์:"} {client.contact_fax}</span>}
+                      </div>
+                      <div className="showcase-actions">
+                        <a
+                          className="btn agency-btn-primary w-100"
+                          href={client.system_url}
+                          target={client.system_url?.startsWith("http") ? "_blank" : "_self"}
+                          rel={client.system_url?.startsWith("http") ? "noopener noreferrer" : undefined}
+                        >
+                          {ui.viewPortal} →
+                        </a>
+                      </div>
                     </div>
-                    <div className="showcase-actions">
-                      <a
-                        className="btn agency-btn-primary"
-                        href={client.system_url}
-                        target={client.system_url?.startsWith("http") ? "_blank" : "_self"}
-                        rel={client.system_url?.startsWith("http") ? "noopener noreferrer" : undefined}
-                      >
-                        {ui.viewPortal}
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              </div>
-            ))}
+                  </article>
+                </div>
+              );
+            })}
           </div>
 
           {filteredClients.length === 0 && (
