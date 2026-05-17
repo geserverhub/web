@@ -44,17 +44,19 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   // Fetch notifications from API
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/kenergy/notifications?site=${selectedSite}&limit=10`);
+      const res = await fetch(`/api/kenergy/notifications?site=${selectedSite}&limit=10`, { signal });
       const json = await res.json();
       if (json.success) {
         setNotifications(json.data.notifications);
         setUnreadCount(json.data.unreadCount);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Failed to fetch notifications:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -97,10 +99,13 @@ export default function Header() {
   // Fetch notifications on mount and when site changes
   useEffect(() => {
     setMounted(true);
-    fetchNotifications();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    const controller = new AbortController();
+    fetchNotifications(controller.signal);
+    const interval = setInterval(() => fetchNotifications(controller.signal), 30000);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [selectedSite]);
 
   useEffect(() => {

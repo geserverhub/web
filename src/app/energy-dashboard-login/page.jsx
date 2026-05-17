@@ -80,10 +80,13 @@ export default function EnergyDashboardLoginPage() {
           }}>
             <Zap size={36} color="#fff" />
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-            Green Retail Group
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+            MOMOGE SPACE
+          </div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1e293b', margin: 0, lineHeight: 1.3 }}>
+            AI SMART ENERGY MONITORING PLATFORM
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, lineHeight: 1.6 }}>
             ระบบมอนิเตอริ่งพลังงานไฟฟ้า
           </p>
           <div style={{ marginTop: 10, fontSize: 12, color: '#94a3b8' }}>
