@@ -9,3 +9,7 @@ dist
 .env
 .env.local
 .env.*.local
+
+# Local backups and logs
+backups/
+*.log

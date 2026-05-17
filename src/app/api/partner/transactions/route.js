@@ -7,6 +7,12 @@ function isPartnerOrAdmin(session) {
   return role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
+function clientFilter(session) {
+  const { role, clientId } = session.user;
+  if (role === "PARTNER") return { clientId: clientId ?? "__none__" };
+  return {};
+}
+
 export async function GET(req) {
   const session = await auth();
   if (!isPartnerOrAdmin(session)) {
@@ -20,8 +26,10 @@ export async function GET(req) {
     const yearStart = new Date(`${year}-01-01T00:00:00`);
     const yearEnd = new Date(`${year + 1}-01-01T00:00:00`);
 
+    const baseFilter = clientFilter(session);
+
     const transactions = await prisma.partnerTransaction.findMany({
-      where: { date: { gte: yearStart, lt: yearEnd } },
+      where: { ...baseFilter, date: { gte: yearStart, lt: yearEnd } },
       orderBy: { date: "desc" },
     });
 
@@ -30,12 +38,10 @@ export async function GET(req) {
     const expenses = transactions.filter(t => t.type === "EXPENSE" && t.status !== "CANCELLED");
     const pending  = transactions.filter(t => t.status === "PENDING");
 
-    // KRW-only totals for main stats
     const totalRevenue = sales.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
     const totalExpense = expenses.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
     const totalPending = pending.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
 
-    // Non-KRW breakdown per currency
     function groupByCurrency(list) {
       return list.filter(t => t.currency !== "KRW").reduce((acc, t) => {
         const cur = t.currency || "KRW";
@@ -72,9 +78,8 @@ export async function GET(req) {
       byCategory[key] = (byCategory[key] || 0) + Number(t.amount);
     }
 
-    // Partner income: all-time cumulative grouped by customerName (PROFIT_SHARE)
     const allProfitShare = await prisma.partnerTransaction.findMany({
-      where: { type: "PROFIT_SHARE", status: { not: "CANCELLED" } },
+      where: { ...baseFilter, type: "PROFIT_SHARE", status: { not: "CANCELLED" } },
       select: { customerName: true, amount: true, currency: true, status: true },
     });
     const partnerIncomeMap = {};
@@ -142,11 +147,13 @@ export async function POST(req) {
     const dd = String(now.getDate()).padStart(2, "0");
     const number = `${prefix}${yyyy}${mm}${dd}-${String(count + 1).padStart(4, "0")}`;
 
+    const clientId = session.user.clientId ?? null;
+
     const tx = await prisma.partnerTransaction.create({
       data: {
         number,
         brand: brand || "MOMOGE SPACE",
-        type: type || "SALE",
+        type: txType,
         description: description || null,
         customerName: customerName || null,
         amount: currency === "KRW" ? Math.round(Number(amount)) : Number(Number(amount).toFixed(2)),
@@ -155,6 +162,7 @@ export async function POST(req) {
         category: category || null,
         notes: notes || null,
         date: date ? new Date(date) : new Date(),
+        clientId,
       },
     });
 

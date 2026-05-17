@@ -7,12 +7,20 @@ function isPartnerOrAdmin(session) {
   return role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
+// PARTNER users see only their own client's data; ADMIN/SUPER_ADMIN see all
+function clientFilter(session) {
+  const { role, clientId } = session.user;
+  if (role === "PARTNER") return { clientId: clientId ?? "__none__" };
+  return {};
+}
+
 export async function GET() {
   const session = await auth();
   if (!isPartnerOrAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
     const tasks = await prisma.partnerTask.findMany({
+      where: clientFilter(session),
       orderBy: [{ status: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
     });
     return NextResponse.json(tasks);
@@ -29,6 +37,8 @@ export async function POST(req) {
     const { title, type, status, priority, dueDate, notes, brand } = await req.json();
     if (!title?.trim()) return NextResponse.json({ error: "กรุณากรอกชื่องาน" }, { status: 400 });
 
+    const clientId = session.user.clientId ?? null;
+
     const task = await prisma.partnerTask.create({
       data: {
         title: title.trim(),
@@ -38,6 +48,7 @@ export async function POST(req) {
         brand: brand || "MOMOGE SPACE",
         dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes || null,
+        clientId,
       },
     });
     return NextResponse.json(task, { status: 201 });

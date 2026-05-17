@@ -7,11 +7,21 @@ function isPartnerOrAdmin(session) {
   return role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
+async function ownsProduct(session, id) {
+  const { role, clientId } = session.user;
+  if (role === "ADMIN" || role === "SUPER_ADMIN") return true;
+  const p = await prisma.partnerProduct.findUnique({ where: { id }, select: { clientId: true } });
+  return p?.clientId === clientId;
+}
+
 export async function PATCH(req, { params }) {
   try {
     const session = await auth();
     if (!isPartnerOrAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const { id } = await params;
+    if (!(await ownsProduct(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const body = await req.json();
     const { name, model, brand, costPrice, sellPrice, currency, imageUrls } = body;
     const toNum = (v) => (v ? Number(String(v).replace(/,/g, "")) : null);
@@ -36,11 +46,14 @@ export async function PATCH(req, { params }) {
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(_req, { params }) {
   try {
     const session = await auth();
     if (!isPartnerOrAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const { id } = await params;
+    if (!(await ownsProduct(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     await prisma.partnerProduct.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {

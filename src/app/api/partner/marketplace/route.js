@@ -90,7 +90,7 @@ export async function POST(req) {
     const number = `MKT${yyyy}${mm}${dd}-${String(count + 1).padStart(4, "0")}`;
 
     const notePayload = {
-      source: "energy-dashboard-login-marketplace",
+      source: "momoge-product-marketplace",
       customerName,
       customerContact,
       customerEmail,

@@ -7,12 +7,21 @@ function isPartnerOrAdmin(session) {
   return role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
+async function ownsTask(session, id) {
+  const { role, clientId } = session.user;
+  if (role === "ADMIN" || role === "SUPER_ADMIN") return true;
+  const task = await prisma.partnerTask.findUnique({ where: { id }, select: { clientId: true } });
+  return task?.clientId === clientId;
+}
+
 export async function PATCH(req, { params }) {
   const session = await auth();
   if (!isPartnerOrAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
     const { id } = await params;
+    if (!(await ownsTask(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const body = await req.json();
     const { title, type, status, priority, dueDate, notes } = body;
 
@@ -33,12 +42,14 @@ export async function PATCH(req, { params }) {
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(_req, { params }) {
   const session = await auth();
   if (!isPartnerOrAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
     const { id } = await params;
+    if (!(await ownsTask(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     await prisma.partnerTask.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {

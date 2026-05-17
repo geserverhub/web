@@ -89,13 +89,17 @@ model Client {
   createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
 
-  users     User[]
-  services  ClientService[]
-  invoices  Invoice[]
-  receipts  Receipt[]
-  customers Customer[]
-  expenses  Expense[]
-  mgroupOrders MGroupOrder[]
+  users               User[]
+  services            ClientService[]
+  invoices            Invoice[]
+  receipts            Receipt[]
+  customers           Customer[]
+  expenses            Expense[]
+  mgroupOrders        MGroupOrder[]
+  partnerTasks        PartnerTask[]
+  partnerTransactions PartnerTransaction[]
+  partnerProducts     PartnerProduct[]
+  cargoOrders         CargoOrder[]
 
   @@index([slug])
   @@index([status])
@@ -309,6 +313,8 @@ model Product {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  mgroupOrderItems MGroupOrderItem[]
+
   @@index([category])
   @@index([active])
 }
@@ -373,6 +379,8 @@ model CargoOrder {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  clientId     String?
+  client       Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
   customerId   String?
   customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
@@ -380,6 +388,7 @@ model CargoOrder {
   transactions    CargoTransaction[]
   cusDetails      CargoCusDetail[]
 
+  @@index([clientId])
   @@index([status])
   @@index([direction])
   @@index([createdAt])
@@ -503,8 +512,10 @@ model MGroupOrderItem {
   amount      Decimal @db.Decimal(10, 2)
 
   order   MGroupOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
+  @@index([productId])
 }
 
 // ── M-Factory / M-Resort Inquiries ──────────────────────────────
@@ -593,9 +604,12 @@ model PartnerTask {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([clientId])
   @@index([type])
   @@index([status])
   @@index([dueDate])
@@ -619,9 +633,12 @@ model PartnerTransaction {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  clientId     String?
+  client       Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   userId       String?
   user         User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([clientId])
   @@index([type])
   @@index([status])
   @@index([date])
@@ -641,9 +658,12 @@ model PartnerProduct {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  clientId  String?
+  client    Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   userId    String?
   user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([clientId])
   @@index([name])
   @@index([userId])
 }

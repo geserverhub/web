@@ -6,6 +6,13 @@ function isAdmin(session) {
   return session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
 }
 
+// SUPER_ADMIN sees all; ADMIN sees only their own client's orders
+function cargoClientFilter(session) {
+  const { role, clientId } = session.user;
+  if (role === "SUPER_ADMIN") return {};
+  return { clientId: clientId ?? "__none__" };
+}
+
 async function genCargoNumber() {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
@@ -28,7 +35,17 @@ export async function GET(req) {
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
+    const { searchParams } = new URL(req.url);
+    const filterClientId = searchParams.get("clientId");
+
+    const where = cargoClientFilter(session);
+    // SUPER_ADMIN may optionally filter by a specific clientId via query param
+    if (filterClientId && session.user.role === "SUPER_ADMIN") {
+      where.clientId = filterClientId;
+    }
+
     const orders = await prisma.cargoOrder.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       include: { customer: { select: { id: true, name: true, phone: true, email: true } } },
     });
@@ -54,6 +71,8 @@ export async function POST(req) {
     }
 
     const number = await genCargoNumber();
+    const clientId = session.user.clientId ?? null;
+
     const order = await prisma.cargoOrder.create({
       data: {
         number,
@@ -72,6 +91,7 @@ export async function POST(req) {
         notes: notes || null,
         shippedAt: shippedAt ? new Date(shippedAt) : null,
         deliveredAt: deliveredAt ? new Date(deliveredAt) : null,
+        clientId,
       },
     });
     return NextResponse.json({ order }, { status: 201 });

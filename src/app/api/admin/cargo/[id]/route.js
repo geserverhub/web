@@ -6,6 +6,13 @@ function isAdmin(session) {
   return session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
 }
 
+async function ownsOrder(session, id) {
+  const { role, clientId } = session.user;
+  if (role === "SUPER_ADMIN") return true;
+  const order = await prisma.cargoOrder.findUnique({ where: { id }, select: { clientId: true } });
+  return order?.clientId === clientId;
+}
+
 // PATCH /api/admin/cargo/[id]
 export async function PATCH(req, { params }) {
   const session = await auth();
@@ -13,6 +20,8 @@ export async function PATCH(req, { params }) {
 
   try {
     const { id } = await params;
+    if (!(await ownsOrder(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const body = await req.json();
     const { senderName, senderPhone, receiverName, receiverPhone, receiverAddress,
             direction, weightKg, sizeNote, itemDesc, currency, income, expense,
@@ -45,12 +54,14 @@ export async function PATCH(req, { params }) {
 }
 
 // DELETE /api/admin/cargo/[id]
-export async function DELETE(req, { params }) {
+export async function DELETE(_req, { params }) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
     const { id } = await params;
+    if (!(await ownsOrder(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     await prisma.cargoOrder.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {

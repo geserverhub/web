@@ -7,6 +7,12 @@ function isPartnerOrAdmin(session) {
   return role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
+function clientFilter(session) {
+  const { role, clientId } = session.user;
+  if (role === "PARTNER") return { clientId: clientId ?? "__none__" };
+  return {};
+}
+
 export async function GET(req) {
   const session = await auth();
   if (!isPartnerOrAdmin(session)) {
@@ -20,9 +26,11 @@ export async function GET(req) {
     const yearStart = new Date(`${year}-01-01T00:00:00`);
     const yearEnd = new Date(`${year + 1}-01-01T00:00:00`);
 
+    const baseFilter = clientFilter(session);
+
     const [receipts, invoices, expenses, clients] = await Promise.all([
       prisma.receipt.findMany({
-        where: { issuedAt: { gte: yearStart, lt: yearEnd } },
+        where: { ...baseFilter, issuedAt: { gte: yearStart, lt: yearEnd } },
         select: {
           id: true,
           number: true,
@@ -35,7 +43,7 @@ export async function GET(req) {
         orderBy: { issuedAt: "desc" },
       }),
       prisma.invoice.findMany({
-        where: { createdAt: { gte: yearStart, lt: yearEnd } },
+        where: { ...baseFilter, createdAt: { gte: yearStart, lt: yearEnd } },
         select: {
           id: true,
           number: true,
@@ -49,17 +57,20 @@ export async function GET(req) {
         orderBy: { createdAt: "desc" },
       }),
       prisma.expense.findMany({
-        where: { date: { gte: yearStart, lt: yearEnd } },
+        where: { ...baseFilter, date: { gte: yearStart, lt: yearEnd } },
         select: { id: true, amount: true, category: true, date: true, status: true },
         orderBy: { date: "desc" },
       }),
       prisma.client.findMany({
+        // PARTNER sees only their own client; ADMIN/SUPER_ADMIN sees all
+        where: session.user.role === "PARTNER"
+          ? { id: session.user.clientId ?? "__none__" }
+          : {},
         select: { id: true, name: true, status: true },
         orderBy: { name: "asc" },
       }),
     ]);
 
-    // Aggregate monthly revenue from receipts
     const monthlyRevenue = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1,
       label: new Date(year, i, 1).toLocaleString("th-TH", { month: "short" }),
@@ -73,7 +84,6 @@ export async function GET(req) {
       monthlyRevenue[m].count += 1;
     }
 
-    // Totals
     const totalRevenue = receipts.reduce((s, r) => s + Number(r.total), 0);
     const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0);
     const totalInvoicePaid = invoices
@@ -83,7 +93,6 @@ export async function GET(req) {
       .filter(i => i.status === "PENDING" || i.status === "OVERDUE")
       .reduce((s, i) => s + Number(i.amount), 0);
 
-    // Revenue by client
     const revenueByClient = {};
     for (const r of receipts) {
       const key = r.client?.name || "ไม่ระบุ";

@@ -14,17 +14,22 @@ export async function GET() {
   }
 
   try {
-    const goeunClient = await prisma.client.findFirst({
-      where: { name: "GOEUN SERVER HUB" },
-      select: { id: true, name: true },
-    });
+    const { role, clientId } = session.user;
 
-    const clientId = goeunClient?.id;
+    // PARTNER must have a clientId assigned; ADMIN/SUPER_ADMIN falls back to GOEUN SERVER HUB
+    let resolvedClientId = clientId ?? null;
+    if (!resolvedClientId && (role === "ADMIN" || role === "SUPER_ADMIN")) {
+      const fallback = await prisma.client.findFirst({
+        where: { name: "GOEUN SERVER HUB" },
+        select: { id: true },
+      });
+      resolvedClientId = fallback?.id ?? null;
+    }
 
     const [receipts, invoices, expenses] = await Promise.all([
-      clientId
+      resolvedClientId
         ? prisma.receipt.findMany({
-            where: { clientId },
+            where: { clientId: resolvedClientId },
             select: {
               id: true, number: true, total: true, currency: true,
               issuedAt: true, customerName: true, clientId: true,
@@ -32,9 +37,9 @@ export async function GET() {
             orderBy: { issuedAt: "asc" },
           })
         : [],
-      clientId
+      resolvedClientId
         ? prisma.invoice.findMany({
-            where: { clientId },
+            where: { clientId: resolvedClientId },
             select: {
               id: true, number: true, amount: true, currency: true,
               status: true, createdAt: true,
@@ -43,6 +48,7 @@ export async function GET() {
           })
         : [],
       prisma.expense.findMany({
+        where: resolvedClientId ? { clientId: resolvedClientId } : {},
         select: {
           id: true, number: true, category: true, amount: true,
           currency: true, status: true, date: true,
@@ -51,7 +57,7 @@ export async function GET() {
       }),
     ]);
 
-    return NextResponse.json({ receipts, invoices, expenses, clientId });
+    return NextResponse.json({ receipts, invoices, expenses, clientId: resolvedClientId });
   } catch (err) {
     console.error("[GET /api/partner/ledger]", err);
     return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
