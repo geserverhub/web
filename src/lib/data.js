@@ -75,7 +75,7 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
     thumbnail: "/momoge/momoge-space.jpg",
-    system_url: "/customer-momoge-login",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/customer-momoge-login",
   },
   {
     id: 3,
@@ -118,7 +118,7 @@ export const fallbackClients = [
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    thumbnail: "/momoge/Logo-brand.jpg",
+    thumbnail: "/momoge/Logo-brand.png",
     system_url: "/momoge-product",
   },
   {
