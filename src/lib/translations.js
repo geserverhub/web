@@ -208,6 +208,10 @@ export const translations = {
         name: "ระบบมาร์ทและซุปเปอร์มาเก็ต",
         description: "ระบบจัดการร้านค้าปลีก มาร์ท และซุปเปอร์มาเก็ต ครบวงจร",
       },
+      "acc-tax": {
+        name: "ระบบบริการดูแล บัญชีและภาษี",
+        description: "บริการดูแลและจัดการบัญชี การเงิน และภาษีอย่างครบวงจร โดยทีมผู้เชี่ยวชาญ",
+      },
     },
   },
   en: {
@@ -422,6 +426,10 @@ export const translations = {
         name: "Mart & Supermarket System",
         description: "Comprehensive retail management system for marts and supermarkets.",
       },
+      "acc-tax": {
+        name: "Accounting & Tax Management System",
+        description: "Comprehensive accounting, financial, and tax management services by a team of specialists.",
+      },
     },
   },
   zh: {
@@ -625,6 +633,10 @@ export const translations = {
         name: "超市管理系统",
         description: "面向零售店、超市综合管理系统。",
       },
+      "acc-tax": {
+        name: "会计与税务管理系统",
+        description: "由专业团队提供全面的会计、财务与税务管理服务。",
+      },
     },
   },
   ko: {
@@ -827,6 +839,10 @@ export const translations = {
       "mart-supermarket": {
         name: "마트 & 슈퍼마켓 시스템",
         description: "마트 및 슈퍼마켓을 위한 종합 소매 관리 시스템.",
+      },
+      "acc-tax": {
+        name: "회계 및 세무 관리 시스템",
+        description: "전문 팀이 제공하는 종합 회계, 재무 및 세무 관리 서비스.",
       },
     },
   },
