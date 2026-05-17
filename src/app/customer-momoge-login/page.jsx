@@ -14,7 +14,7 @@ function toNum(n) {
 }
 
 function CustomerDashboardLoginPageImpl() {
-    const { t, locale } = useLocale();
+  const { t } = useLocale();
   const tr = (key, fallback) => {
     const text = t(key);
     return !text || text === key ? fallback : text;
@@ -48,7 +48,7 @@ function CustomerDashboardLoginPageImpl() {
   async function checkOrderStatus(orderNumber) {
     const number = String(orderNumber || '').trim();
     if (!number) {
-      setStatusError(t('pleaseEnterOrderNumber') || 'กรุณากรอกเลขออเดอร์');
+      setStatusError(tr('pleaseEnterOrderNumber', 'กรุณากรอกเลขออเดอร์'));
       setStatusResult(null);
       return;
     }
@@ -57,11 +57,11 @@ function CustomerDashboardLoginPageImpl() {
     try {
       const res = await fetch(`/api/partner/marketplace/status?number=${encodeURIComponent(number)}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t('orderStatusCheckFailed') || 'ตรวจสอบสถานะไม่สำเร็จ');
+      if (!res.ok) throw new Error(data.error || tr('orderStatusCheckFailed', 'ตรวจสอบสถานะไม่สำเร็จ'));
       setStatusResult(data.order || null);
     } catch (err) {
       setStatusResult(null);
-      setStatusError(err.message || t('orderStatusCheckFailed') || 'ตรวจสอบสถานะไม่สำเร็จ');
+      setStatusError(err.message || tr('orderStatusCheckFailed', 'ตรวจสอบสถานะไม่สำเร็จ'));
     } finally {
       setCheckingStatus(false);
     }
@@ -74,10 +74,10 @@ function CustomerDashboardLoginPageImpl() {
       try {
         const res = await fetch('/api/partner/marketplace', { cache: 'no-store' });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || t('loadProductsFailed') || 'โหลดสินค้าไม่สำเร็จ');
+        if (!res.ok) throw new Error(data.error || tr('loadProductsFailed', 'โหลดสินค้าไม่สำเร็จ'));
         setProducts(Array.isArray(data.products) ? data.products : []);
       } catch (err) {
-        setError(err.message || t('loadProductsFailed') || 'โหลดสินค้าไม่สำเร็จ');
+        setError(err.message || tr('loadProductsFailed', 'โหลดสินค้าไม่สำเร็จ'));
       } finally {
         setLoading(false);
       }
@@ -134,7 +134,7 @@ function CustomerDashboardLoginPageImpl() {
     });
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.error || t('uploadSlipFailed') || 'อัปโหลดสลิปไม่สำเร็จ');
+      throw new Error(data.error || tr('uploadSlipFailed', 'อัปโหลดสลิปไม่สำเร็จ'));
     }
     return data;
   }
@@ -142,7 +142,7 @@ function CustomerDashboardLoginPageImpl() {
   async function submitOrder(e) {
     e.preventDefault();
     if (cartItems.length === 0) {
-      setError(t('pleaseSelectAtLeastOneProduct') || 'กรุณาเลือกสินค้าอย่างน้อย 1 รายการ');
+      setError(tr('pleaseSelectAtLeastOneProduct', 'กรุณาเลือกสินค้าอย่างน้อย 1 รายการ'));
       return;
     }
     setCreatingOrder(true);
@@ -164,12 +164,12 @@ function CustomerDashboardLoginPageImpl() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t('orderCreateFailed') || 'สร้างคำสั่งซื้อไม่สำเร็จ');
+      if (!res.ok) throw new Error(data.error || tr('orderCreateFailed', 'สร้างคำสั่งซื้อไม่สำเร็จ'));
       setCreatedOrder(data);
       setCart({});
       setNote('');
       setShippingAddress('');
-      setPaymentMessage('✅ ' + (t('orderCreatedSuccess') || 'สร้างคำสั่งซื้อสำเร็จ เลือกช่องทางชำระเงินได้ด้านล่าง'));
+      setPaymentMessage('✅ ' + tr('orderCreatedSuccess', 'สร้างคำสั่งซื้อสำเร็จ เลือกช่องทางชำระเงินได้ด้านล่าง'));
       setOrderQuery(data.number || '');
       checkOrderStatus(data.number || '');
 
@@ -177,16 +177,16 @@ function CustomerDashboardLoginPageImpl() {
         setUploadingSlip(true);
         try {
           await uploadSlipForOrder(data.transactionId, slipFile);
-          setPaymentMessage('✅ ' + (t('orderCreatedAndSlipUploaded') || 'สร้างคำสั่งซื้อสำเร็จและแนบสลิปเรียบร้อยแล้ว'));
+          setPaymentMessage('✅ ' + tr('orderCreatedAndSlipUploaded', 'สร้างคำสั่งซื้อสำเร็จและแนบสลิปเรียบร้อยแล้ว'));
           setSlipFile(null);
         } catch (uploadErr) {
-          setError(uploadErr.message || t('uploadSlipFailed') || 'อัปโหลดสลิปไม่สำเร็จ');
+          setError(uploadErr.message || tr('uploadSlipFailed', 'อัปโหลดสลิปไม่สำเร็จ'));
         } finally {
           setUploadingSlip(false);
         }
       }
     } catch (err) {
-      setError(err.message || t('orderCreateFailed') || 'สร้างคำสั่งซื้อไม่สำเร็จ');
+      setError(err.message || tr('orderCreateFailed', 'สร้างคำสั่งซื้อไม่สำเร็จ'));
     } finally {
       setCreatingOrder(false);
     }
@@ -207,11 +207,11 @@ function CustomerDashboardLoginPageImpl() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t('openPaymentFailed') || 'เปิดหน้าชำระเงินไม่สำเร็จ');
-      if (!data.checkoutUrl) throw new Error(t('paymentLinkNotFound') || 'ไม่พบลิงก์ชำระเงิน');
+      if (!res.ok) throw new Error(data.error || tr('openPaymentFailed', 'เปิดหน้าชำระเงินไม่สำเร็จ'));
+      if (!data.checkoutUrl) throw new Error(tr('paymentLinkNotFound', 'ไม่พบลิงก์ชำระเงิน'));
       window.location.href = data.checkoutUrl;
     } catch (err) {
-      setError(err.message || t('openPaymentFailed') || 'เปิดหน้าชำระเงินไม่สำเร็จ');
+      setError(err.message || tr('openPaymentFailed', 'เปิดหน้าชำระเงินไม่สำเร็จ'));
     } finally {
       setPayingCard(false);
     }
@@ -232,11 +232,11 @@ function CustomerDashboardLoginPageImpl() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t('promptpayCreateFailed') || 'สร้าง PromptPay ไม่สำเร็จ');
+      if (!res.ok) throw new Error(data.error || tr('promptpayCreateFailed', 'สร้าง PromptPay ไม่สำเร็จ'));
       setPromptPayInfo(data);
-      setPaymentMessage('✅ ' + (t('promptpayCreated') || 'สร้าง PromptPay แล้ว กรุณาชำระเงินผ่านลิงก์/QR ด้านล่าง จากนั้นกดเช็กสถานะออเดอร์'));
+      setPaymentMessage('✅ ' + tr('promptpayCreated', 'สร้าง PromptPay แล้ว กรุณาชำระเงินผ่านลิงก์/QR ด้านล่าง จากนั้นกดเช็กสถานะออเดอร์'));
     } catch (err) {
-      setError(err.message || t('promptpayCreateFailed') || 'สร้าง PromptPay ไม่สำเร็จ');
+      setError(err.message || tr('promptpayCreateFailed', 'สร้าง PromptPay ไม่สำเร็จ'));
     } finally {
       setCreatingPromptPay(false);
     }
@@ -250,26 +250,23 @@ function CustomerDashboardLoginPageImpl() {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px 60px' }}>
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1d4ed822', border: '1px solid #60a5fa66', borderRadius: 999, padding: '6px 14px', fontSize: 12, fontWeight: 700, color: '#93c5fd' }}>
-            🔗 {t('customerConnectedMarketplace') || 'Customer Connected Marketplace'}
+            🔗 {tr('customerConnectedMarketplace', 'Customer Connected Marketplace')}
           </div>
           <h1 style={{ margin: '14px 0 8px', fontSize: 'clamp(1.6rem, 3vw, 2.1rem)', fontWeight: 800, color: '#f8fafc' }}>
-            /customer-momoge-login · MOMOGE SPACE MARKET PLACE
+            MOMOGE SPACE MARKET PLACE
           </h1>
-          <p style={{ margin: 0, color: '#94a3b8', fontSize: 14, lineHeight: 1.7 }}>
-            {t('pageDescriptionMarketplace') || 'หน้านี้ดึงสินค้าที่ partner บันทึกในระบบโดยตรง, ส่งคำสั่งซื้อเข้า Partner Transaction, เช็กสถานะด้วยเลขออเดอร์ และชำระเงินผ่าน Stripe/PromptPay'}
-          </p>
         </div>
 
         <section style={{ marginBottom: 16, background: '#0b1220cc', border: '1px solid #1e293b', borderRadius: 14, padding: 14 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#bfdbfe' }}>🔎 {t('checkOrderStatus') || 'เช็กสถานะออเดอร์ลูกค้า'}</div>
-            <div style={{ fontSize: 12, color: '#93c5fd' }}>{t('enterOrderNumberExample') || 'กรอกเลขออเดอร์ เช่น MKT20260517-0001'}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#bfdbfe' }}>🔎 {tr('checkOrderStatus', 'เช็กสถานะออเดอร์ลูกค้า')}</div>
+            <div style={{ fontSize: 12, color: '#93c5fd' }}>{tr('enterOrderNumberExample', 'กรอกเลขออเดอร์ เช่น MKT20260517-0001')}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input
               value={orderQuery}
               onChange={(e) => setOrderQuery(e.target.value)}
-              placeholder={t('orderNumber') || 'Order Number'}
+              placeholder={tr('orderNumber', 'Order Number')}
               style={{ minWidth: 260, flex: '1 1 260px', background: '#111827', border: '1px solid #334155', color: '#e5e7eb', borderRadius: 8, padding: '9px 10px' }}
             />
             <button
@@ -278,7 +275,7 @@ function CustomerDashboardLoginPageImpl() {
               disabled={checkingStatus}
               style={{ background: checkingStatus ? '#475569' : '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 14px', fontWeight: 700, cursor: checkingStatus ? 'not-allowed' : 'pointer' }}
             >
-              {checkingStatus ? t('checkingStatus') || 'กำลังตรวจสอบ...' : t('checkStatus') || 'เช็กสถานะ'}
+              {checkingStatus ? tr('checkingStatus', 'กำลังตรวจสอบ...') : tr('checkStatus', 'เช็กสถานะ')}
             </button>
           </div>
 
@@ -286,13 +283,13 @@ function CustomerDashboardLoginPageImpl() {
 
           {statusResult && (
             <div style={{ marginTop: 10, borderTop: '1px solid #1f2937', paddingTop: 10, fontSize: 13 }}>
-              <div style={{ color: '#e2e8f0' }}>{t('orderNumber') || 'เลขที่'}: <b>{statusResult.number}</b></div>
+              <div style={{ color: '#e2e8f0' }}>{tr('orderNumber', 'เลขที่')}: <b>{statusResult.number}</b></div>
               <div style={{ color: '#93c5fd', marginTop: 2 }}>
-                {t('status') || 'สถานะ'}: <b>{statusResult.status}</b>
-                {statusResult.paymentStatus ? <span> · {t('paymentStatus') || 'Payment'}: <b>{statusResult.paymentStatus}</b></span> : null}
+                {tr('status', 'สถานะ')}: <b>{statusResult.status}</b>
+                {statusResult.paymentStatus ? <span> · {tr('paymentStatus', 'Payment')}: <b>{statusResult.paymentStatus}</b></span> : null}
               </div>
               <div style={{ color: '#94a3b8', marginTop: 2 }}>
-                {t('grandTotal') || 'ยอดรวม'}: <b>{currencySymbol(statusResult.currency)}{toNum(statusResult.amount).toLocaleString()}</b>
+                {tr('grandTotal', 'ยอดรวม')}: <b>{currencySymbol(statusResult.currency)}{toNum(statusResult.amount).toLocaleString()}</b>
               </div>
             </div>
           )}
@@ -306,27 +303,45 @@ function CustomerDashboardLoginPageImpl() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
           <section style={{ background: '#0b1220cc', border: '1px solid #1e293b', borderRadius: 16, padding: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: '#bfdbfe' }}>📦 {t('productsFromPartner') || 'สินค้าจากระบบ Partner'}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: '#bfdbfe' }}>📦 {tr('productsFromPartner', 'สินค้าจากระบบ Partner')}</div>
             {loading ? (
-              <div style={{ color: '#93c5fd', fontSize: 14 }}>{t('loadingProducts') || 'กำลังโหลดสินค้า...'}</div>
+              <div style={{ color: '#93c5fd', fontSize: 14 }}>{tr('loadingProducts', 'กำลังโหลดสินค้า...')}</div>
             ) : products.length === 0 ? (
-              <div style={{ color: '#94a3b8', fontSize: 14 }}>{t('noProductsInPartner') || 'ยังไม่มีสินค้าในระบบ partner'}</div>
+              <div style={{ color: '#94a3b8', fontSize: 14 }}>{tr('noProductsInPartner', 'ยังไม่มีสินค้าในระบบ partner')}</div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                 {products.map((p) => {
                   const price = toNum(p.sellPrice ?? p.costPrice ?? 0);
                   const qty = Number(cart[p.id] || 0);
                   return (
-                    <article key={p.id} style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 12, padding: 12 }}>
+                    <article key={p.id} style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 12, overflow: 'hidden' }}>
+                      {/* Product images */}
+                      {Array.isArray(p.imageUrls) && p.imageUrls.length > 0 && (
+                        <div style={{ position: 'relative', height: 160, background: '#0f172a', overflow: 'hidden' }}>
+                          <img
+                            src={p.imageUrls[0]}
+                            alt={p.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          />
+                          {p.imageUrls.length > 1 && (
+                            <div style={{ position: 'absolute', bottom: 6, right: 8, display: 'flex', gap: 4 }}>
+                              {p.imageUrls.slice(1, 5).map((url, i) => (
+                                <img key={i} src={url} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4, border: '1px solid #334155' }} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div style={{ padding: 12 }}>
                       <div style={{ fontWeight: 700, color: '#f8fafc', marginBottom: 4 }}>{p.name}</div>
                       <div style={{ fontSize: 12, color: '#93c5fd', minHeight: 18 }}>
-                        {p.model ? `${t('model') || 'Model'}: ${p.model}` : `${t('model') || 'Model'}: -`}
+                        {p.model ? `${tr('model', 'Model')}: ${p.model}` : `${tr('model', 'Model')}: -`}
                       </div>
                       <div style={{ fontSize: 12, color: '#94a3b8', minHeight: 18 }}>
-                        {p.brand ? `${t('brand') || 'Brand'}: ${p.brand}` : `${t('brand') || 'Brand'}: -`}
+                        {p.brand ? `${tr('brand', 'Brand')}: ${p.brand}` : `${tr('brand', 'Brand')}: -`}
                       </div>
                       <div style={{ marginTop: 8, fontWeight: 800, color: '#4ade80' }}>
-                        {currencySymbol(p.currency)}{price.toLocaleString()} / {t('unit') || 'unit'}
+                        {currencySymbol(p.currency)}{price.toLocaleString()} / {tr('unit', 'unit')}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
                         <button type="button" onClick={() => updateQty(p.id, qty - 1)} style={{ background: '#1f2937', color: '#e5e7eb', border: '1px solid #374151', borderRadius: 8, width: 30, height: 30, cursor: 'pointer' }}>-</button>
@@ -339,6 +354,7 @@ function CustomerDashboardLoginPageImpl() {
                         />
                         <button type="button" onClick={() => updateQty(p.id, qty + 1)} style={{ background: '#1d4ed8', color: '#fff', border: '1px solid #2563eb', borderRadius: 8, width: 30, height: 30, cursor: 'pointer' }}>+</button>
                       </div>
+                      </div>
                     </article>
                   );
                 })}
@@ -347,11 +363,11 @@ function CustomerDashboardLoginPageImpl() {
           </section>
 
           <aside style={{ background: '#0b1220cc', border: '1px solid #1e293b', borderRadius: 16, padding: 16, alignSelf: 'start', position: 'sticky', top: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: '#bfdbfe' }}>🛒 ซื้อ-ขาย & ชำระเงินจริง</div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: '#bfdbfe' }}>🛒 {tr('marketplaceCartTitle', 'ซื้อ-ขาย & ชำระเงินจริง')}</div>
 
             <div style={{ marginBottom: 12, maxHeight: 190, overflow: 'auto', border: '1px solid #1f2937', borderRadius: 10, padding: 10, background: '#111827' }}>
               {cartItems.length === 0 ? (
-                <div style={{ fontSize: 13, color: '#94a3b8' }}>ยังไม่มีสินค้าในตะกร้า</div>
+                <div style={{ fontSize: 13, color: '#94a3b8' }}>{tr('cartEmpty', 'ยังไม่มีสินค้าในตะกร้า')}</div>
               ) : cartItems.map((it) => (
                 <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 8, fontSize: 13 }}>
                   <span style={{ color: '#e2e8f0' }}>{it.name} x {it.qty}</span>
@@ -361,7 +377,7 @@ function CustomerDashboardLoginPageImpl() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ color: '#94a3b8' }}>ยอดรวม</span>
+              <span style={{ color: '#94a3b8' }}>{tr('grandTotal', 'ยอดรวม')}</span>
               <strong style={{ color: '#f8fafc', fontSize: 18 }}>{currencySymbol(cartCurrency)}{grandTotal.toLocaleString()}</strong>
             </div>
 
@@ -378,7 +394,7 @@ function CustomerDashboardLoginPageImpl() {
                   style={{ background: '#111827', border: '1px solid #334155', color: '#e5e7eb', borderRadius: 8, padding: '9px 10px', resize: 'vertical' }}
                 />
                 <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ background: '#111827', border: '1px solid #334155', color: '#e5e7eb', borderRadius: 8, padding: '9px 10px' }}>
-                  <option value="STRIPE_CARD">{t('stripeCard') || 'Stripe Card'}</option>
+                  <option value="STRIPE_CARD">{tr('stripeCard', 'Stripe Card')}</option>
                   <option value="PROMPTPAY">{tr('promptpay', 'PromptPay')}</option>
                 </select>
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder={tr('orderNote', 'หมายเหตุคำสั่งซื้อ')} style={{ background: '#111827', border: '1px solid #334155', color: '#e5e7eb', borderRadius: 8, padding: '9px 10px', resize: 'vertical' }} />
@@ -405,15 +421,15 @@ function CustomerDashboardLoginPageImpl() {
                   ? (uploadingSlip
                     ? tr('uploadingSlip', 'กำลังอัปโหลดสลิป...')
                     : tr('creatingOrder', 'กำลังสร้างคำสั่งซื้อ...'))
-                  : tr('createOrderInPartner', 'confirm')}
+                  : tr('confirmOrder', 'confirm')}
               </button>
             </form>
 
             {createdOrder && (
               <div style={{ marginTop: 12, borderTop: '1px solid #1f2937', paddingTop: 12 }}>
-                <div style={{ fontSize: 13, color: '#86efac', marginBottom: 6 }}>✅ {t('orderCreatedSuccess') || 'สร้างคำสั่งซื้อสำเร็จ'}</div>
+                <div style={{ fontSize: 13, color: '#86efac', marginBottom: 6 }}>✅ {tr('orderCreatedSuccess', 'สร้างคำสั่งซื้อสำเร็จ')}</div>
                 <div style={{ fontSize: 12, color: '#93c5fd', marginBottom: 8 }}>
-                  {t('orderNumber') || 'เลขที่'}: <b>{createdOrder.number}</b> · {t('status') || 'สถานะ'}: <b>{createdOrder.status}</b>
+                  {tr('orderNumber', 'เลขที่')}: <b>{createdOrder.number}</b> · {tr('status', 'สถานะ')}: <b>{createdOrder.status}</b>
                 </div>
 
                 <div style={{ display: 'grid', gap: 8 }}>
@@ -423,7 +439,7 @@ function CustomerDashboardLoginPageImpl() {
                     disabled={payingCard}
                     style={{ background: payingCard ? '#475569' : 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 12px', fontWeight: 700, cursor: payingCard ? 'not-allowed' : 'pointer' }}
                   >
-                    {payingCard ? t('openingStripe') || 'กำลังเปิด Stripe...' : '💳 ' + (t('payWithStripeCard') || 'ชำระด้วย Stripe Card')}
+                    {payingCard ? tr('openingStripe', 'กำลังเปิด Stripe...') : '💳 ' + tr('payWithStripeCard', 'ชำระด้วย Stripe Card')}
                   </button>
 
                   <button
@@ -432,7 +448,7 @@ function CustomerDashboardLoginPageImpl() {
                     disabled={creatingPromptPay}
                     style={{ background: creatingPromptPay ? '#475569' : '#0f766e', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 12px', fontWeight: 700, cursor: creatingPromptPay ? 'not-allowed' : 'pointer' }}
                   >
-                    {creatingPromptPay ? t('creatingPromptpay') || 'กำลังสร้าง PromptPay...' : '📱 ' + (t('payWithPromptpay') || 'ชำระด้วย PromptPay (Stripe)')}
+                    {creatingPromptPay ? tr('creatingPromptpay', 'กำลังสร้าง PromptPay...') : '📱 ' + tr('payWithPromptpay', 'ชำระด้วย PromptPay (Stripe)')}
                   </button>
                 </div>
 
@@ -445,7 +461,7 @@ function CustomerDashboardLoginPageImpl() {
                     rel="noreferrer"
                     style={{ display: 'inline-block', marginTop: 8, fontSize: 12, color: '#67e8f9' }}
                   >
-                    {t('openPromptpayInstructions') || 'เปิดลิงก์ PromptPay QR / Payment Instructions'}
+                    {tr('openPromptpayInstructions', 'เปิดลิงก์ PromptPay QR / Payment Instructions')}
                   </a>
                 )}
               </div>

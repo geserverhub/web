@@ -18,7 +18,7 @@ const LANGS = {
       totalPending: "รอชำระ",
       pendingCount: (n) => `${n} รายการ`,
     },
-    monthlyTitle: (y) => `ยอดขายรายเดือน`,
+    monthlyTitle: (_y) => `ยอดขายรายเดือน`,
     profitTitle: (y) => `กำไรสุทธิรายเดือน (หลังหัก VAT 10%) — ${y}`,
     profitCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
     vatNote: "สูตร: (รายรับ − รายจ่าย) × 90% ÷ 2",
@@ -2012,29 +2012,37 @@ export default function PartnerDashboard() {
             return Math.round(tax);
           }
 
-          const ACCENT = "#1e40af";
-          const ACCENT2 = "#dbeafe";
+          const ACCENT  = "#16a34a";   // dashboard green
+          const BG      = "#0a0c12";   // dashboard page bg
+          const BG2     = "#16181f";   // section bg
+          const BG3     = "#1e2130";   // card/row bg
+          const BORDER  = "#2a2d3a";   // border color
+          const TEXT    = "#e8eaf0";   // primary text
+          const MUTED   = "#8b8fa8";   // secondary text
+
           const P = {
-            page: { background: "#fff", color: "#1e293b", fontFamily: "'Segoe UI', system-ui, sans-serif", fontSize: 13, padding: "20px 28px", maxWidth: 900, margin: "0 auto" },
-            h2: { fontSize: 12, fontWeight: 800, color: "#fff", background: ACCENT, margin: "24px 0 0", padding: "7px 14px", letterSpacing: 0.5, textTransform: "uppercase", borderRadius: "6px 6px 0 0" },
-            table: { width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 16, border: "1px solid #e2e8f0" },
-            th: { background: "#f8fafc", color: "#475569", padding: "8px 12px", textAlign: "left", fontWeight: 700, borderBottom: "2px solid #e2e8f0", fontSize: 11, letterSpacing: 0.3 },
-            td: { padding: "7px 12px", borderBottom: "1px solid #f1f5f9", color: "#334155", verticalAlign: "top" },
-            tdAlt: { padding: "7px 12px", borderBottom: "1px solid #f1f5f9", color: "#334155", background: "#f8fafc", verticalAlign: "top" },
-            card: { display: "inline-flex", flexDirection: "column", gap: 4, border: `1px solid ${ACCENT2}`, borderTop: `3px solid ${ACCENT}`, borderRadius: 8, padding: "12px 20px", marginRight: 12, marginBottom: 12, minWidth: 150, background: "#f8fbff" },
-            label: { fontSize: 10, color: "#64748b", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" },
-            value: { fontSize: 20, fontWeight: 800, color: "#0f172a" },
-            divider: { border: "none", borderTop: "1px solid #e2e8f0", margin: "16px 0" },
+            page: { background: BG, color: TEXT, fontFamily: "system-ui, sans-serif", fontSize: 13, padding: "20px 28px", maxWidth: 900, margin: "0 auto" },
+            h2: { fontSize: 11, fontWeight: 800, color: ACCENT, background: BG2, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${ACCENT}`, margin: "24px 0 0", padding: "7px 14px", letterSpacing: 0.8, textTransform: "uppercase", borderRadius: "6px 6px 0 0" },
+            table: { width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 16, border: `1px solid ${BORDER}` },
+            th: { background: BG2, color: MUTED, padding: "8px 12px", textAlign: "left", fontWeight: 700, borderBottom: `2px solid ${BORDER}`, fontSize: 11, letterSpacing: 0.3 },
+            td: { padding: "7px 12px", borderBottom: `1px solid ${BG3}`, color: TEXT, verticalAlign: "top" },
+            tdAlt: { padding: "7px 12px", borderBottom: `1px solid ${BG3}`, color: TEXT, background: "#0d1018", verticalAlign: "top" },
+            card: { display: "inline-flex", flexDirection: "column", gap: 4, border: `1px solid ${BORDER}`, borderTop: `3px solid ${ACCENT}`, borderRadius: 8, padding: "12px 20px", marginRight: 12, marginBottom: 12, minWidth: 150, background: BG2 },
+            label: { fontSize: 10, color: MUTED, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" },
+            value: { fontSize: 20, fontWeight: 800, color: "#4ade80" },
+            divider: { border: "none", borderTop: `1px solid ${BORDER}`, margin: "16px 0" },
           };
 
+          const STATUS_CLS = { COMPLETED: "badge-done", PENDING: "badge-pending", CANCELLED: "badge-cancel" };
+          const TYPE_CLS   = { SALE: "badge-sale", EXPENSE: "badge-expense", REFUND: "badge-refund", PROFIT_SHARE: "badge-profit", PARTNER_INVESTMENT: "badge-invest" };
           const statusBadge = (s) => {
-            const map = { COMPLETED: ["#dcfce7","#16a34a"], PENDING: ["#fef9c3","#a16207"], CANCELLED: ["#f3f4f6","#6b7280"] };
-            const [bg, col] = map[s] || ["#f3f4f6","#6b7280"];
+            const map = { COMPLETED: ["#14532d","#4ade80"], PENDING: ["#422006","#fb923c"], CANCELLED: ["#1e2130","#6b7280"] };
+            const [bg, col] = map[s] || ["#1e2130","#6b7280"];
             return { background: bg, color: col, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" };
           };
           const typeBadge = (tp) => {
-            const map = { SALE: ["#dbeafe","#1d4ed8"], EXPENSE: ["#fee2e2","#dc2626"], REFUND: ["#ede9fe","#7c3aed"], PROFIT_SHARE: ["#dcfce7","#16a34a"], PARTNER_INVESTMENT: ["#fef3c7","#d97706"] };
-            const [bg, col] = map[tp] || ["#f3f4f6","#6b7280"];
+            const map = { SALE: ["#172554","#60a5fa"], EXPENSE: ["#3b0000","#f87171"], REFUND: ["#2e1065","#a78bfa"], PROFIT_SHARE: ["#14532d","#4ade80"], PARTNER_INVESTMENT: ["#422006","#fb923c"] };
+            const [bg, col] = map[tp] || ["#1e2130","#6b7280"];
             return { background: bg, color: col, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" };
           };
 
@@ -2055,12 +2063,12 @@ export default function PartnerDashboard() {
                       <tr key={tx.id}>
                         <td style={{ ...cell, fontFamily: "monospace", fontSize: 10, color: "#64748b" }}>{tx.number}</td>
                         <td style={{ ...cell, whiteSpace: "nowrap" }}>{new Date(tx.date).toLocaleDateString(koLocale)}</td>
-                        <td style={cell}><span style={typeBadge(tx.type)}>{ko.types[tx.type] || tx.type}</span></td>
+                        <td style={cell}><span className={TYPE_CLS[tx.type] || "badge-cancel"} style={typeBadge(tx.type)}>{ko.types[tx.type] || tx.type}</span></td>
                         <td style={cell}>{tx.description || "-"}</td>
                         <td style={cell}>{tx.customerName || "-"}</td>
                         <td style={{ ...cell, textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{fmtNum(tx.amount, koLocale)}</td>
                         <td style={{ ...cell, color: "#64748b", fontSize: 11 }}>{tx.currency}</td>
-                        <td style={cell}><span style={statusBadge(tx.status)}>{ko.statuses[tx.status] || tx.status}</span></td>
+                        <td style={cell}><span className={STATUS_CLS[tx.status] || "badge-cancel"} style={statusBadge(tx.status)}>{ko.statuses[tx.status] || tx.status}</span></td>
                       </tr>
                     );
                   })}
@@ -2070,14 +2078,14 @@ export default function PartnerDashboard() {
           }
 
           function SectionTitle({ children }) {
-            return <SectionTitle>{children}</SectionTitle>;
+            return <div className="pr-section-title" style={P.h2}>{children}</div>;
           }
 
           function ReportHeader({ title, dateRange }) {
             return (
               <div style={{ marginBottom: 28 }}>
                 {/* Top bar */}
-                <div style={{ background: ACCENT, borderRadius: 10, padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div className="pr-header-bar" style={{ background: ACCENT, borderRadius: 10, padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div>
                     <div style={{ color: "#93c5fd", fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>BUSINESS FINANCIAL REPORT</div>
                     <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.2 }}>GOEUN SERVER HUB</div>
@@ -2086,7 +2094,7 @@ export default function PartnerDashboard() {
                   <div style={{ textAlign: "right" }}>
                     <div style={{ color: "#bfdbfe", fontSize: 10, fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{pr.generatedOn(today)}</div>
                     {dateRange && (
-                      <div style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
+                      <div className="pr-daterange" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
                         {dateRange}
                       </div>
                     )}
@@ -2095,7 +2103,7 @@ export default function PartnerDashboard() {
                 {/* Report title */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 4, height: 28, background: ACCENT, borderRadius: 2, flexShrink: 0 }} />
-                  <div style={{ fontSize: 17, fontWeight: 800, color: "#0f172a" }}>{title}</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: TEXT }}>{title}</div>
                 </div>
               </div>
             );
@@ -2127,7 +2135,7 @@ export default function PartnerDashboard() {
                     { label: ko.stats.totalExpense, value: `₩${fmtNum(exp, koLocale)}` },
                     { label: ko.stats.netProfit, value: `₩${fmtNum(net, koLocale)}` },
                     { label: "VAT 10%", value: `₩${fmtNum(vat, koLocale)}` },
-                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={P.value}>{c.value}</div></div>)}
+                  ].map(c => <div key={c.label} className="pr-card" style={P.card}><div className="pr-label" style={P.label}>{c.label}</div><div className="pr-value" style={P.value}>{c.value}</div></div>)}
                 </div>
                 <SectionTitle>{pr.sections.transactions} ({monthTx.length})</SectionTitle>
                 <TxTable rows={monthTx} />
@@ -2151,7 +2159,7 @@ export default function PartnerDashboard() {
                     { label: ko.stats.totalExpense, value: `₩${fmtNum(totalExp, koLocale)}` },
                     { label: ko.stats.netProfit, value: `₩${fmtNum(totalNet, koLocale)}` },
                     { label: "VAT 10%", value: `₩${fmtNum(Math.round(Math.max(0,totalNet)*0.1), koLocale)}` },
-                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={P.value}>{c.value}</div></div>)}
+                  ].map(c => <div key={c.label} className="pr-card" style={P.card}><div className="pr-label" style={P.label}>{c.label}</div><div className="pr-value" style={P.value}>{c.value}</div></div>)}
                 </div>
                 <SectionTitle>{pr.sections.monthly}</SectionTitle>
                 <table style={P.table}>
@@ -2245,7 +2253,7 @@ export default function PartnerDashboard() {
                     { label: "상반기 (1월–6월)", value: `₩${fmtNum(sumVat(h1), koLocale)}` },
                     { label: "하반기 (7월–12월)", value: `₩${fmtNum(sumVat(h2), koLocale)}` },
                     { label: "연간 부가세 합계", value: `₩${fmtNum(sumVat(vatRows), koLocale)}` },
-                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={{ ...P.value, color: "#dc2626" }}>{c.value}</div></div>)}
+                  ].map(c => <div key={c.label} className="pr-card" style={P.card}><div className="pr-label" style={P.label}>{c.label}</div><div className="pr-value" style={{ ...P.value, color: "#dc2626" }}>{c.value}</div></div>)}
                 </div>
                 <VatBlock label={"상반기 (1월 – 6월)"} rows={h1} />
                 <VatBlock label={"하반기 (7월 – 12월)"} rows={h2} />
@@ -2270,7 +2278,7 @@ export default function PartnerDashboard() {
                   {[
                     { label: ko.stats.netProfit, value: `₩${fmtNum(annualNet, koLocale)}` },
                     { label: "VAT 공제 후", value: `₩${fmtNum(Math.round(annualNet*0.9), koLocale)}` },
-                  ].map(c => <div key={c.label} style={P.card}><div style={P.label}>{c.label}</div><div style={P.value}>{c.value}</div></div>)}
+                  ].map(c => <div key={c.label} className="pr-card" style={P.card}><div className="pr-label" style={P.label}>{c.label}</div><div className="pr-value" style={P.value}>{c.value}</div></div>)}
                 </div>
                 <SectionTitle>{pr.perPersonTitle}</SectionTitle>
                 <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 16 }}>
@@ -2302,9 +2310,9 @@ export default function PartnerDashboard() {
                     <SectionTitle>{pr.sections.partnerIncome}</SectionTitle>
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12, marginBottom: 16 }}>
                       {partnerIncomeSummary.map(p => (
-                        <div key={p.name} style={P.card}>
-                          <div style={P.label}>👤 {p.name}</div>
-                          <div style={P.value}>₩{fmtNum(p.total, koLocale)}</div>
+                        <div key={p.name} className="pr-card" style={P.card}>
+                          <div className="pr-label" style={P.label}>👤 {p.name}</div>
+                          <div className="pr-value" style={P.value}>₩{fmtNum(p.total, koLocale)}</div>
                         </div>
                       ))}
                     </div>
@@ -2323,21 +2331,91 @@ export default function PartnerDashboard() {
               <style>{`
                 @media print {
                   @page { margin: 15mm 12mm; size: A4 portrait; }
+                  html, body {
+                    height: auto !important;
+                    overflow: visible !important;
+                    background: #fff !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
                   body * { visibility: hidden !important; }
                   #print-report, #print-report * { visibility: visible !important; }
+                  .no-print { display: none !important; }
+
+                  /* reset ALL inline dark backgrounds */
+                  #print-report * {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                    color: #1e293b !important;
+                    border-color: #cbd5e1 !important;
+                  }
+
+                  /* keep report header banner colored */
+                  #print-report .pr-header-bar {
+                    background: #1e40af !important;
+                    color: #fff !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
+                  #print-report .pr-header-bar * { color: #fff !important; }
+                  #print-report .pr-header-bar .pr-daterange {
+                    background: rgba(255,255,255,0.2) !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
+
+                  /* section title bar */
+                  #print-report .pr-section-title {
+                    background: #1e40af !important;
+                    color: #fff !important;
+                    border-left: 3px solid #1e40af !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
+                  #print-report .pr-section-title * { color: #fff !important; }
+
+                  /* table */
+                  #print-report th {
+                    background: #f1f5f9 !important;
+                    color: #475569 !important;
+                    border-bottom: 2px solid #cbd5e1 !important;
+                  }
+                  #print-report tr:nth-child(even) td { background: #f8fafc !important; }
+
+                  /* stat cards */
+                  #print-report .pr-card {
+                    border: 1px solid #e2e8f0 !important;
+                    border-top: 3px solid #1e40af !important;
+                    background: #f8fafc !important;
+                  }
+                  #print-report .pr-card .pr-value { color: #0f172a !important; font-size: 20px !important; }
+                  #print-report .pr-card .pr-label { color: #64748b !important; }
+
+                  /* badges — keep colored */
+                  #print-report .badge-sale    { background: #dbeafe !important; color: #1d4ed8 !important; }
+                  #print-report .badge-expense { background: #fee2e2 !important; color: #dc2626 !important; }
+                  #print-report .badge-refund  { background: #ede9fe !important; color: #7c3aed !important; }
+                  #print-report .badge-profit  { background: #dcfce7 !important; color: #16a34a !important; }
+                  #print-report .badge-invest  { background: #fef3c7 !important; color: #d97706 !important; }
+                  #print-report .badge-done    { background: #dcfce7 !important; color: #16a34a !important; }
+                  #print-report .badge-pending { background: #fef9c3 !important; color: #a16207 !important; }
+                  #print-report .badge-cancel  { background: #f3f4f6 !important; color: #6b7280 !important; }
+
+                  /* layout */
                   #print-report {
-                    position: fixed !important;
+                    position: absolute !important;
                     top: 0 !important; left: 0 !important;
                     width: 100% !important;
+                    height: auto !important;
                     background: #fff !important;
-                    color: #000 !important;
                     z-index: 99999 !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
+                    padding: 0 !important; margin: 0 !important;
+                    overflow: visible !important;
                   }
                   #print-report table { page-break-inside: auto; }
                   #print-report tr { page-break-inside: avoid; page-break-after: auto; }
                   #print-report thead { display: table-header-group; }
+                  #print-report .page-break { page-break-before: always; }
                 }
               `}</style>
 
