@@ -22,6 +22,8 @@ export async function GET() {
         status: c.status.toLowerCase().replace(/_/g, "-"),
         contact_email: c.contactEmail,
         contact_phone: c.contactPhone,
+        contact_fax: c.contactFax,
+        address: c.address,
         system_url: c.systemUrl,
         thumbnail: c.logoUrl,
       })),

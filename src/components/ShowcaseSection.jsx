@@ -39,7 +39,8 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                       <div className="showcase-meta">
                         {client.contact_email && <span>✉ {client.contact_email}</span>}
                         {client.contact_phone && <span>📞 {client.contact_phone}</span>}
-                        {client.contact_fax && <span>{ui.faxLabel || "แฟกซ์:"} {client.contact_fax}</span>}
+                        {client.contact_fax && <span>📠 {client.contact_fax}</span>}
+                        {client.address && <span>📍 {client.address}</span>}
                       </div>
                       <div className="showcase-actions">
                         <a
