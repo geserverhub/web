@@ -141,7 +141,7 @@ export const fallbackClients = [
     status: "coming-soon",
     contact_email: "",
     contact_phone: "",
-    thumbnail: null,
+    thumbnail: "/mart-1/134074.jpg",
     system_url: "#",
   },
 ];
