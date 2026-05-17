@@ -204,6 +204,10 @@ export const translations = {
         name: "SP Foods Co.,Ltd.",
         description: "ส.ภาวิณีร์ อีสานฟู้ดส์ ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี",
       },
+      "mart-supermarket": {
+        name: "ระบบมาร์ทและซุปเปอร์มาเก็ต",
+        description: "ระบบจัดการร้านค้าปลีก มาร์ท และซุปเปอร์มาเก็ต ครบวงจร",
+      },
     },
   },
   en: {
@@ -414,6 +418,10 @@ export const translations = {
         name: "SP Foods Co.,Ltd.",
         description: "S.Pawinee Isaan Foods — processed & frozen food manufacturer, importer & exporter. The only certified Thai food producer in Korea.",
       },
+      "mart-supermarket": {
+        name: "Mart & Supermarket System",
+        description: "Comprehensive retail management system for marts and supermarkets.",
+      },
     },
   },
   zh: {
@@ -613,6 +621,10 @@ export const translations = {
         name: "SP Foods Co.,Ltd.",
         description: "ส.ภาวิณีร์ 伊善食品 — 加工和冷冻食品生产商、进口商和出口商。韩国唯一认证泰国食品生产商。",
       },
+      "mart-supermarket": {
+        name: "超市管理系统",
+        description: "面向零售店、超市综合管理系统。",
+      },
     },
   },
   ko: {
@@ -811,6 +823,10 @@ export const translations = {
       "spfoods": {
         name: "SP Foods Co.,Ltd.",
         description: "ส.ภาวิณีร์ 이산 푸드 — 가공 및 냉동 식품 제조·수출입 업체. 한국 내 유일한 공인 태국 식품 생산업체.",
+      },
+      "mart-supermarket": {
+        name: "마트 & 슈퍼마켓 시스템",
+        description: "마트 및 슈퍼마켓을 위한 종합 소매 관리 시스템.",
       },
     },
   },

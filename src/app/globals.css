@@ -1780,7 +1780,7 @@ img {
 
 .showcase-card-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -0.02em;
@@ -1827,9 +1827,9 @@ img {
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex-shrink: 0;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   line-height: 1.65;
-  color: #4b5675;
+  color: #1a2340;
 }
 
 .showcase-meta {
@@ -1845,9 +1845,9 @@ img {
   border-radius: var(--agency-radius-pill);
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.09);
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   font-weight: 500;
-  color: #4b5675;
+  color: #1a2340;
 }
 
 .showcase-actions {

@@ -112,8 +112,8 @@ export const fallbackClients = [
   },
   {
     id: 6,
-    name: "MOMOGE SPACE PRODUCT",
-    slug: "MOMOGE SPACE PRODUCT",
+    name: "MOMOGE SPACE  PRODUCT",
+    slug: "MOMOGE  SPACE  PRODUCT",
     description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
@@ -131,6 +131,17 @@ export const fallbackClients = [
     contact_phone: "",
     thumbnail: "/uploads/logos/spfoods-main.jpg",
     system_url: "https://spfoodskorea.com/",
+  },
+  {
+    id: 8,
+    name: "ระบบมาร์ทและซุปเปอร์มาเก็ต",
+    slug: "mart-supermarket",
+    description: "ระบบจัดการร้านค้าปลีก มาร์ท และซุปเปอร์มาเก็ต ครบวงจร",
+    status: "coming-soon",
+    contact_email: "",
+    contact_phone: "",
+    thumbnail: null,
+    system_url: "#",
   },
 ];
 
