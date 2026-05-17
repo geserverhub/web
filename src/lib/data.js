@@ -119,7 +119,7 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
     thumbnail: "/momoge/Logo-brand.png",
-    system_url: "/momoge-product",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/momoge-product",
   },
   {
     id: 7,
