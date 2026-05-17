@@ -1574,17 +1574,19 @@ img {
 }
 
 .showcase-card-featured .showcase-visual {
-  min-height: 15rem;
+  min-height: 22rem;
 }
 
 .showcase-visual {
   position: relative;
-  min-height: 12rem;
+  min-height: 18rem;
   padding: 1.3rem;
   color: #fff;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.15), transparent 32%),
     linear-gradient(145deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+  background-size: cover;
+  background-position: center;
 }
 
 .showcase-glow {
