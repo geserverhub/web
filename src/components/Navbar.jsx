@@ -43,16 +43,10 @@ export default function Navbar({ ui, currentLanguage, setCurrentLanguage, query,
           ))}
         </div>
         <a href="#contact" className="agency-topbar-link">
-          <span className="btn-path-stack">
-            <span className="btn-path-label">{ui.navContact}</span>
-            <span className="btn-path-caption">#contact</span>
-          </span>
+          {ui.navContact}
         </a>
         <a href="https://strong-dory-enabled.ngrok-free.app/auth/select" className="btn agency-btn-primary agency-topbar-cta">
-          <span className="btn-path-stack center">
-            <span className="btn-path-label">{ui.navLogin || "เข้าสู่ระบบ"}</span>
-            <span className="btn-path-caption">/auth/select</span>
-          </span>
+          {ui.navLogin || "เข้าสู่ระบบ"}
         </a>
       </div>
     </header>
