@@ -26,13 +26,13 @@
   --agency-maintenance: #f59e0b;
   --agency-soon:        #8b5cf6;
 
-  /* Dark surfaces (section/card) */
-  --dk-base:    #192240;
-  --dk-surface: #1f2d52;
-  --dk-card:    #243058;
-  --dk-card-2:  #2a3866;
-  --dk-border:  rgba(99, 155, 255, 0.15);
-  --dk-text:    #f1f5ff;
+  /* Dark surfaces (section/card) — Slate palette */
+  --dk-base:    #263347;
+  --dk-surface: #2e3d56;
+  --dk-card:    #2d3f5c;
+  --dk-card-2:  #334566;
+  --dk-border:  rgba(100, 160, 220, 0.18);
+  --dk-text:    #f1f5f9;
   --dk-muted:   #94a3b8;
 
   /* Shadows */
