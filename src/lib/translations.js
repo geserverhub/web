@@ -185,12 +185,12 @@ export const translations = {
         description: "\"ดูแล ใส่ใจ เกษตรไทย ครบวงจร\" บริการสินค้าด้านการเกษตร ในราคาปลีก-ส่ง ด้วยสินค้าหลากหลายมากกว่า 10,000 รายการ",
       },
       "green-retail-group": {
-        name: "Green Retail Group",
-        description: "ระบบมอนิเตอริ่ง ผู้ใช้ Demo",
+        name: "MOMOGE SPACE",
+        description: "AI SMART ENERGY MONITORING PLATFORM Demo",
       },
       "green-retail-energy": {
-        name: "Green Retail Group",
-        description: "ระบบมอนิเตอริ่งพลังงานไฟฟ้า",
+        name: "MOMOGE SPACE PRODUCT",
+        description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
       },
       "m-retsort": {
         name: "M-Resort",
@@ -199,6 +199,10 @@ export const translations = {
       "cargo": {
         name: "คาโก้ ไทย-เกาหลี",
         description: "บริการส่งสินค้าทางเครื่องบิน ไทย ↔ เกาหลี ปลอดภัย รวดเร็ว พร้อมติดตามสถานะออนไลน์",
+      },
+      "spfoods": {
+        name: "SP Foods Co.,Ltd.",
+        description: "ส.ภาวิณีร์ อีสานฟู้ดส์ ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี",
       },
     },
   },
@@ -391,12 +395,12 @@ export const translations = {
         description: "\"Caring for Thai agriculture, end-to-end\" — retail & wholesale agricultural products with over 10,000 items",
       },
       "green-retail-group": {
-        name: "Green Retail Group",
-        description: "Monitoring System — Demo User",
+        name: "MOMOGE SPACE",
+        description: "AI SMART ENERGY MONITORING PLATFORM Demo",
       },
       "green-retail-energy": {
-        name: "Green Retail Group",
-        description: "Electrical Energy Monitoring System",
+        name: "MOMOGE SPACE PRODUCT",
+        description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
       },
       "m-retsort": {
         name: "M-Resort",
@@ -405,6 +409,10 @@ export const translations = {
       "cargo": {
         name: "Thai-Korean Cargo",
         description: "Air freight service Thailand ↔ Korea. Safe, fast, with online shipment tracking.",
+      },
+      "spfoods": {
+        name: "SP Foods Co.,Ltd.",
+        description: "S.Pawinee Isaan Foods — processed & frozen food manufacturer, importer & exporter. The only certified Thai food producer in Korea.",
       },
     },
   },
@@ -586,12 +594,12 @@ export const translations = {
         description: "\"专注关怀泰国农业，一站式服务\" — 农业商品零售与批发，超过 10,000 种产品",
       },
       "green-retail-group": {
-        name: "Green Retail Group",
-        description: "监控系统 Demo 用户",
+        name: "MOMOGE SPACE",
+        description: "AI SMART ENERGY MONITORING PLATFORM Demo",
       },
       "green-retail-energy": {
-        name: "Green Retail Group",
-        description: "电力能源监控系统",
+        name: "MOMOGE SPACE PRODUCT",
+        description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
       },
       "m-retsort": {
         name: "M-度假村",
@@ -600,6 +608,10 @@ export const translations = {
       "cargo": {
         name: "泰韩货运服务",
         description: "航空货运服务 泰国 ↔ 韩国，安全快速，支持在线追踪货物状态。",
+      },
+      "spfoods": {
+        name: "SP Foods Co.,Ltd.",
+        description: "ส.ภาวิณีร์ 伊善食品 — 加工和冷冻食品生产商、进口商和出口商。韩国唯一认证泰国食品生产商。",
       },
     },
   },
@@ -781,12 +793,12 @@ export const translations = {
         description: "\"태국 농업을 세심하게 돌보는 일괄 서비스\" — 농업 상품 소매·도매, 10,000개 이상의 다양한 제품",
       },
       "green-retail-group": {
-        name: "Green Retail Group",
-        description: "모니터링 시스템 Demo 사용자",
+        name: "MOMOGE SPACE",
+        description: "AI SMART ENERGY MONITORING PLATFORM Demo",
       },
       "green-retail-energy": {
-        name: "Green Retail Group",
-        description: "전력 에너지 모니터링 시스템",
+        name: "MOMOGE SPACE PRODUCT",
+        description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
       },
       "m-retsort": {
         name: "M-리조트",
@@ -795,6 +807,10 @@ export const translations = {
       "cargo": {
         name: "태국-한국 카고 서비스",
         description: "항공 화물 서비스 태국 ↔ 한국. 안전하고 빠른 배송, 온라인 실시간 배송 추적.",
+      },
+      "spfoods": {
+        name: "SP Foods Co.,Ltd.",
+        description: "ส.ภาวิณีร์ 이산 푸드 — 가공 및 냉동 식품 제조·수출입 업체. 한국 내 유일한 공인 태국 식품 생산업체.",
       },
     },
   },
