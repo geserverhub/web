@@ -96,7 +96,7 @@ export const fallbackClients = [
     status: "online",
     contact_email: "mukhngamnuch@gmail.com",
     contact_phone: "095-241-1833",
-    thumbnail: "/uploads/logos/1776692894976-ecji3u.jpg",
+    thumbnail: "/m-resort/123738_0.jpg",
     system_url: "https://m-factoryandresort.com/",
   },
   {
