@@ -112,14 +112,25 @@ export const fallbackClients = [
   },
   {
     id: 6,
-    name: "Green Retail Group",
+    name: "MOMOGE SPACE",
     slug: "green-retail-energy",
-    description: "ระบบมอนิเตอริ่งพลังงานไฟฟ้า",
+    description: "PATHFORM MONITORING SMART ENERGY",
     status: "online",
     contact_email: "it@green-retail.example.com",
     contact_phone: "02-555-1199",
     thumbnail: "/uploads/logos/G-monitoring.png",
     system_url: "/energy-dashboard-login",
+  },
+  {
+    id: 7,
+    name: "SP Foods Co.,Ltd.",
+    slug: "spfoods",
+    description: "ส.ภาวิณีร์ อีสานฟู้ดส์ ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตและจำหน่ายอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี ครบวงจรด้านอุตสาหกรรมอาหาร ผสมผสานเทคโนโลยีร่วมกับอุตสาหกรรมอาหารและการเกษตร เพื่อผลิตอาหารแปรรูปที่มีคุณภาพและได้มาตรฐานสากล",
+    status: "online",
+    contact_email: "",
+    contact_phone: "",
+    thumbnail: "/uploads/logos/spfoods-main.jpg",
+    system_url: "https://spfoodskorea.com/",
   },
 ];
 
