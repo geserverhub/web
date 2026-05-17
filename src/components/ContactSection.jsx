@@ -1,5 +1,3 @@
-import { backendBaseUrl } from "@/lib/data";
-
 export default function ContactSection({ ui, profile }) {
   return (
     <section className="agency-section agency-section-dark" id="contact">
@@ -17,18 +15,15 @@ export default function ContactSection({ ui, profile }) {
             </div>
             <div className="contact-strip">
               <span>{ui.phoneLabel}</span>
-              <strong>{profile.phone}</strong>
+              <strong style={{ whiteSpace: "pre-line" }}>{profile.phone}</strong>
             </div>
             <div className="contact-strip">
               <span>{ui.addressLabel}</span>
-              <strong>{profile.address}</strong>
+              <strong style={{ whiteSpace: "pre-line" }}>{profile.address}</strong>
             </div>
             <div className="contact-actions">
               <a className="btn agency-btn-primary btn-lg" href={`mailto:${profile.email}`}>
                 {ui.sendEmail}
-              </a>
-              <a className="btn agency-btn-outline btn-lg" href={`${backendBaseUrl}/clients`}>
-                {ui.openDirectory}
               </a>
             </div>
           </div>

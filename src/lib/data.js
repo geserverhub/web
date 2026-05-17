@@ -8,9 +8,9 @@ export const fallbackProfile = {
   headline: "ศูนย์กลางระบบลูกค้าและหน้าโปรโมทบริการของคุณ",
   subheadline:
     "รวมหน้าแนะนำบริการ, ช่องทางติดต่อ, และทางเข้าระบบสำหรับลูกค้าหลายรายไว้ในเว็บเดียว",
-  phone: "081-234-5678",
+  phone: "081-234-5678\n010-8105-0384",
   email: "goeunserverhub@gmail.com",
-  address: "Bangkok, Thailand",
+  address: "Bangkok, Thailand\nAnsan, Republic Korea",
 };
 
 export const fallbackServices = [
@@ -58,7 +58,7 @@ export const fallbackClients = [
     name: "M-Group",
     slug: "m-group",
     description:
-      "\"ดูแล ใส่ใจ เกษตรไทย ครบวงจร\" บริการสินค้าด้านการเกษตร ในราคาปลีก-ส่ง ด้วยสินค้าหลากหลายมากกว่า 10,000 รายการ",
+      '"ดูแล ใส่ใจ เกษตรไทย ครบวงจร" บริการสินค้าด้านการเกษตร ในราคาปลีก-ส่ง ด้วยสินค้าหลากหลายมากกว่า 10,000 รายการ',
     status: "online",
     contact_email: "sale@m-group.in.th",
     contact_phone: "089-4871144",
@@ -101,7 +101,7 @@ export const fallbackClients = [
   },
   {
     id: 5,
-    name: "คาโก้ ไทย-เกาหลี / เกาหลี-ไทย",
+    name: "คาโก้ ไทย-เกาหลี",
     slug: "cargo",
     description: "บริการส่งสินค้าทางเครื่องบิน ไทย ↔ เกาหลี ปลอดภัย รวดเร็ว พร้อมติดตามสถานะออนไลน์",
     status: "online",
