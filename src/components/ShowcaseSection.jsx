@@ -26,7 +26,6 @@ export default function ShowcaseSection({
                   <div className="showcase-visual" style={client.thumbnail ? { backgroundImage: `url(${client.thumbnail})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}>
                     {!client.thumbnail && <div className="showcase-glow" />}
                     <div className="showcase-visual-content" style={client.thumbnail ? { background: "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%)", position:"absolute", inset:0, padding:"1.3rem" } : {}}>
-                      <span className="client-slug">{client.slug}</span>
                     </div>
                   </div>
                   <div className="showcase-body">
