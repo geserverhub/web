@@ -34,7 +34,7 @@ export async function POST(req) {
     await mkdir(uploadDir, { recursive: true });
     await writeFile(path.join(uploadDir, safeName), Buffer.from(await file.arrayBuffer()));
 
-    return NextResponse.json({ url: `/uploads/partner-products/${safeName}` });
+    return NextResponse.json({ url: `/api/uploads/partner-products/${safeName}` });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

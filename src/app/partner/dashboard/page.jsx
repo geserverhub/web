@@ -458,6 +458,7 @@ export default function PartnerDashboard() {
   const [productImages, setProductImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState([]);
   const [uploadingProductId, setUploadingProductId] = useState(null);
+  const [productImgError, setProductImgError] = useState({});
 
   const [printView, setPrintView] = useState("annual"); // "annual" | "monthly" | "vat" | "income_tax"
   const [printMonth, setPrintMonth] = useState(new Date().getMonth() + 1); // 1-12
@@ -684,24 +685,33 @@ export default function PartnerDashboard() {
     const remaining = 5 - currentImgs.length;
     if (remaining <= 0) return;
     setUploadingProductId(productId);
+    setProductImgError(prev => ({ ...prev, [productId]: null }));
     const uploaded = [];
     for (const file of Array.from(files).slice(0, remaining)) {
-      try {
-        const fd = new FormData();
-        fd.append("file", file);
-        const res = await fetch("/api/partner/products/images", { method: "POST", body: fd });
-        const data = await res.json();
-        if (data.url) uploaded.push(data.url);
-      } catch {}
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/partner/products/images", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setProductImgError(prev => ({ ...prev, [productId]: data.error || `upload error ${res.status}` }));
+        setUploadingProductId(null);
+        return;
+      }
+      if (data.url) uploaded.push(data.url);
     }
     if (uploaded.length) {
       const newUrls = [...currentImgs, ...uploaded].slice(0, 5);
-      await fetch(`/api/partner/products/${productId}`, {
+      const patchRes = await fetch(`/api/partner/products/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageUrls: newUrls }),
       });
-      fetchProducts();
+      if (!patchRes.ok) {
+        const patchErr = await patchRes.json().catch(() => ({}));
+        setProductImgError(prev => ({ ...prev, [productId]: patchErr.error || `save error ${patchRes.status}` }));
+      } else {
+        fetchProducts();
+      }
     }
     setUploadingProductId(null);
   }
@@ -1460,6 +1470,13 @@ export default function PartnerDashboard() {
                               🗑
                             </button>
                           </div>
+
+                          {/* Image upload error */}
+                          {productImgError[p.id] && (
+                            <div style={{ marginTop: 6, fontSize: 11, color: "#f87171", background: "#3b000066", borderRadius: 5, padding: "3px 8px" }}>
+                              ❌ {productImgError[p.id]}
+                            </div>
+                          )}
 
                           {/* Image row */}
                           <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
