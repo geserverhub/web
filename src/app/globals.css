@@ -997,20 +997,20 @@ img {
 
 .agency-section-shell .section-title {
   color: #ffffff;
-  font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
   font-weight: 900;
   letter-spacing: -0.03em;
-  line-height: 0.95;
-  background: linear-gradient(135deg, #ffffff 30%, #93c5fd 70%, #60a5fa 100%);
+  line-height: 1.05;
+  background: linear-gradient(135deg, #ffffff 20%, #bfdbfe 60%, #93c5fd 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-shadow: none;
-  filter: drop-shadow(0 0 40px rgba(99, 155, 255, 0.35));
+  filter: drop-shadow(0 0 32px rgba(99, 155, 255, 0.4));
 }
 
 .agency-section-shell .section-subtitle {
-  color: rgba(180, 200, 255, 0.75);
+  color: rgba(210, 228, 255, 0.85);
   font-size: 1.05rem;
   line-height: 1.7;
 }
@@ -1699,27 +1699,29 @@ img {
 
 .showcase-card-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 900;
   color: #fff;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-shadow:
+    0 2px 8px rgba(0,0,0,0.8),
+    0 4px 24px rgba(0,0,0,0.5);
+  line-height: 1.15;
 }
 
 .showcase-body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: 1.4rem 1.55rem 1.55rem;
+  gap: 1rem;
+  padding: 1.5rem 1.6rem 1.6rem;
 }
 
 .showcase-body h3 {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #e8f0ff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
   letter-spacing: -0.01em;
 }
 
@@ -1731,9 +1733,9 @@ img {
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex-shrink: 0;
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: rgba(180, 200, 255, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(200, 220, 255, 0.85);
 }
 
 .showcase-meta {
@@ -1745,12 +1747,13 @@ img {
 .showcase-meta span {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 0.75rem;
+  padding: 0.45rem 0.85rem;
   border-radius: var(--agency-radius-pill);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(99, 155, 255, 0.18);
-  font-size: 0.8rem;
-  color: rgba(180, 210, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(99, 155, 255, 0.25);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: rgba(210, 228, 255, 0.95);
   backdrop-filter: blur(4px);
 }
 
