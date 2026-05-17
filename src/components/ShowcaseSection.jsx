@@ -22,15 +22,11 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                     className="showcase-card"
                   >
                     {/* Image area with title overlay */}
-                    <div
-                      className="showcase-visual"
-                      style={client.thumbnail ? {
-                        backgroundImage: `url(${client.thumbnail})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      } : {}}
-                    >
-                      {!client.thumbnail && <div className="showcase-glow" />}
+                    <div className="showcase-visual">
+                      {client.thumbnail
+                        ? <div className="showcase-visual-bg" style={{ backgroundImage: `url(${client.thumbnail})` }} />
+                        : <div className="showcase-glow" />
+                      }
                       <div className="showcase-visual-content">
                         <span className={`status-pill ${statusClassName(client.status)}`} />
                         <h3 className="showcase-card-title">{name}</h3>
