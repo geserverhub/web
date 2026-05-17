@@ -75,7 +75,7 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
     thumbnail: "/momoge/momoge-space.jpg",
-    system_url: "/customer-dashboard-login",
+    system_url: "/customer-momoge-login",
   },
   {
     id: 3,
