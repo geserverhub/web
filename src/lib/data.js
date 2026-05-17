@@ -144,6 +144,17 @@ export const fallbackClients = [
     thumbnail: "/mart-1/134074.jpg",
     system_url: "#",
   },
+  {
+    id: 9,
+    name: "ระบบบริการดูแล บัญชีและภาษี",
+    slug: "acc-tax",
+    description: "บริการดูแลและจัดการบัญชี การเงิน และภาษีอย่างครบวงจร โดยทีมผู้เชี่ยวชาญ",
+    status: "coming-soon",
+    contact_email: "",
+    contact_phone: "",
+    thumbnail: "/ACC/134076.jpg",
+    system_url: "#",
+  },
 ];
 
 export const filterOptions = [
