@@ -12,7 +12,8 @@ export async function PATCH(req, { params }) {
     const session = await auth();
     if (!isPartnerOrAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     const { id } = await params;
-    const { name, model, brand, costPrice, sellPrice, currency } = await req.json();
+    const body = await req.json();
+    const { name, model, brand, costPrice, sellPrice, currency, imageUrls } = body;
     const toNum = (v) => (v ? Number(String(v).replace(/,/g, "")) : null);
     const data = {};
     if (name !== undefined) data.name = name.trim();
@@ -21,8 +22,15 @@ export async function PATCH(req, { params }) {
     if (costPrice !== undefined) data.costPrice = toNum(costPrice);
     if (sellPrice !== undefined) data.sellPrice = toNum(sellPrice);
     if (currency !== undefined) data.currency = ["KRW", "USD", "THB"].includes(currency) ? currency : "KRW";
+    if (imageUrls !== undefined) {
+      const safeUrls = Array.isArray(imageUrls) ? imageUrls.filter(Boolean).slice(0, 5) : [];
+      data.imageUrls = safeUrls.length ? JSON.stringify(safeUrls) : null;
+    }
     const product = await prisma.partnerProduct.update({ where: { id }, data });
-    return NextResponse.json(product);
+    return NextResponse.json({
+      ...product,
+      imageUrls: product.imageUrls ? JSON.parse(product.imageUrls) : [],
+    });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

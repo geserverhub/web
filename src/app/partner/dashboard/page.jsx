@@ -455,6 +455,9 @@ export default function PartnerDashboard() {
   const [products, setProducts] = useState([]);
   const [productForm, setProductForm] = useState({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW" });
   const [productFormState, setProductFormState] = useState("");
+  const [productImages, setProductImages] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState([]);
+  const [uploadingProductId, setUploadingProductId] = useState(null);
 
   const [printView, setPrintView] = useState("annual"); // "annual" | "monthly" | "vat" | "income_tax"
   const [printMonth, setPrintMonth] = useState(new Date().getMonth() + 1); // 1-12
@@ -634,6 +637,27 @@ export default function PartnerDashboard() {
     }
   }
 
+  async function handleProductImageSelect(e) {
+    const files = Array.from(e.target.files || []);
+    const remaining = 5 - productImages.length;
+    if (remaining <= 0) return;
+    const toUpload = files.slice(0, remaining);
+    setUploadingImages(toUpload.map(f => f.name));
+    const uploaded = [];
+    for (const file of toUpload) {
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/partner/products/images", { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.url) uploaded.push(data.url);
+      } catch {}
+    }
+    setProductImages(prev => [...prev, ...uploaded].slice(0, 5));
+    setUploadingImages([]);
+    e.target.value = "";
+  }
+
   async function handleAddProduct(e) {
     e.preventDefault();
     setProductFormState("loading");
@@ -641,17 +665,55 @@ export default function PartnerDashboard() {
       const res = await fetch("/api/partner/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(productForm),
+        body: JSON.stringify({ ...productForm, imageUrls: productImages }),
       });
       if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || "error"); }
       setProductFormState("success");
       setProductForm({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW" });
+      setProductImages([]);
       fetchProducts();
       setTimeout(() => setProductFormState(""), 3000);
     } catch (err) {
       setProductFormState(err.message || "error");
       setTimeout(() => setProductFormState(""), 4000);
     }
+  }
+
+  async function handleUploadProductImages(productId, currentImgs, files) {
+    if (!files.length) return;
+    const remaining = 5 - currentImgs.length;
+    if (remaining <= 0) return;
+    setUploadingProductId(productId);
+    const uploaded = [];
+    for (const file of Array.from(files).slice(0, remaining)) {
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/partner/products/images", { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.url) uploaded.push(data.url);
+      } catch {}
+    }
+    if (uploaded.length) {
+      const newUrls = [...currentImgs, ...uploaded].slice(0, 5);
+      await fetch(`/api/partner/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrls: newUrls }),
+      });
+      fetchProducts();
+    }
+    setUploadingProductId(null);
+  }
+
+  async function handleRemoveProductImage(productId, currentImgs, idx) {
+    const newUrls = currentImgs.filter((_, i) => i !== idx);
+    await fetch(`/api/partner/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrls: newUrls }),
+    });
+    fetchProducts();
   }
 
   async function handleDeleteProduct(id) {
@@ -1332,8 +1394,36 @@ export default function PartnerDashboard() {
                         <option value="THB">฿ THB</option>
                       </select>
                     </div>
-                    <button type="submit" disabled={productFormState === "loading"}
-                      style={{ marginTop: 4, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: productFormState === "loading" ? 0.6 : 1 }}>
+                    {/* Image upload */}
+                    <div>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>
+                        📷 รูปสินค้า ({productImages.length}/5)
+                      </label>
+                      {productImages.length < 5 && (
+                        <label style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1e2130", border: "1px dashed #4a5070", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 12, color: "#8b8fa8" }}>
+                          + เพิ่มรูป (สูงสุด 5 รูป)
+                          <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={handleProductImageSelect} disabled={uploadingImages.length > 0} />
+                        </label>
+                      )}
+                      {uploadingImages.length > 0 && (
+                        <div style={{ fontSize: 11, color: "#60a5fa", marginTop: 6 }}>⏳ กำลังอัพโหลด {uploadingImages.length} รูป...</div>
+                      )}
+                      {productImages.length > 0 && (
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                          {productImages.map((url, i) => (
+                            <div key={i} style={{ position: "relative" }}>
+                              <img src={url} alt="" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: "1px solid #2a2d3a" }} />
+                              <button type="button" onClick={() => setProductImages(prev => prev.filter((_, j) => j !== i))}
+                                style={{ position: "absolute", top: -6, right: -6, background: "#7f1d1d", border: "none", borderRadius: "50%", width: 18, height: 18, color: "#fca5a5", fontSize: 10, cursor: "pointer", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button type="submit" disabled={productFormState === "loading" || uploadingImages.length > 0}
+                      style={{ marginTop: 4, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: (productFormState === "loading" || uploadingImages.length > 0) ? 0.6 : 1 }}>
                       {productFormState === "loading" ? t.products.submitting : t.products.submit}
                     </button>
                     {productFormState === "success" && <div style={{ color: "#4ade80", fontSize: 12, textAlign: "center" }}>{t.products.success}</div>}
@@ -1351,22 +1441,48 @@ export default function PartnerDashboard() {
                   <div style={{ color: "#4a5070", fontSize: 13, textAlign: "center", padding: "24px 0" }}>{t.products.noData}</div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {products.map(p => (
-                      <div key={p.id} style={{ background: "#1e2130", borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ color: "#e8eaf0", fontWeight: 600, fontSize: 13 }}>{p.name}{p.model ? <span style={{ color: "#60a5fa", marginLeft: 6 }}>({p.model})</span> : ""}</div>
-                          {p.brand && <div style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>{p.brand}</div>}
-                          <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap" }}>
-                            {p.costPrice && <span style={{ color: "#fbbf24", fontSize: 11 }}>ทุน {Number(p.costPrice).toLocaleString()} {p.currency}</span>}
-                            {p.sellPrice && <span style={{ color: "#4ade80", fontSize: 11 }}>ขาย {Number(p.sellPrice).toLocaleString()} {p.currency}</span>}
+                    {products.map(p => {
+                      const imgs = Array.isArray(p.imageUrls) ? p.imageUrls : [];
+                      const isUploading = uploadingProductId === p.id;
+                      return (
+                        <div key={p.id} style={{ background: "#1e2130", borderRadius: 8, padding: "10px 14px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ color: "#e8eaf0", fontWeight: 600, fontSize: 13 }}>{p.name}{p.model ? <span style={{ color: "#60a5fa", marginLeft: 6 }}>({p.model})</span> : ""}</div>
+                              {p.brand && <div style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>{p.brand}</div>}
+                              <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap" }}>
+                                {p.costPrice && <span style={{ color: "#fbbf24", fontSize: 11 }}>ทุน {Number(p.costPrice).toLocaleString()} {p.currency}</span>}
+                                {p.sellPrice && <span style={{ color: "#4ade80", fontSize: 11 }}>ขาย {Number(p.sellPrice).toLocaleString()} {p.currency}</span>}
+                              </div>
+                            </div>
+                            <button onClick={() => handleDeleteProduct(p.id)}
+                              style={{ background: "#3b0000", border: "1px solid #7f1d1d", color: "#f87171", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
+                              🗑
+                            </button>
+                          </div>
+
+                          {/* Image row */}
+                          <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                            {imgs.map((url, i) => (
+                              <div key={i} style={{ position: "relative" }}>
+                                <img src={url} alt="" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 5, border: "1px solid #2a2d3a" }} />
+                                <button type="button" onClick={() => handleRemoveProductImage(p.id, imgs, i)}
+                                  style={{ position: "absolute", top: -5, right: -5, background: "#7f1d1d", border: "none", borderRadius: "50%", width: 16, height: 16, color: "#fca5a5", fontSize: 9, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            {imgs.length < 5 && (
+                              <label style={{ width: 56, height: 56, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111827", border: "1px dashed #374151", borderRadius: 5, cursor: isUploading ? "not-allowed" : "pointer", fontSize: 18, color: "#4a5070", gap: 2 }}>
+                                {isUploading ? <span style={{ fontSize: 10, color: "#60a5fa" }}>⏳</span> : <>📷<span style={{ fontSize: 9, color: "#6b7280" }}>{imgs.length}/5</span></>}
+                                <input type="file" accept="image/*" multiple style={{ display: "none" }} disabled={isUploading}
+                                  onChange={e => { handleUploadProductImages(p.id, imgs, e.target.files); e.target.value = ""; }} />
+                              </label>
+                            )}
                           </div>
                         </div>
-                        <button onClick={() => handleDeleteProduct(p.id)}
-                          style={{ background: "#3b0000", border: "1px solid #7f1d1d", color: "#f87171", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
-                          🗑
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

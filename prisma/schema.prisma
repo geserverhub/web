@@ -637,6 +637,7 @@ model PartnerProduct {
   costPrice Decimal? @db.Decimal(14, 2)
   sellPrice Decimal? @db.Decimal(14, 2)
   currency  String   @default("KRW")
+  imageUrls String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
