@@ -24,7 +24,7 @@ export default function Navbar({ ui, currentLanguage, setCurrentLanguage, query,
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={ui.searchPlaceholder || "ค้นหาระบบ บริการ หรือพอร์ทัล..."}
+          placeholder={ui.searchPlaceholder || "พิมพ์ชื่อบริษัท"}
           aria-label="ค้นหา"
         />
       </div>
