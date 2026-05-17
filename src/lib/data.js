@@ -69,12 +69,12 @@ export const fallbackClients = [
   {
     id: 2,
     name: "MOMOGE SPACE",
-    slug: "MOMOGE SPACE",
+    slug: "green-retail-group",
     description: "AI SMART ENERGY MONITORING PLATFORM Demo",
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    thumbnail: "/uploads/logos/Guser-demo.png",
+    thumbnail: "/momoge/momoge-space.jpg",
     system_url: "/customer-dashboard-login",
   },
   {
@@ -112,13 +112,13 @@ export const fallbackClients = [
   },
   {
     id: 6,
-    name: "MOMOGE SPACE",
-    slug: "MOMOGE SPACE",
-    description: "AI SMART ENERGY MONITORING PLATFORM ระบบมอนิเตอริ่งพลังงานอัจฉริยะ",
+    name: "MOMOGE SPACE PRODUCT",
+    slug: "green-retail-energy",
+    description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    thumbnail: "/uploads/logos/G-monitoring.png",
+    thumbnail: "/momoge/Logo-brand.jpg",
     system_url: "/energy-dashboard-login",
   },
   {
