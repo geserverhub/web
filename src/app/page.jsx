@@ -43,37 +43,49 @@ export default function Page() {
     document.documentElement.lang = currentLanguage;
   }, [currentLanguage]);
 
-  // Scroll-reveal: mark body ready, then observe [data-reveal] elements
+  // Scroll-reveal: never leave sections invisible (ge-ready hides until is-revealed)
   useEffect(() => {
     document.body.classList.add("ge-ready");
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-revealed");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.05, rootMargin: "0px 0px 0px 0px" }
-    );
+    const reveal = (el) => el.classList.add("is-revealed");
 
-    const elements = document.querySelectorAll("[data-reveal]");
-    elements.forEach((el) => observer.observe(el));
+    const run = () => {
+      const elements = document.querySelectorAll("[data-reveal]");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              reveal(entry.target);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.05, rootMargin: "0px 0px 80px 0px" }
+      );
 
-    // Fallback: if observer doesn't fire within 1.5s, reveal all remaining elements
-    const fallback = setTimeout(() => {
-      document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach((el) => {
-        el.classList.add("is-revealed");
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (inView) {
+          reveal(el);
+        } else {
+          observer.observe(el);
+        }
       });
-    }, 1500);
 
-    return () => {
-      observer.disconnect();
-      clearTimeout(fallback);
+      const fallback = window.setTimeout(() => {
+        document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach(reveal);
+      }, 600);
+
+      return () => {
+        observer.disconnect();
+        window.clearTimeout(fallback);
+      };
     };
-  }, [loading]); // re-observe after async data loads
+
+    const cleanup = run();
+    return cleanup;
+  }, [loading, clients.length]);
 
   useEffect(() => {
     let active = true;

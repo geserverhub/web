@@ -90,6 +90,7 @@ model Client {
   invoices Invoice[]
   receipts Receipt[]
   customers Customer[]
+  partnerProducts PartnerProduct[]
 
   @@index([slug])
   @@index([status])
@@ -351,10 +352,15 @@ model PartnerProduct {
   costPrice Decimal? @db.Decimal(14, 2)
   sellPrice Decimal? @db.Decimal(14, 2)
   currency  String   @default("KRW")
+  imageUrls String?  @db.Text
+  clientId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   @@index([name])
+  @@index([clientId])
 }
 
 model CargoOrder {

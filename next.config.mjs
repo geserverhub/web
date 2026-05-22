@@ -8,8 +8,11 @@ const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Use this app folder as workspace root (avoids picking parent C:\web\package-lock.json)
+  // Force this folder as app root (parent C:\web\package-lock.json must not win)
   outputFileTracingRoot: __dirname,
+  turbopack: {
+    root: __dirname,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

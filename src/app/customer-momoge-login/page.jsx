@@ -124,9 +124,6 @@ export default function CustomerMomogeLoginPage() {
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f8fafc', margin: 0 }}>
             Momoge
           </h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
-            Partner Connected Marketplace
-          </p>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
