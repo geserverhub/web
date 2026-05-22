@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
+import { formatDbConnectError } from "@/lib/db-connect-error";
 
 function safeNumber(v) {
   const n = Number(v);
@@ -8,6 +9,10 @@ function safeNumber(v) {
 
 export async function GET() {
   try {
+    const prisma = getPrisma();
+    if (!prisma) {
+      return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
+    }
     const products = await prisma.partnerProduct.findMany({
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
       select: {
@@ -29,12 +34,18 @@ export async function GET() {
     }));
     return NextResponse.json({ products: parsed });
   } catch (err) {
-    return NextResponse.json({ error: err.message || "Failed to load products" }, { status: 500 });
+    const message = formatDbConnectError(err);
+    const status = message.includes('geserverhub') ? 503 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
 export async function POST(req) {
   try {
+    const prisma = getPrisma();
+    if (!prisma) {
+      return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
+    }
     const body = await req.json();
     const customerName = String(body.customerName || "").trim();
     const customerContact = String(body.customerContact || "").trim();

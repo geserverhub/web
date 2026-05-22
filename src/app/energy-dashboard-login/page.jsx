@@ -97,8 +97,17 @@ export default function EnergyDashboardLoginPage() {
 
       const data = await parseJsonResponse(res);
 
-      if (data._html || data.error) {
-        setError(data.error || t('serverError'));
+      if (data._html || data._parseError) {
+        setError(
+          data._parseError
+            ? `${t('serverError')} (${data._preview || 'non-JSON'})`
+            : (data.error || t('serverError'))
+        );
+        return;
+      }
+
+      if (data.error && !res.ok) {
+        setError(data.error);
         return;
       }
 

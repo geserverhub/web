@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { fallbackClients } from "@/lib/data";
 
 /** Keep homepage client cards in sync when DB rows lag behind fallback/seed data. */
@@ -17,6 +17,10 @@ const CLIENT_CARD_OVERRIDES = {
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return Response.json({ clients: fallbackClients });
+  }
   try {
     const rows = await prisma.client.findMany({
       orderBy: { createdAt: "asc" },

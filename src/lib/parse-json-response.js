@@ -17,6 +17,11 @@ export async function parseJsonResponse(res) {
   try {
     return JSON.parse(trimmed);
   } catch {
-    return { error: 'Invalid response from server' };
+    const preview = trimmed.slice(0, 120).replace(/\s+/g, ' ');
+    return {
+      error: 'Invalid response from server',
+      _parseError: true,
+      _preview: preview,
+    };
   }
 }

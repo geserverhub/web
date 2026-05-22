@@ -1,9 +1,13 @@
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { fallbackServices } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return Response.json({ services: fallbackServices });
+  }
   try {
     const rows = await prisma.service.findMany({
       where: { active: true },

@@ -2401,4 +2401,9 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
     transition-duration:      0.01ms !important;
     transition-delay:         0s     !important;
   }
+
+  body.ge-ready [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
