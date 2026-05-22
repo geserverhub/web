@@ -29,6 +29,8 @@ const updates = [
     data: {
       contactEmail: "goeunserverhub@gmail.com",
       contactPhone: "010-8105-0384",
+      logoUrl: "/uploads/logos/G-monitoring.png",
+      systemUrl: "/energy-dashboard-login",
     },
   },
   // cargo: fix slug from auto-generated to clean slug + update name

@@ -8,6 +8,8 @@ const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Use this app folder as workspace root (avoids picking parent C:\web\package-lock.json)
+  outputFileTracingRoot: __dirname,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -31,6 +33,7 @@ const nextConfig = {
       },
       // Energy dashboard short-path aliases
       { source: "/dashboard", destination: "/energy-dashboard/dashboard" },
+      { source: "/current-monitor", destination: "/energy-dashboard/current-monitor" },
       { source: "/overview", destination: "/energy-dashboard/overview" },
       { source: "/monitor", destination: "/energy-dashboard/monitor" },
       { source: "/location", destination: "/energy-dashboard/location" },

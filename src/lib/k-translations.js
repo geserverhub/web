@@ -877,6 +877,10 @@ const translationData = {
     userFeedback: '사용자 피드백',
     helpDocs: '도움말 문서',
     userProfile: '사용자 프로필',
+    dashboard: '대시보드',
+    overview: '개요',
+    monitor: '모니터',
+    currentMonitor: '실시간 전류',
 
     // Kenergy Device Notifications
     deviceNotifications: '기기 알림',
@@ -1952,6 +1956,10 @@ const translationData = {
     userFeedback: 'User Feedback',
     helpDocs: 'Help Docs',
     userProfile: 'User Profile',
+    dashboard: 'Dashboard',
+    overview: 'Overview',
+    monitor: 'Monitor',
+    currentMonitor: 'Real-time Current',
 
     // Kenergy Device Notifications
     deviceNotifications: 'Device Notifications',
@@ -2770,6 +2778,7 @@ const translationData = {
     dashboard: 'แดชบอร์ด',
     overview: 'ภาพรวม',
     monitor: 'ติดตาม',
+    currentMonitor: 'กระแสไฟเรียลไทม์',
     refresh: 'รีเฟรช',
 
     // Dashboard

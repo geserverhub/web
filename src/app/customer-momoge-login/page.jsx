@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
+import { parseJsonResponse } from '@/lib/parse-json-response';
 
 export default function CustomerMomogeLoginPage() {
   const router = useRouter();
@@ -25,9 +26,14 @@ export default function CustomerMomogeLoginPage() {
         body: JSON.stringify({ username, password, pageName: '/momoge-product' }),
       });
 
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
 
-      if (!res.ok || data.error) {
+      if (data._html || data.error) {
+        setError(data.error || 'Server error — run: npx prisma generate && restart dev server');
+        return;
+      }
+
+      if (!res.ok) {
         setError(data.error || 'Invalid username or password');
         return;
       }

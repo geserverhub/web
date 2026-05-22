@@ -192,6 +192,10 @@ export const translations = {
         name: "MOMOGE SPACE PRODUCT",
         description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
       },
+      "momoge-space-product": {
+        name: "MOMOGE SPACE PRODUCT",
+        description: "ตลาดสินค้าเชื่อมต่อพาร์ทเนอร์ — สั่งซื้อและชำระเงินออนไลน์",
+      },
       "m-retsort": {
         name: "M-Resort",
         description: "เอ็มรีสอร์ท บริการที่พัก บรรยากาศส่วนตัว",
@@ -455,6 +459,10 @@ export const translations = {
       "green-retail-energy": {
         name: "MOMOGE SPACE PRODUCT",
         description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
+      },
+      "momoge-space-product": {
+        name: "MOMOGE SPACE PRODUCT",
+        description: "Partner-connected marketplace — order and pay online",
       },
       "m-retsort": {
         name: "M-Resort",
@@ -961,6 +969,10 @@ export const translations = {
       "green-retail-energy": {
         name: "MOMOGE SPACE PRODUCT",
         description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
+      },
+      "momoge-space-product": {
+        name: "MOMOGE SPACE PRODUCT",
+        description: "파트너 연동 마켓플레이스 — 온라인 주문 및 결제",
       },
       "m-retsort": {
         name: "M-리조트",
