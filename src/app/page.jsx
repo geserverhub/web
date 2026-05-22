@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import {
   languageStorageKey,
+  supportedLanguages,
   fallbackProfile,
   fallbackServices,
   fallbackClients,
@@ -32,7 +33,9 @@ export default function Page() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(languageStorageKey);
-    if (saved && translations[saved]) setCurrentLanguage(saved);
+    if (saved && translations[saved] && supportedLanguages.includes(saved)) {
+      setCurrentLanguage(saved);
+    }
   }, []);
 
   useEffect(() => {
@@ -131,7 +134,12 @@ export default function Page() {
 
   return (
     <div className="agency-app-layout">
-      <Sidebar ui={ui} profile={profile} />
+      <Sidebar
+        ui={ui}
+        profile={profile}
+        currentLanguage={currentLanguage}
+        setCurrentLanguage={setCurrentLanguage}
+      />
 
       <main className="agency-main-content">
         <div className="agency-page">

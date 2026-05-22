@@ -1,5 +1,7 @@
 "use client";
 
+import AgencyLanguageSwitcher from "@/components/AgencyLanguageSwitcher";
+
 const NAV_ITEMS = [
   {
     labelKey: "navHome",
@@ -60,7 +62,7 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar({ ui, profile }) {
+export default function Sidebar({ ui, profile, currentLanguage, setCurrentLanguage }) {
   return (
     <aside className="agency-sidebar">
       <div className="agency-sidebar-brand">
@@ -81,6 +83,16 @@ export default function Sidebar({ ui, profile }) {
       </nav>
 
       <div className="agency-sidebar-divider" />
+
+      {setCurrentLanguage && (
+        <div className="agency-sidebar-lang">
+          <AgencyLanguageSwitcher
+            currentLanguage={currentLanguage}
+            setCurrentLanguage={setCurrentLanguage}
+            className="agency-language-switcher--sidebar"
+          />
+        </div>
+      )}
 
       <div className="agency-sidebar-bottom">
         <a href="https://strong-dory-enabled.ngrok-free.app/auth/select" className="agency-sidebar-item agency-sidebar-login-item">

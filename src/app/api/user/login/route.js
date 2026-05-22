@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import prisma from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 
 export async function POST(request) {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json(
+      { error: 'Database unavailable. Run: npx prisma generate && restart the dev server.' },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { username, password } = body;

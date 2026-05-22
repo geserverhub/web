@@ -3,6 +3,15 @@ export const backendBaseUrl =
 
 export const languageStorageKey = "goeun-agency-language";
 
+/** Homepage + agency pages: Thai, English, Korean only */
+export const supportedLanguages = ["th", "en", "ko"];
+
+export const languageOptions = [
+  { key: "th", label: "ไทย" },
+  { key: "en", label: "English" },
+  { key: "ko", label: "한국어" },
+];
+
 export const fallbackProfile = {
   brand_name: "GOEUN SERVER HUB",
   headline: "ศูนย์กลางระบบลูกค้าและหน้าโปรโมทบริการของคุณ",
@@ -72,10 +81,10 @@ export const fallbackClients = [
     slug: "green-retail-group",
     description: "ระบบมอนิเตอริ่ง ผู้ใช้ Demo",
     status: "online",
-    contact_email: "it@green-retail.example.com",
-    contact_phone: "02-555-1199",
-    thumbnail: "/uploads/logos/Guser-demo.png",
-    system_url: "/customer-dashboard-login",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010-8105-0384",
+    thumbnail: "/uploads/logos/G-monitoring.png",
+    system_url: "/energy-dashboard-login",
   },
   {
     id: 3,
@@ -112,14 +121,48 @@ export const fallbackClients = [
   },
   {
     id: 6,
-    name: "MOMOGE SPACE",
-    slug: "momoge-space",
-    description: "AI SMART ENERGY MONITORING PLATFORM\nระบบมอนิเตอริ่งพลังงานไฟฟ้า",
+    name: "MOMOGE SPACE  PRODUCT",
+    slug: "momoge-space-product",
+    description: "AI SMART ENERGY MONITORING PLATFORM WITH IOT PRODUCTS",
     status: "online",
-    contact_email: "it@green-retail.example.com",
-    contact_phone: "02-555-1199",
-    thumbnail: "/uploads/logos/G-monitoring.png",
-    system_url: "/energy-dashboard-login",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010-8105-0384",
+    thumbnail: "/momoge/Logo-brand.png",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/momoge-product",
+  },
+  {
+    id: 7,
+    name: "SP Foods Co.,Ltd.",
+    slug: "spfoods",
+    description: "ส.ภาวิณีร์ อีสานฟู้ดส์ ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตและจำหน่ายอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี ครบวงจรด้านอุตสาหกรรมอาหาร ผสมผสานเทคโนโลยีร่วมกับอุตสาหกรรมอาหารและการเกษตร เพื่อผลิตอาหารแปรรูปที่มีคุณภาพและได้มาตรฐานสากล",
+    status: "online",
+    contact_email: "info@spfoods.com",
+    contact_phone: "02-1234-5678",
+    address: "경기도 화성시 서신면 흔들길 42",
+    thumbnail: "/uploads/logos/spfoods-main.jpg",
+    system_url: "https://spfoodskorea.com/",
+  },
+  {
+    id: 8,
+    name: "ระบบมาร์ทและซุปเปอร์มาเก็ต",
+    slug: "mart-supermarket",
+    description: "ระบบจัดการร้านค้าปลีก มาร์ท และซุปเปอร์มาเก็ต ครบวงจร",
+    status: "coming-soon",
+    contact_email: "",
+    contact_phone: "",
+    thumbnail: "/mart-1/134074.jpg",
+    system_url: "#",
+  },
+  {
+    id: 9,
+    name: "ระบบบริการดูแล บัญชีและภาษี",
+    slug: "acc-tax",
+    description: "บริการดูแลและจัดการบัญชี การเงิน และภาษีอย่างครบวงจร โดยทีมผู้เชี่ยวชาญ",
+    status: "coming-soon",
+    contact_email: "",
+    contact_phone: "",
+    thumbnail: "/ACC/134076.jpg",
+    system_url: "#",
   },
 ];
 
@@ -128,13 +171,6 @@ export const filterOptions = [
   { key: "online", label: "พร้อมใช้งาน" },
   { key: "maintenance", label: "บำรุงรักษา" },
   { key: "coming-soon", label: "เร็ว ๆ นี้" },
-];
-
-export const languageOptions = [
-  { key: "th", label: "TH" },
-  { key: "en", label: "EN" },
-  { key: "zh", label: "中" },
-  { key: "ko", label: "KO" },
 ];
 
 export function clientPortalUrl(slug) {
@@ -152,13 +188,16 @@ export function statusClassName(status) {
 }
 
 export async function getJson(paths) {
+  const { parseJsonResponse } = await import("@/lib/parse-json-response");
   const candidates = Array.isArray(paths) ? paths : [paths];
   let lastError = null;
   for (const path of candidates) {
     try {
       const response = await fetch(path, { cache: "no-store" });
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      return response.json();
+      const data = await parseJsonResponse(response);
+      if (data._html) throw new Error(data.error || "Server returned HTML instead of JSON");
+      if (!response.ok) throw new Error(data.error || `Request failed: ${response.status}`);
+      return data;
     } catch (error) {
       lastError = error;
     }

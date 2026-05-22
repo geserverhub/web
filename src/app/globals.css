@@ -232,6 +232,26 @@ img {
   flex-shrink: 0;
 }
 
+.agency-sidebar-lang {
+  padding: 0 0.6rem 0.85rem;
+  flex-shrink: 0;
+}
+
+.agency-language-switcher--sidebar {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  justify-content: stretch;
+}
+
+.agency-language-switcher--sidebar .agency-language-button {
+  width: 100%;
+  text-align: center;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 0.8rem;
+}
+
 .agency-sidebar-bottom {
   padding: 0.6rem 0.6rem 1rem;
   flex-shrink: 0;

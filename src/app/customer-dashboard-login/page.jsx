@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { parseJsonResponse } from '@/lib/parse-json-response';
 
 export default function CustomerDashboardLoginPage() {
   const router = useRouter();
@@ -24,9 +25,14 @@ export default function CustomerDashboardLoginPage() {
         body: JSON.stringify({ username, password, pageName: '/customer-dashboard' }),
       });
 
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
 
-      if (!res.ok || data.error) {
+      if (data._html || data.error) {
+        setError(data.error || 'Server error — run: npx prisma generate && restart dev server');
+        return;
+      }
+
+      if (!res.ok) {
         setError(data.error || 'Invalid username or password');
         return;
       }
@@ -87,9 +93,9 @@ export default function CustomerDashboardLoginPage() {
             ระบบมอนิเตอริ่ง ผู้ใช้ Demo
           </p>
           <div style={{ marginTop: 10, fontSize: 12, color: '#94a3b8' }}>
-            <span>it@green-retail.example.com</span>
+            <span>goeunserverhub@gmail.com</span>
             <span style={{ margin: '0 6px' }}>·</span>
-            <span>02-555-1199</span>
+            <span>010-8105-0384</span>
           </div>
         </div>
 

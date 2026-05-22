@@ -1,6 +1,6 @@
 "use client";
 
-import { languageOptions } from "@/lib/data";
+import AgencyLanguageSwitcher from "@/components/AgencyLanguageSwitcher";
 
 export default function Navbar({ ui, currentLanguage, setCurrentLanguage, query, setQuery }) {
   return (
@@ -30,18 +30,10 @@ export default function Navbar({ ui, currentLanguage, setCurrentLanguage, query,
       </div>
 
       <div className="agency-topbar-actions">
-        <div className="agency-language-switcher" aria-label="Language switcher">
-          {languageOptions.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              className={`agency-language-button ${currentLanguage === option.key ? "is-active" : ""}`}
-              onClick={() => setCurrentLanguage(option.key)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <AgencyLanguageSwitcher
+          currentLanguage={currentLanguage}
+          setCurrentLanguage={setCurrentLanguage}
+        />
         <a href="#contact" className="agency-topbar-link">
           {ui.navContact}
         </a>

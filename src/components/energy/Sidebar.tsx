@@ -1,12 +1,13 @@
 "use client";
 
-import { Home, BarChart2, MapPin, Bell, Settings, Monitor, Layout as LayoutIcon, Code, Users, FileText, MessageSquare, HelpCircle, UserCircle, LogOut } from "lucide-react";
+import { Home, BarChart2, MapPin, Bell, Settings, Monitor, Activity, Layout as LayoutIcon, Code, Users, FileText, MessageSquare, HelpCircle, UserCircle, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/lib/LocaleContext";
 
 const navigationItems = [
   { key: "dashboard", icon: Home, href: "/energy-dashboard/dashboard" },
+  { key: "currentMonitor", icon: Activity, href: "/energy-dashboard/current-monitor" },
   { key: "overview", icon: BarChart2, href: "/energy-dashboard/overview" },
   { key: "monitor", icon: Monitor, href: "/energy-dashboard/monitor" },
   { key: "location", icon: MapPin, href: "/energy-dashboard/location" },
