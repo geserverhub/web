@@ -904,6 +904,154 @@ LOCK TABLES `user_feedback` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `mqtt_settings`
+--
+
+DROP TABLE IF EXISTS `mqtt_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mqtt_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `site` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'thailand',
+  `host` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `port` int NOT NULL DEFAULT '1883',
+  `username` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `topic` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `topic_prefix` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT 'ge',
+  `interval` int NOT NULL DEFAULT '30',
+  `gateway_model` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'T310',
+  `serial_port` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '/dev/ttyS1',
+  `baud_rate` int NOT NULL DEFAULT '9600',
+  `parity` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'none',
+  `data_bits` tinyint NOT NULL DEFAULT '8',
+  `stop_bits` tinyint NOT NULL DEFAULT '1',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_mqtt_user_site` (`user_id`,`site`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mqtt_settings`
+--
+
+LOCK TABLES `mqtt_settings` WRITE;
+/*!40000 ALTER TABLE `mqtt_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mqtt_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `device_connectivity`
+--
+
+DROP TABLE IF EXISTS `device_connectivity`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `device_connectivity` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `device_id` int NOT NULL,
+  `gateway_model` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'T310',
+  `serial_port` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '/dev/ttyS1',
+  `baud_rate` int NOT NULL DEFAULT '9600',
+  `parity` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'none',
+  `data_bits` tinyint NOT NULL DEFAULT '8',
+  `stop_bits` tinyint NOT NULL DEFAULT '1',
+  `slave_before` int NOT NULL DEFAULT '1',
+  `slave_metrics` int NOT NULL DEFAULT '2',
+  `reg_v_l1` int NOT NULL DEFAULT '0',
+  `reg_v_l2` int NOT NULL DEFAULT '2',
+  `reg_v_l3` int NOT NULL DEFAULT '4',
+  `scale_voltage` decimal(10,4) NOT NULL DEFAULT '10.0000',
+  `mqtt_topic` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `publish_interval_sec` int NOT NULL DEFAULT '30',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_device_connectivity_device` (`device_id`),
+  KEY `idx_device_connectivity_enabled` (`enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `device_connectivity`
+--
+
+LOCK TABLES `device_connectivity` WRITE;
+/*!40000 ALTER TABLE `device_connectivity` DISABLE KEYS */;
+/*!40000 ALTER TABLE `device_connectivity` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ai_settings`
+--
+
+DROP TABLE IF EXISTS `ai_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ai_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `openai_api_key` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `openai_model` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'gpt-4o-mini',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ai_settings_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ai_settings`
+--
+
+LOCK TABLES `ai_settings` WRITE;
+/*!40000 ALTER TABLE `ai_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ai_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `MFactoryInquiry`
+--
+
+DROP TABLE IF EXISTS `MFactoryInquiry`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `MFactoryInquiry` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'factory',
+  `lang` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'th',
+  `source` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `company` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `taxId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bookingDate` date DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `warehouse` text COLLATE utf8mb4_unicode_ci,
+  `rentalType` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `paymentRef` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  KEY `MFactoryInquiry_createdAt_idx` (`createdAt`),
+  KEY `MFactoryInquiry_type_idx` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `MFactoryInquiry`
+--
+
+LOCK TABLES `MFactoryInquiry` WRITE;
+/*!40000 ALTER TABLE `MFactoryInquiry` DISABLE KEYS */;
+/*!40000 ALTER TABLE `MFactoryInquiry` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Dumping routines for database 'goeunserverhub'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -916,4 +1064,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-23 17:33:46
+-- Dump completed on 2026-05-22 (energy mqtt/connectivity/ai + MFactoryInquiry tables included)
