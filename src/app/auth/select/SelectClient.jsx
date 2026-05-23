@@ -89,7 +89,7 @@ const S = {
     padding: "3px 10px",
     fontSize: 10,
     fontWeight: 700,
-    letterSpacing: 0.04em,
+    letterSpacing: "0.04em",
   }),
   langBar: { display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" },
   langBtn: (active) => ({
