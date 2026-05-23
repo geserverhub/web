@@ -1,6 +1,8 @@
 # goeunserverhub database
 
-- `geserverhub.sql` — Full MySQL dump (Prisma app tables + GE Energy monitoring tables + `MFactoryInquiry`). Import into database `goeunserverhub`.
+**28 tables** — see [TABLES.md](./TABLES.md) for the full list (19 Prisma + 9 GE Energy).
+
+- `geserverhub.sql` — Full MySQL dump (all 28 tables). Import into database `goeunserverhub`.
 - `prisma/migrate-energy-geserverhub.sql` — energy DDL only (devices, power_records, mqtt_settings, device_connectivity, ai_settings, …).
 - `prisma/migrate-mfactory-inquiry.sql` — M-Factory booking table only.
 
