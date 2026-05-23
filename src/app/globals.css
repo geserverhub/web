@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet map styles */
+@import 'leaflet/dist/leaflet.css';
+
 :root {
   /* ── Unified Slate Navy palette ── */
   --agency-bg:          #eef2fa;
@@ -1870,17 +1873,6 @@ img {
 .showcase-actions {
   margin-top: auto;
   padding-top: 0.25rem;
-  position: relative;
-  z-index: 3;
-}
-
-.showcase-actions .btn.disabled,
-.showcase-actions .btn:disabled {
-  opacity: 0.55;
-  pointer-events: none;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .showcase-actions .agency-btn-primary {
@@ -2408,10 +2400,5 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
     animation-iteration-count: 1     !important;
     transition-duration:      0.01ms !important;
     transition-delay:         0s     !important;
-  }
-
-  body.ge-ready [data-reveal] {
-    opacity: 1 !important;
-    transform: none !important;
   }
 }

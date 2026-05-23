@@ -1,36 +1,22 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextResponse } from 'next/server';
+import { createMFactoryBooking } from '@/lib/mfactory/booking-service';
 
-// POST /api/mfactory/inquiry
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+/** POST /api/mfactory/inquiry — alias for booking (legacy + site forms) */
 export async function POST(req) {
   try {
     const body = await req.json();
-    const name = (body.name || "").trim();
-    const phone = (body.phone || "").trim();
-    const email = (body.email || "").trim();
-    const message = (body.message || "").trim();
-    const type = body.type || "factory"; // "factory" | "resort" | "sale"
-    const lang = body.lang || "th";
-    const source = body.source || null;
-
-    if (!name) {
-      return NextResponse.json({ error: "กรุณากรอกชื่อ" }, { status: 400 });
+    const result = await createMFactoryBooking(body);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
-
-    const inquiry = await prisma.mFactoryInquiry.create({
-      data: {
-        type,
-        name,
-        phone: phone || null,
-        email: email || null,
-        message: message || null,
-        lang,
-        source,
-      },
-    });
-
-    return NextResponse.json({ ok: true, id: inquiry.id }, { status: 201 });
+    return NextResponse.json({ ok: true, id: result.id }, { status: result.status });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to save inquiry' },
+      { status: 500 }
+    );
   }
 }

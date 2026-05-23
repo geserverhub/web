@@ -1,6 +1,8 @@
 "use client";
 
-export default function Navbar({ ui, query, setQuery }) {
+import AgencyLanguageSwitcher from "@/components/AgencyLanguageSwitcher";
+
+export default function Navbar({ ui, currentLanguage, setCurrentLanguage, query, setQuery }) {
   return (
     <header className="agency-topbar">
       <div className="agency-topbar-search">
@@ -28,8 +30,15 @@ export default function Navbar({ ui, query, setQuery }) {
       </div>
 
       <div className="agency-topbar-actions">
+        <AgencyLanguageSwitcher
+          currentLanguage={currentLanguage}
+          setCurrentLanguage={setCurrentLanguage}
+        />
         <a href="#contact" className="agency-topbar-link">
           {ui.navContact}
+        </a>
+        <a href="/auth/select" className="btn agency-btn-primary agency-topbar-cta">
+          {ui.navLogin || "เข้าสู่ระบบ"}
         </a>
       </div>
     </header>

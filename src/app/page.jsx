@@ -43,49 +43,37 @@ export default function Page() {
     document.documentElement.lang = currentLanguage;
   }, [currentLanguage]);
 
-  // Scroll-reveal: never leave sections invisible (ge-ready hides until is-revealed)
+  // Scroll-reveal: mark body ready, then observe [data-reveal] elements
   useEffect(() => {
     document.body.classList.add("ge-ready");
 
-    const reveal = (el) => el.classList.add("is-revealed");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.05, rootMargin: "0px 0px 0px 0px" }
+    );
 
-    const run = () => {
-      const elements = document.querySelectorAll("[data-reveal]");
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              reveal(entry.target);
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.05, rootMargin: "0px 0px 80px 0px" }
-      );
+    const elements = document.querySelectorAll("[data-reveal]");
+    elements.forEach((el) => observer.observe(el));
 
-      elements.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        const inView = rect.top < window.innerHeight && rect.bottom > 0;
-        if (inView) {
-          reveal(el);
-        } else {
-          observer.observe(el);
-        }
+    // Fallback: if observer doesn't fire within 1.5s, reveal all remaining elements
+    const fallback = setTimeout(() => {
+      document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach((el) => {
+        el.classList.add("is-revealed");
       });
+    }, 1500);
 
-      const fallback = window.setTimeout(() => {
-        document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach(reveal);
-      }, 600);
-
-      return () => {
-        observer.disconnect();
-        window.clearTimeout(fallback);
-      };
+    return () => {
+      observer.disconnect();
+      clearTimeout(fallback);
     };
-
-    const cleanup = run();
-    return cleanup;
-  }, [loading, clients.length]);
+  }, [loading]); // re-observe after async data loads
 
   useEffect(() => {
     let active = true;
@@ -146,7 +134,12 @@ export default function Page() {
 
   return (
     <div className="agency-app-layout">
-      <Sidebar ui={ui} profile={profile} />
+      <Sidebar
+        ui={ui}
+        profile={profile}
+        currentLanguage={currentLanguage}
+        setCurrentLanguage={setCurrentLanguage}
+      />
 
       <main className="agency-main-content">
         <div className="agency-page">
@@ -154,7 +147,13 @@ export default function Page() {
           <div className="agency-ambient agency-ambient-b" aria-hidden="true" />
           <div className="agency-ambient agency-ambient-c" aria-hidden="true" />
 
-          <Navbar ui={ui} query={query} setQuery={setQuery} />
+          <Navbar
+            ui={ui}
+            currentLanguage={currentLanguage}
+            setCurrentLanguage={setCurrentLanguage}
+            query={query}
+            setQuery={setQuery}
+          />
           <Hero
             ui={ui}
             profile={profile}

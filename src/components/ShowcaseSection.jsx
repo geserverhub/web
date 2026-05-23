@@ -1,9 +1,4 @@
-import Link from "next/link";
-import {
-  isExternalPortalUrl,
-  resolveClientPortalUrl,
-  statusClassName,
-} from "@/lib/data";
+import { statusClassName } from "@/lib/data";
 
 export default function ShowcaseSection({ ui, filteredClients }) {
   return (
@@ -18,12 +13,7 @@ export default function ShowcaseSection({ ui, filteredClients }) {
           <div className="row g-4">
             {filteredClients.map((client, index) => {
               const name = ui.clientDescriptions?.[client.slug]?.name || client.name;
-              const description =
-                ui.clientDescriptions?.[client.slug]?.description || client.description;
-              const portalUrl = resolveClientPortalUrl(client);
-              const external = isExternalPortalUrl(portalUrl);
-              const portalDisabled = !portalUrl;
-
+              const description = ui.clientDescriptions?.[client.slug]?.description || client.description;
               return (
                 <div key={client.slug} className="col-12 col-md-6 col-lg-4">
                   <article
@@ -31,21 +21,19 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                     data-delay={Math.min(index + 1, 6)}
                     className="showcase-card"
                   >
+                    {/* Image area with title overlay */}
                     <div className="showcase-visual">
-                      {client.thumbnail ? (
-                        <div
-                          className="showcase-visual-bg"
-                          style={{ backgroundImage: `url(${client.thumbnail})` }}
-                        />
-                      ) : (
-                        <div className="showcase-glow" />
-                      )}
+                      {client.thumbnail
+                        ? <div className="showcase-visual-bg" style={{ backgroundImage: `url(${client.thumbnail})` }} />
+                        : <div className="showcase-glow" />
+                      }
                       <div className="showcase-visual-content">
                         <span className={`status-pill ${statusClassName(client.status)}`} />
                         <h3 className="showcase-card-title">{name}</h3>
                       </div>
                     </div>
 
+                    {/* Body */}
                     <div className="showcase-body">
                       <p>{description}</p>
                       <div className="showcase-meta">
@@ -55,32 +43,14 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                         {client.address && <span>📍 {client.address}</span>}
                       </div>
                       <div className="showcase-actions">
-                        {portalDisabled ? (
-                          <span
-                            className="btn agency-btn-primary w-100 disabled"
-                            aria-disabled="true"
-                          >
-                            {client.status === "coming-soon"
-                              ? ui.filterComingSoon || "เร็ว ๆ นี้"
-                              : ui.portalUnavailable || "ยังไม่พร้อมใช้งาน"}
-                          </span>
-                        ) : external ? (
-                          <a
-                            className="btn agency-btn-primary w-100"
-                            href={portalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {ui.viewPortal} →
-                          </a>
-                        ) : (
-                          <Link
-                            className="btn agency-btn-primary w-100"
-                            href={portalUrl}
-                          >
-                            {ui.viewPortal} →
-                          </Link>
-                        )}
+                        <a
+                          className="btn agency-btn-primary w-100"
+                          href={client.system_url}
+                          target={client.system_url?.startsWith("http") ? "_blank" : "_self"}
+                          rel={client.system_url?.startsWith("http") ? "noopener noreferrer" : undefined}
+                        >
+                          {ui.viewPortal} →
+                        </a>
                       </div>
                     </div>
                   </article>

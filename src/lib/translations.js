@@ -8,7 +8,7 @@ export const translations = {
     navJourney: "เส้นทางงาน",
     navContact: "ติดต่อ",
     navLogin: "เข้าสู่ระบบ",
-    heroKicker: "GE DIGITAL INFRASTRUCTURE",
+    heroKicker: "GOEUN DIGITAL INFRASTRUCTURE",
     heroWelcome: "ยินดีต้อนรับสู่ศูนย์กลางระบบลูกค้าของคุณ",
     heroTitle: "ศูนย์กลางระบบลูกค้าและหน้าโปรโมทบริการของคุณ",
     heroSubtitle:
@@ -129,7 +129,7 @@ export const translations = {
     ],
     researchKicker: "งานวิจัย",
     researchTitle: "งานวิจัยที่กำลังพัฒนาของเรา",
-    researchSubtitle: "โครงการวิจัยและนวัตกรรมที่ GE กำลังพัฒนาเพื่ออนาคต",
+    researchSubtitle: "โครงการวิจัยและนวัตกรรมที่ GOEUN กำลังพัฒนาเพื่ออนาคต",
     researchItems: [
       {
         icon: "🌿",
@@ -165,9 +165,9 @@ export const translations = {
     sendEmail: "ส่งอีเมล",
     faxLabel: "แฟกซ์:",
     openDirectory: "เปิด directory เดิม",
-    footerSubtitle: "ลิขสิทธิ์ © 2026 GE SERVER HUB",
+    footerSubtitle: "ลิขสิทธิ์ © 2026 GOEUN SERVER HUB",
     footerFrontend: "สงวนลิขสิทธิ์",
-    footerBackend: "GE SERVER HUB",
+    footerBackend: "GOEUN SERVER HUB",
     researchStatus: "กำลังพัฒนา",
     loadError: "โหลดข้อมูลจาก Python backend ไม่สำเร็จ จึงแสดงข้อมูลตัวอย่างแทนชั่วคราว",
     statusLabels: {
@@ -236,7 +236,7 @@ export const translations = {
     grandTotal: "ยอดรวม",
     productsFromPartner: "สินค้าจากระบบ Partner",
     loadingProducts: "กำลังโหลดสินค้า...",
-    noProductsInPartner: "ไม่พบสินค้า",
+    noProductsInPartner: "ยังไม่มีสินค้าในระบบ partner",
     model: "รุ่น",
     brand: "แบรนด์",
     unit: "ชิ้น",
@@ -273,7 +273,7 @@ export const translations = {
     navJourney: "Journey",
     navContact: "Contact",
     navLogin: "Sign In",
-    heroKicker: "GE DIGITAL INFRASTRUCTURE",
+    heroKicker: "GOEUN DIGITAL INFRASTRUCTURE",
     heroWelcome: "Welcome to your client access agency",
     heroTitle: "Your hub for client systems and service showcase",
     heroSubtitle:
@@ -397,7 +397,7 @@ export const translations = {
     ],
     researchKicker: "Research",
     researchTitle: "Our Ongoing Research & Development",
-    researchSubtitle: "Innovation projects GE is developing for the future",
+    researchSubtitle: "Innovation projects GOEUN is developing for the future",
     researchItems: [
       {
         icon: "🌿",
@@ -433,9 +433,9 @@ export const translations = {
     sendEmail: "Send Email",
     faxLabel: "Fax:",
     openDirectory: "Open Legacy Directory",
-    footerSubtitle: "Copyright © 2026 GE SERVER HUB",
+    footerSubtitle: "Copyright © 2026 GOEUN SERVER HUB",
     footerFrontend: "All rights reserved",
-    footerBackend: "GE SERVER HUB",
+    footerBackend: "GOEUN SERVER HUB",
     researchStatus: "In Development",
     loadError: "Could not load data from the Python backend, so fallback content is shown for now.",
     statusLabels: {
@@ -504,7 +504,7 @@ export const translations = {
     grandTotal: "Total",
     productsFromPartner: "Products from Partner",
     loadingProducts: "Loading products...",
-    noProductsInPartner: "No products found",
+    noProductsInPartner: "No products available",
     model: "Model",
     brand: "Brand",
     unit: "unit",
@@ -541,7 +541,7 @@ export const translations = {
     navJourney: "流程",
     navContact: "联系",
     navLogin: "登录",
-    heroKicker: "GE DIGITAL INFRASTRUCTURE",
+    heroKicker: "GOEUN DIGITAL INFRASTRUCTURE",
     heroWelcome: "欢迎来到您的客户系统入口中心",
     heroTitle: "您的客户系统与服务展示中心",
     heroSubtitle: "把服务介绍、联系方式以及多个客户系统入口集中在同一个页面中。",
@@ -654,7 +654,7 @@ export const translations = {
     ],
     researchKicker: "研究项目",
     researchTitle: "我们正在推进的研究与开发",
-    researchSubtitle: "GE 面向未来正在开发的创新项目",
+    researchSubtitle: "GOEUN 面向未来正在开发的创新项目",
     researchItems: [
       {
         icon: "🌿",
@@ -690,9 +690,9 @@ export const translations = {
     sendEmail: "发送邮件",
     faxLabel: "传真:",
     openDirectory: "打开原目录页",
-    footerSubtitle: "版权所有 © 2026 GE SERVER HUB",
+    footerSubtitle: "版权所有 © 2026 GOEUN SERVER HUB",
     footerFrontend: "保留所有权利",
-    footerBackend: "GE SERVER HUB",
+    footerBackend: "GOEUN SERVER HUB",
     researchStatus: "开发中",
     loadError: "无法从 Python backend 加载数据，当前暂时显示示例内容。",
     statusLabels: {
@@ -794,7 +794,7 @@ export const translations = {
     navJourney: "진행 과정",
     navContact: "문의",
     navLogin: "로그인",
-    heroKicker: "GE DIGITAL INFRASTRUCTURE",
+    heroKicker: "GOEUN DIGITAL INFRASTRUCTURE",
     heroWelcome: "고객 시스템 허브에 오신 것을 환영합니다",
     heroTitle: "고객 시스템과 서비스 홍보를 위한 통합 허브",
     heroSubtitle: "서비스 소개, 연락처, 여러 고객 시스템의 진입점을 한 페이지에 모아 보여줍니다.",
@@ -907,7 +907,7 @@ export const translations = {
     ],
     researchKicker: "연구",
     researchTitle: "현재 진행 중인 연구 개발",
-    researchSubtitle: "GE이 미래를 위해 개발 중인 혁신 프로젝트",
+    researchSubtitle: "GOEUN이 미래를 위해 개발 중인 혁신 프로젝트",
     researchItems: [
       {
         icon: "🌿",
@@ -943,9 +943,9 @@ export const translations = {
     sendEmail: "이메일 보내기",
     faxLabel: "팩스:",
     openDirectory: "기존 디렉터리 열기",
-    footerSubtitle: "저작권 © 2026 GE SERVER HUB",
+    footerSubtitle: "저작권 © 2026 GOEUN SERVER HUB",
     footerFrontend: "판권 소유",
-    footerBackend: "GE SERVER HUB",
+    footerBackend: "GOEUN SERVER HUB",
     researchStatus: "개발 중",
     loadError: "Python backend에서 데이터를 불러오지 못해 현재는 예시 데이터를 표시합니다.",
     statusLabels: {
@@ -1014,7 +1014,7 @@ export const translations = {
     grandTotal: "합계",
     productsFromPartner: "파트너 상품",
     loadingProducts: "상품 로딩 중...",
-    noProductsInPartner: "상품이 없습니다",
+    noProductsInPartner: "등록된 상품이 없습니다",
     model: "모델",
     brand: "브랜드",
     unit: "개",

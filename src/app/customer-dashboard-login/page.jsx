@@ -238,7 +238,7 @@ export default function CustomerDashboardLoginPage() {
         </form>
 
         <footer className="cdl-footer">
-          <a href="/energy-dashboard/dashboard" className="cdl-back">
+          <a href="/auth/select" className="cdl-back">
             {t.back}
           </a>
         </footer>

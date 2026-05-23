@@ -182,8 +182,8 @@ export default function AdminLoginPage() {
 
         <hr style={S.divider} />
 
-        <a href="/login" style={S.backLink}>
-          ← กลับหน้าล็อกอินผู้ใช้ทั่วไป
+        <a href="/auth/select" style={S.backLink}>
+          ← กลับเลือกประเภทผู้ใช้
         </a>
       </div>
     </div>
