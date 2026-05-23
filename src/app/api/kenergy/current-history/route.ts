@@ -6,6 +6,22 @@ export const dynamic = 'force-dynamic'
 
 type RecordScope = 'installed' | 'pre_install'
 
+type CurrentHistoryRow = {
+  record_time: string | Date
+  before_current_L1?: string | number | null
+  before_current_L2?: string | number | null
+  before_current_L3?: string | number | null
+  metrics_L1?: string | number | null
+  metrics_L2?: string | number | null
+  metrics_L3?: string | number | null
+}
+
+const toFloat = (value: string | number | null | undefined): number | null => {
+  if (value === null || value === undefined || value === '') return null
+  const n = typeof value === 'number' ? value : parseFloat(value)
+  return Number.isFinite(n) ? n : null
+}
+
 const SCOPE_TO_TABLE: Record<RecordScope, string> = {
   installed: 'power_records',
   pre_install: 'power_records_preinstall'
@@ -27,7 +43,8 @@ async function tableExists(tableName: string): Promise<boolean> {
         AND TABLE_NAME = ?`,
     [tableName]
   )
-  return Number(rows?.[0]?.total || 0) > 0
+  const row = rows[0] as { total?: number | string } | undefined
+  return Number(row?.total || 0) > 0
 }
 
 /**
@@ -58,7 +75,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get historical data
-    const records = await queryGe(
+    const records = (await queryGe(
       `SELECT
         record_time,
         before_current_L1,
@@ -72,10 +89,10 @@ export async function GET(request: NextRequest) {
          AND record_time >= NOW() - INTERVAL ? HOUR
        ORDER BY record_time ASC`,
       [deviceId, hours]
-    )
+    )) as CurrentHistoryRow[]
 
     // Format data for chart
-    const chartData = records.map((record: any) => {
+    const chartData = records.map((record) => {
       const time = new Date(record.record_time)
       return {
         time: time.toLocaleTimeString('en-US', {
@@ -85,18 +102,18 @@ export async function GET(request: NextRequest) {
         }),
         timestamp: time.getTime(),
         // Before values
-        beforeL1: record.before_current_L1 ? parseFloat(record.before_current_L1) : null,
-        beforeL2: record.before_current_L2 ? parseFloat(record.before_current_L2) : null,
-        beforeL3: record.before_current_L3 ? parseFloat(record.before_current_L3) : null,
-        beforeAvg: record.before_current_L1 && record.before_current_L2 && record.before_current_L3
-          ? (parseFloat(record.before_current_L1) + parseFloat(record.before_current_L2) + parseFloat(record.before_current_L3)) / 3
+        beforeL1: toFloat(record.before_current_L1),
+        beforeL2: toFloat(record.before_current_L2),
+        beforeL3: toFloat(record.before_current_L3),
+        beforeAvg: [record.before_current_L1, record.before_current_L2, record.before_current_L3].every(Boolean)
+          ? ([toFloat(record.before_current_L1), toFloat(record.before_current_L2), toFloat(record.before_current_L3)] as number[]).reduce((a, b) => a + b, 0) / 3
           : null,
         // After values
-        afterL1: record.metrics_L1 ? parseFloat(record.metrics_L1) : null,
-        afterL2: record.metrics_L2 ? parseFloat(record.metrics_L2) : null,
-        afterL3: record.metrics_L3 ? parseFloat(record.metrics_L3) : null,
-        afterAvg: record.metrics_L1 && record.metrics_L2 && record.metrics_L3
-          ? (parseFloat(record.metrics_L1) + parseFloat(record.metrics_L2) + parseFloat(record.metrics_L3)) / 3
+        afterL1: toFloat(record.metrics_L1),
+        afterL2: toFloat(record.metrics_L2),
+        afterL3: toFloat(record.metrics_L3),
+        afterAvg: [record.metrics_L1, record.metrics_L2, record.metrics_L3].every(Boolean)
+          ? ([toFloat(record.metrics_L1), toFloat(record.metrics_L2), toFloat(record.metrics_L3)] as number[]).reduce((a, b) => a + b, 0) / 3
           : null
       }
     })
@@ -105,14 +122,14 @@ export async function GET(request: NextRequest) {
     const latestRecord = records[records.length - 1]
     const stats = latestRecord ? {
       currentBefore: {
-        L1: latestRecord.before_current_L1 ? parseFloat(latestRecord.before_current_L1) : null,
-        L2: latestRecord.before_current_L2 ? parseFloat(latestRecord.before_current_L2) : null,
-        L3: latestRecord.before_current_L3 ? parseFloat(latestRecord.before_current_L3) : null
+        L1: toFloat(latestRecord.before_current_L1),
+        L2: toFloat(latestRecord.before_current_L2),
+        L3: toFloat(latestRecord.before_current_L3)
       },
       currentAfter: {
-        L1: latestRecord.metrics_L1 ? parseFloat(latestRecord.metrics_L1) : null,
-        L2: latestRecord.metrics_L2 ? parseFloat(latestRecord.metrics_L2) : null,
-        L3: latestRecord.metrics_L3 ? parseFloat(latestRecord.metrics_L3) : null
+        L1: toFloat(latestRecord.metrics_L1),
+        L2: toFloat(latestRecord.metrics_L2),
+        L3: toFloat(latestRecord.metrics_L3)
       }
     } : null
 
