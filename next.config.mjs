@@ -52,6 +52,8 @@ const nextConfig = {
         source: "/backend-api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
+      // Legacy K-Energy API path → ge-energy
+      { source: "/api/kenergy/:path*", destination: "/api/ge-energy/:path*" },
       // Energy dashboard short-path aliases
       { source: "/dashboard", destination: "/energy-dashboard/dashboard" },
       { source: "/current-monitor", destination: "/energy-dashboard/current-monitor" },

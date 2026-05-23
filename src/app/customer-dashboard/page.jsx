@@ -90,7 +90,7 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
-    fetch(`/api/kenergy/dashboard-stats?site=${selectedSite}`)
+    fetch(`/api/ge-energy/dashboard-stats?site=${selectedSite}`)
       .then(r => r.json())
       .then(j => {
         if (j.success && j.data?.recentDevices) {
@@ -103,7 +103,7 @@ export default function CustomersPage() {
   useEffect(() => {
     let active = true;
 
-    fetch(`/api/kenergy/customer-dashboard?site=${selectedSite}`)
+    fetch(`/api/ge-energy/customer-dashboard?site=${selectedSite}`)
       .then(r => r.json())
       .then(j => {
         if (!active) return;
@@ -139,9 +139,9 @@ export default function CustomersPage() {
     try {
       const today = new Date().toISOString().slice(0, 10);
       const [histRes, snapRes, devRes] = await Promise.all([
-        fetch(`/api/kenergy/device-history?deviceId=${selectedDeviceId}&period=hour&from=${today}&to=${today}&limit=24`),
-        fetch(`/api/kenergy/device-monitoring?deviceId=${selectedDeviceId}`),
-        fetch(`/api/kenergy/devices-setting?site=all`),
+        fetch(`/api/ge-energy/device-history?deviceId=${selectedDeviceId}&period=hour&from=${today}&to=${today}&limit=24`),
+        fetch(`/api/ge-energy/device-monitoring?deviceId=${selectedDeviceId}`),
+        fetch(`/api/ge-energy/devices-setting?site=all`),
       ]);
       const histJson = await histRes.json();
       const snapJson = await snapRes.json();
@@ -168,7 +168,7 @@ export default function CustomersPage() {
   async function fetchLiveSnapshot() {
     if (!selectedDeviceId) return;
     try {
-      const r = await fetch(`/api/kenergy/device-monitoring?deviceId=${selectedDeviceId}`);
+      const r = await fetch(`/api/ge-energy/device-monitoring?deviceId=${selectedDeviceId}`);
       const j = await r.json();
       if (j.success) setSnapshot(normalizeSnapshot(j.data, deviceDetails?.connection));
     } catch {}
@@ -205,7 +205,7 @@ export default function CustomersPage() {
     setContactError(null);
 
     try {
-      const response = await fetch('/api/kenergy/user-feedback', {
+      const response = await fetch('/api/ge-energy/user-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

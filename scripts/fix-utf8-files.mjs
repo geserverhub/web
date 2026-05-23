@@ -10,9 +10,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const files = [
   'src/app/energy-dashboard/dashboard/page.tsx',
   'src/app/energy-dashboard/devices-setting/page.tsx',
-  'src/app/api/kenergy/user-feedback/route.ts',
-  'src/app/api/kenergy/devices-setting/route.ts',
-  'src/app/api/kenergy/device-notifications/route.ts',
+  'src/app/api/ge-energy/user-feedback/route.ts',
+  'src/app/api/ge-energy/devices-setting/route.ts',
+  'src/app/api/ge-energy/device-notifications/route.ts',
 ];
 
 for (const rel of files) {

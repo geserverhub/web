@@ -21,7 +21,7 @@ export default function LocationPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/kenergy/device-locations?site=${selectedSite}`);
+      const response = await fetch(`/api/ge-energy/device-locations?site=${selectedSite}`);
       const data = await response.json();
 
       if (data.success) {

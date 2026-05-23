@@ -30,7 +30,7 @@ async function isDeviceIdAutoIncrement(): Promise<boolean> {
 }
 
 /**
- * GET /api/kenergy/devices-setting
+ * GET /api/ge-energy/devices-setting
  * ???????????????????????????? realtime
  * Query params:
  *   - site: thailand | korea | all
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/devices-setting
+ * PUT /api/ge-energy/devices-setting
  * ??????????????????????????? * Body: { deviceId, deviceName?, location?, owner?, ipAddress?, latitude?, longitude? }
  */
 export async function PUT(req: NextRequest) {
@@ -251,7 +251,7 @@ export async function PUT(req: NextRequest) {
 }
 
 /**
- * POST /api/kenergy/devices-setting
+ * POST /api/ge-energy/devices-setting
  * ??????????????????? * Body: { deviceName, geID?, location?, site?, owner?, ipAddress?, customerName?, customerPhone?, customerAddress? }
  */
 export async function POST(req: NextRequest) {
@@ -463,7 +463,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * DELETE /api/kenergy/devices-setting
+ * DELETE /api/ge-energy/devices-setting
  * Delete a device. Query params: deviceId
  */
 export async function DELETE(req: NextRequest) {

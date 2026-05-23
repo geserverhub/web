@@ -67,3 +67,45 @@ export async function createMFactoryBooking(body) {
     createdAt: inquiry.createdAt,
   };
 }
+
+/** @param {{ limit?: number }} [opts] */
+export async function listMFactoryBookings(opts = {}) {
+  await ensureMFactoryInquirySchema();
+
+  const prisma = getPrisma();
+  if (!prisma) {
+    return { ok: false, status: 503, error: 'Database unavailable', bookings: [] };
+  }
+
+  const limit = Math.min(Math.max(Number(opts.limit) || 200, 1), 500);
+
+  const rows = await prisma.mFactoryInquiry.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  return {
+    ok: true,
+    status: 200,
+    count: rows.length,
+    bookings: rows.map((r) => ({
+      id: r.id,
+      type: r.type,
+      lang: r.lang,
+      source: r.source,
+      company: r.company,
+      name: r.name,
+      phone: r.phone,
+      email: r.email,
+      taxId: r.taxId,
+      bookingDate: r.bookingDate,
+      address: r.address,
+      warehouse: r.warehouse,
+      rentalType: r.rentalType,
+      paymentRef: r.paymentRef,
+      message: r.message,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    })),
+  };
+}

@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * GET /api/kenergy/device-notifications
+ * GET /api/ge-energy/device-notifications
  * List per-device notification settings by site.
  * Query params:
  *   - site: thailand | korea | all
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/device-notifications
+ * PUT /api/ge-energy/device-notifications
  * ??????????????????????????????????
  * Body: {
  *   deviceId: number,

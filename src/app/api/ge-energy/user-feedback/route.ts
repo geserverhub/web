@@ -27,7 +27,7 @@ async function ensureFeedbackBranchColumn() {
   }
 }
 
-/** POST /api/kenergy/user-feedback */
+/** POST /api/ge-energy/user-feedback */
 export async function POST(req: NextRequest) {
   try {
     await ensureFeedbackBranchColumn()
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** GET /api/kenergy/user-feedback */
+/** GET /api/ge-energy/user-feedback */
 export async function GET(req: NextRequest) {
   try {
     await ensureFeedbackBranchColumn()

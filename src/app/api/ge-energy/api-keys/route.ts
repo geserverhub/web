@@ -5,7 +5,7 @@ import crypto from 'crypto'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** GET /api/kenergy/api-keys?userId= */
+/** GET /api/ge-energy/api-keys?userId= */
 export async function GET(req: NextRequest) {
   try {
     const userId = new URL(req.url).searchParams.get('userId')
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST /api/kenergy/api-keys */
+/** POST /api/ge-energy/api-keys */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** DELETE /api/kenergy/api-keys?id= */
+/** DELETE /api/ge-energy/api-keys?id= */
 export async function DELETE(req: NextRequest) {
   try {
     const id = new URL(req.url).searchParams.get('id')

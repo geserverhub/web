@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * GET /api/kenergy/customers-by-site?site=thailand
+ * GET /api/ge-energy/customers-by-site?site=thailand
  *
  * Returns customers that have devices in the specified site
  */

@@ -68,7 +68,7 @@ async function generateAiNarrative(
 }
 
 /**
- * GET /api/kenergy/ai-carbon-insights?site=thailand&period=30&locale=th
+ * GET /api/ge-energy/ai-carbon-insights?site=thailand&period=30&locale=th
  */
 export async function GET(request: NextRequest) {
   try {

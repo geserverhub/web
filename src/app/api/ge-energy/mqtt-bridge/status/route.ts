@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/kenergy/mqtt-bridge/status
+ * GET /api/ge-energy/mqtt-bridge/status
  * Returns MQTT profiles from DB for ops / UI (no passwords).
  */
 export async function GET() {

@@ -317,9 +317,9 @@ export default function DeviceConnectivityPage() {
     setStatus(null);
     try {
       const [mqttRes, devRes, bridgeRes] = await Promise.all([
-        fetch(`/api/kenergy/mqtt-settings?userId=${user.userId}&site=${selectedSite}`),
-        fetch(`/api/kenergy/device-connectivity?site=${selectedSite}`),
-        fetch('/api/kenergy/mqtt-bridge/status'),
+        fetch(`/api/ge-energy/mqtt-settings?userId=${user.userId}&site=${selectedSite}`),
+        fetch(`/api/ge-energy/device-connectivity?site=${selectedSite}`),
+        fetch('/api/ge-energy/mqtt-bridge/status'),
       ]);
       const mqttJson = await mqttRes.json();
       const devJson = await devRes.json();
@@ -359,7 +359,7 @@ export default function DeviceConnectivityPage() {
     setSavingMqtt(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/kenergy/mqtt-settings', {
+      const res = await fetch('/api/ge-energy/mqtt-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -409,7 +409,7 @@ export default function DeviceConnectivityPage() {
     if (!editing?.device_id) return;
     setSavingDevice(true);
     try {
-      const res = await fetch('/api/kenergy/device-connectivity', {
+      const res = await fetch('/api/ge-energy/device-connectivity', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

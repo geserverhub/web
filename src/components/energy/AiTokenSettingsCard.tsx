@@ -88,7 +88,7 @@ export default function AiTokenSettingsCard({
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const res = await fetch(`/api/kenergy/ai-settings?userId=${userId}`);
+    const res = await fetch(`/api/ge-energy/ai-settings?userId=${userId}`);
     const json = await res.json();
     if (json.success) {
       setSettings(json.settings);
@@ -112,7 +112,7 @@ export default function AiTokenSettingsCard({
     setSaving(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/kenergy/ai-settings', {
+      const res = await fetch('/api/ge-energy/ai-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -51,7 +51,7 @@ function siteWhereClause(site: string): { sql: string; params: string[] } {
 }
 
 /**
- * GET /api/kenergy/device-connectivity?site=thailand&deviceId=5
+ * GET /api/ge-energy/device-connectivity?site=thailand&deviceId=5
  */
 export async function GET(req: NextRequest) {
   try {
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/device-connectivity
+ * PUT /api/ge-energy/device-connectivity
  */
 export async function PUT(req: NextRequest) {
   try {

@@ -20,7 +20,7 @@ async function generateTicketId(): Promise<string> {
 }
 
 /**
- * GET /api/kenergy/support-tickets
+ * GET /api/ge-energy/support-tickets
  * 錫붲마錫?support tickets 錫귖릎錫?user 錫왽르仙됢릎錫?filters
  * Query params:
  *   - userId: number (required)
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/kenergy/support-tickets
+ * POST /api/ge-energy/support-tickets
  * 錫む르仙됢림錫?ticket 仙꺺릊錫□퉰
  * Body: {
  *   userId: number,
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/support-tickets
+ * PUT /api/ge-energy/support-tickets
  * 錫?릴錫왽?錫붲툠 ticket (仙錫쎹른錫듀퉰錫№툢錫む툟錫꿋툢錫? priority, etc.)
  * Body: {
  *   ticketId: string,
