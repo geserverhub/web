@@ -23,7 +23,7 @@ sleep 2
 
 sudo mysql -e "
 CREATE USER IF NOT EXISTS 'geserverhub'@'%' IDENTIFIED BY '${APP_PASS}';
-GRANT ALL PRIVILEGES ON geserverhub.* TO 'geserverhub'@'%';
+GRANT ALL PRIVILEGES ON goeunserverhub.* TO 'geserverhub'@'%';
 FLUSH PRIVILEGES;
 "
 

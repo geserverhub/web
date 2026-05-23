@@ -31,7 +31,7 @@ const labels = {
     logout: 'ออกจากระบบ',
     login: 'ไปหน้าเข้าสู่ระบบ',
     noSession: 'ยังไม่ได้ล็อกอิน',
-    editSettings: 'ตั้งค่าอุปกรณ์',
+    editSettings: 'เชื่อมต่ออุปกรณ์ (MQTT/RS485)',
   },
   en: {
     subtitle: 'Your energy dashboard account',
@@ -45,7 +45,7 @@ const labels = {
     logout: 'Sign out',
     login: 'Go to login',
     noSession: 'Not signed in',
-    editSettings: 'Device settings',
+    editSettings: 'Device connectivity (MQTT/RS485)',
   },
   ko: {
     subtitle: '에너지 대시보드 계정 정보',
@@ -59,7 +59,7 @@ const labels = {
     logout: '로그아웃',
     login: '로그인',
     noSession: '로그인되지 않음',
-    editSettings: '장치 설정',
+    editSettings: '장치 연결 (MQTT/RS485)',
   },
 };
 
@@ -163,7 +163,7 @@ export default function UserProfileContent() {
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Link
-              href="/energy-dashboard/devices-setting"
+              href="/energy-dashboard/device-connectivity"
               className="flex-1 text-center rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50 transition-colors"
             >
               {ui.editSettings}

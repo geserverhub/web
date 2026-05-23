@@ -1,7 +1,7 @@
 import mysql, { type RowDataPacket } from 'mysql2/promise';
 
-/** Single database for this Next.js app — geserverhub only. */
-export const GESERVERHUB_DATABASE = 'geserverhub';
+/** Single database for this Next.js app — goeunserverhub only. */
+export const GESERVERHUB_DATABASE = 'goeunserverhub';
 
 function assertGeserverhubDatabase(name: string): void {
   const normalized = name.trim().toLowerCase();
@@ -57,7 +57,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
 });
 
-/** Run SQL against geserverhub (energy tables, feedback, tickets, etc.). */
+/** Run SQL against goeunserverhub (energy tables, feedback, tickets, etc.). */
 export async function queryGeserverhub(sql: string, values?: unknown[]): Promise<RowDataPacket[]> {
   const conn = await pool.getConnection();
   try {

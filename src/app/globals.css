@@ -1870,6 +1870,17 @@ img {
 .showcase-actions {
   margin-top: auto;
   padding-top: 0.25rem;
+  position: relative;
+  z-index: 3;
+}
+
+.showcase-actions .btn.disabled,
+.showcase-actions .btn:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .showcase-actions .agency-btn-primary {

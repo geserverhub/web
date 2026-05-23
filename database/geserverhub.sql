@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
 --
--- Host: localhost    Database: geserverhub
+-- Host: localhost    Database: goeunserverhub
 -- ------------------------------------------------------
 -- Server version	8.0.45-0ubuntu0.22.04.1
 
@@ -904,7 +904,7 @@ LOCK TABLES `user_feedback` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping routines for database 'geserverhub'
+-- Dumping routines for database 'goeunserverhub'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

@@ -1,5 +1,5 @@
 /**
- * Export geserverhub database to database/geserverhub.sql
+ * Export goeunserverhub database to database/geserverhub.sql
  * Usage: node scripts/export-geserverhub-db.mjs
  */
 import { config } from 'dotenv';
@@ -19,7 +19,7 @@ function fromDatabaseUrl(url) {
     port: process.env.DB_PORT || u.port || '3306',
     user: decodeURIComponent(u.username),
     password: decodeURIComponent(u.password),
-    database: (u.pathname || '/geserverhub').replace(/^\//, '') || 'geserverhub',
+    database: (u.pathname || '/goeunserverhub').replace(/^\//, '') || 'goeunserverhub',
   };
 }
 
@@ -30,7 +30,7 @@ const cfg = process.env.DATABASE_URL?.startsWith('mysql://')
       port: process.env.DB_PORT || '3306',
       user: process.env.DB_USER || 'geserverhub',
       password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'geserverhub',
+      database: process.env.DB_NAME || 'goeunserverhub',
     };
 
 const outDir = resolve(root, 'database');
