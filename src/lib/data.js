@@ -73,7 +73,7 @@ export const fallbackClients = [
     contact_phone: "089-4871144",
     contact_fax: "034-878369, 034-848022",
     thumbnail: "/m-group-building.jpg",
-    system_url: "https://strong-dory-enabled.ngrok-free.app/m-group",
+    system_url: "/m-group",
   },
   {
     id: 2,
@@ -128,7 +128,7 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
     thumbnail: "/momoge/Logo-brand.png",
-    system_url: "https://strong-dory-enabled.ngrok-free.app/momoge-product",
+    system_url: "/momoge-product",
   },
   {
     id: 7,
@@ -172,6 +172,44 @@ export const filterOptions = [
   { key: "maintenance", label: "บำรุงรักษา" },
   { key: "coming-soon", label: "เร็ว ๆ นี้" },
 ];
+
+const fallbackBySlug = Object.fromEntries(fallbackClients.map((c) => [c.slug, c]));
+
+/** Slug-specific fixes when DB systemUrl is empty or outdated */
+const PORTAL_URL_OVERRIDES = {
+  "green-retail-group": "/energy-dashboard-login",
+  "green-retail-energy": "/energy-dashboard-login",
+  "m-group": "/m-group",
+};
+
+/**
+ * Resolve a clickable portal URL for homepage cards (DB + fallback + overrides).
+ * Returns null when the portal is not available (coming soon, maintenance, or "#").
+ */
+export function resolveClientPortalUrl(client) {
+  if (!client) return null;
+  const status = String(client.status || "").toLowerCase();
+  if (status === "coming-soon" || status === "maintenance") return null;
+
+  const slug = client.slug;
+  const raw = String(client.system_url ?? client.systemUrl ?? "").trim();
+  let url =
+    raw && raw !== "#"
+      ? raw
+      : PORTAL_URL_OVERRIDES[slug] || fallbackBySlug[slug]?.system_url || "";
+
+  url = String(url).trim();
+  if (!url || url === "#") return null;
+
+  if (url.startsWith("/") || /^https?:\/\//i.test(url)) return url;
+  if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}/i.test(url)) return `https://${url}`;
+
+  return url;
+}
+
+export function isExternalPortalUrl(url) {
+  return Boolean(url && /^https?:\/\//i.test(url));
+}
 
 export function clientPortalUrl(slug) {
   return `${backendBaseUrl}/portal/${slug}`;

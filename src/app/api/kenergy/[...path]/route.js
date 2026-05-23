@@ -1,6 +1,6 @@
 /**
  * Catch-all for unimplemented /api/kenergy/* paths.
- * This app does not proxy energy APIs to port 8000 — use geserverhub routes only.
+ * This app does not proxy energy APIs to port 8000 — use goeunserverhub routes only.
  */
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ function notImplemented(pathParts) {
     {
       error: "Not implemented",
       path,
-      hint: "Energy APIs in this app read geserverhub only. Add a route under src/app/api/kenergy/ or call an existing endpoint.",
+      hint: "Energy APIs in this app read goeunserverhub only. Add a route under src/app/api/kenergy/ or call an existing endpoint.",
     },
     { status: 404 }
   );

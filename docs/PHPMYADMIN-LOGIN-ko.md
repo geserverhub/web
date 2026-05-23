@@ -4,7 +4,7 @@
 
 `http://localhost:8080/phpmyadmin/` 은 **Windows MySQL80** (`127.0.0.1:3306`) 에 연결됩니다.
 
-`geserverhub` 계정과 DB 백업은 **WSL 안의 MySQL** 에만 있어서, Windows에서는 아래 오류가 납니다.
+`geserverhub` MySQL 사용자와 `goeunserverhub` DB 백업은 **WSL 안의 MySQL** 에만 있어서, Windows에서는 아래 오류가 납니다.
 
 ```
 Access denied for user 'geserverhub'@'localhost'
@@ -54,7 +54,7 @@ bash scripts/setup-wsl-mysql-for-phpmyadmin.sh
 
 그다음 phpMyAdmin 로그인 화면 **서버 선택**에서:
 
-- **WSL MySQL (geserverhub)** — `127.0.0.1:3307`
+- **WSL MySQL (goeunserverhub)** — `127.0.0.1:3307`
 - 사용자: `geserverhub`
 - 암호: `2350400018644`
 
@@ -64,7 +64,7 @@ bash scripts/setup-wsl-mysql-for-phpmyadmin.sh
 
 | 실행 위치 | DATABASE_URL |
 |-----------|----------------|
-| WSL `npm run dev` | `localhost:3306` → WSL MySQL (geserverhub OK) |
+| WSL `npm run dev` | `localhost:3306` → WSL MySQL (goeunserverhub OK) |
 | Windows `npm run dev` | `localhost:3306` → MySQL80 (방법 A 필요) |
 
 WSL에서 개발할 때: `npm run db:check` / `npm run dev:restart`

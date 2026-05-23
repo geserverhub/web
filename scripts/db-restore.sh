@@ -25,7 +25,7 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-3306}"
 DB_USER="${DB_USER:-root}"
 DB_PASSWORD="${DB_PASSWORD:-}"
-DB_NAME="${DB_NAME:-geserverhub}"
+DB_NAME="${DB_NAME:-goeunserverhub}"
 
 BACKUP="${1:-$ROOT/backups/20260508_173742/goeunserverhub_db.sql}"
 if [[ ! -f "$BACKUP" ]]; then

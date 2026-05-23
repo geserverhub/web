@@ -11,6 +11,7 @@ import {
   Edit2, MapPin,
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import AiCarbonInsightsPanel from '@/components/energy/AiCarbonInsightsPanel'
 
 interface DashboardStats {
   totalDevices: number
@@ -934,6 +935,8 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      <AiCarbonInsightsPanel periodDays={30} />
 
       {/* ── System Health + Quick Actions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

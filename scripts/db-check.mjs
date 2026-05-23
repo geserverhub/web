@@ -6,8 +6,8 @@ import mysql from 'mysql2/promise';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env.local') });
 
-const REQUIRED_DB = 'geserverhub';
-const dbName = (process.env.DB_NAME || 'geserverhub').trim();
+const REQUIRED_DB = 'goeunserverhub';
+const dbName = (process.env.DB_NAME || 'goeunserverhub').trim();
 
 if (dbName.toLowerCase() !== REQUIRED_DB) {
   console.error(`FAIL — DB_NAME must be ${REQUIRED_DB} for this app, got "${dbName}".`);

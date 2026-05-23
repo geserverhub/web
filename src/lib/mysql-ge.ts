@@ -9,7 +9,7 @@ export { GESERVERHUB_DATABASE, getGeserverhubConnectionConfig };
 /** @deprecated Prefer queryGeserverhub */
 export const queryGe = queryGeserverhub;
 
-/** @deprecated Use queryGeserverhub — same geserverhub pool */
+/** @deprecated Use queryGeserverhub — same goeunserverhub pool */
 export const queryUser = queryGeserverhub;
 
 export async function getAllDevices(): Promise<unknown[]> {
