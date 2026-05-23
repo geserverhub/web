@@ -28,7 +28,7 @@ async function tableExists(tableName: string): Promise<boolean> {
 }
 
 /**
- * POST /api/kenergy/power-record
+ * POST /api/ge-energy/power-record
  */
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET /api/kenergy/power-record?device_id=1&limit=10
+ * GET /api/ge-energy/power-record?device_id=1&limit=10
  */
 export async function GET(req: NextRequest) {
   try {

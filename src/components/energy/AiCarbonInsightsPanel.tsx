@@ -128,7 +128,7 @@ export default function AiCarbonInsightsPanel({ periodDays = 30 }: { periodDays?
     try {
       const uid = userId ? `&userId=${userId}` : '';
       const res = await fetch(
-        `/api/kenergy/ai-carbon-insights?site=${selectedSite}&period=${periodDays}&locale=${locale}${uid}`
+        `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${periodDays}&locale=${locale}${uid}`
       );
       const json = await res.json();
       if (json.success) setData(json.data);

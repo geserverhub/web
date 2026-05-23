@@ -27,7 +27,7 @@ export default function OverviewPage() {
   const fetchDevices = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/kenergy/devices');
+      const res = await fetch('/api/ge-energy/devices');
       const json = await res.json();
 
       if (json.success) {

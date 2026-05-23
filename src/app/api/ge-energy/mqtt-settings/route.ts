@@ -28,7 +28,7 @@ function encryptPassword(password: string): string {
 }
 
 /**
- * GET /api/kenergy/mqtt-settings
+ * GET /api/ge-energy/mqtt-settings
  */
 export async function GET(req: NextRequest) {
   try {
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/mqtt-settings
+ * PUT /api/ge-energy/mqtt-settings
  */
 export async function PUT(req: NextRequest) {
   try {

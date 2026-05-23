@@ -82,7 +82,7 @@ export default function CompareMonitoringPage() {
       setError(null)
       try {
         // Fetch from MySQL power_records API instead of InfluxDB
-        const res = await fetch('/api/kenergy/power-records?limit=100')
+        const res = await fetch('/api/ge-energy/power-records?limit=100')
         const body = await res.json().catch(() => ({}))
         if (!res.ok) {
           if (mounted) setError(body?.error || 'Failed to load')
@@ -169,7 +169,7 @@ export default function CompareMonitoringPage() {
       let mounted = true
       async function fetchParsed() {
         try {
-          const res = await fetch(`/api/kenergy/influx/device?id=${encodeURIComponent(device)}`)
+          const res = await fetch(`/api/ge-energy/influx/device?id=${encodeURIComponent(device)}`)
           const body = await res.json().catch(() => ({}))
           if (!mounted) return
           if (res.ok && body && body.parsed) setParsed(body.parsed as ParsedDeviceData)

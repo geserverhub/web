@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * GET /api/kenergy/device-locations
+ * GET /api/ge-energy/device-locations
  * 錫붲마錫뉋툊仙됢릎錫□많錫?릎錫멘툤錫곟르錫볙퉴錫쀠링仙댽륫錫듀툧錫닮툈錫긍툝 location 錫왽르仙됢릎錫□릉錫뽤림錫쇸린 online/offline
  * Query params:
  *   - site: thailand | korea | all
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/device-locations
+ * PUT /api/ge-energy/device-locations
  * 錫?릴錫왽?錫붲툠錫왽릿錫곟릴錫?location 錫귖릎錫뉋릎錫멘툤錫곟르錫볙퉴
  * Body: { deviceId: number, latitude: number, longitude: number }
  */

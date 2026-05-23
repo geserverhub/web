@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/kenergy/ai-settings?userId=1
+ * GET /api/ge-energy/ai-settings?userId=1
  */
 export async function GET(req: NextRequest) {
   try {
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PUT /api/kenergy/ai-settings
+ * PUT /api/ge-energy/ai-settings
  * Body: { userId, apiKey?, openai_model?, clearKey? }
  */
 export async function PUT(req: NextRequest) {

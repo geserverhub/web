@@ -47,7 +47,7 @@ export default function Header() {
   const fetchNotifications = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/kenergy/notifications?site=${selectedSite}&limit=10`, { signal });
+      const res = await fetch(`/api/ge-energy/notifications?site=${selectedSite}&limit=10`, { signal });
       const json = await res.json();
       if (json.success) {
         setNotifications(json.data.notifications);
@@ -65,7 +65,7 @@ export default function Header() {
   // Mark all as read
   const markAllRead = async () => {
     try {
-      const res = await fetch('/api/kenergy/notifications', {
+      const res = await fetch('/api/ge-energy/notifications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ markAll: true })
@@ -82,7 +82,7 @@ export default function Header() {
   // Mark single notification as read
   const markRead = async (id: number) => {
     try {
-      const res = await fetch('/api/kenergy/notifications', {
+      const res = await fetch('/api/ge-energy/notifications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId: id })

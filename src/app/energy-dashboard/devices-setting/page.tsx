@@ -185,7 +185,7 @@ export default function DevicesSettingPage() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const res = await fetch('/api/kenergy/products?limit=200&sortBy=name');
+        const res = await fetch('/api/ge-energy/products?limit=200&sortBy=name');
         const json = (await res.json()) as ProductResponse;
         if (json?.products?.length) {
           setProductNames(
@@ -265,7 +265,7 @@ export default function DevicesSettingPage() {
     if (!confirm(confirmMsg)) return;
 
     try {
-      const response = await fetch(`/api/kenergy/devices-setting?deviceId=${device.deviceID}`, {
+      const response = await fetch(`/api/ge-energy/devices-setting?deviceId=${device.deviceID}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -287,7 +287,7 @@ export default function DevicesSettingPage() {
     setSaving(true);
     setSaveMsg(null);
     try {
-      const res = await fetch('/api/kenergy/devices-setting', {
+      const res = await fetch('/api/ge-energy/devices-setting', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -316,7 +316,7 @@ export default function DevicesSettingPage() {
     
     setUpdatingRecordScope(true);
     try {
-      const res = await fetch('/api/kenergy/devices-setting', {
+      const res = await fetch('/api/ge-energy/devices-setting', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -374,7 +374,7 @@ export default function DevicesSettingPage() {
     setCreating(true);
     setCreateMsg(null);
     try {
-      const res = await fetch('/api/kenergy/devices-setting', {
+      const res = await fetch('/api/ge-energy/devices-setting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -408,7 +408,7 @@ export default function DevicesSettingPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/kenergy/devices-setting?site=${selectedSite}`);
+      const response = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`);
       const data = await response.json();
 
       if (data.success) {
