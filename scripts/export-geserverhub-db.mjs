@@ -37,12 +37,16 @@ const outDir = resolve(root, 'database');
 const outFile = resolve(outDir, 'geserverhub.sql');
 mkdirSync(outDir, { recursive: true });
 
+const dumpUser = process.env.DB_USER || cfg.user;
+const dumpPassword = process.env.DB_PASSWORD ?? cfg.password;
+
 const args = [
   `-h${cfg.host}`,
   `-P${cfg.port}`,
-  `-u${cfg.user}`,
-  ...(cfg.password ? [`-p${cfg.password}`] : []),
+  `-u${dumpUser}`,
+  ...(dumpPassword ? [`-p${dumpPassword}`] : []),
   '--single-transaction',
+  '--no-tablespaces',
   '--routines',
   '--triggers',
   '--set-gtid-purged=OFF',
