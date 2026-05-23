@@ -28,10 +28,13 @@ const authConfig: NextAuthConfig = {
       const { pathname } = nextUrl;
 
       // Public auth pages — always accessible
+      if (pathname === "/auth/select") return true;
+      if (pathname === "/login") return true;
       if (pathname === "/admin/login") return true;
       if (pathname === "/partner/login") return true;
       if (pathname === "/customer-dashboard-login") return true;
-      if (pathname === "/auth/select") return true;
+      if (pathname === "/customer-momoge-login") return true;
+      if (pathname === "/energy-dashboard-login") return true;
 
       // ระบบผู้ดูแล — ADMIN / SUPER_ADMIN เท่านั้น
       if (pathname.startsWith("/admin")) {

@@ -73,7 +73,7 @@ export const fallbackClients = [
     contact_phone: "089-4871144",
     contact_fax: "034-878369, 034-848022",
     thumbnail: "/m-group-building.jpg",
-    system_url: "/m-group",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/m-group",
   },
   {
     id: 2,
@@ -83,7 +83,7 @@ export const fallbackClients = [
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    thumbnail: "/uploads/logos/G-monitoring.png",
+    thumbnail: "momoge/momoge-space.jpg",
     system_url: "/energy-dashboard-login",
   },
   {
@@ -95,7 +95,7 @@ export const fallbackClients = [
     contact_email: "m.factoryandresort@gmail.com",
     contact_phone: "+66 095-241-1833",
     thumbnail: "/m-factory/LINE_ALBUM_12369_260417_1.jpg",
-    system_url: "https://m-factoryandresort.com",
+    system_url: "/m-factory",
   },
   {
     id: 4,
@@ -128,7 +128,7 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
     thumbnail: "/momoge/Logo-brand.png",
-    system_url: "/momoge-product",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/momoge-product",
   },
   {
     id: 7,
@@ -175,17 +175,13 @@ export const filterOptions = [
 
 const fallbackBySlug = Object.fromEntries(fallbackClients.map((c) => [c.slug, c]));
 
-/** Slug-specific fixes when DB systemUrl is empty or outdated */
 const PORTAL_URL_OVERRIDES = {
   "green-retail-group": "/energy-dashboard-login",
   "green-retail-energy": "/energy-dashboard-login",
   "m-group": "/m-group",
 };
 
-/**
- * Resolve a clickable portal URL for homepage cards (DB + fallback + overrides).
- * Returns null when the portal is not available (coming soon, maintenance, or "#").
- */
+/** Resolve portal URL for API cards when DB systemUrl is empty or invalid. */
 export function resolveClientPortalUrl(client) {
   if (!client) return null;
   const status = String(client.status || "").toLowerCase();
@@ -200,10 +196,8 @@ export function resolveClientPortalUrl(client) {
 
   url = String(url).trim();
   if (!url || url === "#") return null;
-
   if (url.startsWith("/") || /^https?:\/\//i.test(url)) return url;
   if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}/i.test(url)) return `https://${url}`;
-
   return url;
 }
 

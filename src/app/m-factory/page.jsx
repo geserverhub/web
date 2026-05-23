@@ -1,11 +1,10 @@
-import PageClient from "./PageClient";
+import BookingClient from "./BookingClient";
 
 export const metadata = {
-  title: "M-Factory — ขาย-ให้เช่าโกดัง โรงงาน รีสอร์ทส่วนตัว",
-  description:
-    "M-Factory ให้บริการขายและให้เช่าโกดัง โรงงาน พร้อมบริการที่พักรีสอร์ทส่วนตัว",
+  title: "M-Factory — จองโกดัง / Warehouse Booking",
+  description: "จองโกดัง M-Factory ลาดหลุมแก้ว ปทุมธานี ขาย-ให้เช่าโกดังโรงงาน",
 };
 
 export default function MFactoryPage() {
-  return <PageClient />;
+  return <BookingClient />;
 }

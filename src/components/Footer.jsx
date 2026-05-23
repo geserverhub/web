@@ -6,7 +6,7 @@ export default function Footer({ ui, profile }) {
           <div className="agency-footer-brand">
             <img
               src="/logo-mark.svg"
-              alt="GE SERVER HUB"
+              alt="GOEUN SERVER HUB"
               width="56"
               height="56"
               className="agency-footer-logo"
