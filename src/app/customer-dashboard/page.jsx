@@ -9,7 +9,7 @@ import {
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import {
-  Zap, TrendingDown, DollarSign, Leaf, Phone, Mail, MessageSquare,
+  Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
   Thermometer, ChevronDown, BarChart2, Users, Star, MapPin, Calendar,
   Shield,
@@ -21,13 +21,6 @@ function L(locale, th, ko, en) {
   return en;
 }
 function fmt(n) { return n.toLocaleString(); }
-
-const staffList = [
-  { name: 'Nattapong S.', nameKo: '나타퐁 S.', nameTh: 'ณัฐพงศ์ ส.', role: 'Sales Engineer', roleTh: 'วิศวกรขาย', roleKo: '영업 엔지니어', phone: '+66 81-234-5678', email: 'nattapong@ge-serverhub.com', line: '@ge_nat', available: true },
-  { name: 'Sirikanya P.', nameKo: '시리칸야 P.', nameTh: 'ศิริกัญญา พ.', role: 'Customer Success', roleTh: 'ฝ่ายดูแลลูกค้า', roleKo: '고객 성공팀', phone: '+66 89-345-6789', email: 'sirikanya@ge-serverhub.com', line: '@ge_siri', available: true },
-  { name: 'Wanchai T.', nameKo: '완차이 T.', nameTh: 'วันชัย ท.', role: 'Technical Support', roleTh: 'ฝ่ายเทคนิค', roleKo: '기술 지원팀', phone: '+66 92-456-7890', email: 'wanchai@ge-serverhub.com', line: '@ge_tech', available: false },
-  { name: 'Minjun K.', nameKo: '민준 K.', nameTh: 'มินจุน เค.', role: 'Korea Sales Manager', roleTh: 'ผู้จัดการฝ่ายขาย เกาหลี', roleKo: '한국 영업 매니저', phone: '+82 10-1234-5678', email: 'minjun@ge-serverhub.com', line: '@ge_kr', available: true },
-];
 
 export default function CustomersPage() {
   const { locale } = useLocale();
@@ -46,6 +39,24 @@ export default function CustomersPage() {
   const [liveMetric, setLiveMetric] = useState('current');
   const [deviceDetails, setDeviceDetails] = useState(null);
   const liveTimer = useRef(null);
+  const monitorTimer = useRef(null);
+  const [monitorSeries, setMonitorSeries] = useState([]);
+  const [monitorSnapshot, setMonitorSnapshot] = useState(null);
+  const [monitorLoading, setMonitorLoading] = useState(false);
+  const [monitorError, setMonitorError] = useState(null);
+  const [lastMonitorAt, setLastMonitorAt] = useState(null);
+  const [monitorMinutes, setMonitorMinutes] = useState(30);
+  const [monitorMetric, setMonitorMetric] = useState('current');
+  const [isLivePulse, setIsLivePulse] = useState(false);
+
+  const monitorMetricOptions = [
+    { key: 'current', label: L(locale, 'กระแสไฟ', '전류', 'Current') },
+    { key: 'power', label: L(locale, 'กำลังไฟ', '전력', 'Power') },
+    { key: 'voltage', label: L(locale, 'แรงดัน', '전압', 'Voltage') },
+    { key: 'frequency', label: L(locale, 'ความถี่', '주파수', 'Frequency') },
+    { key: 'stability', label: L(locale, 'ความเสถียร', '안정성', 'Stability') },
+    { key: 'reactive', label: L(locale, 'การกักเก็บกระแสไฟ', '무효전력', 'Reactive') },
+  ];
   const [sendingContact, setSendingContact] = useState(false);
   const [contactError, setContactError] = useState(null);
 
@@ -82,6 +93,7 @@ export default function CustomersPage() {
       voltageL2: toNumber(Array.isArray(metrics.voltageLL) ? metrics.voltageLL[1] : metrics.voltageL2),
       voltageL3: toNumber(Array.isArray(metrics.voltageLL) ? metrics.voltageLL[2] : metrics.voltageL3),
       frequency: toNumber(metrics.frequency),
+      reactivePower: toNumber(metrics.reactivePower),
       thdBefore: toNumber(metrics.thdBefore),
       thdAfter: toNumber(metrics.thdAfter),
       energySaved: toNumber(metrics.energySaved),
@@ -133,6 +145,46 @@ export default function CustomersPage() {
     liveTimer.current = setInterval(fetchLiveSnapshot, 30000);
     return () => { if (liveTimer.current) clearInterval(liveTimer.current); };
   }, [selectedDeviceId]);
+
+  async function fetchCustomerMonitor() {
+    if (!selectedDeviceId) return;
+    setMonitorLoading(true);
+    setMonitorError(null);
+    try {
+      const res = await fetch(
+        `/api/ge-energy/customer-live-monitor?site=${encodeURIComponent(selectedSite)}&deviceId=${encodeURIComponent(selectedDeviceId)}&minutes=${monitorMinutes}`,
+        { cache: 'no-store' }
+      );
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to load monitor data');
+      }
+      if (Array.isArray(json.devices) && json.devices.length > 0) {
+        setDevices(json.devices);
+      }
+      setMonitorSeries(json.series || []);
+      setMonitorSnapshot(json.snapshot || null);
+      setLastMonitorAt(json.timestamp || new Date().toISOString());
+      setIsLivePulse(Boolean(json.snapshot?.isOnline));
+    } catch (err) {
+      setMonitorError(err instanceof Error ? err.message : 'Failed to load monitor data');
+      setMonitorSeries([]);
+      setMonitorSnapshot(null);
+      setIsLivePulse(false);
+    } finally {
+      setMonitorLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab !== 'monitor' || !selectedDeviceId) return undefined;
+    fetchCustomerMonitor();
+    if (monitorTimer.current) clearInterval(monitorTimer.current);
+    monitorTimer.current = setInterval(fetchCustomerMonitor, 10000);
+    return () => {
+      if (monitorTimer.current) clearInterval(monitorTimer.current);
+    };
+  }, [activeTab, selectedDeviceId, selectedSite, monitorMinutes]);
 
   async function fetchLive() {
     setLiveLoading(true);
@@ -280,6 +332,7 @@ export default function CustomersPage() {
               { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),  icon: BarChart2 },
               { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),     icon: DollarSign },
               { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),         icon: Activity },
+              { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
               { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),            icon: Users },
             ].map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -298,21 +351,23 @@ export default function CustomersPage() {
         {/* ── Energy / Cost Charts ── */}
         {(activeTab === 'energy' || activeTab === 'cost') && (
           <>
-            {/* Chart type toggle */}
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setChartType('bar')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
-                  chartType === 'bar' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
-                }`}>
-                <BarChart2 className="w-3.5 h-3.5" />{L(locale,'แผนภูมิแท่ง','막대 차트','Bar')}
-              </button>
-              <button onClick={() => setChartType('line')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
-                  chartType === 'line' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
-                }`}>
-                <Activity className="w-3.5 h-3.5" />{L(locale,'กราฟเส้น','선 차트','Line')}
-              </button>
-            </div>
+            {/* Chart type toggle — energy tab only; cost uses line chart */}
+            {activeTab === 'energy' && (
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setChartType('bar')}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
+                    chartType === 'bar' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
+                  }`}>
+                  <BarChart2 className="w-3.5 h-3.5" />{L(locale,'แผนภูมิแท่ง','막대 차트','Bar')}
+                </button>
+                <button onClick={() => setChartType('line')}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
+                    chartType === 'line' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
+                  }`}>
+                  <Activity className="w-3.5 h-3.5" />{L(locale,'กราฟเส้น','선 차트','Line')}
+                </button>
+              </div>
+            )}
 
             {/* Chart */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
@@ -333,7 +388,26 @@ export default function CustomersPage() {
                 ) : (
                   <div className="cd-chart-box">
                   <ResponsiveContainer width="100%" height="100%">
-                {chartType === 'bar' ? (
+                {activeTab === 'cost' || chartType === 'line' ? (
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+                    <Tooltip formatter={(v) =>
+                      activeTab === 'energy'
+                        ? Number(v).toLocaleString()
+                        : formatCost(Number(v))
+                    } />
+                    <Legend />
+                    {activeTab === 'energy' ? <>
+                      <Line type="monotone" dataKey={keyBefore} stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey={keyAfter}  stroke="#22c55e" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    </> : <>
+                      <Line type="monotone" dataKey={keyCostB} stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey={keyCostA} stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    </>}
+                  </LineChart>
+                ) : (
                   <BarChart data={chartData} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
@@ -352,25 +426,6 @@ export default function CustomersPage() {
                       <Bar dataKey={keyCostA} fill="#3b82f6" radius={[4,4,0,0]} />
                     </>}
                   </BarChart>
-                ) : (
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
-                    <Tooltip formatter={(v) =>
-                      activeTab === 'energy'
-                        ? Number(v).toLocaleString()
-                        : formatCost(Number(v))
-                    } />
-                    <Legend />
-                    {activeTab === 'energy' ? <>
-                      <Line type="monotone" dataKey={keyBefore} stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} />
-                      <Line type="monotone" dataKey={keyAfter}  stroke="#22c55e" strokeWidth={2.5} dot={{ r: 4 }} />
-                    </> : <>
-                      <Line type="monotone" dataKey={keyCostB} stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} />
-                      <Line type="monotone" dataKey={keyCostA} stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} />
-                    </>}
-                  </LineChart>
                 )}
                   </ResponsiveContainer>
                   </div>
@@ -449,6 +504,151 @@ export default function CustomersPage() {
           </>
         )}
 
+        {/* ── Real-time current monitor ── */}
+        {activeTab === 'monitor' && (
+          <div className="space-y-5">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
+              <div className="relative w-full sm:w-auto">
+                <select value={selectedDeviceId} onChange={e => setSelectedDeviceId(e.target.value)}
+                  className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer sm:min-w-[220px]">
+                  {devices.map(d => (
+                    <option key={d.deviceID} value={String(d.deviceID)}>{d.deviceName || d.geID || d.deviceID}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              <select value={monitorMinutes} onChange={e => setMonitorMinutes(Number(e.target.value))}
+                className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700">
+                <option value={15}>{L(locale,'15 นาที','15분','15 min')}</option>
+                <option value={30}>{L(locale,'30 นาที','30분','30 min')}</option>
+                <option value={60}>{L(locale,'60 นาที','60분','60 min')}</option>
+              </select>
+              <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+                {monitorMetricOptions.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setMonitorMetric(m.key)}
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition ${
+                      monitorMetric === m.key
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-gray-600 border-gray-200'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={fetchCustomerMonitor} disabled={monitorLoading}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60">
+                <RefreshCw className={`w-4 h-4 ${monitorLoading ? 'animate-spin' : ''}`} />
+                {L(locale,'รีเฟรช','새로고침','Refresh')}
+              </button>
+              <div className="flex items-center gap-2 text-xs text-gray-500 sm:ml-auto">
+                <span className={`inline-flex h-2.5 w-2.5 rounded-full ${isLivePulse ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300'}`} />
+                {L(locale,'อัปเดตทุก 10 วินาที','10초마다 업데이트','Updates every 10s')}
+                {lastMonitorAt && (
+                  <span className="text-gray-400">· {new Date(lastMonitorAt).toLocaleTimeString()}</span>
+                )}
+              </div>
+            </div>
+
+            {monitorSnapshot && (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                {[
+                  { label: L(locale,'สถานะ','상태','Status'), val: monitorSnapshot.isOnline ? L(locale,'ออนไลน์','온라인','Online') : L(locale,'ออฟไลน์','오프라인','Offline'), color: monitorSnapshot.isOnline ? 'text-emerald-600' : 'text-red-500' },
+                  { label: L(locale,'กำลังไฟ OUT (kW)','출력 전력','Power OUT'), val: monitorSnapshot.totalPowerKw?.toFixed(2) ?? '—', color: 'text-amber-600' },
+                  { label: L(locale,'แรงดัน L1 (V)','전압 L1','V L1'), val: monitorSnapshot.voltage?.L1?.toFixed(1) ?? '—', color: 'text-violet-600' },
+                  { label: L(locale,'ความถี่ (Hz)','주파수','Freq'), val: monitorSnapshot.frequency?.toFixed(2) ?? '—', color: 'text-blue-600' },
+                  { label: L(locale,'ความเสถียร (PF)','역률 PF','PF'), val: monitorSnapshot.powerFactor?.toFixed(3) ?? '—', color: 'text-teal-600' },
+                  { label: L(locale,'กระแสรีแอก OUT (kVAr)','무효전력 OUT','Q OUT'), val: monitorSnapshot.reactiveOutputKvar?.toFixed(2) ?? '—', color: 'text-indigo-600' },
+                  { label: L(locale,'OUTPUT L1 (A)','OUTPUT L1','OUT L1'), val: monitorSnapshot.currentOutput?.L1?.toFixed(2) ?? '—', color: 'text-emerald-600' },
+                  { label: L(locale,'INPUT L1 (A)','INPUT L1','IN L1'), val: monitorSnapshot.currentInput?.L1?.toFixed(2) ?? '—', color: 'text-red-600' },
+                ].map((item) => (
+                  <div key={item.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
+                    <p className={`text-lg font-bold tabular-nums ${item.color}`}>{item.val}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
+              <div className="h-1 w-full bg-gradient-to-r from-red-400 via-amber-400 to-emerald-400" />
+              <div className="p-3 md:p-6">
+                <h2 className="font-bold text-gray-800 text-base md:text-lg">
+                  {monitorMetric === 'current' && L(locale,'กราฟกระแสไฟเรียลไทม์','실시간 전류','Real-time Current')}
+                  {monitorMetric === 'power' && L(locale,'กราฟกำลังไฟเรียลไทม์','실시간 전력','Real-time Power')}
+                  {monitorMetric === 'voltage' && L(locale,'กราฟแรงดันเรียลไทม์','실시간 전압','Real-time Voltage')}
+                  {monitorMetric === 'frequency' && L(locale,'กราฟความถี่เรียลไทม์','실시간 주파수','Real-time Frequency')}
+                  {monitorMetric === 'stability' && L(locale,'กราฟความเสถียร (Power Factor)','안정성 (역률)','Stability (Power Factor)')}
+                  {monitorMetric === 'reactive' && L(locale,'กราฟการกักเก็บกระแสไฟ (kVAr)','무효전력','Reactive Power (kVAr)')}
+                </h2>
+                <p className="text-gray-400 text-xs mt-1 mb-4">
+                  {monitorSeries.length} {L(locale,'จุดข้อมูล','데이터 포인트','points')}
+                </p>
+                {monitorLoading && monitorSeries.length === 0 ? (
+                  <div className="flex items-center justify-center h-64">
+                    <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
+                  </div>
+                ) : monitorSeries.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                    <WifiOff className="w-10 h-10 mb-2" />
+                    <p className="text-sm">{L(locale,'ยังไม่มีข้อมูลในช่วงเวลาที่เลือก','선택 구간 데이터 없음','No data in selected window')}</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={320}>
+                    <LineChart data={monitorSeries} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={24} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(v, name) => {
+                        if (v == null) return ['—', name];
+                        const n = Number(v).toFixed(2);
+                        if (monitorMetric === 'frequency') return [`${n} Hz`, name];
+                        if (monitorMetric === 'stability') return [n, name];
+                        if (monitorMetric === 'power') return [`${n} kW`, name];
+                        if (monitorMetric === 'voltage') return [`${n} V`, name];
+                        if (monitorMetric === 'reactive') return [`${n} kVAr`, name];
+                        return [`${n} A`, name];
+                      }} />
+                      <Legend />
+                      {monitorMetric === 'current' && <>
+                        <Line type="monotone" dataKey="beforeL1" name="INPUT L1" stroke="#ef4444" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="beforeL2" name="INPUT L2" stroke="#f97316" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="beforeL3" name="INPUT L3" stroke="#fb923c" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="afterL1" name="OUTPUT L1" stroke="#10b981" strokeWidth={2.5} dot={false} />
+                        <Line type="monotone" dataKey="afterL2" name="OUTPUT L2" stroke="#14b8a6" strokeWidth={2.5} dot={false} />
+                        <Line type="monotone" dataKey="afterL3" name="OUTPUT L3" stroke="#0ea5e9" strokeWidth={2.5} dot={false} />
+                      </>}
+                      {monitorMetric === 'power' && <>
+                        <Line type="monotone" dataKey="powerInput" name="INPUT (kW)" stroke="#ef4444" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="powerOutput" name="OUTPUT (kW)" stroke="#10b981" strokeWidth={2.5} dot={false} />
+                      </>}
+                      {monitorMetric === 'voltage' && <>
+                        <Line type="monotone" dataKey="voltageL1" name="L1 (V)" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="voltageL2" name="L2 (V)" stroke="#a78bfa" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="voltageL3" name="L3 (V)" stroke="#c4b5fd" strokeWidth={2} dot={false} />
+                      </>}
+                      {monitorMetric === 'frequency' && (
+                        <Line type="monotone" dataKey="frequency" name={L(locale,'ความถี่ (Hz)','주파수','Frequency')} stroke="#2563eb" strokeWidth={2.5} dot={false} />
+                      )}
+                      {monitorMetric === 'stability' && (
+                        <Line type="monotone" dataKey="powerFactor" name={L(locale,'Power Factor','역률','PF')} stroke="#0d9488" strokeWidth={2.5} dot={false} />
+                      )}
+                      {monitorMetric === 'reactive' && <>
+                        <Line type="monotone" dataKey="reactiveInput" name="INPUT (kVAr)" stroke="#6366f1" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="reactiveOutput" name="OUTPUT (kVAr)" stroke="#4f46e5" strokeWidth={2.5} dot={false} />
+                      </>}
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+                {monitorError && <p className="text-xs text-red-500 mt-3">{monitorError}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Live Devices ── */}
         {activeTab === 'live' && (
           <div className="space-y-5">
@@ -465,14 +665,12 @@ export default function CustomersPage() {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
               <div className="flex gap-2 flex-wrap">
-                {['current','power','voltage'].map(m => (
-                  <button key={m} onClick={() => setLiveMetric(m)}
+                {monitorMetricOptions.map((m) => (
+                  <button key={m.key} onClick={() => setLiveMetric(m.key)}
                     className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition ${
-                      liveMetric === m ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200'
+                      liveMetric === m.key ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200'
                     }`}>
-                    {m === 'current' ? L(locale,'กระแสไฟ','전류','Current (A)')
-                     : m === 'power'   ? L(locale,'กำลังไฟ','전력','Power (kW)')
-                     : L(locale,'แรงดัน','전압','Voltage (V)')}
+                    {m.label}
                   </button>
                 ))}
               </div>
@@ -552,6 +750,15 @@ export default function CustomersPage() {
                       <Line type="monotone" dataKey="voltageL2" name="V-L2" stroke="#06b6d4" strokeWidth={2} dot={false} />
                       <Line type="monotone" dataKey="voltageL3" name="V-L3" stroke="#f97316" strokeWidth={2} dot={false} />
                     </>}
+                    {liveMetric === 'frequency' && (
+                      <Line type="monotone" dataKey="frequency" name={L(locale,'ความถี่ (Hz)','주파수','Hz')} stroke="#2563eb" strokeWidth={2.5} dot={false} />
+                    )}
+                    {liveMetric === 'stability' && (
+                      <Line type="monotone" dataKey="powerFactor" name={L(locale,'Power Factor','역률','PF')} stroke="#0d9488" strokeWidth={2.5} dot={false} />
+                    )}
+                    {liveMetric === 'reactive' && (
+                      <Line type="monotone" dataKey="reactivePower" name={L(locale,'กระแสรีแอก (kVAr)','무효전력','kVAr')} stroke="#6366f1" strokeWidth={2.5} dot={false} />
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -648,70 +855,9 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {/* ── Contact Staff ── */}
+        {/* ── Contact ── */}
         {activeTab === 'contact' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Staff Cards */}
-            <div className="lg:col-span-2 space-y-4">
-              <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <Users className="w-5 h-5 text-emerald-600" />
-                {L(locale,'ทีมงาน','담당자','Our Team')}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {staffList.map((s, i) => {
-                  const gradients = [
-                    'from-emerald-500 to-green-700',
-                    'from-violet-500 to-purple-600',
-                    'from-emerald-500 to-teal-600',
-                    'from-orange-500 to-amber-600',
-                  ];
-                  return (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${gradients[i % gradients.length]} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                        {(locale === 'th' ? s.nameTh : locale === 'ko' ? s.nameKo : s.name).charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-800 truncate">
-                            {locale === 'th' ? s.nameTh : locale === 'ko' ? s.nameKo : s.name}
-                          </p>
-                          <span className={`flex-shrink-0 w-2 h-2 rounded-full ${s.available ? 'bg-emerald-400' : 'bg-gray-300'}`} />
-                        </div>
-                        <p className="text-xs text-emerald-600 font-medium">
-                          {locale === 'th' ? s.roleTh : locale === 'ko' ? s.roleKo : s.role}
-                        </p>
-                        <div className="mt-3 space-y-1.5">
-                          <a href={`tel:${s.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-700 transition-colors">
-                            <Phone className="w-3.5 h-3.5 text-emerald-600" />{s.phone}
-                          </a>
-                          <a href={`mailto:${s.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-700 transition-colors truncate">
-                            <Mail className="w-3.5 h-3.5 text-emerald-600" />{s.email}
-                          </a>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <MessageSquare className="w-3.5 h-3.5 text-green-500" />
-                            <span>LINE: {s.line}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        s.available ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200' : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {s.available
-                          ? L(locale,'✅ พร้อมให้บริการ','🟢 상담 가능','🟢 Available')
-                          : L(locale,'⛔ ไม่ว่างในขณะนี้','🔴 현재 부재중','🔴 Unavailable')}
-                      </span>
-                    </div>
-                  </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Contact Form */}
+          <div className="max-w-lg mx-auto">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden h-fit">
               <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
               <div className="p-6">

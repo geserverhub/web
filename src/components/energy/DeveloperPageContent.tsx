@@ -39,6 +39,7 @@ const endpoints = [
   { method: 'GET', path: '/api/ge-energy/devices-setting?site={site}', desc: 'Device settings' },
   { method: 'GET', path: '/api/ge-energy/device-monitoring?deviceId={id}', desc: 'Live metrics' },
   { method: 'GET', path: '/api/ge-energy/current-history?deviceId={id}&hours=0.5', desc: 'Current history' },
+  { method: 'GET', path: '/api/ge-energy/customer-live-monitor?site=thailand&deviceId={id}&minutes=30', desc: 'Customer real-time current monitor (snapshot + series)' },
   { method: 'GET', path: '/api/ge-energy/device-history?deviceId={id}&period=hour', desc: 'Historical data' },
   { method: 'GET', path: '/api/ge-energy/customers-by-site?site={site}', desc: 'Customers by site' },
   { method: 'GET', path: '/api/ge-energy/device-locations?site={site}', desc: 'Map locations' },
