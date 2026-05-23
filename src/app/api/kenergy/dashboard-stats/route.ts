@@ -58,7 +58,8 @@ async function tableExists(tableName: string) {
        AND TABLE_NAME = ?`,
     [tableName]
   )
-  return Number(rows?.[0]?.count || 0) > 0
+  const row = rows[0] as { count?: number | string } | undefined
+  return Number(row?.count || 0) > 0
 }
 
 export async function GET(request: NextRequest) {

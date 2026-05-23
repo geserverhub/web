@@ -18,7 +18,7 @@ import {
 type DeviceRow = {
   deviceID?: number | string
   deviceName?: string | null
-  geID?: string | null
+  ksaveID?: string | null
   site?: string | null
   U_email?: string | null
   P_email?: string | null
@@ -80,23 +80,23 @@ export default function MeterSetingPage() {
   const copy = {
     th: {
       badge: 'Meter Seting',
-      title: '?????????????????????',
-      subtitle: '??????????????????????????? devices ??????????',
-      totalDevices: '???????????????????????',
-      enabledDevices: '???????????????????????????',
-      locations: '???????????????????',
-      addDevice: '????????????????????,
-      refresh: '?????????,
-      listTitle: '????????????????',
-      search: '?????????,
-      searchPlaceholder: '?????????????????????????????? GE ID, ????????, ??????????? IP',
-      statusFilter: '????????????????',
-      allStatus: '???????????',
-      enabled: '??????????????????,
-      other: '?????????????,
-      no: '?????????,
+      title: 'การจัดการมิเตอร์',
+      subtitle: 'แสดงข้อมูลจากตาราง devices โดยตรง',
+      totalDevices: 'อุปกรณ์ทั้งหมด',
+      enabledDevices: 'สถานะพร้อมใช้งาน',
+      locations: 'จำนวนสถานที่',
+      addDevice: 'เพิ่มอุปกรณ์',
+      refresh: 'รีเฟรช',
+      listTitle: 'รายการมิเตอร์',
+      search: 'ค้นหา',
+      searchPlaceholder: 'ค้นหาจากชื่ออุปกรณ์, KSAVE ID, อีเมล, สถานที่, IP',
+      statusFilter: 'ตัวกรองสถานะ',
+      allStatus: 'ทุกสถานะ',
+      enabled: 'พร้อมใช้งาน',
+      other: 'สถานะอื่น',
+      no: 'ลำดับ',
       deviceId: 'Device ID',
-      deviceName: '??????????????????,
+      deviceName: 'ชื่ออุปกรณ์',
       ownerEmail: 'Owner',
       location: 'Location',
       phone: 'Phone',
@@ -107,32 +107,32 @@ export default function MeterSetingPage() {
       lastUpdate: 'Last Update',
       status: 'Status',
       actions: 'Actions',
-      open: '???????,
-      noData: '?????????????????????????????',
-      showing: '??????',
-      to: '?????,
-      of: '?????,
-      entries: '??????'
+      open: 'เปิด',
+      noData: 'ไม่พบข้อมูลอุปกรณ์',
+      showing: 'แสดง',
+      to: 'ถึง',
+      of: 'จาก',
+      entries: 'รายการ'
     },
     ko: {
       badge: 'Meter Seting',
-      title: '???? ????',
-      subtitle: 'devices ???????????? ??? ????????????,
-      totalDevices: '??? ????',
-      enabledDevices: '????? ?????????',
-      locations: '???? ??,
-      addDevice: '???? ????',
-      refresh: '???? ??',
-      listTitle: '???? ??',
-      search: '????,
-      searchPlaceholder: '?????? GE ID, ?????? ????, IP??????,
-      statusFilter: '????? ?????',
-      allStatus: '??? ?????',
-      enabled: '????? ????,
-      other: '??? ?????',
-      no: '?????',
+      title: '미터 설정',
+      subtitle: 'devices 테이블 데이터를 직접 표시합니다',
+      totalDevices: '전체 장치',
+      enabledDevices: '사용 가능 상태',
+      locations: '위치 수',
+      addDevice: '장치 추가',
+      refresh: '새로 고침',
+      listTitle: '미터 목록',
+      search: '검색',
+      searchPlaceholder: '장치명, KSAVE ID, 이메일, 위치, IP로 검색',
+      statusFilter: '상태 필터',
+      allStatus: '전체 상태',
+      enabled: '사용 가능',
+      other: '기타 상태',
+      no: '번호',
       deviceId: 'Device ID',
-      deviceName: '??????,
+      deviceName: '장치명',
       ownerEmail: 'Owner',
       location: 'Location',
       phone: 'Phone',
@@ -143,12 +143,12 @@ export default function MeterSetingPage() {
       lastUpdate: 'Last Update',
       status: 'Status',
       actions: 'Actions',
-      open: '???',
-      noData: '???? ??????? ??????????',
-      showing: '?????',
-      to: '????,
+      open: '열기',
+      noData: '장치 데이터가 없습니다',
+      showing: '표시',
+      to: '부터',
       of: '/',
-      entries: '??????'
+      entries: '개 항목'
     },
     en: {
       badge: 'Meter Seting',
@@ -161,7 +161,7 @@ export default function MeterSetingPage() {
       refresh: 'Refresh',
       listTitle: 'Meter List',
       search: 'Search',
-      searchPlaceholder: 'Search by device name, GE ID, email, location, IP',
+      searchPlaceholder: 'Search by device name, KSAVE ID, email, location, IP',
       statusFilter: 'Status Filter',
       allStatus: 'All Statuses',
       enabled: 'Enabled',
@@ -197,7 +197,7 @@ export default function MeterSetingPage() {
     refresh: 'Refresh',
     listTitle: 'Meter List',
     search: 'Search',
-    searchPlaceholder: 'Search by device name, GE ID, email, location, IP',
+    searchPlaceholder: 'Search by device name, KSAVE ID, email, location, IP',
     statusFilter: 'Status Filter',
     allStatus: 'All Statuses',
     enabled: 'Enabled',
@@ -266,7 +266,7 @@ export default function MeterSetingPage() {
     const haystack = [
       device.deviceID,
       device.deviceName,
-      device.geID,
+      device.ksaveID,
       device.U_email,
       device.P_email,
       device.phone,
@@ -403,7 +403,7 @@ export default function MeterSetingPage() {
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.no}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.deviceId}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.deviceName}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">GE ID</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">KSAVE ID</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.ownerEmail}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.location}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.phone}</th>
@@ -427,7 +427,7 @@ export default function MeterSetingPage() {
                           <td className="px-4 py-3 text-sm text-gray-700">{startIndex + index + 1}</td>
                           <td className="px-4 py-3 text-sm font-semibold text-gray-700">{device.deviceID || '-'}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{device.deviceName || '-'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700 font-mono">{device.geID || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700 font-mono">{device.ksaveID || '-'}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{device.U_email || device.P_email || '-'}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{device.location || '-'}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{device.phone || '-'}</td>
@@ -447,7 +447,7 @@ export default function MeterSetingPage() {
                           </td>
                           <td className="px-4 py-3">
                             <Link
-                              href={`/dashboard?device=${encodeURIComponent(String(device.deviceID || ''))}&geID=${encodeURIComponent(String(device.geID || ''))}&site=${encodeURIComponent(targetSite)}`}
+                              href={`/dashboard?device=${encodeURIComponent(String(device.deviceID || ''))}&ksave=${encodeURIComponent(String(device.ksaveID || ''))}&site=${encodeURIComponent(targetSite)}`}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-200 text-sky-700 hover:bg-sky-50 text-sm"
                             >
                               <Settings className="w-3.5 h-3.5" />
@@ -472,14 +472,14 @@ export default function MeterSetingPage() {
                     disabled={safeCurrentPage === 1}
                     onClick={() => setCurrentPage(1)}
                   >
-                    �
+                    «
                   </button>
                   <button
                     className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm disabled:opacity-40"
                     disabled={safeCurrentPage === 1}
                     onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                   >
-                    ??
+                    ‹
                   </button>
                   <button className="px-3 py-1.5 bg-sky-600 text-white rounded text-sm">
                     {safeCurrentPage}
@@ -489,14 +489,14 @@ export default function MeterSetingPage() {
                     disabled={safeCurrentPage === totalPages}
                     onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                   >
-                    ??
+                    ›
                   </button>
                   <button
                     className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm disabled:opacity-40"
                     disabled={safeCurrentPage === totalPages}
                     onClick={() => setCurrentPage(totalPages)}
                   >
-                    �
+                    »
                   </button>
                 </div>
               </div>

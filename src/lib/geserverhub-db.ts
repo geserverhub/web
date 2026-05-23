@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import mysql, { type RowDataPacket } from 'mysql2/promise';
 
 /** Single database for this Next.js app — geserverhub only. */
 export const GESERVERHUB_DATABASE = 'geserverhub';
@@ -58,10 +58,10 @@ const pool = mysql.createPool({
 });
 
 /** Run SQL against geserverhub (energy tables, feedback, tickets, etc.). */
-export async function queryGeserverhub(sql: string, values?: unknown[]): Promise<unknown[]> {
+export async function queryGeserverhub(sql: string, values?: unknown[]): Promise<RowDataPacket[]> {
   const conn = await pool.getConnection();
   try {
-    const [rows] = await conn.query(sql, values);
+    const [rows] = await conn.query<RowDataPacket[]>(sql, values);
     return Array.isArray(rows) ? rows : [rows];
   } finally {
     conn.release();

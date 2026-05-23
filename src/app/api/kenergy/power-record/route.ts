@@ -62,7 +62,8 @@ async function tableExists(tableName: string): Promise<boolean> {
        AND TABLE_NAME = ?`,
     [tableName]
   )
-  return Number(rows?.[0]?.total || 0) > 0
+  const row = rows[0] as { total?: number | string } | undefined
+  return Number(row?.total || 0) > 0
 }
 
 async function devicesHasRecordScopeColumn(): Promise<boolean> {
@@ -73,7 +74,8 @@ async function devicesHasRecordScopeColumn(): Promise<boolean> {
        AND TABLE_NAME = 'devices'
        AND COLUMN_NAME = 'record_scope'`
   )
-  return Number(rows?.[0]?.total || 0) > 0
+  const row = rows[0] as { total?: number | string } | undefined
+  return Number(row?.total || 0) > 0
 }
 
 async function resolveRecordScope(deviceId: number, payloadScope?: string | null): Promise<RecordScope> {
@@ -88,7 +90,8 @@ async function resolveRecordScope(deviceId: number, payloadScope?: string | null
     [deviceId]
   )
 
-  const scopeFromDevice = normalizeRecordScope(rows?.[0]?.record_scope ?? null)
+  const deviceRow = rows[0] as { record_scope?: string | null } | undefined
+  const scopeFromDevice = normalizeRecordScope(deviceRow?.record_scope ?? null)
   return scopeFromDevice ?? 'installed'
 }
 

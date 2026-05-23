@@ -25,7 +25,7 @@ interface PowerSnapshot {
 
 interface PowerRecordRow {
   device?: string
-  geID?: string
+  ksave?: string
   time?: string
   location?: string
   series_no?: string
@@ -106,11 +106,11 @@ export default function CompareMonitoringPage() {
     }
   }, [])
 
-  // group rows by device/geID for card rendering
+  // group rows by device/ksave for card rendering
   const groups = useMemo(() => {
     const map = new Map<string, PowerRecordRow[]>()
     for (const r of rows) {
-      const key = (r.device || r.geID || 'Unknown') as string
+      const key = (r.device || r.ksave || 'Unknown') as string
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(r)
     }
@@ -185,18 +185,19 @@ export default function CompareMonitoringPage() {
     const latest = sorted[0]
 
     // prefer parsed values from /api/influx/device when available
-    const location = parsed?.location ?? latest?.location ?? '??
+    const location = parsed?.location ?? latest?.location ?? '—'
 
-    const geID = latest?.geID || device || '?'
+    // K-Save ID should be the ksaveID from database
+    const ksaveId = latest?.ksave || device || '—'
 
     // Get series_no directly from database (from API response)
-    const displaySeriesNo = latest?.series_no || '??
+    const displaySeriesNo = latest?.series_no || '—'
 
     // Get additional device information from database
-    const ipAddress = latest?.ipAddress || '??
-    const phone = latest?.phone || '??
-    const beforeMeterNo = latest?.beforeMeterNo || '??
-    const metricsMeterNo = latest?.metricsMeterNo || '??
+    const ipAddress = latest?.ipAddress || '—'
+    const phone = latest?.phone || '—'
+    const beforeMeterNo = latest?.beforeMeterNo || '—'
+    const metricsMeterNo = latest?.metricsMeterNo || '—'
 
     const statusOn = parsed?.ok ?? latest?.ok ?? false
 
@@ -234,29 +235,29 @@ export default function CompareMonitoringPage() {
     // Calculate percentage savings for power
     const savingsPercent_P = before_P > 0 ? ((savings_P / before_P) * 100) : 0
     const lastSeenDate = latest?.time ? new Date(latest.time) : null
-    const lastSeenStr = lastSeenDate ? lastSeenDate.toLocaleString() : '??
+    const lastSeenStr = lastSeenDate ? lastSeenDate.toLocaleString() : '—'
 
     return (
       <div key={device} className="card machine-card" style={{ minWidth: 600, maxWidth: 800 }}>
         <div className="machine-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="machine-name">{displayName || device}</div>
-            <div className="machine-sub">??? Site: {location}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>??? {lastSeenStr}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>??? IP: {ipAddress}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>??? Before Meter: {beforeMeterNo}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>??? Metrics Meter: {metricsMeterNo}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>??? Phone: {phone}</div>
+            <div className="machine-sub">📍 Site: {location}</div>
+            <div className="machine-sub" style={{ marginTop: 4 }}>🕐 {lastSeenStr}</div>
+            <div className="machine-sub" style={{ marginTop: 4 }}>🌐 IP: {ipAddress}</div>
+            <div className="machine-sub" style={{ marginTop: 4 }}>📊 Before Meter: {beforeMeterNo}</div>
+            <div className="machine-sub" style={{ marginTop: 4 }}>📈 Metrics Meter: {metricsMeterNo}</div>
+            <div className="machine-sub" style={{ marginTop: 4 }}>📞 Phone: {phone}</div>
           </div>
           <div className={"status-pill " + (statusOn ? 'ok' : 'warn')}>
-            {statusOn ? '??? ON' : '??? OFF'}
+            {statusOn ? '🟢 ON' : '🔴 OFF'}
           </div>
         </div>
 
         <div className="machine-info-row" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="machine-info">
-            <div className="label">GE ID:</div>
-            <div className="value">{geID}</div>
+            <div className="label">K-Save ID:</div>
+            <div className="value">{ksaveId}</div>
           </div>
           <div className="machine-info">
             <div className="label">Series no:</div>
@@ -272,7 +273,7 @@ export default function CompareMonitoringPage() {
           borderRadius: 8,
           color: '#fff'
         }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>??Power Savings</div>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>⚡ Power Savings</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
               <div style={{ fontSize: 24, fontWeight: 700 }}>
@@ -291,7 +292,7 @@ export default function CompareMonitoringPage() {
 
         {/* Grafana Chart */}
         <div style={{ marginTop: 16, height: 140, marginBottom: 12 }}>
-          <PanelFrame uid={process.env.NEXT_PUBLIC_GRAFANA_DASH_UID || 'all-power'} panelId={Number(process.env.NEXT_PUBLIC_GRAFANA_PANEL_ID || 2)} vars={{ geID: device }} height={140} />
+          <PanelFrame uid={process.env.NEXT_PUBLIC_GRAFANA_DASH_UID || 'all-power'} panelId={Number(process.env.NEXT_PUBLIC_GRAFANA_PANEL_ID || 2)} vars={{ ksave: device }} height={140} />
         </div>
 
         {/* Comparison Table */}
@@ -316,7 +317,7 @@ export default function CompareMonitoringPage() {
               color: savings_I > 0 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_I) ? `${savings_I > 0 ? '?? : '??} ${Math.abs(savings_I).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_I) ? `${savings_I > 0 ? '↓' : '↑'} ${Math.abs(savings_I).toFixed(3)}` : '-'}
             </div>
 
             {/* P (W) */}
@@ -332,7 +333,7 @@ export default function CompareMonitoringPage() {
               color: savings_P > 0 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_P) ? `${savings_P > 0 ? '?? : '??} ${Math.abs(savings_P).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_P) ? `${savings_P > 0 ? '↓' : '↑'} ${Math.abs(savings_P).toFixed(3)}` : '-'}
             </div>
 
             {/* Q (var) */}
@@ -348,7 +349,7 @@ export default function CompareMonitoringPage() {
               color: savings_Q > 0 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_Q) ? `${savings_Q > 0 ? '?? : '??} ${Math.abs(savings_Q).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_Q) ? `${savings_Q > 0 ? '↓' : '↑'} ${Math.abs(savings_Q).toFixed(3)}` : '-'}
             </div>
 
             {/* S (VA) */}
@@ -364,7 +365,7 @@ export default function CompareMonitoringPage() {
               color: savings_S > 0 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_S) ? `${savings_S > 0 ? '?? : '??} ${Math.abs(savings_S).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_S) ? `${savings_S > 0 ? '↓' : '↑'} ${Math.abs(savings_S).toFixed(3)}` : '-'}
             </div>
 
             {/* PF */}
@@ -380,7 +381,7 @@ export default function CompareMonitoringPage() {
               color: savings_PF > 0 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_PF) ? `${savings_PF > 0 ? '?? : '??} ${Math.abs(savings_PF).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_PF) ? `${savings_PF > 0 ? '↑' : '↓'} ${Math.abs(savings_PF).toFixed(3)}` : '-'}
             </div>
 
             {/* THD */}
@@ -396,7 +397,7 @@ export default function CompareMonitoringPage() {
               color: savings_THD > 0 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_THD) ? `${savings_THD > 0 ? '?? : '??} ${Math.abs(savings_THD).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_THD) ? `${savings_THD > 0 ? '↓' : '↑'} ${Math.abs(savings_THD).toFixed(3)}` : '-'}
             </div>
 
             {/* F (Hz) */}
@@ -412,7 +413,7 @@ export default function CompareMonitoringPage() {
               color: Math.abs(savings_F) < 1 ? '#2563eb' : '#6b7280',
               fontWeight: 600
             }}>
-              {Number.isFinite(savings_F) ? `${savings_F > 0 ? '?? : '??} ${Math.abs(savings_F).toFixed(3)}` : '-'}
+              {Number.isFinite(savings_F) ? `${savings_F > 0 ? '↑' : '↓'} ${Math.abs(savings_F).toFixed(3)}` : '-'}
             </div>
           </div>
         </div>
@@ -496,7 +497,7 @@ export default function CompareMonitoringPage() {
 
       <main style={{ marginTop: 0 }}>
         {loading ? (
-          <div>Loading??/div>
+          <div>Loading…</div>
         ) : error ? (
           <div style={{ color: '#b91c1c' }}>Error: {error}</div>
         ) : (
@@ -510,7 +511,8 @@ export default function CompareMonitoringPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
                 {filteredGroups.map(([device, items], idx) => {
-                  const displayName = `GE${String(idx + 1).padStart(2, '0')}`
+                  // display names: KSave01, KSave02, ...
+                  const displayName = `KSave${String(idx + 1).padStart(2, '0')}`
                   return <ComparisonCard key={device} device={device} displayName={displayName} items={items} />
                 })}
               </div>
