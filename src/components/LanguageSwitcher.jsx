@@ -65,10 +65,10 @@ export default function LanguageSwitcher({ allowedCodes, showBruneiAlias = false
                 onClick={() => {
                   try {
                     setLocale(language.code);
-                    try { localStorage.setItem('k_system_lang', language.code); } catch (_) {}
+                    try { localStorage.setItem('ge_lang', language.code); } catch (_) {}
                     try { localStorage.setItem('locale', language.code); } catch (_) {}
                     try {
-                      window.dispatchEvent(new CustomEvent('k-system-lang', { detail: language.code }));
+                      window.dispatchEvent(new CustomEvent('ge-lang-changed', { detail: language.code }));
                       window.dispatchEvent(new CustomEvent('locale-changed', { detail: { locale: language.code } }));
                     } catch (_) {}
                   } catch (e) {}

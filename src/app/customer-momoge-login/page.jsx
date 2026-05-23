@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { parseJsonResponse } from '@/lib/parse-json-response';
+import { GE_ADMIN_TOKEN_KEY, GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 
 export default function CustomerMomogeLoginPage() {
   const router = useRouter();
@@ -38,8 +39,8 @@ export default function CustomerMomogeLoginPage() {
         return;
       }
 
-      localStorage.setItem('k_system_admin_token', data.token || '');
-      localStorage.setItem('k_system_admin_user', JSON.stringify({
+      localStorage.setItem(GE_ADMIN_TOKEN_KEY, data.token || '');
+      localStorage.setItem(GE_ADMIN_USER_KEY, JSON.stringify({
         userId: data.userId,
         username: data.username,
         name: data.name,

@@ -95,7 +95,7 @@ export default function SelectClient() {
       </div>
 
       <div style={{ textAlign: "center" }}>
-        <p style={S.logo}>⚡ GOEUN SERVER HUB</p>
+        <p style={S.logo}>⚡ GE SERVER HUB</p>
         <h1 style={S.title}>{t.title}</h1>
         <p style={S.sub}>{t.sub}</p>
       </div>

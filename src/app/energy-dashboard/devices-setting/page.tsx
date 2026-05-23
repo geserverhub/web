@@ -9,7 +9,7 @@ interface Device {
   deviceID?: number;
   deviceName?: string;
   name?: string;
-  ksaveID?: string;
+  geID?: string;
   seriesNo?: string;
   type?: string;
   owner?: string;
@@ -54,17 +54,17 @@ interface CustomerResult {
 }
 
 const customerCompanyEnFallbackMap: Record<string, string> = {
-  'บริษัท ไทยเกษตร อินดัสเทรียล จำกัด': 'Thai Kaset Industrial Co., Ltd.',
-  'บริษัท คาลเท็กซ์ (ไทยแลนด์) จำกัด': 'Caltex (Thailand) Co., Ltd.',
-  'บริษัท ซัสโก้ จำกัด': 'SUSCO Co., Ltd.',
-  'บริษัท ซีเจ มอร์ จำกัด': 'CJ MORE Co., Ltd.',
-  'บริษัท ท็อปซูเปอร์มาร์เก็ต จำกัด': 'Tops Supermarket Co., Ltd.',
-  'บริษัท บีซีพีจี จำกัด (มหาชน)': 'BCPG Public Company Limited',
-  'บริษัท พีทีจี เอ็นเนอร์ยี่ จำกัด': 'PTG Energy Co., Ltd.',
-  'บริษัท เจแอนด์อี ไลท์ติ้ง จำกัด': 'J&E Lighting Co., Ltd.',
-  'บริษัท เชลล์ (ประเทศไทย) จำกัด': 'Shell (Thailand) Co., Ltd.',
-  'บริษัท โลตัส โก เฟรช จำกัด': 'Lotus Go Fresh Co., Ltd.',
-  'ห้างหุ้นส่วนจำกัด ลอว์สัน 108': 'Lawson 108 Limited Partnership'
+  'Thai Kaset': 'Thai Kaset Industrial Co., Ltd.',
+  'Caltex': 'Caltex (Thailand) Co., Ltd.',
+  'SUSCO': 'SUSCO Co., Ltd.',
+  'CJ MORE': 'CJ MORE Co., Ltd.',
+  'Tops': 'Tops Supermarket Co., Ltd.',
+  'BCPG': 'BCPG Public Company Limited',
+  'PTG': 'PTG Energy Co., Ltd.',
+  'J&E Lighting': 'J&E Lighting Co., Ltd.',
+  'Shell': 'Shell (Thailand) Co., Ltd.',
+  'Lotus': 'Lotus Go Fresh Co., Ltd.',
+  'Lawson 108': 'Lawson 108 Limited Partnership',
 };
 
 const getCustomerCompanyEn = (customer: CustomerResult) => {
@@ -97,7 +97,7 @@ export default function DevicesSettingPage() {
   const [productNames, setProductNames] = useState<string[]>([]);
   const [addForm, setAddForm] = useState<DeviceForm>({
     deviceName: '',
-    ksaveID: '',
+    geID: '',
     seriesNo: '',
     ipAddress: '',
     phone: '',
@@ -140,18 +140,18 @@ export default function DevicesSettingPage() {
     return `${y}${m}${day}`;
   };
 
-  const nextKsaveId = (site: string | undefined) => {
+  const nextGeId = (site: string | undefined) => {
     const code = siteCode(site);
-    const regex = new RegExp(`^KSAVE-${code}-(\\d{6})$`);
+    const regex = new RegExp(`^GE-${code}-(\\d{6})$`, 'i');
     const current = devices
       .filter(d => (d.site || '').toLowerCase() === (site || '').toLowerCase())
       .map(d => {
-        const match = (d.ksaveID || '').toUpperCase().match(regex);
+        const match = (d.geID || '').toUpperCase().match(regex);
         return match ? Number(match[1]) : 0;
       })
       .reduce((max, n) => Math.max(max, n), 0);
     const next = String(current + 1).padStart(6, '0');
-    return `KSAVE-${code}-${next}`;
+    return `GE-${code}-${next}`;
   };
 
   const nextSerialNo = (site: string | undefined) => {
@@ -255,9 +255,9 @@ export default function DevicesSettingPage() {
   async function handleDelete(device: Device) {
     if (!device.deviceID) return;
 
-    const deviceName = device.deviceName || device.name || device.ksaveID || 'this device';
+    const deviceName = device.deviceName || device.name || device.geID || 'this device';
     const confirmMsg = locale === 'ko'
-      ? `정말 "${deviceName}"을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`
+      ? `"${deviceName}"을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`
       : locale === 'th'
       ? `คุณแน่ใจหรือไม่ที่จะลบ "${deviceName}"?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้`
       : `Are you sure you want to delete "${deviceName}"?\n\nThis action cannot be undone.`;
@@ -340,7 +340,7 @@ export default function DevicesSettingPage() {
   function openAddModal() {
     setAddForm({
       deviceName: '',
-      ksaveID: nextKsaveId(selectedSite),
+      geID: nextGeId(selectedSite),
       seriesNo: nextSerialNo(selectedSite),
       ipAddress: '',
       phone: '',
@@ -466,142 +466,150 @@ export default function DevicesSettingPage() {
     switch (uiLocale) {
       case 'th':
         return {
-          heroSubtitle: 'จัดการอุปกรณ์และข้อมูลลูกค้าทั้งหมด',
-          total: 'ทั้งหมด',
-          online: 'ออนไลน์',
-          offline: 'ออฟไลน์',
-          searchPlaceholder: 'ค้นหา ชื่อลูกค้า, เบอร์โทร, ที่อยู่...',
-          refresh: 'รีเฟรช',
-          addDevice: 'เพิ่มเครื่อง',
-          deviceList: 'รายการอุปกรณ์',
-          loading: 'กำลังโหลดข้อมูล...',
-          retry: 'ลองใหม่',
-          notFound: 'ไม่พบอุปกรณ์',
-          email: 'อีเมล',
+          heroSubtitle: 'à¸à¸±à¸à¸à¸²à¸£à¸?¸¸à¸à¸à¸£à¸à¹à¹à¸?¸°à¸à¹à¸?¸¡à¸¹à¸¥à¸?¸¹à¸à¸à¹à¸²à¸à¸±à¹à¸à¸«à¸¡à¸?,
+          total: 'à¸à¸±à¹à¸à¸«à¸¡à¸?,
+          online: 'à¸?¸­à¸à¹à¸?¸à¹?,
+          offline: 'à¸?¸­à¸à¹à¸?¸à¹?,
+          searchPlaceholder: 'à¸à¹à¸à¸«à¸?à¸à¸·à¹à¸­à¸?¸¹à¸à¸à¹à¸², à¹à¸à¸­à¸£à¹à¹à¸à¸? à¸à¸µà¹à¸­à¸¢à¸¹à¹?..',
+          refresh: 'à¸£à¸µà¹à¸à¸£à¸?,
+          addDevice: 'à¹à¸à¸´à¹à¸¡à¹à¸à¸£à¸·à¹à¸?¸',
+          deviceList: 'à¸£à¸²à¸¢à¸à¸²à¸£à¸?¸¸à¸à¸à¸£à¸à¹?,
+          loading: 'à¸à¸³à¸?¸±à¸à¹à¸«à¸¥à¸à¸à¹à¸­à¸¡à¸¹à¸?..',
+          retry: 'à¸?¸­à¸à¹à¸«à¸¡à¹?,
+          notFound: 'à¹à¸¡à¹à¸à¸à¸­à¸¸à¸à¸à¸£à¸à¹',
+          email: 'à¸?¸µà¹à¸¡à¸¥',
           ipAddress: 'IP Address',
-          lastUpdate: 'อัปเดตล่าสุด',
-          registerDate: 'วันที่ลงทะเบียน',
-          tableHeaders: ['#', 'แก้ไข', 'ชื่อเครื่อง', 'KSAVE ID', 'ชื่อลูกค้า', 'เบอร์โทร', 'ที่อยู่', 'อีเมลเจ้าของ', 'ประเภทการติดตั้ง', 'สถานะ', 'IP Address', 'อัปเดตล่าสุด', 'ลงทะเบียน'],
-          settingsBadge: 'ตั้งค่าอุปกรณ์',
-          edit: 'แก้ไข',
-          delete: 'ลบ',
-          showing: 'แสดง',
-          fromTotal: 'รายการ จากทั้งหมด',
-          devicesUnit: 'เครื่อง',
-          customerInfo: 'ข้อมูลลูกค้า',
-          customerNameLabel: 'ชื่อลูกค้า / Customer Name (ไทย)',
-          customerNamePlaceholder: 'ชื่อ-นามสกุลลูกค้า (ภาษาไทย)',
-          customerNameEnLabel: 'ชื่อลูกค้า (ภาษาอังกฤษ)',
+          lastUpdate: 'à¸?¸±à¸à?à¸à¸à¸?¹à¸²à¸ªà¸¸à¸',
+          registerDate: 'à¸§à¸±à¸à¸à¸µà¹à¸?¸à¸à¸°à¹à¸à¸µà¸¢à¸',
+          tableHeaders: ['#', 'à¹à¸à¹à¹à¸?, 'à¸à¸·à¹à¸­à¹à¸à¸£à¸·à¹à¸?¸', 'GE ID', 'à¸à¸·à¹à¸­à¸?¸¹à¸à¸à¹à¸²', 'à¹à¸à¸­à¸£à¹à¹à¸à¸?, 'à¸à¸µà¹à¸­à¸¢à¸¹à¹?, 'à¸?¸µà¹à¸¡à¸¥à¹à¸à¹à¸²à¸à¸?¸', 'à¸à¸£à¸°à?à¸ à¸à¸à¸²à¸£à¸à¸´à¸à¸à¸±à¹à¸', 'à¸ªà¸à¸²à¸à¸?, 'IP Address', 'à¸?¸±à¸à?à¸à¸à¸?¹à¸²à¸ªà¸¸à¸', 'à¸?¸à¸à¸°à¹à¸à¸µà¸¢à¸'],
+          settingsBadge: 'à¸à¸±à¹à¸à¸à¹à¸²à¸­à¸¸à¸à¸à¸£à¸à¹',
+          edit: 'à¹à¸à¹à¹à¸?,
+          delete: 'à¸?¸',
+          showing: 'à¹à¸ªà¸à¸',
+          fromTotal: 'à¸£à¸²à¸¢à¸à¸²à¸£ à¸à¸²à¸à¸à¸±à¹à¸à¸«à¸¡à¸',
+          devicesUnit: 'à¹à¸à¸£à¸·à¹à¸?¸',
+          customerInfo: 'à¸à¹à¸?¸¡à¸¹à¸¥à¸?¸¹à¸à¸à¹à¸²',
+          customerNameLabel: 'à¸à¸·à¹à¸­à¸?¸¹à¸à¸à¹à¸² / Customer Name (à¹à¸à¸?',
+          customerNamePlaceholder: 'à¸à¸·à¹à¸­-à¸à¸²à¸¡à¸ªà¸à¸¸à¸?¸¥à¸¹à¸à¸à¹à¸?(à¸ à¸²à¸©à¸²à¹à¸à¸?',
+          customerNameEnLabel: 'à¸à¸·à¹à¸­à¸?¸¹à¸à¸à¹à¸² (à¸ à¸²à¸©à¸²à¸?¸±à¸à¸à¸¤à¸©)',
           customerNameEnPlaceholder: 'Customer Name (English)',
-          phoneLabel: 'เบอร์โทร / Phone',
-          phonePlaceholder: 'เช่น 02-123-4567 หรือ +66 81-234-5678',
-          addressLabel: 'ที่อยู่ / Address',
-          addressPlaceholder: 'ที่อยู่เต็ม เช่น บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์',
-          deviceInfo: 'ข้อมูลอุปกรณ์',
-          deviceNameLabel: 'ชื่อเครื่อง / Device Name',
-          ownerEmailLabel: 'อีเมลเจ้าของ / Owner Email',
-          serialNoLabel: 'หมายเลขซีเรียล / Serial no',
-          locationLabel: 'สถานที่ / Location',
-          locationNameLabel: 'ชื่อสถานที่ / Location name',
-          latitudeLabel: 'ละติจูด / Latitude',
-          longitudeLabel: 'ลองจิจูด / Longitude',
-          devicePhoneLabel: 'เบอร์โทรเครื่อง / Device Phone',
-          deviceNamePlaceholder: 'ชื่อเครื่อง',
-          ownerEmailPlaceholder: 'อีเมลเจ้าของ',
-          locationPlaceholder: 'สถานที่',
-          devicePhonePlaceholder: 'เช่น 02-123-4567 หรือ +66 81-234-5678',
-          serialNoPlaceholder: 'เช่น KS2024010001',
-          saving: 'กำลังบันทึก...',
-          saved: '✓ บันทึกแล้ว!',
-          save: 'บันทึก',
-          cancel: 'ยกเลิก',
-          close: 'ปิด',
-          search: 'ค้นหา',
-          saveError: 'เกิดข้อผิดพลาด กรุณาลองใหม่',
-          deviceConfigTitle: 'การตั้งค่าอุปกรณ์',
-          statusOnline: 'ออนไลน์',
-          statusOffline: 'ออฟไลน์',
-          addTitle: 'เพิ่มอุปกรณ์ใหม่',
-          addHint: 'กรอกข้อมูลอุปกรณ์และลูกค้าเพื่อสร้างเครื่องใหม่',
-          create: 'เพิ่มเครื่อง',
-          creating: 'กำลังเพิ่ม...',
-          created: '✓ เพิ่มสำเร็จ!',
-          createError: 'เพิ่มไม่สำเร็จ กรุณาตรวจสอบชื่อเครื่องแล้วลองใหม่',
-          deviceNameRequired: 'ชื่อเครื่องจำเป็นต้องกรอก',
-          installationTypeLabel: '📦 ประเภทการติดตั้ง / Installation Type',
-          preInstallLabel: '📝 ก่อนติดตั้ง',
+          phoneLabel: 'à¹à¸à¸­à¸£à¹à¹à¸à¸?/ Phone',
+          phonePlaceholder: 'à¹à¸à¹à¸?02-123-4567 à¸«à¸£à¸·à¸­ +66 81-234-5678',
+          addressLabel: 'à¸à¸µà¹à¸­à¸¢à¸¹à¹?/ Address',
+          addressPlaceholder: 'à¸à¸µà¹à¸­à¸¢à¸¹à¹à?à¸à¹à¸?à¹à¸à¹à¸?à¸à¹à¸²à¸à¹à¸?¸à¸à¸µà¹?à¸à¸à¸?à¸à¸³à¸à¸¥ à¸?¸³à¹à¸ à¸­ à¸à¸±à¸à¸«à¸§à¸±à¸?à¸£à¸«à¸±à¸ªà¹à¸à¸£à¸©à¸à¸µà¸¢à¹',
+          deviceInfo: 'à¸à¹à¸?¸¡à¸¹à¸¥à¸?¸¸à¸à¸à¸£à¸à¹?,
+          deviceNameLabel: 'à¸à¸·à¹à¸­à¹à¸à¸£à¸·à¹à¸?¸ / Device Name',
+          ownerEmailLabel: 'à¸?¸µà¹à¸¡à¸¥à¹à¸à¹à¸²à¸à¸?¸ / Owner Email',
+          serialNoLabel: 'à¸«à¸¡à¸²à¸¢à¹à¸?¸à¸à¸µà¹à¸£à¸µà¸¢à¸¥ / Serial no',
+          locationLabel: 'à¸ªà¸à¸²à¸à¸à¸µà¹?/ Location',
+          locationNameLabel: 'à¸à¸·à¹à¸­à¸ªà¸à¸²à¸à¸à¸µà¹?/ Location name',
+          latitudeLabel: 'à¸?¸°à¸à¸´à¸à¸¹à¸?/ Latitude',
+          longitudeLabel: 'à¸?¸­à¸à¸à¸´à¸à¸¹à¸ / Longitude',
+          devicePhoneLabel: 'à¹à¸à¸­à¸£à¹à¹à¸à¸£à?à¸à¸£à¸·à¹à¸?¸ / Device Phone',
+          deviceNamePlaceholder: 'à¸à¸·à¹à¸­à¹à¸à¸£à¸·à¹à¸?¸',
+          ownerEmailPlaceholder: 'à¸?¸µà¹à¸¡à¸¥à¹à¸à¹à¸²à¸à¸?¸',
+          locationPlaceholder: 'à¸ªà¸à¸²à¸à¸à¸µà¹?,
+          devicePhonePlaceholder: 'à¹à¸à¹à¸?02-123-4567 à¸«à¸£à¸·à¸­ +66 81-234-5678',
+          serialNoPlaceholder: 'à¹à¸à¹à¸?KS2024010001',
+          saving: 'à¸à¸³à¸?¸±à¸à¸à¸±à¸à¸à¸¶à¸?..',
+          saved: '??à¸à¸±à¸à¸à¸¶à¸à¹à¸¥à¹à¸§!',
+          save: 'à¸à¸±à¸à¸à¸¶à¸',
+          cancel: 'à¸¢à¸à¹à¸?¸´à¸?,
+          close: 'à¸à¸´à¸?,
+          search: 'à¸à¹à¸à¸«à¸?,
+          saveError: 'à¹à¸à¸´à¸à¸à¹à¸­à¸à¸´à¸à¸à¸?¸²à¸?à¸à¸£à¸¸à¸à¸²à¸¥à¸?¸à¹à¸«à¸¡à¹',
+          deviceConfigTitle: 'à¸à¸²à¸£à¸à¸±à¹à¸à¸à¹à¸²à¸?¸¸à¸à¸à¸£à¸à¹?,
+          statusOnline: 'à¸?¸­à¸à¹à¸?¸à¹?,
+          statusOffline: 'à¸?¸­à¸à¹à¸?¸à¹?,
+          addTitle: 'à¹à¸à¸´à¹à¸¡à¸?¸¸à¸à¸à¸£à¸à¹à¹à¸«à¸¡à¹?,
+          addHint: 'à¸à¸£à¸?¸à¸à¹à¸?¸¡à¸¹à¸¥à¸?¸¸à¸à¸à¸£à¸à¹à¹à¸?¸°à¸?¸¹à¸à¸à¹à¸²à¹à¸à¸·à¹à¸­à¸ªà¸£à¹à¸²à¸à?à¸à¸£à¸·à¹à¸?¸à¹à¸«à¸¡à¹',
+          create: 'à¹à¸à¸´à¹à¸¡à¹à¸à¸£à¸·à¹à¸?¸',
+          creating: 'à¸à¸³à¸?¸±à¸à?à¸à¸´à¹à¸¡...',
+          created: '??à¹à¸à¸´à¹à¸¡à¸ªà¸³à¹à¸£à¹à¸?',
+          createError: 'à¹à¸à¸´à¹à¸¡à¹à¸¡à¹à¸ªà¸³à?à¸£à¹à¸?à¸à¸£à¸¸à¸à¸²à¸à¸£à¸§à¸à¸ªà¸?¸à¸à¸·à¹à¸­à¹à¸à¸£à¸·à¹à¸?¸à¹à¸¥à¹à¸§à¸?¸­à¸à¹à¸«à¸¡à¹?,
+          deviceNameRequired: 'à¸à¸·à¹à¸­à¹à¸à¸£à¸·à¹à¸?¸à¸à¸³à¹à¸à¹à¸à¸à¹à¸­à¸à¸à¸£à¸­à¸?,
+          installationTypeLabel: '?¦ à¸à¸£à¸°à?à¸ à¸à¸à¸²à¸£à¸à¸´à¸à¸à¸±à¹à¸ / Installation Type',
+          preInstallLabel: '? à¸à¹à¸?¸à¸à¸´à¸à¸à¸±à¹à¸?,
           preInstallDesc: 'Pre-Installation',
-          installedLabel: '✓ ติดตั้งจริง',
+          installedLabel: '??à¸à¸´à¸à¸à¸±à¹à¸à¸à¸£à¸´à¸?,
           installedDesc: 'Installed'
         };
       case 'ko':
         return {
-          heroSubtitle: '장치 및 고객 정보를 관리합니다',
-          total: '전체',
-          online: '온라인',
-          offline: '오프라인',
-          searchPlaceholder: '고객명, 전화번호, 주소 검색...',
-          refresh: '새로고침',
-          addDevice: '장치 추가',
-          deviceList: '장치 목록',
-          loading: '데이터를 불러오는 중...',
-          retry: '다시 시도',
-          notFound: '장치를 찾을 수 없습니다',
-          email: '이메일',
-          ipAddress: 'IP 주소',
-          lastUpdate: '최근 업데이트',
-          registerDate: '등록일',
-          tableHeaders: ['#', '수정', '장치명', 'KSAVE ID', '고객명', '전화번호', '주소', '소유자 이메일', '설치 유형', '상태', 'IP 주소', '최근 업데이트', '등록일'],
-          settingsBadge: '장치 설정',
-          edit: '수정',
-          delete: '삭제',
-          showing: '표시',
-          fromTotal: '개 / 전체',
-          devicesUnit: '대',
-          customerInfo: '고객 정보',
-          customerNameLabel: '고객명 (태국어)',
-          customerNamePlaceholder: '고객 이름 입력 (태국어)',
-          customerNameEnLabel: '고객명 (영어)',
+          heroSubtitle: '?¥ì¹ ë°?ê³ ê° ?ë³´ë¥?ê´ë¦¬í©?ë¤',
+          total: '?ì²´',
+          online: '?¨ë¼??,
+          offline: '?¤í?¼ì¸',
+          searchPlaceholder: 'ê³ ê°ëª? ?íë²í¸, ì£¼ì ê²??..',
+          refresh: '?ë¡ê³ ì¹¨',
+          addDevice: '?¥ì¹ ì¶ê?',
+          deviceList: '?¥ì¹ ëª©ë¡',
+          loading: '?°ì´?°ë? ë¶ë¬?¤ë ì¤?..',
+          retry: '?¤ì ?ë',
+          notFound: '?¥ì¹ë¥?ì°¾ì ???ìµ?ë¤',
+          email: '?´ë©??,
+          ipAddress: 'IP ì£¼ì',
+          lastUpdate: 'ìµê·¼ ?
+ë°?´í¸',
+          registerDate: '?±ë¡??,
+          tableHeaders: ['#', '?ì ', '?¥ì¹ëª?, 'GE ID', 'ê³ ê°ëª?, '?íë²í¸', 'ì£¼ì', '?ì ???´ë©??, '?¤ì¹ ? í', '?í', 'IP ì£¼ì', 'ìµê·¼ ?
+ë°?´í¸', '?±ë¡??],
+          settingsBadge: '?¥ì¹ ?¤ì ',
+          edit: '?ì ',
+          delete: '?? ',
+          showing: '?ì',
+          fromTotal: 'ê°?/ ?ì²´',
+          devicesUnit: '?',
+          customerInfo: 'ê³ ê° ?ë³´',
+          customerNameLabel: 'ê³ ê°ëª?(?êµ­??',
+          customerNamePlaceholder: 'ê³ ê° ?´ë¦ ?
+ë ¥ (?êµ­??',
+          customerNameEnLabel: 'ê³ ê°ëª?(?ì´)',
           customerNameEnPlaceholder: 'Customer Name (English)',
-          phoneLabel: '전화번호 / Phone',
-          phonePlaceholder: '예: 02-123-4567 또는 +82 10-1234-5678',
-          addressLabel: '주소 / Address',
-          addressPlaceholder: '상세 주소 입력',
-          deviceInfo: '장치 정보',
-          deviceNameLabel: '장치명 / Device Name',
-          ownerEmailLabel: '소유자 이메일 / Owner Email',
-          serialNoLabel: '시리얼 번호 / Serial no',
-          locationLabel: '위치 / Location',
-          locationNameLabel: '위치명 / Location name',
-          latitudeLabel: '위도 / Latitude',
-          longitudeLabel: '경도 / Longitude',
-          devicePhoneLabel: '장치 전화번호 / Device Phone',
-          deviceNamePlaceholder: '장치명',
-          ownerEmailPlaceholder: '소유자 이메일',
-          locationPlaceholder: '위치',
-          devicePhonePlaceholder: '예: 02-123-4567 또는 +82 10-1234-5678',
-          serialNoPlaceholder: '예: KS2024010001',
-          saving: '저장 중...',
-          saved: '✓ 저장 완료!',
-          save: '저장',
-          cancel: '취소',
-          close: '닫기',
-          search: '검색',
-          saveError: '오류가 발생했습니다. 다시 시도해주세요.',
-          deviceConfigTitle: '장치 구성',
-          statusOnline: '온라인',
-          statusOffline: '오프라인',
-          addTitle: '새 장치 추가',
-          addHint: '새 장치를 생성하려면 장치/고객 정보를 입력하세요',
-          create: '추가',
-          creating: '추가 중...',
-          created: '✓ 추가 완료!',
-          createError: '추가 실패. 장치명을 확인 후 다시 시도하세요.',
-          deviceNameRequired: '장치명은 필수입니다',
-          installationTypeLabel: '📦 설치 유형 / Installation Type',
-          preInstallLabel: '📝 설치 전',
+          phoneLabel: '?íë²í¸ / Phone',
+          phonePlaceholder: '?? 02-123-4567 ?ë +82 10-1234-5678',
+          addressLabel: 'ì£¼ì / Address',
+          addressPlaceholder: '?ì¸ ì£¼ì ?
+ë ¥',
+          deviceInfo: '?¥ì¹ ?ë³´',
+          deviceNameLabel: '?¥ì¹ëª?/ Device Name',
+          ownerEmailLabel: '?ì ???´ë©??/ Owner Email',
+          serialNoLabel: '?ë¦¬??ë²í¸ / Serial no',
+          locationLabel: '?ì¹ / Location',
+          locationNameLabel: '?ì¹ëª?/ Location name',
+          latitudeLabel: '?ë / Latitude',
+          longitudeLabel: 'ê²½ë / Longitude',
+          devicePhoneLabel: '?¥ì¹ ?íë²í¸ / Device Phone',
+          deviceNamePlaceholder: '?¥ì¹ëª?,
+          ownerEmailPlaceholder: '?ì ???´ë©??,
+          locationPlaceholder: '?ì¹',
+          devicePhonePlaceholder: '?? 02-123-4567 ?ë +82 10-1234-5678',
+          serialNoPlaceholder: '?? KS2024010001',
+          saving: '???ì¤?..',
+          saved: '??????ë£!',
+          save: '???,
+          cancel: 'ì·¨ì',
+          close: '?«ê¸°',
+          search: 'ê²??,
+          saveError: '?¤ë¥ê° ë°ì?ìµ?ë¤. ?¤ì ?ë?´ì£¼?¸ì.',
+          deviceConfigTitle: '?¥ì¹ êµ¬ì±',
+          statusOnline: '?¨ë¼??,
+          statusOffline: '?¤í?¼ì¸',
+          addTitle: '???¥ì¹ ì¶ê?',
+          addHint: '???¥ì¹ë¥??ì±?ë ¤ë©??¥ì¹/ê³ ê° ?ë³´ë¥??
+ë ¥?ì¸??,
+          create: 'ì¶ê?',
+          creating: 'ì¶ê? ì¤?..',
+          created: '??ì¶ê? ?ë£!',
+          createError: 'ì¶ê? ?¤í¨. ?¥ì¹ëª
+ì ?ì¸ ???¤ì ?ë?ì¸??',
+          deviceNameRequired: '?¥ì¹ëª
+ì? ?ì?
+ë??,
+          installationTypeLabel: '?¦ ?¤ì¹ ? í / Installation Type',
+          preInstallLabel: '? ?¤ì¹ ??,
           preInstallDesc: 'Pre-Installation',
-          installedLabel: '✓ 설치 완료',
+          installedLabel: '???¤ì¹ ?ë£',
           installedDesc: 'Installed'
         };
       default:
@@ -621,7 +629,7 @@ export default function DevicesSettingPage() {
           ipAddress: 'IP Address',
           lastUpdate: 'Last Update',
           registerDate: 'Register Date',
-          tableHeaders: ['#', 'Edit', 'Device Name', 'KSAVE ID', 'Customer Name', 'Phone', 'Address', 'Owner Email', 'Installation Type', 'Status', 'IP Address', 'Last Update', 'Registered'],
+          tableHeaders: ['#', 'Edit', 'Device Name', 'GE ID', 'Customer Name', 'Phone', 'Address', 'Owner Email', 'Installation Type', 'Status', 'IP Address', 'Last Update', 'Registered'],
           settingsBadge: 'Device Settings',
           edit: 'Edit',
           delete: 'Delete',
@@ -652,7 +660,7 @@ export default function DevicesSettingPage() {
           devicePhonePlaceholder: 'e.g. +66 81-234-5678',
           serialNoPlaceholder: 'e.g. KS2024010001',
           saving: 'Saving...',
-          saved: '✓ Saved!',
+          saved: '??Saved!',
           save: 'Save',
           cancel: 'Cancel',
           close: 'Close',
@@ -665,13 +673,13 @@ export default function DevicesSettingPage() {
           addHint: 'Fill in device and customer information to create a new device',
           create: 'Create Device',
           creating: 'Creating...',
-          created: '✓ Created!',
+          created: '??Created!',
           createError: 'Create failed. Please check required fields and try again.',
           deviceNameRequired: 'Device name is required',
-          installationTypeLabel: '📦 Installation Type',
-          preInstallLabel: '📝 Pre-Installation',
+          installationTypeLabel: '?¦ Installation Type',
+          preInstallLabel: '? Pre-Installation',
           preInstallDesc: 'Pre-Installation',
-          installedLabel: '✓ Installed',
+          installedLabel: '??Installed',
           installedDesc: 'Installed'
         };
     }
@@ -724,7 +732,7 @@ export default function DevicesSettingPage() {
               className="hidden md:inline-flex items-center justify-center gap-2 px-4 py-3 bg-white text-slate-800 font-semibold text-sm rounded-xl hover:bg-slate-50 transition shadow-md border border-white/30"
             >
               <Plus className="w-4 h-4" />
-              {ui.addDevice || 'เพิ่มเครื่อง'}
+              {ui.addDevice || 'à¹à¸à¸´à¹à¸¡à¹à¸à¸£à¸·à¹à¸?¸'}
             </button>
           </div>
         </div>
@@ -751,7 +759,7 @@ export default function DevicesSettingPage() {
           <button onClick={openAddModal}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-xl text-sm font-semibold hover:from-emerald-700 hover:to-green-800 shadow-sm transition whitespace-nowrap">
             <Plus className="w-4 h-4" />
-            {ui.addDevice || 'เพิ่มเครื่อง'}
+            {ui.addDevice || 'à¹à¸à¸´à¹à¸¡à¹à¸à¸£à¸·à¹à¸?¸'}
           </button>
         </div>
       </div>
@@ -788,7 +796,7 @@ export default function DevicesSettingPage() {
             </div>
           ) : (
             <>
-              {/* ── Mobile cards (< md) ── */}
+              {/* ?? Mobile cards (< md) ?? */}
               <div className="md:hidden space-y-3">
                 {filteredDevices.map((device) => (
                   <div key={device.deviceID} className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
@@ -798,7 +806,7 @@ export default function DevicesSettingPage() {
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">
                           {device.deviceName || device.name || '-'}
                         </span>
-                        <p className="text-xs text-gray-400 font-mono mt-1">{device.ksaveID || '-'}</p>
+                        <p className="text-xs text-gray-400 font-mono mt-1">{device.geID || '-'}</p>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold ${
@@ -868,7 +876,7 @@ export default function DevicesSettingPage() {
                 ))}
               </div>
 
-              {/* ── Desktop table (≥ md) ── */}
+              {/* ?? Desktop table (??md) ?? */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -900,7 +908,7 @@ export default function DevicesSettingPage() {
                             {device.deviceName || device.name || '-'}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-xs text-gray-500 font-mono">{device.ksaveID || '-'}</td>
+                        <td className="px-4 py-3.5 text-xs text-gray-500 font-mono">{device.geID || '-'}</td>
                         <td className="px-4 py-3.5">
                           {device.customerName
                             ? <span className="flex items-center gap-1.5 font-semibold text-gray-800"><User className="w-3.5 h-3.5 text-blue-400 flex-shrink-0"/>{device.customerName}</span>
@@ -932,15 +940,15 @@ export default function DevicesSettingPage() {
                                 onChange={(e) => setSelectedRecordScope(e.target.value as 'pre_install' | 'installed')}
                                 className="px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500"
                               >
-                                <option value="pre_install">📝 {ui.preInstallLabel || 'Pre-Install'}</option>
-                                <option value="installed">✓ {ui.installedLabel || 'Installed'}</option>
+                                <option value="pre_install">? {ui.preInstallLabel || 'Pre-Install'}</option>
+                                <option value="installed">??{ui.installedLabel || 'Installed'}</option>
                               </select>
                               <button
                                 onClick={updateRecordScope}
                                 disabled={updatingRecordScope}
                                 className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                               >
-                                ✓
+                                ??
                               </button>
                               <button
                                 onClick={() => {
@@ -949,7 +957,7 @@ export default function DevicesSettingPage() {
                                 }}
                                 className="px-2 py-1 text-xs bg-gray-400 text-white rounded hover:bg-gray-500"
                               >
-                                ✕
+                                ??
                               </button>
                             </div>
                           ) : (
@@ -959,7 +967,7 @@ export default function DevicesSettingPage() {
                                   ? 'bg-blue-100 text-blue-700'
                                   : 'bg-green-100 text-green-700'
                               }`}>
-                                {device.record_scope === 'pre_install' ? '📝' : '✓'} {device.record_scope === 'pre_install' ? (ui.preInstallLabel || 'Pre-Install') : (ui.installedLabel || 'Installed')}
+                                {device.record_scope === 'pre_install' ? '?' : '??} {device.record_scope === 'pre_install' ? (ui.preInstallLabel || 'Pre-Install') : (ui.installedLabel || 'Installed')}
                               </span>
                               <button
                                 onClick={() => {
@@ -967,7 +975,7 @@ export default function DevicesSettingPage() {
                                   setSelectedRecordScope(device.record_scope || 'installed');
                                 }}
                                 className="w-6 h-6 text-gray-400 hover:text-blue-600 flex items-center justify-center"
-                                title="แก้ไข"
+                                title="à¹à¸à¹à¹à¸?
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
@@ -1068,9 +1076,9 @@ export default function DevicesSettingPage() {
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{ui.deviceInfo}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">KSAVE ID</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">GE ID</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 font-mono">
-                      {viewingDevice.ksaveID || '-'}
+                      {viewingDevice.geID || '-'}
                     </div>
                   </div>
                   <div>
@@ -1342,12 +1350,12 @@ export default function DevicesSettingPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">KSAVE ID</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">GE ID</label>
                   <input
-                    value={addForm.ksaveID ?? ''}
-                    onChange={e => setAddForm(f => ({ ...f, ksaveID: e.target.value }))}
+                    value={addForm.geID ?? ''}
+                    onChange={e => setAddForm(f => ({ ...f, geID: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder={`KSAVE-${siteCode(selectedSite)}-000001`}
+                    placeholder={`GE-${siteCode(selectedSite)}-000001`}
                   />
                 </div>
                 <div>
@@ -1426,7 +1434,7 @@ export default function DevicesSettingPage() {
                         value={customerSearchTerm}
                         onChange={e => setCustomerSearchTerm(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder={ui.searchPlaceholder || 'ค้นหาลูกค้าจากฐานข้อมูล'}
+                        placeholder={ui.searchPlaceholder || 'à¸à¹à¸à¸«à¸²à¸¥à¸¹à¸à¸à¹à¸²à¸à¸²à¸à¸à¸²à¸à¸à¹à¸­à¸¡à¸¹à¸?}
                       />
                       <button
                         type="button"

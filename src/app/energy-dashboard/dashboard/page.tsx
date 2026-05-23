@@ -28,7 +28,7 @@ interface RecentDevice {
   customerPhone?: string
   customerAddress?: string
   seriesNo?: string
-  ksaveID?: string
+  geID?: string
   metricsMeterNo?: string
   beforeMeterNo?: string
   ipAddress?: string
@@ -89,8 +89,8 @@ const isPreInstallScope = (scope?: string | null) => {
 }
 
 const companyNameFallbackMap: Record<string, string> = {
-  'บริษัท ซีเจ มอร์ จำกัด': 'CJ MORE Co., Ltd.',
-  'บริษัท คาลเท็กซ์ (ไทยแลนด์) จำกัด': 'Caltex (Thailand) Co., Ltd.'
+  'CJ MORE': 'CJ MORE Co., Ltd.',
+  'Caltex': 'Caltex (Thailand) Co., Ltd.',
 }
 
 const getLocalizedCustomerName = (
@@ -121,9 +121,9 @@ export default function DashboardPage() {
   const [showAllDevices, setShowAllDevices] = useState(false)
   const [showAllCurrentAnalysis, setShowAllCurrentAnalysis] = useState(false)
   const focusedDeviceParam = normalizeLookupValue(searchParams.get('device'))
-  const focusedKsaveParam = normalizeLookupValue(searchParams.get('ksave'))
+  const focusedGeParam = normalizeLookupValue(searchParams.get('geID'))
   const requestedSiteParam = String(searchParams.get('site') || '').trim().toLowerCase()
-  const hasFocusedDevice = Boolean(focusedDeviceParam || focusedKsaveParam)
+  const hasFocusedDevice = Boolean(focusedDeviceParam || focusedGeParam)
 
   useEffect(() => {
     if (!requestedSiteParam) return
@@ -150,7 +150,7 @@ export default function DashboardPage() {
     const d = new Date()
     setNowStr(
       d.toLocaleDateString(lang, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) +
-      ' · ' +
+      ' ? ' +
       d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })
     )
   }, [locale])
@@ -188,8 +188,8 @@ export default function DashboardPage() {
   }
 
   if (error && !data) {
-    const errMsg = ({ th: 'โหลดแดชบอร์ดไม่สำเร็จ', ko: '대시보드를 불러오지 못했습니다' } as Record<string, string>)[locale] ?? 'Failed to load dashboard'
-    const retryMsg = ({ th: 'ลองใหม่', ko: '다시 시도' } as Record<string, string>)[locale] ?? 'Retry'
+    const errMsg = ({ th: '?????????????????????', ko: '????? ???? ?????' } as Record<string, string>)[locale] ?? 'Failed to load dashboard'
+    const retryMsg = ({ th: '???????????', ko: '?? ??' } as Record<string, string>)[locale] ?? 'Retry'
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
         <div className="text-center bg-white rounded-3xl shadow-sm border border-red-100 p-10 max-w-sm">
@@ -225,35 +225,35 @@ export default function DashboardPage() {
   const searchQuery = searchTerm.trim().toLowerCase()
   const dashboardCopy = {
     th: {
-      searchLabel: 'กรองตามสถานที่ติดตั้ง',
-      searchPlaceholder: 'ทั้งหมด',
-      searchResults: 'ผลการกรอง',
-      clearSearch: 'ล้าง',
-      allLocations: 'ทั้งหมด',
-      noSearchResults: 'ไม่พบเครื่องที่ตรงกับคำค้น',
-      viewAll: 'ดูทั้งหมด',
-      viewLess: 'ดูน้อยลง',
-      currentTitle: 'วิเคราะห์กระแสไฟก่อนติดตั้ง',
-      currentSubtitle: 'แสดงเฉพาะรายการที่บันทึกเป็นประเภทก่อนติดตั้งจริงในฐานข้อมูลเท่านั้น',
-      avgCurrent: 'กระแสเฉลี่ย',
-      loadBalance: 'สมดุลโหลด',
-      phaseCurrent: 'กระแสแต่ละเฟส',
-      avgThd: 'THD เฉลี่ย',
-      phaseThd: 'THD แต่ละเฟส',
-      updatedAt: 'อัปเดตล่าสุด',
-      analyze: 'ดูทั้งหมด',
-      noCurrentData: 'ยังไม่มีรายการก่อนติดตั้งจริงที่บันทึกไว้',
-      balanceGood: 'สมดุลดี',
-      balanceWarn: 'ควรติดตาม',
-      balanceRisk: 'ต่างกันสูง',
-      beforeCurrentLabel: 'Before K-Save (ก่อนติดตั้ง 7-14 วัน)',
-      beforeAvgCurrent: 'ค่าเฉลี่ยก่อนติดตั้ง',
-      waitingMeter: 'รอรับข้อมูลจากมิเตอร์',
-      modelLabel: 'รุ่น',
-      meterNoLabel: 'เลขมิเตอร์',
-      telLabel: 'โทร.',
-      addressLabel: 'ที่อยู่',
-      currentReduced: 'กระแสลดลง'
+      searchLabel: '????????????????????????,
+      searchPlaceholder: '????????,
+      searchResults: '??????????,
+      clearSearch: '??????',
+      allLocations: '????????,
+      noSearchResults: '?????????????????????????????',
+      viewAll: '??????????,
+      viewLess: '????????????',
+      currentTitle: '???????????????????????????',
+      currentSubtitle: '??????????????????????????????????????????????????????????????????????????,
+      avgCurrent: '?????????????,
+      loadBalance: '????????????,
+      phaseCurrent: '???????????????',
+      avgThd: 'THD ???????,
+      phaseThd: 'THD ?????????',
+      updatedAt: '?????????????????',
+      analyze: '??????????,
+      noCurrentData: '????????????????????????????????????????????,
+      balanceGood: '??????????,
+      balanceWarn: '??????????,
+      balanceRisk: '??????????',
+      beforeCurrentLabel: 'Before GE (??????????????7-14 ????',
+      beforeAvgCurrent: '?????????????????????',
+      waitingMeter: '???????????????????????',
+      modelLabel: '????',
+      meterNoLabel: '????????????',
+      telLabel: '????',
+      addressLabel: '????????,
+      currentReduced: '??????????
     },
     en: {
       searchLabel: 'Filter by Location',
@@ -277,7 +277,7 @@ export default function DashboardPage() {
       balanceGood: 'Balanced',
       balanceWarn: 'Monitor',
       balanceRisk: 'High Gap',
-      beforeCurrentLabel: 'Before K-Save (7-14 days pre-install)',
+      beforeCurrentLabel: 'Before GE (7-14 days pre-install)',
       beforeAvgCurrent: 'Avg Before Install',
       waitingMeter: 'Waiting for meter data',
       modelLabel: 'Model',
@@ -287,66 +287,77 @@ export default function DashboardPage() {
       currentReduced: 'Current Reduced'
     },
     ko: {
-      searchLabel: '설치 위치로 필터',
-      searchPlaceholder: '전체',
-      searchResults: '필터 결과',
-      clearSearch: '지우기',
-      allLocations: '전체',
-      noSearchResults: '검색 조건과 일치하는 장치가 없습니다',
-      viewAll: '전체 보기',
-      viewLess: '간단히 보기',
-      currentTitle: '설치 전 전류 분석',
-      currentSubtitle: '데이터베이스에 설치 전 항목으로 저장된 장치만 표시합니다.',
-      avgCurrent: '평균 전류',
-      loadBalance: '부하 밸런스',
-      phaseCurrent: '상별 전류',
-      avgThd: '평균 THD',
-      phaseThd: '상별 THD',
-      updatedAt: '최근 업데이트',
-      analyze: '전체 보기',
-      noCurrentData: '저장된 설치 전 항목이 없습니다',
-      balanceGood: '양호',
-      balanceWarn: '확인 필요',
-      balanceRisk: '편차 큼',
-      beforeCurrentLabel: 'K-Save 설치 전 (7-14일)',
-      beforeAvgCurrent: '설치 전 평균 전류',
-      waitingMeter: '미터 데이터 대기 중',
-      modelLabel: '모델',
-      meterNoLabel: '계량기 번호',
-      telLabel: '전화',
-      addressLabel: '주소',
-      currentReduced: '전류 감소'
+      searchLabel: '??? ????????',
+      searchPlaceholder: '???',
+      searchResults: '??? ??',
+      clearSearch: '????',
+      allLocations: '???',
+      noSearchResults: '????????????? ???? ??????',
+      viewAll: '??? ??',
+      viewLess: '??????',
+      currentTitle: '??? ????? ??',
+      currentSubtitle: '?????????????? ????????? ????? ?????????????',
+      avgCurrent: '??? ???',
+      loadBalance: '???????,
+      phaseCurrent: '??? ???',
+      avgThd: '??? THD',
+      phaseThd: '??? THD',
+      updatedAt: '?? ?
+????',
+      analyze: '??? ??',
+      noCurrentData: '????? ??? ??????????????',
+      balanceGood: '???',
+      balanceWarn: '??? ???',
+      balanceRisk: '??? ??,
+      beforeCurrentLabel: 'GE ??? ??(7-14??',
+      beforeAvgCurrent: '??? ????? ???',
+      waitingMeter: '?? ???????????,
+      modelLabel: '??',
+      meterNoLabel: '??????',
+      telLabel: '???',
+      addressLabel: '??',
+      currentReduced: '??? ??'
     },
     cn: {
-      searchLabel: '按安装位置筛选',
-      searchPlaceholder: '全部位置',
-      searchResults: '筛选结果',
-      clearSearch: '清除',
-      allLocations: '全部位置',
-      noSearchResults: '没有匹配搜索条件的设备',
-      viewAll: '查看全部',
-      viewLess: '收起',
-      currentTitle: '安装前电流分析',
-      currentSubtitle: '仅显示数据库中保存为安装前类型的记录。',
-      avgCurrent: '平均电流',
-      loadBalance: '负载平衡',
-      phaseCurrent: '各相电流',
-      avgThd: '平均THD',
-      phaseThd: '各相THD',
-      updatedAt: '最近更新',
-      analyze: '查看全部',
-      noCurrentData: '暂无已保存的安装前记录',
-      balanceGood: '平衡良好',
-      balanceWarn: '建议关注',
-      balanceRisk: '差异较高',
-      beforeCurrentLabel: 'Before K-Save（安装前7-14天）',
-      beforeAvgCurrent: '安装前平均电流',
-      waitingMeter: '等待表计数据',
-      modelLabel: '型号',
-      meterNoLabel: '电表编号',
-      telLabel: '电话',
-      addressLabel: '地址',
-      currentReduced: '电流减少'
+      searchLabel: '????
+???????,
+      searchPlaceholder: '?????',
+      searchResults: '?????,
+      clearSearch: '?
+?',
+      allLocations: '?????',
+      noSearchResults: '?????
+?????????????,
+      viewAll: '??????',
+      viewLess: '???',
+      currentTitle: '??
+???????,
+      currentSubtitle: '?
+???????????????
+??????????,
+      avgCurrent: '?????',
+      loadBalance: '????',
+      phaseCurrent: '??????',
+      avgThd: '??THD',
+      phaseThd: '???THD',
+      updatedAt: '??????,
+      analyze: '??????',
+      noCurrentData: '?????????
+??????,
+      balanceGood: '?????',
+      balanceWarn: '??????',
+      balanceRisk: '??????',
+      beforeCurrentLabel: 'Before GE???
+?7-14??',
+      beforeAvgCurrent: '??
+????????,
+      waitingMeter: '??
+??????',
+      modelLabel: '???',
+      meterNoLabel: '?????',
+      telLabel: '???',
+      addressLabel: '????',
+      currentReduced: '??????'
     },
     vn: {
       searchLabel: 'Loc theo vi tri lap dat',
@@ -370,8 +381,8 @@ export default function DashboardPage() {
       balanceGood: 'Can bang tot',
       balanceWarn: 'Nen theo doi',
       balanceRisk: 'Lech cao',
-      beforeCurrentLabel: 'Before K-Save (7-14 ngày trước lắp)',
-      beforeAvgCurrent: 'TB trước lắp đặt',
+      beforeCurrentLabel: 'Before GE (7-14 ng?y tr??c l?p)',
+      beforeAvgCurrent: 'TB tr??c l?p ??t',
       waitingMeter: 'Cho du lieu dong ho',
       modelLabel: 'Model',
       meterNoLabel: 'So dong ho',
@@ -401,7 +412,7 @@ export default function DashboardPage() {
       balanceGood: 'Seimbang',
       balanceWarn: 'Perlu Dipantau',
       balanceRisk: 'Ketidakseimbangan Tinggi',
-      beforeCurrentLabel: 'Before K-Save (7-14 hari sebelum pasang)',
+      beforeCurrentLabel: 'Before GE (7-14 hari sebelum pasang)',
       beforeAvgCurrent: 'Purata Sebelum Pasang',
       waitingMeter: 'Menunggu data meter',
       modelLabel: 'Model',
@@ -432,7 +443,7 @@ export default function DashboardPage() {
     balanceGood: 'Balanced',
     balanceWarn: 'Monitor',
     balanceRisk: 'High Gap',
-    beforeCurrentLabel: 'Before K-Save (7-14 days pre-install)',
+    beforeCurrentLabel: 'Before GE (7-14 days pre-install)',
     beforeAvgCurrent: 'Avg Before Install',
     waitingMeter: 'Waiting for meter data',
     modelLabel: 'Model',
@@ -444,88 +455,89 @@ export default function DashboardPage() {
 
   const uiCopy = {
     th: {
-      dashboardTitle: 'แดชบอร์ด',
-      totalTag: 'ทั้งหมด',
-      totalDevices: 'อุปกรณ์ทั้งหมด',
-      onlineDevices: 'ออนไลน์',
-      offlineDevices: 'ออฟไลน์',
-      energySavedLabel: 'พลังงานที่ประหยัด',
-      failedToLoadDashboard: 'โหลดแดชบอร์ดไม่สำเร็จ',
-      retry: 'ลองใหม่',
+      dashboardTitle: '??????????',
+      totalTag: '????????,
+      totalDevices: '????????????????',
+      onlineDevices: '????????????,
+      offlineDevices: '????????????,
+      energySavedLabel: '??????????????????,
+      failedToLoadDashboard: '???????????????????????????,
+      retry: '??????????,
       systemBadge: 'K Energy Save System',
-      kpiDevices: 'อุปกรณ์',
-      kpiOnline: 'ออนไลน์',
-      kpiKwhSaved: 'kWh ที่ประหยัด',
-      refresh: 'รีเฟรช',
-      live: 'สด',
-      onlineSuffix: 'ออนไลน์',
-      alert: 'แจ้งเตือน',
-      needsAttention: 'ต้องตรวจสอบ',
-      systemHealth: 'สถานะระบบ',
-      autoRefresh60s: 'รีเฟรชอัตโนมัติทุก 60 วินาที',
-      onlineRate: 'อัตราออนไลน์',
-      online: 'ออนไลน์',
-      offline: 'ออฟไลน์',
-      co2Reduced: 'CO₂ ลดลง',
-      kwhSaved: 'kWh ที่ประหยัด',
-      quickActions: 'การดำเนินการด่วน',
-      liveMonitor: 'มอนิเตอร์สด',
-      realTimeData: 'ข้อมูลเรียลไทม์',
-      analytics: 'วิเคราะห์',
-      chartsReports: 'กราฟ & รายงาน',
-      devices: 'อุปกรณ์',
-      allDevices: 'อุปกรณ์ทั้งหมด',
-      settings: 'ตั้งค่า',
-      systemConfig: 'ตั้งค่าระบบ',
-      voltageLineToLine: 'แรงดัน (สาย-สาย)',
-      current: 'กระแส',
+      kpiDevices: '??????????,
+      kpiOnline: '????????????,
+      kpiKwhSaved: 'kWh ??????????',
+      refresh: '???????,
+      live: '??',
+      onlineSuffix: '????????????,
+      alert: '???????????',
+      needsAttention: '??????????????,
+      systemHealth: '??????????,
+      autoRefresh60s: '???????????????????60 ??????',
+      onlineRate: '????????????????',
+      online: '????????????,
+      offline: '????????????,
+      co2Reduced: 'CO??????????',
+      kwhSaved: 'kWh ??????????',
+      quickActions: '?????????????????',
+      liveMonitor: '???????????',
+      realTimeData: '?????????????????',
+      analytics: '?????????',
+      chartsReports: '???? & ??????',
+      devices: '??????????,
+      allDevices: '????????????????',
+      settings: '????????,
+      systemConfig: '????????????,
+      voltageLineToLine: '?????? (????????',
+      current: '??????,
       thd: 'THD',
-      trendTitle: 'แนวโน้มกระแส (30 นาทีล่าสุด)',
-      reduction: 'ลดลง',
-      beforeKsave: 'ก่อน K-Save',
-      afterKsave: 'หลัง K-Save'
+      trendTitle: '???????????? (30 ????????????)',
+      reduction: '????????',
+      beforeGe: '?????? GE',
+      afterGe: '???? GE'
     },
     ko: {
-      dashboardTitle: '대시보드',
-      totalTag: '전체',
-      totalDevices: '전체 장치',
-      onlineDevices: '온라인 장치',
-      offlineDevices: '오프라인 장치',
-      energySavedLabel: '절약 전력량',
-      failedToLoadDashboard: '대시보드를 불러오지 못했습니다',
-      retry: '다시 시도',
-      systemBadge: 'K Energy Save 시스템',
-      kpiDevices: '장치',
-      kpiOnline: '온라인',
-      kpiKwhSaved: '절약 kWh',
-      refresh: '새로 고침',
-      live: '실시간',
-      onlineSuffix: '온라인',
-      alert: '경보',
-      needsAttention: '확인 필요',
-      systemHealth: '시스템 상태',
-      autoRefresh60s: '60초마다 자동 새로 고침',
-      onlineRate: '온라인 비율',
-      online: '온라인',
-      offline: '오프라인',
-      co2Reduced: 'CO₂ 감소',
-      kwhSaved: 'kWh 절약',
-      quickActions: '빠른 작업',
-      liveMonitor: '실시간 모니터',
-      realTimeData: '실시간 데이터',
-      analytics: '분석',
-      chartsReports: '차트 & 보고서',
-      devices: '장치',
-      allDevices: '모든 장치',
-      settings: '설정',
-      systemConfig: '시스템 설정',
-      voltageLineToLine: '전압 (선간)',
-      current: '전류',
+      dashboardTitle: '???????,
+      totalTag: '???',
+      totalDevices: '??? ???',
+      onlineDevices: '????????',
+      offlineDevices: '?????? ???',
+      energySavedLabel: '??? ?????,
+      failedToLoadDashboard: '????????? ?????? ???????,
+      retry: '??? ???',
+      systemBadge: 'K Energy Save ?????,
+      kpiDevices: '???',
+      kpiOnline: '?????,
+      kpiKwhSaved: '??? kWh',
+      refresh: '??? ??',
+      live: '?????,
+      onlineSuffix: '?????,
+      alert: '??',
+      needsAttention: '??? ???',
+      systemHealth: '????????',
+      autoRefresh60s: '60??????? ??? ??',
+      onlineRate: '???????',
+      online: '?????,
+      offline: '??????',
+      co2Reduced: 'CO????',
+      kwhSaved: 'kWh ???',
+      quickActions: '?? ???
+',
+      liveMonitor: '?????????,
+      realTimeData: '??????????,
+      analytics: '??',
+      chartsReports: '?? & ????,
+      devices: '???',
+      allDevices: '?? ???',
+      settings: '???',
+      systemConfig: '????????',
+      voltageLineToLine: '??? (???)',
+      current: '???',
       thd: 'THD',
-      trendTitle: '전류 추세 (최근 30분)',
-      reduction: '감소',
-      beforeKsave: 'K-Save 이전',
-      afterKsave: 'K-Save 이후'
+      trendTitle: '??? ?? (?? 30??',
+      reduction: '??',
+      beforeGe: 'GE ???',
+      afterGe: 'GE ???'
     },
     en: {
       dashboardTitle: 'Dashboard',
@@ -550,7 +562,7 @@ export default function DashboardPage() {
       onlineRate: 'Online Rate',
       online: 'Online',
       offline: 'Offline',
-      co2Reduced: 'CO₂ reduced',
+      co2Reduced: 'CO??reduced',
       kwhSaved: 'kWh saved',
       quickActions: 'Quick Actions',
       liveMonitor: 'Live Monitor',
@@ -566,50 +578,52 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'Current Trend (Last 30 min)',
       reduction: 'Reduction',
-      beforeKsave: 'Before K-Save',
-      afterKsave: 'After K-Save'
+      beforeGe: 'Before GE',
+      afterGe: 'After GE'
     },
     cn: {
-      dashboardTitle: '仪表板',
-      totalTag: '总计',
-      totalDevices: '设备总数',
-      onlineDevices: '在线设备',
-      offlineDevices: '离线设备',
-      energySavedLabel: '节省电量',
-      failedToLoadDashboard: '无法加载仪表板',
-      retry: '重试',
-      systemBadge: 'K Energy Save 系统',
-      kpiDevices: '设备',
-      kpiOnline: '在线',
-      kpiKwhSaved: '已节省 kWh',
-      refresh: '刷新',
-      live: '实时',
-      onlineSuffix: '在线',
-      alert: '警报',
-      needsAttention: '需要关注',
-      systemHealth: '系统健康',
-      autoRefresh60s: '每 60 秒自动刷新',
-      onlineRate: '在线率',
-      online: '在线',
-      offline: '离线',
-      co2Reduced: '减少 CO₂',
-      kwhSaved: '已节省 kWh',
-      quickActions: '快捷操作',
-      liveMonitor: '实时监控',
-      realTimeData: '实时数据',
-      analytics: '分析',
-      chartsReports: '图表与报告',
-      devices: '设备',
-      allDevices: '所有设备',
-      settings: '设置',
-      systemConfig: '系统配置',
-      voltageLineToLine: '电压（线间）',
-      current: '电流',
+      dashboardTitle: '????,
+      totalTag: '????',
+      totalDevices: '?????',
+      onlineDevices: '?????',
+      offlineDevices: '????',
+      energySavedLabel: '??????',
+      failedToLoadDashboard: '??????????,
+      retry: '???',
+      systemBadge: 'K Energy Save ??',
+      kpiDevices: '??',
+      kpiOnline: '???',
+      kpiKwhSaved: '????kWh',
+      refresh: '???',
+      live: '??',
+      onlineSuffix: '???',
+      alert: '????',
+      needsAttention: '????
+???,
+      systemHealth: '?????',
+      autoRefresh60s: '??60 ???????,
+      onlineRate: '?????,
+      online: '???',
+      offline: '??',
+      co2Reduced: '??? CO??,
+      kwhSaved: '????kWh',
+      quickActions: '?????',
+      liveMonitor: '?????',
+      realTimeData: '?????',
+      analytics: '???',
+      chartsReports: '???????,
+      devices: '??',
+      allDevices: '????????,
+      settings: '??',
+      systemConfig: '?????',
+      voltageLineToLine: '????????',
+      current: '???',
       thd: 'THD',
-      trendTitle: '电流趋势（最近 30 分钟）',
-      reduction: '降幅',
-      beforeKsave: 'K-Save 前',
-      afterKsave: 'K-Save 后'
+      trendTitle: '??????????30 ?????,
+      reduction: '???
+',
+      beforeGe: 'GE ??,
+      afterGe: 'GE ??
     },
     vn: {
       dashboardTitle: 'Bang Dieu Khien',
@@ -634,7 +648,7 @@ export default function DashboardPage() {
       onlineRate: 'Ty le truc tuyen',
       online: 'Truc tuyen',
       offline: 'Ngoai tuyen',
-      co2Reduced: 'CO₂ giam',
+      co2Reduced: 'CO??giam',
       kwhSaved: 'kWh tiet kiem',
       quickActions: 'Thao tac nhanh',
       liveMonitor: 'Giam sat truc tiep',
@@ -650,8 +664,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'Xu huong dong dien (30 phut gan nhat)',
       reduction: 'Giam',
-      beforeKsave: 'Truoc K-Save',
-      afterKsave: 'Sau K-Save'
+      beforeGe: 'Truoc GE',
+      afterGe: 'Sau GE'
     },
     ms: {
       dashboardTitle: 'Papan Pemuka',
@@ -676,7 +690,7 @@ export default function DashboardPage() {
       onlineRate: 'Kadar Dalam Talian',
       online: 'Dalam Talian',
       offline: 'Luar Talian',
-      co2Reduced: 'CO₂ dikurangkan',
+      co2Reduced: 'CO??dikurangkan',
       kwhSaved: 'kWh dijimatkan',
       quickActions: 'Tindakan Pantas',
       liveMonitor: 'Pemantau Langsung',
@@ -692,8 +706,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'Trend Arus (30 minit terakhir)',
       reduction: 'Pengurangan',
-      beforeKsave: 'Sebelum K-Save',
-      afterKsave: 'Selepas K-Save'
+      beforeGe: 'Sebelum GE',
+      afterGe: 'Selepas GE'
     }
   }[locale] ?? {
     dashboardTitle: 'Dashboard',
@@ -718,7 +732,7 @@ export default function DashboardPage() {
     onlineRate: 'Online Rate',
     online: 'Online',
     offline: 'Offline',
-    co2Reduced: 'CO₂ reduced',
+    co2Reduced: 'CO??reduced',
     kwhSaved: 'kWh saved',
     quickActions: 'Quick Actions',
     liveMonitor: 'Live Monitor',
@@ -734,8 +748,8 @@ export default function DashboardPage() {
     thd: 'THD',
     trendTitle: 'Current Trend (Last 30 min)',
     reduction: 'Reduction',
-    beforeKsave: 'Before K-Save',
-    afterKsave: 'After K-Save'
+    beforeGe: 'Before GE',
+    afterGe: 'After GE'
   }
 
   const uniqueLocations = Array.from(
@@ -747,10 +761,10 @@ export default function DashboardPage() {
     const matchesDevice = focusedDeviceParam
       ? normalizeLookupValue(device.deviceID) === focusedDeviceParam || normalizeLookupValue(device.deviceName) === focusedDeviceParam
       : false
-    const matchesKsave = focusedKsaveParam
-      ? normalizeLookupValue(device.ksaveID) === focusedKsaveParam
+    const matchesGe = focusedGeParam
+      ? normalizeLookupValue(device.geID) === focusedGeParam
       : false
-    return matchesDevice || matchesKsave
+    return matchesDevice || matchesGe
   }
 
   const matchesSearch = (device: RecentDevice) => {
@@ -806,7 +820,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm font-semibold text-sky-800">Focused Device View</p>
             <p className="text-xs text-sky-700 mt-1">
-              Showing dashboard cards for {searchParams.get('ksave') || searchParams.get('device') || 'selected device'} only.
+              Showing dashboard cards for {searchParams.get('geID') || searchParams.get('device') || 'selected device'} only.
             </p>
           </div>
           <button
@@ -818,7 +832,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Hero ── */}
+      {/* ???? Hero ???? */}
       <div className="energy-hero">
         <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
@@ -851,7 +865,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Stat Cards ── */}
+      {/* ???? Stat Cards ???? */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
         {/* Total Devices */}
@@ -903,7 +917,7 @@ export default function DashboardPage() {
             </div>
             {stats.offlineDevices > 0 && (
               <span className="text-xs font-semibold bg-white/20 text-white px-2.5 py-1 rounded-full animate-pulse">
-                ⚠ {uiCopy.alert}
+                ??{uiCopy.alert}
               </span>
             )}
           </div>
@@ -935,7 +949,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* ── System Health + Quick Actions ── */}
+      {/* ???? System Health + Quick Actions ???? */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* System Health */}
@@ -1023,10 +1037,10 @@ export default function DashboardPage() {
           <div className="flex-1">
             {(() => {
               const siteLabel: Record<string, { flag: string; region: Record<string, string> }> = {
-                thailand: { flag: '🇹🇭', region: { th: 'กรองตามจังหวัด', en: 'Filter by Province', ko: '태국 주별 필터', cn: '按省份筛选 (泰国)', vn: 'Lọc theo tỉnh (Thái Lan)', ms: 'Tapis mengikut Wilayah (Thai)' } },
-                korea:    { flag: '🇰🇷', region: { th: 'กรองตามเมือง (เกาหลี)', en: 'Filter by City (Korea)', ko: '시/도별 필터', cn: '按城市筛选 (韩国)', vn: 'Lọc theo thành phố (Hàn Quốc)', ms: 'Tapis mengikut Bandar (Korea)' } },
-                vietnam:  { flag: '🇻🇳', region: { th: 'กรองตามจังหวัด (เวียดนาม)', en: 'Filter by Province (Vietnam)', ko: '베트남 주별 필터', cn: '按省份筛选 (越南)', vn: 'Lọc theo tỉnh (Việt Nam)', ms: 'Tapis mengikut Wilayah (Vietnam)' } },
-                malaysia: { flag: '🇲🇾', region: { th: 'กรองตามรัฐ (มาเลเซีย)', en: 'Filter by State (Malaysia)', ko: '말레이시아 주별 필터', cn: '按州筛选 (马来西亚)', vn: 'Lọc theo Bang (Malaysia)', ms: 'Tapis mengikut Negeri (Malaysia)' } },
+                thailand: { flag: '??????', region: { th: '????????????????', en: 'Filter by Province', ko: '??? ?? ???', cn: '???????(??)', vn: 'L?c theo t?nh (Th?i Lan)', ms: 'Tapis mengikut Wilayah (Thai)' } },
+                korea:    { flag: '??????', region: { th: '????????????????? (???????', en: 'Filter by City (Korea)', ko: '????? ???', cn: '???????(???)', vn: 'L?c theo th?nh ph??(H?n Qu?c)', ms: 'Tapis mengikut Bandar (Korea)' } },
+                vietnam:  { flag: '??????', region: { th: '???????????????? (?????????', en: 'Filter by Province (Vietnam)', ko: '?????? ???', cn: '???????(??)', vn: 'L?c theo t?nh (Vi?t Nam)', ms: 'Tapis mengikut Wilayah (Vietnam)' } },
+                malaysia: { flag: '??????', region: { th: '???????????? (??????????', en: 'Filter by State (Malaysia)', ko: '????????? ???', cn: '??????(????)', vn: 'L?c theo Bang (Malaysia)', ms: 'Tapis mengikut Negeri (Malaysia)' } },
               }
               const cfg = siteLabel[selectedSite] ?? siteLabel.thailand
               const regionLabel = cfg.region[locale] ?? cfg.region.en
@@ -1067,7 +1081,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Recent Devices ── */}
+      {/* ???? Recent Devices ???? */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
           <div className="flex items-center gap-2.5">
@@ -1121,7 +1135,7 @@ export default function DashboardPage() {
                   <div key={device.deviceID}
                     className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200">
 
-                    {/* ── Card Header ── */}
+                    {/* ???? Card Header ???? */}
                     <div className={`px-4 py-3.5 flex items-start justify-between gap-2 ${
                       device.isOnline
                         ? 'bg-gradient-to-r from-emerald-600 to-teal-600'
@@ -1158,52 +1172,52 @@ export default function DashboardPage() {
                       </button>
                     </div>
 
-                    {/* ── Two Meters Side by Side ── */}
+                    {/* ???? Two Meters Side by Side ???? */}
                     <div className="grid grid-cols-2 divide-x divide-gray-100">
 
-                      {/* Meter 1 — Before K-Save */}
+                      {/* Meter 1 ??Before GE */}
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border-b border-red-100">
                           <div className="w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0" />
                           <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-600">
-                            {uiCopy.beforeKsave}
+                            {uiCopy.beforeGe}
                           </span>
                         </div>
                         <div className="p-3 space-y-1.5 flex-1">
 
-                        {/* Device info — always shown */}
+                        {/* Device info ??always shown */}
                         <div className="space-y-0.5">
                           <div className="flex flex-col items-center justify-center py-3 text-center">
-                            <span className="text-2xl mb-1.5">🔌</span>
+                            <span className="text-2xl mb-1.5">???</span>
                             <span className="text-[10px] text-gray-400 font-semibold">{dashboardCopy.waitingMeter}</span>
                           </div>
                           <div className="rounded-lg bg-gray-50 border border-gray-100 divide-y divide-gray-100 overflow-hidden">
                             <div className="flex justify-between items-center px-2.5 py-1.5">
                               <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.modelLabel}</span>
-                              <span className="text-[10px] font-bold text-gray-700">{device.deviceName || '–'}</span>
+                              <span className="text-[10px] font-bold text-gray-700">{device.deviceName || '??}</span>
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
                               <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.meterNoLabel}</span>
                               <span className={`text-[10px] font-bold ${device.beforeMeterNo ? 'text-blue-600' : 'text-gray-400'}`}>
-                                {device.beforeMeterNo ? `# ${device.beforeMeterNo}` : '–'}
+                                {device.beforeMeterNo ? `# ${device.beforeMeterNo}` : '??}
                               </span>
                             </div>
                             <div className="flex justify-between items-start px-2.5 py-1.5 gap-2">
                               <span className="text-[10px] text-gray-400 font-medium shrink-0">S/N</span>
-                              <span className="text-[10px] font-bold text-gray-700 text-right break-all">{device.seriesNo || '–'}</span>
+                              <span className="text-[10px] font-bold text-gray-700 text-right break-all">{device.seriesNo || '??}</span>
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
-                              <span className="text-[10px] text-gray-400 font-medium">K-Save ID</span>
-                              <span className="text-[10px] font-bold text-emerald-600">{device.ksaveID || '–'}</span>
+                              <span className="text-[10px] text-gray-400 font-medium">GE ID</span>
+                              <span className="text-[10px] font-bold text-emerald-600">{device.geID || '??}</span>
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
                               <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.telLabel}</span>
-                              <span className="text-[10px] font-bold text-gray-700">{device.customerPhone || '–'}</span>
+                              <span className="text-[10px] font-bold text-gray-700">{device.customerPhone || '??}</span>
                             </div>
                           </div>
                           <div className="rounded-lg bg-gray-50 border border-gray-100 px-2.5 py-2">
                             <span className="text-[9px] text-gray-400 font-medium uppercase tracking-wide block mb-0.5">{dashboardCopy.addressLabel}</span>
-                            <p className="text-[10px] text-gray-600 leading-snug">{device.customerAddress || '–'}</p>
+                            <p className="text-[10px] text-gray-600 leading-snug">{device.customerAddress || '??}</p>
                           </div>
 
                           {/* Before Metrics Panel */}
@@ -1279,49 +1293,49 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Meter 2 — After K-Save */}
+                      {/* Meter 2 ??After GE */}
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border-b border-emerald-100">
                           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
                           <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600">
-                            {uiCopy.afterKsave}
+                            {uiCopy.afterGe}
                           </span>
                         </div>
                         <div className="p-3 space-y-1.5 flex-1">
 
-                        {/* Device info — always shown */}
+                        {/* Device info ??always shown */}
                         <div className="space-y-0.5">
                           <div className="flex flex-col items-center justify-center py-3 text-center">
-                            <span className="text-2xl mb-1.5">📊</span>
+                            <span className="text-2xl mb-1.5">???</span>
                             <span className="text-[10px] text-gray-400 font-semibold">{dashboardCopy.waitingMeter}</span>
                           </div>
                           <div className="rounded-lg bg-gray-50 border border-gray-100 divide-y divide-gray-100 overflow-hidden">
                               <div className="flex justify-between items-center px-2.5 py-1.5">
                                 <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.meterNoLabel}</span>
                                 <span className={`text-[10px] font-bold ${device.metricsMeterNo ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                  {device.metricsMeterNo ? `# ${device.metricsMeterNo}` : '–'}
+                                  {device.metricsMeterNo ? `# ${device.metricsMeterNo}` : '??}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center px-2.5 py-1.5">
-                                <span className="text-[10px] text-gray-400 font-medium">K-Save ID</span>
-                                <span className="text-[10px] font-bold text-emerald-600">{device.ksaveID || '–'}</span>
+                                <span className="text-[10px] text-gray-400 font-medium">GE ID</span>
+                                <span className="text-[10px] font-bold text-emerald-600">{device.geID || '??}</span>
                               </div>
                               <div className="flex justify-between items-start px-2.5 py-1.5 gap-2">
                                 <span className="text-[10px] text-gray-400 font-medium shrink-0">S/N</span>
-                                <span className="text-[10px] font-bold text-gray-700 text-right break-all">{device.seriesNo || '–'}</span>
+                                <span className="text-[10px] font-bold text-gray-700 text-right break-all">{device.seriesNo || '??}</span>
                               </div>
                               <div className="flex justify-between items-center px-2.5 py-1.5">
                                 <span className="text-[10px] text-gray-400 font-medium">IP</span>
-                                <span className="text-[10px] font-bold text-gray-600">{device.ipAddress || '–'}</span>
+                                <span className="text-[10px] font-bold text-gray-600">{device.ipAddress || '??}</span>
                               </div>
                               <div className="flex justify-between items-center px-2.5 py-1.5">
                                 <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.telLabel}</span>
-                                <span className="text-[10px] font-bold text-gray-700">{device.customerPhone || '–'}</span>
+                                <span className="text-[10px] font-bold text-gray-700">{device.customerPhone || '??}</span>
                               </div>
                             </div>
                             <div className="rounded-lg bg-gray-50 border border-gray-100 px-2.5 py-2">
                               <span className="text-[9px] text-gray-400 font-medium uppercase tracking-wide block mb-0.5">{dashboardCopy.addressLabel}</span>
-                              <p className="text-[10px] text-gray-600 leading-snug">{device.customerAddress || '–'}</p>
+                              <p className="text-[10px] text-gray-600 leading-snug">{device.customerAddress || '??}</p>
                             </div>
 
                             {/* After Metrics Panel */}
@@ -1398,22 +1412,22 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* ── Summary Footer ── */}
+                    {/* ???? Summary Footer ???? */}
                     <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {device.currentReduction != null && (
                           <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-green-200">
-                            ↓ {fmtPct(device.currentReduction)} {uiCopy.reduction}
+                            ??{fmtPct(device.currentReduction)} {uiCopy.reduction}
                           </span>
                         )}
                         {device.energyReduction != null && (
                           <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-amber-200">
-                            ⚡ {fmtKwh(device.energyReduction)} saved
+                            ??{fmtKwh(device.energyReduction)} saved
                           </span>
                         )}
                         {device.co2Reduction != null && (
                           <span className="inline-flex items-center gap-1 bg-lime-100 text-lime-700 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-lime-200">
-                            🌿 {Number(device.co2Reduction).toFixed(2)} kg CO₂
+                            ??? {Number(device.co2Reduction).toFixed(2)} kg CO??
                           </span>
                         )}
                         <span className={`inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full border ${bal.className}`}>
@@ -1436,7 +1450,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Pre-install Current Analysis ── */}
+      {/* ???? Pre-install Current Analysis ???? */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-gray-50 flex-wrap">
           <div className="flex items-start gap-3">
@@ -1482,7 +1496,7 @@ export default function DashboardPage() {
                 return (
                   <div key={device.deviceID} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200">
 
-                    {/* ── Card Header ── */}
+                    {/* ???? Card Header ???? */}
                     <div className={`px-4 py-3.5 ${device.isOnline ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-slate-500 to-gray-600'}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -1509,7 +1523,7 @@ export default function DashboardPage() {
 
                     <div className="p-4 space-y-4">
 
-                    {/* ── Before K-Save Baseline ── */}
+                    {/* ???? Before GE Baseline ???? */}
                       <div className="rounded-xl bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 overflow-hidden">
                         <div className="flex items-center justify-between px-3 py-2 border-b border-red-100">
                           <div className="flex items-center gap-2">
@@ -1520,7 +1534,7 @@ export default function DashboardPage() {
                           </div>
                           {device.currentReduction != null && (
                             <span className="inline-flex items-center rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
-                              ▼ {device.currentReduction.toFixed(1)}% {dashboardCopy.currentReduced}
+                              ??{device.currentReduction.toFixed(1)}% {dashboardCopy.currentReduced}
                             </span>
                           )}
                         </div>
@@ -1542,7 +1556,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                    {/* ── KPI Row ── */}
+                    {/* ???? KPI Row ???? */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
                         <p className="text-[10px] font-bold uppercase tracking-wide text-amber-600 mb-1">{dashboardCopy.avgCurrent}</p>
@@ -1561,7 +1575,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* ── Voltage ── */}
+                    {/* ???? Voltage ???? */}
                     <div>
                       <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-2">
                         {uiCopy.voltageLineToLine}
@@ -1580,7 +1594,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* ── Current Trend Chart ── */}
+                    {/* ???? Current Trend Chart ???? */}
                     <CurrentTrendChart
                       deviceId={device.deviceID}
                       recordScope={device.recordScope}
@@ -1588,12 +1602,12 @@ export default function DashboardPage() {
                       labels={{
                         trendTitle: uiCopy.trendTitle,
                         reduction: uiCopy.reduction,
-                        before: uiCopy.beforeKsave,
-                        after: uiCopy.afterKsave
+                        before: uiCopy.beforeGe,
+                        after: uiCopy.afterGe
                       }}
                     />
 
-                    {/* ── Phase Current & THD ── */}
+                    {/* ???? Phase Current & THD ???? */}
                     <div>
                       <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-2">
                         {dashboardCopy.phaseCurrent} & {uiCopy.thd}
@@ -1621,7 +1635,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* ── Avg THD ── */}
+                    {/* ???? Avg THD ???? */}
                     <div className="rounded-xl bg-purple-50 border border-purple-200 px-4 py-3 flex items-center justify-between">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-purple-600">{dashboardCopy.avgThd}</p>
                       <p className="text-xl font-extrabold text-purple-900">
@@ -1629,7 +1643,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
 
-                    {/* ── Footer ── */}
+                    {/* ???? Footer ???? */}
                     <div className="flex items-center justify-between pt-1 border-t border-gray-100 text-[10px] text-gray-400">
                       <span className="font-medium uppercase tracking-wide">{dashboardCopy.updatedAt}</span>
                       <span className="font-semibold text-gray-600">{formatTime(device.lastUpdate)}</span>
@@ -1708,7 +1722,7 @@ function CurrentTrendChart({
           }
         }
       } catch {
-        // silent – chart will show "no data" state
+        // silent ??chart will show "no data" state
       } finally {
         if (!cancelled) setChartLoading(false)
       }
@@ -1749,7 +1763,7 @@ function CurrentTrendChart({
             )}
             {currentReduction && (
               <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                ↓ {currentReduction.toFixed(1)}% {labels.reduction}
+                ??{currentReduction.toFixed(1)}% {labels.reduction}
               </span>
             )}
           </div>
@@ -1821,7 +1835,7 @@ function CurrentTrendChart({
                   <span className="text-red-600">
                     {latestPhases.before[idx] !== null ? `${latestPhases.before[idx]!.toFixed(1)} A` : '--'}
                   </span>
-                  <span className="text-gray-400">→</span>
+                  <span className="text-gray-400">??/span>
                   <span className="text-green-600">
                     {latestPhases.after[idx] !== null ? `${latestPhases.after[idx]!.toFixed(1)} A` : '--'}
                   </span>

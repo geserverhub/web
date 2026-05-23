@@ -146,12 +146,7 @@ export default function Page() {
 
   return (
     <div className="agency-app-layout">
-      <Sidebar
-        ui={ui}
-        profile={profile}
-        currentLanguage={currentLanguage}
-        setCurrentLanguage={setCurrentLanguage}
-      />
+      <Sidebar ui={ui} profile={profile} />
 
       <main className="agency-main-content">
         <div className="agency-page">
@@ -159,13 +154,7 @@ export default function Page() {
           <div className="agency-ambient agency-ambient-b" aria-hidden="true" />
           <div className="agency-ambient agency-ambient-c" aria-hidden="true" />
 
-          <Navbar
-            ui={ui}
-            currentLanguage={currentLanguage}
-            setCurrentLanguage={setCurrentLanguage}
-            query={query}
-            setQuery={setQuery}
-          />
+          <Navbar ui={ui} query={query} setQuery={setQuery} />
           <Hero
             ui={ui}
             profile={profile}

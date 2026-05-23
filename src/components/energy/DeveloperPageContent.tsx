@@ -10,7 +10,7 @@ const copy = {
     subtitle: 'เอกสาร API สำหรับระบบ GE Energy Tech (K-Energy)',
     back: 'กลับแดชบอร์ด',
     proxy: 'Next.js proxy',
-    proxyDesc: 'คำขอไปที่ /api/kenergy/* จะถูกส่งต่อไปยัง backend Python',
+    proxyDesc: 'คำขอ /api/kenergy/* อ่านจากฐานข้อมูล geserverhub เท่านั้น',
     endpoints: 'Endpoints หลัก',
     note: 'ใช้ query site=thailand|korea|vietnam|malaysia ตามไซต์ที่ต้องการ',
   },
@@ -19,7 +19,7 @@ const copy = {
     subtitle: 'API reference for GE Energy Tech (K-Energy)',
     back: 'Back to dashboard',
     proxy: 'Next.js proxy',
-    proxyDesc: 'Requests to /api/kenergy/* are forwarded to the Python backend',
+    proxyDesc: 'Requests to /api/kenergy/* read from geserverhub only',
     endpoints: 'Main endpoints',
     note: 'Use query site=thailand|korea|vietnam|malaysia as needed',
   },
@@ -28,7 +28,7 @@ const copy = {
     subtitle: 'GE Energy Tech (K-Energy) API 문서',
     back: '대시보드로',
     proxy: 'Next.js 프록시',
-    proxyDesc: '/api/kenergy/* 요청은 Python 백엔드로 전달됩니다',
+    proxyDesc: '/api/kenergy/* 요청은 geserverhub DB만 사용합니다',
     endpoints: '주요 엔드포인트',
     note: 'site=thailand|korea|vietnam|malaysia 쿼리 사용',
   },
@@ -99,7 +99,7 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
               <h2 className="text-sm font-bold text-slate-800">{ui.proxy}</h2>
               <p className="text-sm text-slate-600 mt-1">{ui.proxyDesc}</p>
               <code className="mt-2 inline-block text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded">
-                BACKEND_URL → /api/kenergy/[...path]
+                MySQL geserverhub → /api/kenergy/*
               </code>
             </div>
           </div>

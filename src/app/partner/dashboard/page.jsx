@@ -771,7 +771,7 @@ export default function PartnerDashboard() {
           <span style={{ fontSize: 20 }}>🤝</span>
           <div>
             <div style={{ fontWeight: 800, fontSize: 15, color: "#e8eaf0" }}>Partner Dashboard</div>
-            <div style={{ fontSize: 11, color: "#8b8fa8" }}>GOEUN SERVER HUB</div>
+            <div style={{ fontSize: 11, color: "#8b8fa8" }}>GE SERVER HUB</div>
           </div>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 5,
@@ -2088,7 +2088,7 @@ export default function PartnerDashboard() {
                 <div className="pr-header-bar" style={{ background: ACCENT, borderRadius: 10, padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div>
                     <div style={{ color: "#93c5fd", fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>BUSINESS FINANCIAL REPORT</div>
-                    <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.2 }}>GOEUN SERVER HUB</div>
+                    <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.2 }}>GE SERVER HUB</div>
                     <div style={{ color: "#bfdbfe", fontSize: 13, fontWeight: 600, marginTop: 2 }}>지이 서버 허브 &nbsp;·&nbsp; 🚀 MOMOGE SPACE</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -2112,7 +2112,7 @@ export default function PartnerDashboard() {
           function ReportFooter() {
             return (
               <div style={{ marginTop: 32, paddingTop: 12, borderTop: `2px solid ${ACCENT}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94a3b8", fontSize: 10 }}>
-                <div>GOEUN SERVER HUB &nbsp;·&nbsp; 지이 서버 허브 &nbsp;·&nbsp; MOMOGE SPACE</div>
+                <div>GE SERVER HUB &nbsp;·&nbsp; 지이 서버 허브 &nbsp;·&nbsp; MOMOGE SPACE</div>
                 <div>{pr.generatedOn(today)}</div>
               </div>
             );

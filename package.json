@@ -17,7 +17,8 @@
     "db:setup": "bash scripts/db-restore.sh && node scripts/set-energy-login.mjs",
     "db:check": "node scripts/db-check.mjs",
     "db:seed-partner": "node scripts/seed-partner-products.mjs",
-    "db:migrate": "node scripts/migrate-client-columns.mjs && node scripts/migrate-partner-product.mjs"
+    "db:migrate": "node scripts/migrate-client-columns.mjs && node scripts/migrate-partner-product.mjs",
+    "db:setup-energy": "node scripts/setup-ge-energy.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

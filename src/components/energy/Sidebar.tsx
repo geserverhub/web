@@ -110,7 +110,7 @@ const sectionFallback: Record<string, Record<string, string>> = {
   userSupports: { th: "สนับสนุนผู้ใช้", en: "User Supports", ko: "사용자 지원" },
   greenEnergyPortal: { th: "พอร์ทัลพลังงานสีเขียว", en: "Green Energy Portal", ko: "그린 에너지 포털" },
   energyLogin: { th: "ลงชื่อ เข้าระบบใหม่", en: "Sign in again", ko: "다시 로그인" },
-  customerPortal: { th: "ลงชื่อ เข้าระบบใหม่", en: "Sign in again", ko: "다시 로그인" },
+  customerPortal: { th: "เข้าใช้ผ่านสมาร์ทโฟน", en: "Access via smartphone", ko: "스마트폰으로 이용" },
   customerDashboard: { th: "แดชบอร์ดลูกค้า", en: "Customer dashboard", ko: "고객 대시보드" },
   momogeMarketplace: { th: "สินค้า IoT / Momoge", en: "Momoge IoT Store", ko: "MOMOGE IoT 상품" },
   energyAnalytics: { th: "วิเคราะห์พลังงาน", en: "Energy analytics", ko: "에너지 분석" },
