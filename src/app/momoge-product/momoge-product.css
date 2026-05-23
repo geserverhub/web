@@ -42,16 +42,14 @@
 .momo-logo {
   display: block;
   width: auto;
-  height: 96px;
-  max-width: 240px;
+  height: 136px;
+  max-width: 320px;
   object-fit: contain;
   object-position: left center;
   background: transparent;
   border: none;
   border-radius: 0;
   box-shadow: none;
-  /* ลดพื้นขาวรอบโลโก้ PNG (บนพื้นสว่าง) */
-  mix-blend-mode: multiply;
 }
 
 .momo-header-actions {
@@ -282,8 +280,8 @@
   }
 
   .momo-logo {
-    height: 72px;
-    max-width: 180px;
+    height: 112px;
+    max-width: 260px;
   }
 }
 

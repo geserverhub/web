@@ -16,6 +16,16 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // WSL + /mnt/c: avoid stale chunks and slow file watches (ChunkLoadError on app/page.js)
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {

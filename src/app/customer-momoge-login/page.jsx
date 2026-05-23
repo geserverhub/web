@@ -103,24 +103,22 @@ export default function CustomerMomogeLoginPage() {
       }}>
         {/* Logo & Header */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{
-            width: 100,
-            height: 100,
-            borderRadius: 20,
-            overflow: 'hidden',
-            display: 'inline-block',
-            marginBottom: 20,
-            border: '2px solid #1e293b',
-            boxShadow: '0 4px 24px rgba(29,78,216,0.3)',
-          }}>
-            <Image
-              src="/momoge/Logo-brand.png"
-              alt="Momoge Logo"
-              width={100}
-              height={100}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-            />
-          </div>
+          <Image
+            src="/momoge/Logo-brand.png"
+            alt="Momoge Logo"
+            width={200}
+            height={120}
+            style={{
+              display: 'inline-block',
+              marginBottom: 20,
+              objectFit: 'contain',
+              width: 'auto',
+              height: 120,
+              maxWidth: 280,
+              background: 'transparent',
+            }}
+            priority
+          />
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f8fafc', margin: 0 }}>
             Momoge
           </h1>

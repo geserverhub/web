@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Leaflet map styles */
-@import 'leaflet/dist/leaflet.css';
-
 :root {
   /* ── Unified Slate Navy palette ── */
   --agency-bg:          #eef2fa;
