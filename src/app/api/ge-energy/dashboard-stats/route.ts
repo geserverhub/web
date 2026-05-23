@@ -134,6 +134,21 @@ export async function GET(request: NextRequest) {
     const availableColumns = new Set(
       (availableColumnsRows as ColumnNameRow[]).map((row) => row.COLUMN_NAME)
     )
+
+    let availablePreinstallColumns = new Set<string>()
+    if (hasPreInstallTable) {
+      const preinstallColumnRows = await queryGe(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'power_records_preinstall'
+           AND COLUMN_NAME IN (${placeholders})`,
+        selectablePowerColumns
+      )
+      availablePreinstallColumns = new Set(
+        (preinstallColumnRows as ColumnNameRow[]).map((row) => row.COLUMN_NAME)
+      )
+    }
     // Check optional columns in devices table
     const optionalDeviceColumns = ['customerNameEn', 'customerPhone', 'customerAddress', 'series_no', 'metricsMeterNo', 'beforeMeterNo', 'location', 'ipAddress', 'geID', 'record_scope']
     const devicePlaceholders = optionalDeviceColumns.map(() => '?').join(', ')
@@ -156,14 +171,38 @@ export async function GET(request: NextRequest) {
 
     const hasRecordScope = availableDeviceColumns.has('record_scope')
     const scopeExpr = hasRecordScope ? "COALESCE(d.record_scope, 'installed')" : "'installed'"
+
+    const preinstallExpr = (columnName: string): string => {
+      if (availablePreinstallColumns.has(columnName)) {
+        return `p_pre.${columnName}`
+      }
+      if (
+        columnName === 'energy_reduction' &&
+        availablePreinstallColumns.has('before_kWh') &&
+        availablePreinstallColumns.has('metrics_kWh')
+      ) {
+        return '(p_pre.before_kWh - p_pre.metrics_kWh)'
+      }
+      if (
+        columnName === 'co2_reduction' &&
+        availablePreinstallColumns.has('before_kWh') &&
+        availablePreinstallColumns.has('metrics_kWh')
+      ) {
+        return '((p_pre.before_kWh - p_pre.metrics_kWh) * 0.5135)'
+      }
+      return 'NULL'
+    }
+
     const selectedColumn = (columnName: string) => {
-      if (!availableColumns.has(columnName)) {
+      const installedExpr = availableColumns.has(columnName) ? `p_inst.${columnName}` : 'NULL'
+      if (!hasPreInstallTable) {
+        return `${installedExpr} AS ${columnName}`
+      }
+      const preExpr = preinstallExpr(columnName)
+      if (installedExpr === 'NULL' && preExpr === 'NULL') {
         return `NULL AS ${columnName}`
       }
-      if (hasPreInstallTable) {
-        return `CASE WHEN ${scopeExpr} = 'pre_install' THEN p_pre.${columnName} ELSE p_inst.${columnName} END AS ${columnName}`
-      }
-      return `p_inst.${columnName} AS ${columnName}`
+      return `CASE WHEN ${scopeExpr} = 'pre_install' THEN ${preExpr} ELSE ${installedExpr} END AS ${columnName}`
     }
 
     const recentDevices = await queryGe(
