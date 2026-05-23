@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
 import { useSite } from '@/lib/SiteContext';
-import { formatCurrencyBySite, getCurrencyCodeBySite } from '@/lib/currency';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { formatCurrencyBySite } from '@/lib/currency';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -58,8 +57,11 @@ export default function CustomersPage() {
   const totalSavedBaht = totalCostBefore - totalCostAfter;
   const savingPct = totalBefore > 0 ? ((totalSavedKwh / totalBefore) * 100).toFixed(1) : '0.0';
   const co2Saved = (totalSavedKwh * 0.5313).toFixed(0);
-  const currencyCode = getCurrencyCodeBySite(selectedSite, locale);
-  const formatCost = (n) => formatCurrencyBySite(n, selectedSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const formatCost = (n) => formatCurrencyBySite(n, 'korea', 'ko', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const labelCostBefore = L(locale, 'ก่อน (₩)', '이전 (원)', 'Before (KRW)');
+  const labelCostAfter = L(locale, 'หลัง (₩)', '이후 (원)', 'After (KRW)');
+  const labelCostSaved = L(locale, 'ประหยัด (₩)', '절약 (원)', 'Saved (KRW)');
+  const labelMonthlyCost = L(locale, 'ค่าใช้จ่ายรายเดือน (วอน)', '월별 전기 요금 (원)', 'Monthly Cost (KRW)');
 
   const normalizeSnapshot = (raw, connection) => {
     const payload = raw;
@@ -187,14 +189,14 @@ export default function CustomersPage() {
     name: monthLabel(d),
     [L(locale,'ก่อนติดตั้ง','설치 전','Before')]: d.before,
     [L(locale,'หลังติดตั้ง','설치 후','After')]: d.after,
-    [L(locale,`ก่อน (${currencyCode})`,`이전 비용 (${currencyCode})`,`Cost Before (${currencyCode})`)]: d.costBefore,
-    [L(locale,`หลัง (${currencyCode})`,`이후 비용 (${currencyCode})`,`Cost After (${currencyCode})`)]: d.costAfter,
+    [labelCostBefore]: d.costBefore,
+    [labelCostAfter]: d.costAfter,
   }));
 
   const keyBefore  = L(locale,'ก่อนติดตั้ง','설치 전','Before');
   const keyAfter   = L(locale,'หลังติดตั้ง','설치 후','After');
-  const keyCostB   = L(locale,`ก่อน (${currencyCode})`,`이전 비용 (${currencyCode})`,`Cost Before (${currencyCode})`);
-  const keyCostA   = L(locale,`หลัง (${currencyCode})`,`이후 비용 (${currencyCode})`,`Cost After (${currencyCode})`);
+  const keyCostB   = labelCostBefore;
+  const keyCostA   = labelCostAfter;
 
   async function handleSend(e) {
     e.preventDefault();
@@ -231,31 +233,20 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-gray-50">
+    <div className="cd-page-content">
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-violet-800 shadow-2xl px-4 py-7 md:px-10 md:py-12">
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.04)_0%,_transparent_70%)]" />
+      <div className="cd-hero relative overflow-hidden shadow-2xl px-4 py-6 md:px-10 md:py-10">
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-400/25 rounded-full blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl" />
         <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize:'28px 28px'}} />
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/25 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl ring-1 ring-white/20 flex-shrink-0">
-              <Zap className="w-6 h-6 md:w-8 md:h-8 text-yellow-300 drop-shadow" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full ring-1 ring-white/30">⚡ Green Retail Group</span>
-              </div>
-              <h1 className="text-lg md:text-3xl font-bold text-white leading-tight">{L(locale,'รายงานเปรียบเทียบพลังงาน','에너지 비교 보고서','Energy Comparison Report')}</h1>
-              <p className="text-blue-100 text-xs md:text-sm mt-0.5 hidden sm:block">{L(locale,'เปรียบเทียบการใช้ไฟฟ้าและค่าใช้จ่ายก่อน-หลัง','설치 전후 전력 사용량 및 비용 비교','Electricity usage & cost comparison before/after installation')}</p>
-            </div>
+        <div className="relative flex items-center gap-3">
+          <div className="w-11 h-11 md:w-14 md:h-14 bg-white/25 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl ring-1 ring-white/20 flex-shrink-0">
+            <Zap className="w-5 h-5 md:w-7 md:h-7 text-emerald-200 drop-shadow" />
           </div>
-          <div className="flex items-center gap-3 self-start sm:self-auto">
-            <div className="bg-white rounded-xl shadow-md">
-              <LanguageSwitcher />
-            </div>
+          <div>
+            <h1 className="text-lg md:text-2xl font-bold text-white leading-tight">{L(locale,'รายงานเปรียบเทียบพลังงาน','에너지 비교 보고서','Energy Comparison Report')}</h1>
+            <p className="text-emerald-100 text-xs md:text-sm mt-0.5">{L(locale,'เปรียบเทียบการใช้ไฟฟ้าและค่าใช้จ่ายก่อน-หลัง','설치 전후 전력 사용량 및 비용 비교','Electricity usage & cost comparison before/after installation')}</p>
           </div>
         </div>
 
@@ -263,7 +254,7 @@ export default function CustomersPage() {
         <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-5 md:mt-8">
           {[
             { icon: Zap,          val: `${fmt(totalSavedKwh)} kWh`, label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'),    color: 'from-yellow-400 to-amber-400', ring: 'ring-yellow-300/30' },
-            { icon: DollarSign,   val: formatCost(totalSavedBaht),  label: L(locale,'ค่าไฟที่ประหยัด','절약 비용','Cost Saved'),         color: 'from-emerald-400 to-green-400', ring: 'ring-emerald-300/30' },
+            { icon: DollarSign,   val: formatCost(totalSavedBaht),  label: L(locale,'ค่าไฟที่ประหยัด (₩)','절약 비용 (원)','Cost Saved (KRW)'),         color: 'from-emerald-400 to-green-400', ring: 'ring-emerald-300/30' },
             { icon: TrendingDown, val: `${savingPct}%`,             label: L(locale,'% ที่ประหยัด','절약률','Saving Rate'),              color: 'from-sky-400 to-blue-400', ring: 'ring-sky-300/30' },
             { icon: Leaf,         val: `${fmt(Number(co2Saved))} kg`,label: L(locale,'CO₂ ที่ลดได้','CO₂ 절감량','CO₂ Reduced'),        color: 'from-teal-400 to-cyan-400', ring: 'ring-teal-300/30' },
           ].map(({ icon: Icon, val, label, color, ring }) => (
@@ -273,7 +264,7 @@ export default function CustomersPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-white font-bold text-sm md:text-xl leading-tight truncate tabular-nums">{val}</p>
-                <p className="text-blue-100/80 text-xs truncate">{label}</p>
+                <p className="text-emerald-100/80 text-xs truncate">{label}</p>
               </div>
             </div>
           ))}
@@ -283,8 +274,8 @@ export default function CustomersPage() {
       <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-6">
 
         {/* Tab switcher */}
-        <div className="overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
-          <div className="flex gap-1.5 bg-white rounded-2xl p-1.5 shadow-md border border-gray-100/80 w-max md:w-fit">
+        <div className="cd-tab-wrap">
+          <div className="cd-tab-grid">
             {[
               { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),  icon: BarChart2 },
               { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),     icon: DollarSign },
@@ -292,13 +283,13 @@ export default function CustomersPage() {
               { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),            icon: Users },
             ].map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+                className={`cd-tab-btn flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                   activeTab === tab.key
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-200'
+                    ? 'bg-gradient-to-r from-emerald-600 to-green-700 text-white shadow-md shadow-emerald-200'
                     : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                 }`}>
-                <tab.icon className="w-3.5 h-3.5" />
-                {tab.label}
+                <tab.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -311,13 +302,13 @@ export default function CustomersPage() {
             <div className="flex gap-2 justify-end">
               <button onClick={() => setChartType('bar')}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
-                  chartType === 'bar' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                  chartType === 'bar' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
                 }`}>
                 <BarChart2 className="w-3.5 h-3.5" />{L(locale,'แผนภูมิแท่ง','막대 차트','Bar')}
               </button>
               <button onClick={() => setChartType('line')}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
-                  chartType === 'line' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                  chartType === 'line' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
                 }`}>
                 <Activity className="w-3.5 h-3.5" />{L(locale,'กราฟเส้น','선 차트','Line')}
               </button>
@@ -330,17 +321,18 @@ export default function CustomersPage() {
                 <h2 className="font-bold text-gray-800 text-base md:text-lg mb-1">
                   {activeTab === 'energy'
                     ? L(locale,'การใช้ไฟฟ้ารายเดือน (kWh)','월별 전력 사용량 (kWh)','Monthly Energy Usage (kWh)')
-                    : L(locale,`ค่าใช้จ่ายรายเดือน (${currencyCode})`,`월별 전기 요금 (${currencyCode})`,`Monthly Cost (${currencyCode})`)}
+                    : labelMonthlyCost}
                 </h2>
                 <p className="text-gray-500 text-xs md:text-sm mb-4 md:mb-6">
                   {L(locale,'เปรียบเทียบก่อนและหลังติดตั้ง','설치 전후 비교','Before vs after installation')}
                 </p>
                 {monthlyLoading ? (
-                  <div className="flex items-center justify-center h-[260px] text-gray-400">
+                  <div className="cd-chart-box flex items-center justify-center text-gray-400">
                     <RefreshCw className="w-6 h-6 animate-spin" />
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={260}>
+                  <div className="cd-chart-box">
+                  <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'bar' ? (
                   <BarChart data={chartData} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -349,7 +341,7 @@ export default function CustomersPage() {
                     <Tooltip formatter={(v) =>
                       activeTab === 'energy'
                         ? Number(v).toLocaleString()
-                        : formatCurrencyBySite(Number(v), selectedSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                        : formatCost(Number(v))
                     } />
                     <Legend />
                     {activeTab === 'energy' ? <>
@@ -368,7 +360,7 @@ export default function CustomersPage() {
                     <Tooltip formatter={(v) =>
                       activeTab === 'energy'
                         ? Number(v).toLocaleString()
-                        : formatCurrencyBySite(Number(v), selectedSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                        : formatCost(Number(v))
                     } />
                     <Legend />
                     {activeTab === 'energy' ? <>
@@ -381,6 +373,7 @@ export default function CustomersPage() {
                   </LineChart>
                 )}
                   </ResponsiveContainer>
+                  </div>
                 )}
                 {monthlyError && <p className="text-xs text-red-500 mt-3">{monthlyError}</p>}
               </div>
@@ -388,12 +381,12 @@ export default function CustomersPage() {
 
             {/* Comparison Table */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h2 className="font-bold text-gray-800">{L(locale,'ตารางเปรียบเทียบรายเดือน','월별 비교 표','Monthly Comparison Table')}</h2>
+              <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
+              <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-800 text-sm md:text-base">{L(locale,'ตารางเปรียบเทียบรายเดือน','월별 비교 표','Monthly Comparison Table')}</h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="cd-table-scroll overflow-x-auto">
+                <table className="w-full text-sm cd-table">
                   <thead className="bg-gradient-to-r from-gray-50 to-slate-50">
                     <tr>
                       {[
@@ -401,12 +394,12 @@ export default function CustomersPage() {
                         L(locale,'ก่อน (kWh)','이전 (kWh)','Before (kWh)'),
                         L(locale,'หลัง (kWh)','이후 (kWh)','After (kWh)'),
                         L(locale,'ไฟฟ้าที่ประหยัด','전력 절약','Saved kWh'),
-                        L(locale,`ก่อน (${currencyCode})`,`이전 비용 (${currencyCode})`,`Before (${currencyCode})`),
-                        L(locale,`หลัง (${currencyCode})`,`이후 비용 (${currencyCode})`,`After (${currencyCode})`),
-                        L(locale,`ประหยัดค่าไฟ (${currencyCode})`,`비용 절약 (${currencyCode})`,`Saved ${currencyCode}`),
+                        labelCostBefore,
+                        labelCostAfter,
+                        labelCostSaved,
                         L(locale,'% ประหยัด','절약률','Save %'),
                       ].map(h => (
-                        <th key={h} className="px-4 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-2 md:px-4 py-2.5 md:py-3.5 text-left text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -416,14 +409,14 @@ export default function CustomersPage() {
                       const savedBaht = d.costBefore - d.costAfter;
                       const pct = d.before > 0 ? ((savedKwh / d.before) * 100).toFixed(1) : '0.0';
                       return (
-                        <tr key={i} className={`hover:bg-blue-50/60 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}>
-                          <td className="px-4 py-3 font-semibold text-gray-800">{monthLabel(d)} {d.year}</td>
-                          <td className="px-4 py-3 text-red-600">{fmt(d.before)}</td>
-                          <td className="px-4 py-3 text-green-600">{fmt(d.after)}</td>
-                          <td className="px-4 py-3 font-semibold text-blue-700">{fmt(savedKwh)}</td>
-                          <td className="px-4 py-3 text-red-500">{formatCost(d.costBefore)}</td>
-                          <td className="px-4 py-3 text-green-600">{formatCost(d.costAfter)}</td>
-                          <td className="px-4 py-3 font-semibold text-emerald-700">{formatCost(savedBaht)}</td>
+                        <tr key={i} className={`hover:bg-emerald-50/60 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-semibold text-gray-800 whitespace-nowrap">{monthLabel(d)} {d.year}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-red-600 tabular-nums">{fmt(d.before)}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-green-600 tabular-nums">{fmt(d.after)}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-semibold text-emerald-700 tabular-nums">{fmt(savedKwh)}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-red-500 tabular-nums whitespace-nowrap">{formatCost(d.costBefore)}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-green-600 tabular-nums whitespace-nowrap">{formatCost(d.costAfter)}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-semibold text-emerald-700 tabular-nums whitespace-nowrap">{formatCost(savedBaht)}</td>
                           <td className="px-4 py-3">
                             <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">{pct}%</span>
                           </td>
@@ -431,7 +424,7 @@ export default function CustomersPage() {
                       );
                     })}
                   </tbody>
-                  <tfoot className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold">
+                  <tfoot className="bg-gradient-to-r from-emerald-600 to-green-700 text-white font-bold">
                     <tr>
                       <td className="px-4 py-3.5">{L(locale,'รวม','합계','Total')}</td>
                       <td className="px-4 py-3.5 text-red-200">{fmt(totalBefore)}</td>
@@ -464,7 +457,7 @@ export default function CustomersPage() {
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
               <div className="relative w-full sm:w-auto">
                 <select value={selectedDeviceId} onChange={e => { setSelectedDeviceId(e.target.value); }}
-                  className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer sm:min-w-[220px]">
+                  className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none cursor-pointer sm:min-w-[220px]">
                   {devices.map(d => (
                     <option key={d.deviceID} value={String(d.deviceID)}>{d.deviceName || d.deviceID}</option>
                   ))}
@@ -475,7 +468,7 @@ export default function CustomersPage() {
                 {['current','power','voltage'].map(m => (
                   <button key={m} onClick={() => setLiveMetric(m)}
                     className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition ${
-                      liveMetric === m ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'
+                      liveMetric === m ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200'
                     }`}>
                     {m === 'current' ? L(locale,'กระแสไฟ','전류','Current (A)')
                      : m === 'power'   ? L(locale,'กำลังไฟ','전력','Power (kW)')
@@ -485,7 +478,7 @@ export default function CustomersPage() {
               </div>
               <button onClick={fetchLive} disabled={liveLoading}
                 className="w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 shadow-sm transition">
-                <RefreshCw className={`w-4 h-4 ${liveLoading ? 'animate-spin text-blue-500' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${liveLoading ? 'animate-spin text-emerald-600' : ''}`} />
                 {L(locale,'รีเฟรช','새로고침','Refresh')}
               </button>
             </div>
@@ -499,7 +492,7 @@ export default function CustomersPage() {
                   {[
                     { icon: isOnline ? Wifi : WifiOff, label: L(locale,'สถานะ','상태','Status'), val: isOnline ? L(locale,'ออนไลน์','온라인','Online') : 'Offline', color: isOnline ? 'text-emerald-600' : 'text-red-500', bg: isOnline ? 'bg-emerald-50' : 'bg-red-50' },
                     { icon: Zap,         label: L(locale,'กำลังไฟ (kW)','전력 (kW)','Power (kW)'),    val: (d.totalPower ?? 0).toFixed(2),   color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { icon: Activity,    label: L(locale,'L1 (A)','L1 (A)','L1 (A)'),                  val: (d.currentL1   ?? 0).toFixed(2),   color: 'text-blue-600',  bg: 'bg-blue-50' },
+                    { icon: Activity,    label: L(locale,'L1 (A)','L1 (A)','L1 (A)'),                  val: (d.currentL1   ?? 0).toFixed(2),   color: 'text-emerald-600',  bg: 'bg-emerald-50' },
                     { icon: Activity,    label: L(locale,'L2 (A)','L2 (A)','L2 (A)'),                  val: (d.currentL2   ?? 0).toFixed(2),   color: 'text-violet-600',bg: 'bg-violet-50' },
                     { icon: Activity,    label: L(locale,'L3 (A)','L3 (A)','L3 (A)'),                  val: (d.currentL3   ?? 0).toFixed(2),   color: 'text-pink-600',  bg: 'bg-pink-50' },
                     { icon: Thermometer, label: L(locale,'Power Factor','역률','Power Factor'),          val: (d.powerFactor ?? 0).toFixed(3),   color: 'text-teal-600',  bg: 'bg-teal-50' },
@@ -518,7 +511,7 @@ export default function CustomersPage() {
 
             {/* Line Chart */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-blue-400 via-violet-400 to-pink-400" />
+              <div className="h-1 w-full bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400" />
               <div className="p-3 md:p-6">
                 <h2 className="font-bold text-gray-800 text-base md:text-lg mb-1">
                   {L(locale,'กราฟกระแสไฟรายชั่วโมง (วันนี้)','오늘 시간별 전류 그래프','Hourly Chart — Today')}
@@ -528,7 +521,7 @@ export default function CustomersPage() {
                 </p>
               {liveLoading ? (
                 <div className="flex items-center justify-center h-52">
-                  <RefreshCw className="w-8 h-8 animate-spin text-blue-400" />
+                  <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
                 </div>
               ) : liveData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-52 text-gray-400">
@@ -572,25 +565,25 @@ export default function CustomersPage() {
               const dd = deviceDetails;
               return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-                  <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-violet-500" />
+                  <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                    <Cpu className="w-5 h-5 text-blue-500" />
+                    <Cpu className="w-5 h-5 text-emerald-600" />
                     <h2 className="font-bold text-gray-800">{L(locale,'รายละเอียดเครื่อง','기기 상세정보','Device Details')}</h2>
                   </div>
 
                   {/* Owner / Customer section */}
-                  <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50/60 border-b border-gray-100">
+                  <div className="px-6 py-5 bg-gradient-to-r from-emerald-50 to-green-50/60 border-b border-gray-100">
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-600 flex items-center justify-center">
                         <Users className="w-3.5 h-3.5 text-white" />
                       </div>
-                      <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">{L(locale,'ข้อมูลลูกค้า / เจ้าของเครื่อง','고객 / 기기 소유자 정보','Customer / Owner Information')}</p>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">{L(locale,'ข้อมูลลูกค้า / เจ้าของเครื่อง','고객 / 기기 소유자 정보','Customer / Owner Information')}</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">{L(locale,'ชื่อเครื่อง / Device ID','장치명 / Device ID','Device Name / Device ID')}</p>
                         <p className="font-semibold text-gray-800">{dev?.deviceName ?? selectedDeviceId}</p>
-                        <p className="text-xs text-blue-500 font-mono mt-0.5">{dd?.energyID ?? dev?.energyID ?? '-'}</p>
+                        <p className="text-xs text-emerald-600 font-mono mt-0.5">{dd?.energyID ?? dev?.energyID ?? '-'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">{L(locale,'ชื่อลูกค้า','고객명','Customer Name')}</p>
@@ -599,7 +592,7 @@ export default function CustomersPage() {
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">{L(locale,'เบอร์โทร','전화번호','Phone')}</p>
                         {dd?.customerPhone
-                          ? <a href={`tel:${dd.customerPhone}`} className="font-semibold text-blue-600 hover:underline flex items-center gap-1">
+                          ? <a href={`tel:${dd.customerPhone}`} className="font-semibold text-emerald-600 hover:underline flex items-center gap-1">
                               <Phone className="w-3.5 h-3.5 flex-shrink-0" />{dd.customerPhone}
                             </a>
                           : <p className="font-semibold text-gray-800">-</p>}
@@ -632,7 +625,7 @@ export default function CustomersPage() {
                       [L(locale,'แรงดัน L1 (V)','전압 L1 (V)','Voltage L1 (V)'), (d.voltageL1 ?? 0).toFixed(1), 'text-emerald-700'],
                       [L(locale,'แรงดัน L2 (V)','전압 L2 (V)','Voltage L2 (V)'), (d.voltageL2 ?? 0).toFixed(1), 'text-emerald-700'],
                       [L(locale,'แรงดัน L3 (V)','전압 L3 (V)','Voltage L3 (V)'), (d.voltageL3 ?? 0).toFixed(1), 'text-emerald-700'],
-                      [L(locale,'กระแส L1 (A)','전류 L1 (A)','Current L1 (A)'), (d.currentL1 ?? 0).toFixed(2), 'text-blue-700'],
+                      [L(locale,'กระแส L1 (A)','전류 L1 (A)','Current L1 (A)'), (d.currentL1 ?? 0).toFixed(2), 'text-emerald-700'],
                       [L(locale,'กระแส L2 (A)','전류 L2 (A)','Current L2 (A)'), (d.currentL2 ?? 0).toFixed(2), 'text-violet-700'],
                       [L(locale,'กระแส L3 (A)','전류 L3 (A)','Current L3 (A)'), (d.currentL3 ?? 0).toFixed(2), 'text-pink-700'],
                       [L(locale,'กำลังไฟ (kW)','전력 (kW)','Total Power (kW)'), (d.totalPower ?? 0).toFixed(2), 'text-amber-700'],
@@ -662,13 +655,13 @@ export default function CustomersPage() {
             {/* Staff Cards */}
             <div className="lg:col-span-2 space-y-4">
               <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-500" />
+                <Users className="w-5 h-5 text-emerald-600" />
                 {L(locale,'ทีมงาน','담당자','Our Team')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {staffList.map((s, i) => {
                   const gradients = [
-                    'from-blue-500 to-indigo-600',
+                    'from-emerald-500 to-green-700',
                     'from-violet-500 to-purple-600',
                     'from-emerald-500 to-teal-600',
                     'from-orange-500 to-amber-600',
@@ -686,15 +679,15 @@ export default function CustomersPage() {
                           </p>
                           <span className={`flex-shrink-0 w-2 h-2 rounded-full ${s.available ? 'bg-emerald-400' : 'bg-gray-300'}`} />
                         </div>
-                        <p className="text-xs text-blue-600 font-medium">
+                        <p className="text-xs text-emerald-600 font-medium">
                           {locale === 'th' ? s.roleTh : locale === 'ko' ? s.roleKo : s.role}
                         </p>
                         <div className="mt-3 space-y-1.5">
-                          <a href={`tel:${s.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                            <Phone className="w-3.5 h-3.5 text-blue-500" />{s.phone}
+                          <a href={`tel:${s.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-700 transition-colors">
+                            <Phone className="w-3.5 h-3.5 text-emerald-600" />{s.phone}
                           </a>
-                          <a href={`mailto:${s.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors truncate">
-                            <Mail className="w-3.5 h-3.5 text-blue-500" />{s.email}
+                          <a href={`mailto:${s.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-700 transition-colors truncate">
+                            <Mail className="w-3.5 h-3.5 text-emerald-600" />{s.email}
                           </a>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <MessageSquare className="w-3.5 h-3.5 text-green-500" />
@@ -720,7 +713,7 @@ export default function CustomersPage() {
 
             {/* Contact Form */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden h-fit">
-              <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+              <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
               <div className="p-6">
                 <h2 className="font-bold text-gray-800 text-lg mb-1">{L(locale,'ส่งข้อความหาเรา','메시지 보내기','Send us a message')}</h2>
                 <p className="text-gray-500 text-sm mb-5">{L(locale,'ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง','24시간 내에 연락드리겠습니다','Our team will reply within 24 hours')}</p>
@@ -731,7 +724,7 @@ export default function CustomersPage() {
                   </div>
                   <p className="font-semibold text-gray-800">{L(locale,'ส่งข้อความเรียบร้อยแล้ว!','메시지가 전송되었습니다!','Message sent!')}</p>
                   <p className="text-sm text-gray-500 text-center">{L(locale,'เราจะติดต่อกลับโดยเร็วที่สุด','최대한 빨리 연락드리겠습니다','We will contact you as soon as possible')}</p>
-                  <button onClick={() => setSent(false)} className="mt-2 text-blue-600 text-sm underline">
+                  <button onClick={() => setSent(false)} className="mt-2 text-emerald-600 text-sm underline">
                     {L(locale,'ส่งอีกครั้ง','다시 보내기','Send another')}
                   </button>
                 </div>
@@ -740,28 +733,28 @@ export default function CustomersPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'ชื่อ','이름','Name')} *</label>
                     <input required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                       placeholder={L(locale,'ชื่อของคุณ','성함을 입력하세요','Your name')} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'เบอร์โทร','전화번호','Phone')} *</label>
                     <input required value={contactForm.phone} onChange={e => setContactForm({...contactForm, phone: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                       placeholder={L(locale,'เบอร์โทรของคุณ','전화번호를 입력하세요','Your phone number')} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'อีเมล','이메일','Email')}</label>
                     <input type="email" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                       placeholder="email@example.com" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'ข้อความ','메시지','Message')} *</label>
                     <textarea required rows={4} value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none"
                       placeholder={L(locale,'พิมพ์ข้อความของคุณ...','메시지를 입력하세요...','Type your message...')} />
                   </div>
-                  <button type="submit" disabled={sendingContact} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-blue-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed">
+                  <button type="submit" disabled={sendingContact} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-emerald-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed">
                     <Send className="w-4 h-4" />
                     {sendingContact ? L(locale,'กำลังส่ง...','전송 중...','Sending...') : L(locale,'ส่งข้อความ','메시지 보내기','Send Message')}
                   </button>

@@ -19,11 +19,21 @@ export async function POST(request) {
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { username, password } = body;
+    const { username, password, pageName } = body;
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
+
+    const page = String(pageName || '').trim();
+    const isEnergyDashboard =
+      page === '/energy-dashboard' ||
+      page.startsWith('/energy-dashboard/') ||
+      page === '/energy-dashboard-login';
+
+    const allowedRoles = isEnergyDashboard
+      ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
+      : ['CLIENT', 'ADMIN', 'SUPER_ADMIN'];
 
     // Look up by username or email
     const identifier = String(username).trim();
@@ -41,24 +51,52 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
-    if (user.role !== 'CLIENT' && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า' }, { status: 403 });
+    if (!allowedRoles.includes(user.role)) {
+      const error = isEnergyDashboard
+        ? 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบ Energy Dashboard'
+        : 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า';
+      return NextResponse.json({ error }, { status: 403 });
     }
 
     const token = randomUUID();
+
+    let name = user.name ?? user.username;
+    let role = user.role;
+    const uname = user.username ?? '';
+    if (uname === 'goeun' || name === 'Super Admin') {
+      name = 'pavinee boknoi';
+      role = 'ADMIN';
+    } else if (role === 'SUPER_ADMIN') {
+      role = 'ADMIN';
+    }
 
     return NextResponse.json({
       token,
       userId: user.id,
       username: user.username ?? user.email,
-      name: user.name ?? user.username,
+      name,
       email: user.email,
+      role,
       site: null,
       typeID: null,
       departmentID: null,
     });
   } catch (err) {
     console.error('[api/user/login] error:', err);
+    const msg = String(err?.message || '');
+    if (
+      msg.includes('Authentication failed') ||
+      msg.includes('credentials') ||
+      err?.name === 'PrismaClientInitializationError'
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Database connection failed. Start dev in WSL (npm run dev:wsl) or create geserverhub user on Windows MySQL.',
+        },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

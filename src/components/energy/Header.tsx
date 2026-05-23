@@ -1,47 +1,47 @@
 "use client";
 
-import { Bell, RefreshCw, X, CheckCheck, AlertTriangle, Info, Zap, Globe, ChevronDown } from "lucide-react";
-import { useLocale } from "@/lib/LocaleContext";
+import Link from "next/link";
+import { Bell, RefreshCw, X, CheckCheck, AlertTriangle, Info, Zap, Home } from "lucide-react";
 import { useSite } from "@/lib/SiteContext";
+import { useLocale } from "@/lib/LocaleContext";
 import { useState, useRef, useEffect } from "react";
-import CountryFlag from "./CountryFlag";
+import EnergyLangSwitcher from "./EnergyLangSwitcher";
+import { formatEnergyDisplayUser, type EnergySessionUser } from "@/lib/energy/display-user";
 
-type Site = "thailand" | "korea" | "vietnam" | "malaysia";
-type Locale = "ko" | "en" | "th" | "cn" | "vn" | "ms";
+type EnergyUser = EnergySessionUser;
 
-const siteConfig: { value: Site; flagCode: "TH" | "KR" | "VN" | "MY"; nameKey: string }[] = [
-  { value: "thailand", flagCode: "TH", nameKey: "thailand" },
-  { value: "korea", flagCode: "KR", nameKey: "republicOfKorea" },
-  { value: "vietnam", flagCode: "VN", nameKey: "vietnam" },
-  { value: "malaysia", flagCode: "MY", nameKey: "malaysia" },
-];
-
-const languageConfig: { value: Locale; label: string; flagCode: "KR" | "GB" | "TH" | "CN" | "VN" | "MY" }[] = [
-  { value: "ko", label: "한국어", flagCode: "KR" },
-  { value: "en", label: "English", flagCode: "GB" },
-  { value: "cn", label: "中文", flagCode: "CN" },
-  { value: "ms", label: "Bahasa Melayu", flagCode: "MY" },
-  { value: "th", label: "ไทย", flagCode: "TH" },
-  { value: "vn", label: "Tiếng Việt", flagCode: "VN" },
-];
+function readEnergyUser(): EnergyUser | null {
+  try {
+    const raw = localStorage.getItem('energy_system_user');
+    if (!raw) return null;
+    return JSON.parse(raw) as EnergyUser;
+  } catch {
+    return null;
+  }
+}
 
 export default function Header() {
-  const { locale, setLocale, t } = useLocale();
-  const { selectedSite, setSelectedSite } = useSite();
-  const [showSiteMenu, setShowSiteMenu] = useState(false);
-  const [showLangMenu, setShowLangMenu] = useState(false);
+  const { selectedSite } = useSite();
+  const { locale, t } = useLocale();
+  const lang = ["th", "ko", "en"].includes(locale) ? locale : "th";
+  const backMainMenu =
+    t("backMainMenu") !== "backMainMenu"
+      ? t("backMainMenu")
+      : lang === "th"
+        ? "กลับหน้าเมนูหลัก"
+        : lang === "ko"
+          ? "메인 메뉴"
+          : "Main menu";
   const [showNotifications, setShowNotifications] = useState(false);
-  const siteMenuRef = useRef<HTMLDivElement>(null);
-  const langMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-
-  const currentSite = siteConfig.find((s) => s.value === selectedSite) ?? siteConfig[0];
-  const currentLang = languageConfig.find((l) => l.value === locale) ?? languageConfig[1];
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [energyUser, setEnergyUser] = useState<EnergyUser | null>(null);
+
+  const { displayName, displayRole } = formatEnergyDisplayUser(energyUser);
 
   // Fetch notifications from API
   const fetchNotifications = async (signal?: AbortSignal) => {
@@ -96,9 +96,21 @@ export default function Header() {
     }
   };
 
-  // Fetch notifications on mount and when site changes
   useEffect(() => {
     setMounted(true);
+    setEnergyUser(readEnergyUser());
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "energy_system_user" || event.key === null) {
+        setEnergyUser(readEnergyUser());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Fetch notifications on mount and when site changes
+  useEffect(() => {
     const controller = new AbortController();
     fetchNotifications(controller.signal);
     const interval = setInterval(() => fetchNotifications(controller.signal), 30000);
@@ -110,12 +122,6 @@ export default function Header() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (siteMenuRef.current && !siteMenuRef.current.contains(event.target as Node)) {
-        setShowSiteMenu(false);
-      }
-      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
-        setShowLangMenu(false);
-      }
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
@@ -125,92 +131,55 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="relative z-[120] bg-white shadow-sm border-b px-8 py-4 overflow-visible">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {/* Site Selector */}
-          <div className="relative" ref={siteMenuRef}>
-            <button
-              onClick={() => setShowSiteMenu(!showSiteMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md border border-orange-200"
-            >
-              <CountryFlag country={currentSite.flagCode} size="md" />
-              <span className="text-sm font-semibold text-orange-700">{t(currentSite.nameKey) || currentSite.nameKey}</span>
-              <ChevronDown className="w-4 h-4 text-orange-600" />
-            </button>
-            {showSiteMenu && (
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50">
-                {siteConfig.map((site) => (
-                  <button
-                    key={site.value}
-                    onClick={() => { setSelectedSite(site.value); setShowSiteMenu(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors ${
-                      selectedSite === site.value ? "bg-orange-100 border-l-4 border-orange-500" : ""
-                    }`}
-                  >
-                    <CountryFlag country={site.flagCode} size="md" />
-                    <span className={`text-sm font-semibold flex-1 text-left ${
-                      selectedSite === site.value ? "text-orange-700" : "text-gray-800"
-                    }`}>{t(site.nameKey) || site.nameKey}</span>
-                    {selectedSite === site.value && <span className="text-orange-600">✓</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+    <header className="energy-header px-4 sm:px-8 py-4 overflow-visible">
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/energy-dashboard/dashboard"
+          className="inline-flex items-center gap-2 rounded-lg border border-emerald-200/90 bg-emerald-50/60 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 hover:border-emerald-300 shrink-0"
+        >
+          <Home className="w-4 h-4 shrink-0" strokeWidth={2} />
+          <span className="hidden sm:inline">{backMainMenu}</span>
+        </Link>
 
-          {/* Language Switcher */}
-          <div className="relative" ref={langMenuRef}>
-            <button
-              onClick={() => setShowLangMenu(!showLangMenu)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 rounded-lg transition-all duration-200 shadow-sm hover:shadow border border-gray-200 min-w-[15rem]"
+        <div className="flex items-center justify-end gap-2 min-w-0">
+          {mounted && displayName && (
+            <Link
+              href="/energy-dashboard/profile"
+              className="hidden sm:flex items-center gap-2 max-w-[220px] rounded-lg border border-emerald-100 bg-white px-3 py-2 hover:bg-emerald-50/80 transition shrink min-w-0"
+              title={displayName}
             >
-              <Globe className="w-4 h-4 text-gray-600" />
-              <CountryFlag country={currentLang.flagCode} size="sm" />
-              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">{currentLang.label}</span>
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            </button>
-            {showLangMenu && (
-              <div className="absolute left-0 mt-2 w-[18rem] bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-[130] overflow-visible">
-                <div className="grid grid-cols-2 gap-1.5">
-                  {languageConfig.map((lang) => (
-                    <button
-                      key={lang.value}
-                      onClick={() => {
-                        setLocale(lang.value);
-                        try {
-                          localStorage.setItem('locale', lang.value);
-                          localStorage.setItem('k_system_lang', lang.value);
-                          window.dispatchEvent(new CustomEvent('k-system-lang', { detail: lang.value }));
-                          window.dispatchEvent(new CustomEvent('locale-changed', { detail: { locale: lang.value } }));
-                        } catch (_) {}
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                        locale === lang.value ? "bg-blue-50 ring-1 ring-blue-200" : ""
-                      }`}
-                    >
-                      <CountryFlag country={lang.flagCode} size="sm" />
-                      <span className={`text-sm font-medium ${
-                        locale === lang.value ? "text-blue-700" : "text-gray-700"
-                      } whitespace-nowrap`}>{lang.label}</span>
-                      {locale === lang.value && <span className="ml-auto text-blue-600">✓</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+              <span className="min-w-0 flex flex-col leading-tight">
+                <span className="truncate text-sm font-semibold text-gray-800">{displayName}</span>
+                {displayRole && (
+                  <span className="truncate text-[10px] font-medium uppercase tracking-wide text-emerald-600">
+                    {displayRole}
+                  </span>
+                )}
+              </span>
+            </Link>
+          )}
 
-        <div className="flex items-center gap-2">
+          {mounted && displayName && (
+            <Link
+              href="/energy-dashboard/profile"
+              className="sm:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white"
+              title={displayName}
+              aria-label={displayName}
+            >
+              {displayName.charAt(0).toUpperCase()}
+            </Link>
+          )}
+
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2.5 hover:bg-orange-50 rounded-lg transition-all duration-200 hover:shadow-sm relative group"
+              className="p-2.5 hover:bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-sm relative group"
             >
-              <Bell className={`w-5 h-5 transition-colors ${showNotifications ? "text-orange-600" : "text-gray-500 group-hover:text-orange-600"}`} />
+              <Bell className={`w-5 h-5 transition-colors ${showNotifications ? "text-emerald-600" : "text-gray-500 group-hover:text-emerald-600"}`} />
               {mounted && unreadCount > 0 && (
                 <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 ring-2 ring-white animate-pulse">
                   {unreadCount}
@@ -223,7 +192,7 @@ export default function Header() {
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
                   <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-orange-600" />
+                    <Bell className="w-4 h-4 text-emerald-600" />
                     <span className="text-sm font-semibold text-gray-800">Notifications</span>
                     {mounted && unreadCount > 0 && (
                       <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>
@@ -273,18 +242,24 @@ export default function Header() {
 
                 {/* Footer */}
                 <div className="px-4 py-2.5 border-t bg-gray-50">
-                  <a href="/notifications" className="text-xs text-orange-600 hover:text-orange-800 font-medium transition">View all notifications →</a>
+                  <a href="/energy-dashboard/notifications" className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">View all notifications →</a>
                 </div>
               </div>
             )}
           </div>
 
           {/* Refresh */}
-          <button className="p-2.5 hover:bg-orange-50 rounded-lg transition-all duration-200 hover:shadow-sm group">
-            <RefreshCw className="w-5 h-5 text-gray-500 group-hover:text-orange-600 group-hover:rotate-180 transition-all duration-500" />
+          <button
+            type="button"
+            onClick={() => fetchNotifications()}
+            disabled={loading}
+            className="p-2.5 hover:bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-sm group disabled:opacity-50"
+            aria-label="Refresh"
+          >
+            <RefreshCw className="w-5 h-5 text-gray-500 group-hover:text-emerald-600 group-hover:rotate-180 transition-all duration-500" />
           </button>
 
-
+          <EnergyLangSwitcher />
         </div>
       </div>
     </header>

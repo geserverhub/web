@@ -1,0 +1,266 @@
+/* Customer dashboard login — mobile-first */
+
+.cdl-page {
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: linear-gradient(160deg, #064e3b 0%, #047857 35%, #059669 65%, #0d9488 100%);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.cdl-page::before,
+.cdl-page::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  pointer-events: none;
+}
+
+.cdl-page::before {
+  top: -6rem;
+  right: -4rem;
+  width: 14rem;
+  height: 14rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cdl-page::after {
+  bottom: -4rem;
+  left: -3rem;
+  width: 12rem;
+  height: 12rem;
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.cdl-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.25rem 1.35rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.22),
+    0 8px 24px rgba(5, 150, 105, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+@media (min-width: 480px) {
+  .cdl-card {
+    padding: 2rem 1.75rem 1.5rem;
+    border-radius: 1.5rem;
+  }
+}
+
+.cdl-brand {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.cdl-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  max-width: min(72vw, 200px);
+}
+
+.cdl-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 88px;
+  object-fit: contain;
+  background: transparent;
+}
+
+.cdl-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #14532d;
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 480px) {
+  .cdl-logo-wrap {
+    max-width: 220px;
+  }
+
+  .cdl-logo {
+    max-height: 96px;
+  }
+
+  .cdl-title {
+    font-size: 1.2rem;
+  }
+}
+
+.cdl-mobile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #065f46;
+  background: linear-gradient(180deg, #ecfdf5, #d1fae5);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.12);
+}
+
+.cdl-contact {
+  margin-top: 0.65rem;
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.cdl-field {
+  margin-bottom: 1rem;
+}
+
+.cdl-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.4rem;
+}
+
+.cdl-input-wrap {
+  position: relative;
+}
+
+.cdl-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.cdl-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 2.75rem 0.75rem 2.5rem;
+  border-radius: 0.75rem;
+  border: 2px solid #e5e7eb;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: #1e293b;
+  background: #fff;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cdl-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+
+.cdl-toggle-pw {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cdl-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.625rem;
+  padding: 0.65rem 0.875rem;
+  color: #dc2626;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.cdl-submit {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
+  box-shadow:
+    0 8px 24px rgba(5, 150, 105, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cdl-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(5, 150, 105, 0.4);
+}
+
+.cdl-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.cdl-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cdl-footer {
+  text-align: center;
+  margin-top: 1.25rem;
+}
+
+.cdl-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #047857;
+  text-decoration: none;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(236, 253, 245, 0.9);
+}
+
+.cdl-back:hover {
+  background: #ecfdf5;
+}

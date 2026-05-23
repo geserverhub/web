@@ -426,17 +426,19 @@ export default function CompareMonitoringPage() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="energy-page">
+      <div className="energy-hero mb-5">
+        <div className="energy-hero-inner px-6 py-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 style={{ margin: 0 }}>Compare Monitoring - Power Savings Analysis</h2>
-          <div style={{ fontSize: 13, color: '#6b7280' }}>Compare Power Before vs Current Metrics to analyze energy savings</div>
+          <h2 className="text-xl font-bold text-white m-0">Compare Monitoring - Power Savings Analysis</h2>
+          <p className="text-sm text-emerald-100 mt-1 mb-0">Compare Power Before vs Current Metrics to analyze energy savings</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="k-btn" onClick={() => router.push('/sites')} style={{ padding: '8px 12px', borderRadius: 6 }}>Back</button>
-          <button className="k-btn k-btn-primary" onClick={() => window.location.reload()} style={{ padding: '8px 12px', borderRadius: 6, background: '#2563eb', color: '#fff' }}>Refresh</button>
+        <div className="flex gap-2">
+          <button type="button" className="k-btn px-3 py-2 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30" onClick={() => router.push('/energy-dashboard/dashboard')}>Back</button>
+          <button type="button" className="k-btn px-3 py-2 rounded-lg bg-white text-emerald-800 font-semibold hover:bg-emerald-50" onClick={() => window.location.reload()}>Refresh</button>
         </div>
-      </header>
+        </div>
+      </div>
 
       {/* Filters Section */}
       <section style={{ marginTop: 18, marginBottom: 16 }}>

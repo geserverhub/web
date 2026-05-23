@@ -122,18 +122,17 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div className="p-5 space-y-5 bg-gray-50 min-h-screen">
+    <div className="energy-page space-y-5">
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-xl">
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-        <div className="relative z-10 px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="energy-hero">
+        <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
               <BellRing className="w-3.5 h-3.5" /> Notifications
             </div>
             <h1 className="text-3xl font-black text-white mb-1">{t('deviceNotifications') || 'Device Notifications'}</h1>
-            <p className="text-purple-100 text-sm">Configure alert channels for each device</p>
+            <p className="text-emerald-100 text-sm">Configure alert channels for each device</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/20">

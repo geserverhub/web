@@ -26,10 +26,33 @@ if (process.platform === 'win32') {
     console.log('no process on port', port);
   }
 } else {
+  let freed = false;
   try {
-    execSync(`fuser -k ${port}/tcp`, { stdio: 'ignore' });
-    console.log('freed port', port);
+    const pids = execSync(`lsof -ti :${port} 2>/dev/null || true`, {
+      encoding: 'utf8',
+    }).trim();
+    if (pids) {
+      for (const pid of pids.split(/\s+/).filter(Boolean)) {
+        try {
+          execSync(`kill -9 ${pid}`, { stdio: 'ignore' });
+          console.log('killed pid', pid);
+          freed = true;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
   } catch {
-    console.log('no process on port', port);
+    /* lsof not available */
   }
+  if (!freed) {
+    try {
+      execSync(`fuser -k ${port}/tcp 2>/dev/null`, { stdio: 'ignore' });
+      console.log('freed port', port);
+      freed = true;
+    } catch {
+      /* ignore */
+    }
+  }
+  if (!freed) console.log('no process on port', port);
 }

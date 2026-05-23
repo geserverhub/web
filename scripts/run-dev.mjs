@@ -1,7 +1,7 @@
 /**
  * Start Next dev. On Windows, if local MySQL rejects geserverhub, run dev in WSL instead.
  */
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -61,29 +61,54 @@ function run(cmd, args, options = {}) {
   });
 }
 
-async function startNextLocal() {
+async function freePort() {
+  const killScript = resolve(__dirname, 'kill-port.mjs');
+  await run(process.execPath, [killScript, port], { cwd: root });
+}
+
+async function startNextLocal(host = '127.0.0.1') {
+  await freePort();
   const nextBin = resolve(root, 'node_modules/next/dist/bin/next');
-  await run(process.execPath, [nextBin, 'dev', '-p', port], { cwd: root });
+  let wslIp = '';
+  if (process.platform !== 'win32') {
+    try {
+      wslIp = execSync("hostname -I | awk '{print $1}'", { encoding: 'utf8' }).trim();
+    } catch {
+      /* ignore */
+    }
+  }
+  console.log(`\n[dev] http://localhost:${port} (hostname ${host})`);
+  if (wslIp) console.log(`[dev] From Windows browser: http://${wslIp}:${port}/`);
+  console.log('');
+  const useTurbo = process.env.DEV_TURBO === '1';
+  const args = ['dev', '-p', port, '-H', host];
+  if (useTurbo) args.push('--turbopack');
+  await run(process.execPath, [nextBin, ...args], { cwd: root });
 }
 
 async function startNextWsl() {
-  const wslPath = '/mnt/c/web/web'.replace(/\\/g, '/');
-  const cmd = `cd ${wslPath} && npm run dev:restart`;
-  console.log('\n[dev] Windows MySQL: geserverhub not available on localhost:3306.');
-  console.log('[dev] Starting Next.js in WSL (same DB as .env.local)...\n');
+  const wslPath = process.env.WSL_PROJECT_DIR || '~/web';
+  const cmd = `cd ${wslPath} && npm run dev`;
+  console.log('\n[dev] Starting Next.js in WSL (MySQL + APIs)...\n');
   await run('wsl', ['-e', 'bash', '-lc', cmd], { cwd: root });
 }
 
 async function main() {
   if (process.platform === 'win32') {
-    const ok = await canConnectLocalDb();
-    if (!ok) {
+    if (process.env.DEV_USE_WSL === '1') {
       await startNextWsl();
       return;
     }
-    console.log('[dev] Local MySQL OK — starting Next on Windows.\n');
+    const dbOk = await canConnectLocalDb();
+    console.log(
+      dbOk
+        ? '[dev] Windows MySQL OK — homepage + APIs on localhost.'
+        : '[dev] Windows MySQL unavailable — homepage uses fallback data; APIs need npm run dev:wsl'
+    );
+    await startNextLocal('127.0.0.1');
+    return;
   }
-  await startNextLocal();
+  await startNextLocal('0.0.0.0');
 }
 
 main().catch((err) => {

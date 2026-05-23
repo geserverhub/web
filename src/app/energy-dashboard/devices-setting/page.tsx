@@ -441,7 +441,7 @@ export default function DevicesSettingPage() {
   // Avoid hydration mismatch: render a stable placeholder until the client mounts
   if (!clientReady) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="energy-page">
         <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-gray-200 rounded w-32" />
@@ -680,7 +680,7 @@ export default function DevicesSettingPage() {
   // Avoid hydration mismatch: render a stable placeholder until the client mounts
   if (!clientReady) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="energy-page">
         <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-gray-200 rounded w-32" />
@@ -695,20 +695,17 @@ export default function DevicesSettingPage() {
 
   return (
     <>
-    <div className="p-3 md:p-5 space-y-4 md:space-y-5 bg-gradient-to-b from-slate-100 to-gray-50 min-h-screen">
+    <div className="energy-page space-y-4 md:space-y-5">
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 shadow-xl">
-        <div className="absolute -top-16 -right-16 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-56 h-56 bg-indigo-500/10 rounded-full blur-2xl" />
-        <div className="absolute inset-0 opacity-5" style={{backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize:'24px 24px'}} />
-        <div className="relative z-10 px-5 py-6 md:px-8 md:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="energy-hero rounded-2xl md:rounded-3xl">
+        <div className="energy-hero-inner px-5 py-6 md:px-8 md:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3 ring-1 ring-white/20">
-              <Settings className="w-3.5 h-3.5 text-blue-300" /> {ui.settingsBadge}
+              <Settings className="w-3.5 h-3.5 text-emerald-200" /> {ui.settingsBadge}
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1">{ui.deviceConfigTitle}</h1>
-            <p className="text-slate-300 text-sm">{ui.heroSubtitle}</p>
+            <p className="text-emerald-100 text-sm">{ui.heroSubtitle}</p>
           </div>
           <div className="flex items-center gap-2 md:gap-3 self-stretch sm:self-auto">
             {[
@@ -752,7 +749,7 @@ export default function DevicesSettingPage() {
             {ui.refresh}
           </button>
           <button onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition whitespace-nowrap">
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-xl text-sm font-semibold hover:from-emerald-700 hover:to-green-800 shadow-sm transition whitespace-nowrap">
             <Plus className="w-4 h-4" />
             {ui.addDevice || 'เพิ่มเครื่อง'}
           </button>
@@ -761,7 +758,7 @@ export default function DevicesSettingPage() {
 
       {/* Device List */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+        <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
         <div className="px-4 py-4 md:px-6 md:py-5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
             <Server className="w-4 h-4 text-blue-500" />
@@ -1137,7 +1134,7 @@ export default function DevicesSettingPage() {
             {/* Footer */}
             <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
               <button onClick={() => { setViewingDevice(null); openEdit(viewingDevice); }}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-md">
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-md">
                 <Edit2 className="w-4 h-4" />
                 {ui.edit}
               </button>
@@ -1155,7 +1152,7 @@ export default function DevicesSettingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-emerald-600 to-green-700 px-6 py-5 flex items-center justify-between">
               <div>
                 <p className="text-white/70 text-xs font-medium">ID: {editingDevice.deviceID}</p>
                 <h2 className="text-white font-bold text-lg">{editForm.deviceName || editingDevice.deviceName}</h2>
@@ -1248,7 +1245,7 @@ export default function DevicesSettingPage() {
             {/* Footer */}
             <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
               <button onClick={saveEdit} disabled={saving}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-60 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-md">
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 disabled:opacity-60 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-md">
                 <Save className="w-4 h-4" />
                 {saving ? ui.saving : saveMsg === 'saved' ? ui.saved : ui.save}
               </button>
@@ -1268,7 +1265,7 @@ export default function DevicesSettingPage() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-emerald-600 to-green-700 px-6 py-5 flex items-center justify-between">
               <div>
                 <h2 className="text-white font-bold text-lg">{ui.addTitle}</h2>
                 <p className="text-white/80 text-xs mt-0.5">{ui.addHint}</p>
@@ -1513,7 +1510,7 @@ export default function DevicesSettingPage() {
 
             <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
               <button onClick={saveAdd} disabled={creating}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-60 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-md">
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 disabled:opacity-60 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-md">
                 <Plus className="w-4 h-4" />
                 {creating ? ui.creating : createMsg === 'saved' ? ui.created : ui.create}
               </button>

@@ -1,178 +1,226 @@
 "use client";
 
-import { Home, BarChart2, MapPin, Bell, Settings, Monitor, Activity, Layout as LayoutIcon, Code, Users, FileText, MessageSquare, HelpCircle, UserCircle, LogOut } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "@/lib/LocaleContext";
+import type { LucideIcon } from "lucide-react";
+import {
+  Home,
+  BarChart2,
+  MapPin,
+  Bell,
+  Settings,
+  Monitor,
+  Activity,
+  GitCompare,
+  Code,
+  FileText,
+  MessageSquare,
+  HelpCircle,
+  Users,
+  UserCircle,
+  LogOut,
+  Gauge,
+  Leaf,
+  LogIn,
+  Store,
+  LineChart,
+  Building2,
+} from "lucide-react";
+import "./energy-sidebar.css";
 
-const navigationItems = [
-  { key: "dashboard", icon: Home, href: "/energy-dashboard/dashboard" },
-  { key: "currentMonitor", icon: Activity, href: "/energy-dashboard/current-monitor" },
-  { key: "overview", icon: BarChart2, href: "/energy-dashboard/overview" },
-  { key: "monitor", icon: Monitor, href: "/energy-dashboard/monitor" },
-  { key: "location", icon: MapPin, href: "/energy-dashboard/location" },
+const companyNames: Record<string, string> = {
+  th: "บริษัท จีอี อีเนอร์จี่ เทค จำกัด",
+  en: "GE Energy Tech Co., Ltd.",
+  ko: "(주식회사)지이 에너지텍",
+};
+
+type NavItem = {
+  key: string;
+  icon: LucideIcon;
+  href: string;
+  exact?: boolean;
+  badge?: "live";
+};
+
+type NavSection = {
+  sectionKey: string;
+  items: NavItem[];
+};
+
+/** Green energy access → monitoring → configure → support */
+const menuSections: NavSection[] = [
+  {
+    sectionKey: "menuGreenEnergy",
+    items: [
+      {
+        key: "greenEnergyPortal",
+        icon: Leaf,
+        href: "/energy-dashboard/current-monitor",
+        badge: "live",
+      },
+      { key: "energyLogin", icon: LogIn, href: "/energy-dashboard-login" },
+      { key: "customerPortal", icon: Users, href: "/customer-dashboard-login" },
+      { key: "customerDashboard", icon: Building2, href: "/customer-dashboard" },
+      { key: "momogeMarketplace", icon: Store, href: "/momoge-product" },
+      { key: "energyAnalytics", icon: LineChart, href: "/energy-dashboard/overview" },
+    ],
+  },
+  {
+    sectionKey: "menuMonitoring",
+    items: [
+      { key: "dashboard", icon: Home, href: "/energy-dashboard/dashboard", exact: true },
+      { key: "currentMonitor", icon: Activity, href: "/energy-dashboard/current-monitor", badge: "live" },
+      { key: "overview", icon: BarChart2, href: "/energy-dashboard/overview" },
+      { key: "monitor", icon: Monitor, href: "/energy-dashboard/monitor", exact: true },
+      { key: "compareMonitoring", icon: GitCompare, href: "/energy-dashboard/monitor/Compare-Monitoring" },
+      { key: "location", icon: MapPin, href: "/energy-dashboard/location" },
+    ],
+  },
+  {
+    sectionKey: "configurations",
+    items: [
+      { key: "notifications", icon: Bell, href: "/energy-dashboard/notifications" },
+      { key: "devicesSetting", icon: Settings, href: "/energy-dashboard/devices-setting" },
+      { key: "meterSetting", icon: Gauge, href: "/energy-dashboard/meter-seting" },
+    ],
+  },
+  {
+    sectionKey: "menuTools",
+    items: [{ key: "developer", icon: Code, href: "/energy-dashboard/developer" }],
+  },
+  {
+    sectionKey: "userSupports",
+    items: [
+      { key: "productsInfo", icon: FileText, href: "/energy-dashboard/products-info" },
+      { key: "supportTickets", icon: MessageSquare, href: "/energy-dashboard/support-tickets" },
+      { key: "userFeedback", icon: Users, href: "/energy-dashboard/user-feedback" },
+      { key: "helpDocs", icon: HelpCircle, href: "/energy-dashboard/help-docs" },
+      { key: "userProfile", icon: UserCircle, href: "/energy-dashboard/profile" },
+    ],
+  },
 ];
 
-const configurationItems = [
-  { key: "notifications", icon: Bell, href: "/energy-dashboard/notifications" },
-  { key: "devicesSetting", icon: Settings, href: "/energy-dashboard/devices-setting" },
-  { key: "meterSetting", icon: LayoutIcon, href: "/energy-dashboard/meter-seting" },
-];
+const sectionFallback: Record<string, Record<string, string>> = {
+  menuGreenEnergy: { th: "พลังงานสีเขียว", en: "Green Energy", ko: "그린 에너지" },
+  menuMonitoring: { th: "มอนิเตอร์พลังงาน", en: "Energy Monitoring", ko: "에너지 모니터링" },
+  menuTools: { th: "เครื่องมือ", en: "Tools", ko: "도구" },
+  configurations: { th: "การตั้งค่า", en: "Configurations", ko: "설정" },
+  userSupports: { th: "สนับสนุนผู้ใช้", en: "User Supports", ko: "사용자 지원" },
+  greenEnergyPortal: { th: "พอร์ทัลพลังงานสีเขียว", en: "Green Energy Portal", ko: "그린 에너지 포털" },
+  energyLogin: { th: "ลงชื่อ เข้าระบบใหม่", en: "Sign in again", ko: "다시 로그인" },
+  customerPortal: { th: "ลงชื่อ เข้าระบบใหม่", en: "Sign in again", ko: "다시 로그인" },
+  customerDashboard: { th: "แดชบอร์ดลูกค้า", en: "Customer dashboard", ko: "고객 대시보드" },
+  momogeMarketplace: { th: "สินค้า IoT / Momoge", en: "Momoge IoT Store", ko: "MOMOGE IoT 상품" },
+  energyAnalytics: { th: "วิเคราะห์พลังงาน", en: "Energy analytics", ko: "에너지 분석" },
+  compareMonitoring: { th: "เปรียบเทียบ", en: "Compare", ko: "비교 모니터" },
+  live: { th: "สด", en: "Live", ko: "실시간" },
+};
 
-const developerItems = [
-  { key: "developer", icon: Code, href: "/developer" },
-];
+function isActive(pathname: string, item: NavItem): boolean {
+  if (item.exact) return pathname === item.href;
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
 
-const supportItems = [
-  { key: "productsInfo", icon: FileText, href: "/products-info" },
-  { key: "supportTickets", icon: MessageSquare, href: "/support-tickets" },
-  { key: "userFeedback", icon: Users, href: "/user-feedback" },
-  { key: "helpDocs", icon: HelpCircle, href: "/help-docs" },
-  { key: "userProfile", icon: UserCircle, href: "/profile" },
-];
+function sectionLabel(sectionKey: string, locale: string, t: (k: string) => string): string {
+  if (sectionFallback[sectionKey]?.[locale]) return sectionFallback[sectionKey][locale];
+  if (sectionFallback[sectionKey]?.en) return sectionFallback[sectionKey].en;
+  const translated = t(sectionKey);
+  if (translated !== sectionKey) return translated;
+  return sectionKey;
+}
+
+function itemLabel(key: string, locale: string, t: (k: string) => string): string {
+  if (sectionFallback[key]?.[locale]) return sectionFallback[key][locale];
+  if (sectionFallback[key]?.en) return sectionFallback[key].en;
+  const translated = t(key);
+  if (translated !== key) return translated;
+  return key;
+}
 
 export default function Sidebar() {
   const { t, locale } = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
+  const lang = ["th", "ko", "en"].includes(locale) ? locale : "th";
+  const company = companyNames[lang] ?? companyNames.th;
+
+  const signOutLabel = (() => {
+    const translated = t("signOut");
+    if (translated !== "signOut") return translated;
+    return locale === "th" ? "ออกจากระบบ" : locale === "ko" ? "로그아웃" : "Sign out";
+  })();
+
+  function handleSignOut() {
+    localStorage.removeItem("energy_system_token");
+    localStorage.removeItem("energy_system_user");
+    router.push("/energy-dashboard-login");
+  }
 
   return (
-    <div className="w-64 bg-white shadow-lg flex flex-col">
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <div className="h-px flex-1 bg-gradient-to-r from-orange-300 to-transparent" />
-            <h3 className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">{t("navigation")}</h3>
-            <div className="h-px flex-1 bg-gradient-to-l from-orange-300 to-transparent" />
-          </div>
-          <ul className="space-y-0.5">
-            {navigationItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden ${
-                      isActive
-                        ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-md shadow-orange-200"
-                        : "text-gray-600 hover:text-orange-600 hover:bg-orange-50 hover:translate-x-1"
-                    }`}
-                  >
-                    {isActive && <span className="absolute left-0 top-0 h-full w-1 bg-white/40 rounded-r-full" />}
-                    <item.icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 ${isActive ? "text-white" : "text-gray-400 group-hover:text-orange-500 group-hover:scale-110"}`} />
-                    <span className="text-sm font-medium">{t(item.key)}</span>
-                    {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <div className="h-px flex-1 bg-gradient-to-r from-blue-300 to-transparent" />
-            <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{t("configurations")}</h3>
-            <div className="h-px flex-1 bg-gradient-to-l from-blue-300 to-transparent" />
-          </div>
-          <ul className="space-y-0.5">
-            {configurationItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden ${
-                      isActive
-                        ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md shadow-blue-200"
-                        : "text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:translate-x-1"
-                    }`}
-                  >
-                    {isActive && <span className="absolute left-0 top-0 h-full w-1 bg-white/40 rounded-r-full" />}
-                    <item.icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 ${isActive ? "text-white" : "text-gray-400 group-hover:text-blue-500 group-hover:scale-110"}`} />
-                    <span className="text-sm font-medium">{t(item.key)}</span>
-                    {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <div className="h-px flex-1 bg-gradient-to-r from-purple-300 to-transparent" />
-            <h3 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">{t("developer")}</h3>
-            <div className="h-px flex-1 bg-gradient-to-l from-purple-300 to-transparent" />
-          </div>
-          <ul className="space-y-0.5">
-            {developerItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden ${
-                      isActive
-                        ? "bg-gradient-to-r from-purple-500 to-purple-400 text-white shadow-md shadow-purple-200"
-                        : "text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:translate-x-1"
-                    }`}
-                  >
-                    {isActive && <span className="absolute left-0 top-0 h-full w-1 bg-white/40 rounded-r-full" />}
-                    <item.icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 ${isActive ? "text-white" : "text-gray-400 group-hover:text-purple-500 group-hover:scale-110"}`} />
-                    <span className="text-sm font-medium">{t(item.key)}</span>
-                    {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <div>
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <div className="h-px flex-1 bg-gradient-to-r from-teal-300 to-transparent" />
-            <h3 className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">{t("userSupports")}</h3>
-            <div className="h-px flex-1 bg-gradient-to-l from-teal-300 to-transparent" />
-          </div>
-          <ul className="space-y-0.5">
-            {supportItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden ${
-                      isActive
-                        ? "bg-gradient-to-r from-teal-500 to-teal-400 text-white shadow-md shadow-teal-200"
-                        : "text-gray-600 hover:text-teal-600 hover:bg-teal-50 hover:translate-x-1"
-                    }`}
-                  >
-                    {isActive && <span className="absolute left-0 top-0 h-full w-1 bg-white/40 rounded-r-full" />}
-                    <item.icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 ${isActive ? "text-white" : "text-gray-400 group-hover:text-teal-500 group-hover:scale-110"}`} />
-                    <span className="text-sm font-medium">{t(item.key)}</span>
-                    {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </nav>
-
-      {/* Back to Main */}
-      <div className="p-4 border-t">
-        <Link
-          href="/"
-          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 w-full shadow-sm hover:shadow-md hover:shadow-red-200"
-        >
-          <LogOut className="w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
-          <span className="text-sm font-semibold">
-            {locale === "th" ? "กลับหน้าหลัก" : locale === "ko" ? "메인으로 돌아가기" : "Back to Main"}
-          </span>
+    <aside className="esb-root flex flex-col h-full shrink-0">
+      <div className="esb-brand">
+        <Link href="/energy-dashboard/dashboard" className="esb-brand-link">
+          <Image
+            src="/momoge/Logo-brand.png"
+            alt="GE Energy Tech"
+            width={160}
+            height={88}
+            className="esb-brand-logo"
+            priority
+          />
+          <p className="esb-brand-name">{company}</p>
         </Link>
       </div>
-    </div>
+
+      <nav className="esb-nav" aria-label="Energy dashboard menu">
+        {menuSections.map((section) => (
+          <div
+            key={section.sectionKey}
+            className={`esb-section esb-section-panel esb-section--${section.sectionKey}${
+              section.sectionKey === "menuGreenEnergy" ? " esb-section-highlight" : ""
+            }`}
+          >
+            <div className="esb-section-title">
+              <span>{sectionLabel(section.sectionKey, lang, t)}</span>
+              <div className="esb-section-line" />
+            </div>
+            <ul className="esb-list">
+              {section.items.map((item) => {
+                const active = isActive(pathname, item);
+                const Icon = item.icon;
+                return (
+                  <li key={`${section.sectionKey}-${item.href}`}>
+                    <Link
+                      href={item.href}
+                      className={`esb-link${active ? " esb-link-active" : ""}`}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      <span className="esb-icon-wrap">
+                        <Icon className="esb-icon" strokeWidth={2} />
+                      </span>
+                      <span className="esb-label">{itemLabel(item.key, lang, t)}</span>
+                      {item.badge === "live" && (
+                        <span className="esb-badge">
+                          {sectionFallback.live[lang] ?? "Live"}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      <div className="esb-footer">
+        <button type="button" onClick={handleSignOut} className="esb-logout">
+          <LogOut className="w-4 h-4" strokeWidth={2} />
+          <span>{signOutLabel}</span>
+        </button>
+      </div>
+    </aside>
   );
 }
