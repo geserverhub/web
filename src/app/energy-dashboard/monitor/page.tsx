@@ -906,7 +906,7 @@ export default function MonitorPage() {
                   <p className="text-2xl font-bold text-red-700 tabular-nums">
                     {monitoringData.thdBefore != null ? `${monitoringData.thdBefore.toFixed(2)}%` : '—'}
                   </p>
-                  <p className="text-xs text-red-500 mt-0.5">Before K-Save</p>
+                  <p className="text-xs text-red-500 mt-0.5">Before GE</p>
                 </div>
               </div>
 
@@ -929,7 +929,7 @@ export default function MonitorPage() {
                   <p className="text-2xl font-bold text-green-700 tabular-nums">
                     {monitoringData.thdAfter != null ? `${monitoringData.thdAfter.toFixed(2)}%` : '—'}
                   </p>
-                  <p className="text-xs text-green-500 mt-0.5">With K-Save</p>
+                  <p className="text-xs text-green-500 mt-0.5">With GE</p>
                 </div>
               </div>
 

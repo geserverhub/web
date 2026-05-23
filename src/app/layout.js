@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 
 export const metadata = {
-  title: "GOEUN SERVER HUB",
+  title: "GE SERVER HUB",
   description: "Professional client access portal built with Next.js, React, Bootstrap, and a Python/MySQL backend.",
   icons: {
     icon: "/favicon.svg",

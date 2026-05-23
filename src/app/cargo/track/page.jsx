@@ -282,7 +282,7 @@ export default function CargoTrackPage() {
 
       <div style={{ marginBottom: 24, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 4 }}>✈️</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>GOEUN SERVER HUB</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>GE SERVER HUB</div>
         <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>บริการคาโก้ไทย-เกาหลี · 항공 화물 서비스</div>
       </div>
 
@@ -538,7 +538,7 @@ export default function CargoTrackPage() {
                 )}
               </div>
               <div style={{ marginTop: 20, padding: "12px 14px", background: "#facc1510", border: "1px solid #facc1530", borderRadius: 8, textAlign: "center", fontSize: 12, color: "#facc15" }}>
-                📞 มีคำถาม? ติดต่อ GOEUN SERVER HUB
+                📞 มีคำถาม? ติดต่อ GE SERVER HUB
               </div>
             </div>
           )}
@@ -606,7 +606,7 @@ export default function CargoTrackPage() {
 
               {/* LINE QR code */}
               <div style={{ background: "#fff", borderRadius: 14, padding: 16, display: "inline-block", marginBottom: 16, boxShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
-                <div style={{ fontSize: 12, color: "#06c755", fontWeight: 800, marginBottom: 10, textAlign: "center" }}>💬 แอดไลน์ GOEUN CARGO</div>
+                <div style={{ fontSize: 12, color: "#06c755", fontWeight: 800, marginBottom: 10, textAlign: "center" }}>💬 แอดไลน์ GE CARGO</div>
                 <img
                   src="/uploads/logos/line-qr.png"
                   alt="LINE QR Code"
@@ -619,7 +619,7 @@ export default function CargoTrackPage() {
                 <div style={{ display: "none", width: 180, height: 180, background: "#f0fdf4", borderRadius: 8, alignItems: "center", justifyContent: "center", flexDirection: "column", color: "#16a34a" }}>
                   <div style={{ fontSize: 32 }}>💬</div>
                   <div style={{ fontSize: 12, fontWeight: 700 }}>LINE QR Code</div>
-                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>GOEUN CARGO</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>GE CARGO</div>
                 </div>
                 <div style={{ fontSize: 11, color: "#64748b", textAlign: "center", marginTop: 10 }}>สแกน QR เพื่อแอดไลน์ / QR 스캔으로 라인 추가</div>
               </div>
@@ -978,7 +978,7 @@ export default function CargoTrackPage() {
       )}
 
       <div style={{ marginTop: 40, fontSize: 11, color: "#3a3d4a", textAlign: "center" }}>
-        © GOEUN SERVER HUB · บริการคาโก้ไทย-เกาหลี
+        © GE SERVER HUB · บริการคาโก้ไทย-เกาหลี
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ function buildInvoiceMessage(inv, monthLabel) {
   const clientName = inv.user?.name || inv.client?.name || "ลูกค้า";
   const amount = `${Number(inv.amount).toLocaleString("th-TH")} ${inv.currency || "THB"}`;
 
-  return `📢 แจ้งเตือนค่าบริการ — ${monthLabel}\n\nเรียน ${clientName}\nรายการ: ${inv.number}\nสถานะ: ${statusTh}\nยอดชำระ: ${amount}\nกำหนดชำระ: ${dueStr}\n\nกรุณาชำระเงินตามกำหนด ขอบคุณครับ/ค่ะ\n— GOEUN SERVER HUB`;
+  return `📢 แจ้งเตือนค่าบริการ — ${monthLabel}\n\nเรียน ${clientName}\nรายการ: ${inv.number}\nสถานะ: ${statusTh}\nยอดชำระ: ${amount}\nกำหนดชำระ: ${dueStr}\n\nกรุณาชำระเงินตามกำหนด ขอบคุณครับ/ค่ะ\n— GE SERVER HUB`;
 }
 
 async function sendLineMessage(lineUserId, message) {

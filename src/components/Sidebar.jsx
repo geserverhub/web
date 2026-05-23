@@ -1,7 +1,5 @@
 "use client";
 
-import AgencyLanguageSwitcher from "@/components/AgencyLanguageSwitcher";
-
 const NAV_ITEMS = [
   {
     labelKey: "navHome",
@@ -62,13 +60,13 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar({ ui, profile, currentLanguage, setCurrentLanguage }) {
+export default function Sidebar({ ui, profile }) {
   return (
     <aside className="agency-sidebar">
       <div className="agency-sidebar-brand">
-        <img src="/logo-mark.svg" width="36" height="36" alt="GOEUN" />
+        <img src="/logo-mark.svg" width="36" height="36" alt="GE" />
         <div className="agency-sidebar-brand-copy">
-          <strong>{profile?.brand_name || "GOEUN HUB"}</strong>
+          <strong>{profile?.brand_name || "GE HUB"}</strong>
           <span>Server Hub</span>
         </div>
       </div>
@@ -84,28 +82,6 @@ export default function Sidebar({ ui, profile, currentLanguage, setCurrentLangua
 
       <div className="agency-sidebar-divider" />
 
-      {setCurrentLanguage && (
-        <div className="agency-sidebar-lang">
-          <AgencyLanguageSwitcher
-            currentLanguage={currentLanguage}
-            setCurrentLanguage={setCurrentLanguage}
-            className="agency-language-switcher--sidebar"
-          />
-        </div>
-      )}
-
-      <div className="agency-sidebar-bottom">
-        <a href="https://strong-dory-enabled.ngrok-free.app/auth/select" className="agency-sidebar-item agency-sidebar-login-item">
-          <span className="agency-sidebar-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
-              <polyline points="10 17 15 12 10 7" />
-              <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>
-          </span>
-          <span className="btn-path-label">{(ui && ui.navLogin) || "เข้าสู่ระบบ"}</span>
-        </a>
-      </div>
     </aside>
   );
 }

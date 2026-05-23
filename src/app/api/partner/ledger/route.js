@@ -16,11 +16,11 @@ export async function GET() {
   try {
     const { role, clientId } = session.user;
 
-    // PARTNER must have a clientId assigned; ADMIN/SUPER_ADMIN falls back to GOEUN SERVER HUB
+    // PARTNER must have a clientId assigned; ADMIN/SUPER_ADMIN falls back to GE SERVER HUB
     let resolvedClientId = clientId ?? null;
     if (!resolvedClientId && (role === "ADMIN" || role === "SUPER_ADMIN")) {
       const fallback = await prisma.client.findFirst({
-        where: { name: "GOEUN SERVER HUB" },
+        where: { name: "GE SERVER HUB" },
         select: { id: true },
       });
       resolvedClientId = fallback?.id ?? null;

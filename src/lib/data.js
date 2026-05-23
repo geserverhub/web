@@ -13,7 +13,7 @@ export const languageOptions = [
 ];
 
 export const fallbackProfile = {
-  brand_name: "GOEUN SERVER HUB",
+  brand_name: "GE SERVER HUB",
   headline: "ศูนย์กลางระบบลูกค้าและหน้าโปรโมทบริการของคุณ",
   subheadline:
     "รวมหน้าแนะนำบริการ, ช่องทางติดต่อ, และทางเข้าระบบสำหรับลูกค้าหลายรายไว้ในเว็บเดียว",

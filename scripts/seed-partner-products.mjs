@@ -34,7 +34,7 @@ const SAMPLE_PRODUCTS = [
   {
     name: '3-Phase Power Logger',
     model: 'PL-3P200',
-    brand: 'GOEUN SERVER HUB',
+    brand: 'GE SERVER HUB',
     costPrice: 180000,
     sellPrice: 249000,
     currency: 'KRW',
@@ -52,7 +52,7 @@ const SAMPLE_PRODUCTS = [
   {
     name: 'Installation & Commissioning',
     model: 'SVC-INST',
-    brand: 'GOEUN SERVER HUB',
+    brand: 'GE SERVER HUB',
     costPrice: 150000,
     sellPrice: 220000,
     currency: 'KRW',

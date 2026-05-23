@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
             <span>🔒</span> Admin Panel
           </div>
           <h1 style={S.title}>เข้าสู่ระบบผู้ดูแล</h1>
-          <p style={S.sub}>GOEUN SERVER HUB — Admin System</p>
+          <p style={S.sub}>GE SERVER HUB — Admin System</p>
         </div>
 
         {error && <div style={S.error}>⚠️ {error}</div>}

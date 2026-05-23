@@ -185,7 +185,7 @@ export default function PartnerLoginPage() {
             <span>🔒</span> Partner Portal
           </div>
           <h1 style={S.title}>{t.title}</h1>
-          <p style={S.sub}>GOEUN SERVER HUB — Partner System</p>
+          <p style={S.sub}>GE SERVER HUB — Partner System</p>
         </div>
 
         {error && <div style={S.error}>⚠️ {error}</div>}

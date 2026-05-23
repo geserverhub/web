@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { LocaleProvider } from '@/lib/LocaleContext';
 import { SiteProvider, useSite } from '@/lib/SiteContext';
 import CustomerDashboardHeader from '@/components/customer/CustomerDashboardHeader';
+import { GE_ADMIN_TOKEN_KEY } from '@/lib/ge-storage-keys';
 import './customer-dashboard.css';
 
 function CustomerSiteInit({ children }) {
@@ -22,7 +23,7 @@ export default function CustomerDashboardShell({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('k_system_admin_token');
+    const token = localStorage.getItem(GE_ADMIN_TOKEN_KEY);
     if (!token) {
       router.replace('/customer-dashboard-login');
     } else {
