@@ -95,7 +95,7 @@ export const fallbackClients = [
     contact_email: "m.factoryandresort@gmail.com",
     contact_phone: "+66 095-241-1833",
     thumbnail: "/m-factory/LINE_ALBUM_12369_260417_1.jpg",
-    system_url: "/m-factory",
+    system_url: "/m-factory/booking",
   },
   {
     id: 4,
