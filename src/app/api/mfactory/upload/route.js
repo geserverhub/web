@@ -6,7 +6,23 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_BYTES = 8 * 1024 * 1024;
-const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const ALLOWED = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'application/pdf',
+]);
+
+const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.pdf']);
+
+function isAllowedFile(file) {
+  if (file.type && ALLOWED.has(file.type)) return true;
+  const ext = path.extname(file.name || '').toLowerCase();
+  return ALLOWED_EXT.has(ext);
+}
 
 /** POST /api/mfactory/upload — payment slip (multipart field: file) */
 export async function POST(req) {
@@ -17,7 +33,7 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
     }
 
-    if (!ALLOWED.has(file.type)) {
+    if (!isAllowedFile(file)) {
       return NextResponse.json({ success: false, error: 'Invalid file type' }, { status: 400 });
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const TEXT = {
   th: {
@@ -129,6 +129,7 @@ export default function BookingClient() {
   const [accepted, setAccepted] = useState(false);
   const [status, setStatus] = useState("idle");
   const [paymentUploading, setPaymentUploading] = useState(false);
+  const paymentInputRef = useRef(null);
   const [form, setForm] = useState({
     company: "",
     fullname: "",
@@ -423,16 +424,29 @@ export default function BookingClient() {
           <div className={sectionClass}>
             <h2 className={`${sectionTitleClass} mb-2`}>💳 {t.payment}</h2>
             <RequiredHint text={t.requiredUpload} />
-            <label className="mf-file-btn mt-4 w-full min-h-[64px] border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition text-sm sm:text-base text-center break-all gap-1 text-blue-700 font-medium">
-              {paymentUploading ? t.uploading : form.paymentFileName || t.pickFile}
+            <div
+              role="button"
+              tabIndex={0}
+              className="mf-file-btn mt-4 w-full min-h-[64px] border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition text-sm sm:text-base text-center break-all gap-1 text-blue-700 font-medium"
+              onClick={() => paymentInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  paymentInputRef.current?.click();
+                }
+              }}
+            >
+              <span className="mf-file-text">
+                {paymentUploading ? t.uploading : form.paymentFileName || t.pickFile}
+              </span>
               <input
+                ref={paymentInputRef}
                 type="file"
-                accept="image/*,.pdf"
-                required
-                className="hidden"
+                accept="image/*,.pdf,application/pdf"
+                className="mf-file-input"
                 onChange={(e) => void handlePaymentFile(e.target.files?.[0] || null)}
               />
-            </label>
+            </div>
           </div>
 
           <div className="mf-qr-section bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-5 sm:p-7 text-center shadow-sm">
