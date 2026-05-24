@@ -78,6 +78,8 @@ const nextConfig = {
       { source: "/devices-setting/:path*", destination: "/energy-dashboard/devices-setting/:path*" },
       { source: "/meter-seting", destination: "/energy-dashboard/meter-seting" },
       { source: "/notifications", destination: "/energy-dashboard/notifications" },
+      // M-Factory booking alias (works even before /m-factory/booking route exists in build)
+      { source: "/m-factory/booking", destination: "/m-factory" },
     ];
   },
 };
