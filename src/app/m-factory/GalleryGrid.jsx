@@ -62,24 +62,26 @@ function injectStyle() {
 
 /* Layout: row1 [wide, tall], row2 [3 equal], row3 [tall, wide] */
 const IMAGES = [
-  { src: "/m-factory/LINE_ALBUM_12369_260417_1.jpg", cls: "gc-2" },
-  { src: "/m-factory/LINE_ALBUM_12369_260417_2.jpg", cls: "gc-1" },
-  { src: "/m-factory/LINE_ALBUM_12369_260417_3.jpg", cls: "gc-1" },
-  { src: "/m-factory/LINE_ALBUM_12369_260417_4.jpg", cls: "gc-1" },
-  { src: "/m-factory/LINE_ALBUM_12369_260417_5.jpg", cls: "gc-1" },
-  { src: "/m-factory/LINE_ALBUM_12369_260417_6.jpg", cls: "gc-1" },
-  { src: "/m-factory/LINE_ALBUM_12369_260417_7.jpg", cls: "gc-2" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_1.jpg", cls: "gc-2", alt: "โกดังและโรงงาน M-Factory ภาพมุมกว้าง" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_2.jpg", cls: "gc-1", alt: "พื้นที่ด้านหน้าโครงการ M-Factory" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_3.jpg", cls: "gc-1", alt: "ภาพหน้างานก่อสร้างโกดัง M-Factory" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_4.jpg", cls: "gc-1", alt: "โรงงานสำเร็จรูป M-Factory พร้อมใช้งาน" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_5.jpg", cls: "gc-1", alt: "พื้นที่อุตสาหกรรมให้เช่าลาดหลุมแก้ว" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_6.jpg", cls: "gc-1", alt: "คลังสินค้าและโกดัง M-Factory ปทุมธานี" },
+  { src: "/m-factory/LINE_ALBUM_12369_260417_7.jpg", cls: "gc-2", alt: "มุมรวมโครงการโกดังและโรงงาน M-Factory" },
 ];
 
 export default function GalleryGrid() {
   useEffect(() => { injectStyle(); }, []);
   return (
     <div className="mf-gallery">
-      {IMAGES.map(({ src, cls }) => (
+      {IMAGES.map(({ src, cls, alt }) => (
         <div key={src} className={`mf-gallery-card ${cls}`}>
           <img
             src={src}
-            alt="M-Factory"
+            alt={alt}
+            loading="lazy"
+            decoding="async"
           />
           <div className="overlay" />
         </div>
