@@ -1034,11 +1034,16 @@ CREATE TABLE `MFactoryInquiry` (
   `rentalType` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `paymentRef` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `message` text COLLATE utf8mb4_unicode_ci,
+  `bookingNumber` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `termsAccepted` tinyint(1) NOT NULL DEFAULT 1,
   `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `MFactoryInquiry_bookingNumber_key` (`bookingNumber`),
   KEY `MFactoryInquiry_createdAt_idx` (`createdAt`),
-  KEY `MFactoryInquiry_type_idx` (`type`)
+  KEY `MFactoryInquiry_type_idx` (`type`),
+  KEY `MFactoryInquiry_status_idx` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

@@ -3064,12 +3064,18 @@ export default function ClientsUsersClient({ session }) {
               const q = mfactorySearch.trim().toLowerCase();
               const rows = mfactoryBookings.filter(b => {
                 if (!q) return true;
-                const hay = [b.name, b.company, b.phone, b.email, b.taxId].filter(Boolean).join(" ").toLowerCase();
+                const hay = [b.bookingNumber, b.name, b.company, b.phone, b.email, b.taxId].filter(Boolean).join(" ").toLowerCase();
                 return hay.includes(q);
               });
               const detail = rows.find(b => b.id === mfactoryDetailId) || null;
               const fmtDate = (d) => d ? new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "—";
               const rentalLabel = (v) => (v === "rent" ? "เช่า" : v === "buy" ? "ซื้อ" : v || "—");
+              const statusLabel = (s) => {
+                if (s === "CONFIRMED") return "ยืนยันแล้ว";
+                if (s === "CANCELLED") return "ยกเลิก";
+                if (s === "REVIEWED") return "ตรวจแล้ว";
+                return "รอตรวจ";
+              };
               const paymentLink = (ref) => {
                 if (!ref) return null;
                 if (ref.startsWith("http://") || ref.startsWith("https://") || ref.startsWith("/")) {
@@ -3092,7 +3098,7 @@ export default function ClientsUsersClient({ session }) {
                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
                       <thead>
                         <tr>
-                          {["ส่งเมื่อ", "ชื่อ", "บริษัท", "เบอร์", "วันจอง", "ประเภท", ""].map(h => (
+                          {["เลขที่", "ส่งเมื่อ", "ชื่อ", "บริษัท", "สถานะ", "ประเภท", ""].map(h => (
                             <th key={h} style={S.th}>{h}</th>
                           ))}
                         </tr>
@@ -3100,11 +3106,11 @@ export default function ClientsUsersClient({ session }) {
                       <tbody>
                         {rows.map(b => (
                           <tr key={b.id} style={{ background: mfactoryDetailId === b.id ? "#1f2937" : undefined }}>
+                            <td style={S.td}><span style={{ fontFamily: "monospace", fontSize: 11, color: "#fbbf24" }}>{b.bookingNumber || "—"}</span></td>
                             <td style={S.td}>{fmtDate(b.createdAt)}</td>
                             <td style={S.td}><span style={{ fontWeight: 600 }}>{b.name}</span></td>
                             <td style={S.td}>{b.company || <span style={{ color: "#4a5070" }}>—</span>}</td>
-                            <td style={S.td}>{b.phone || "—"}</td>
-                            <td style={S.td}>{fmtDate(b.bookingDate)}</td>
+                            <td style={S.td}>{statusLabel(b.status)}</td>
                             <td style={S.td}>{rentalLabel(b.rentalType)}</td>
                             <td style={S.td}>
                               <button
@@ -3124,6 +3130,8 @@ export default function ClientsUsersClient({ session }) {
                     <div style={{ background: "#1a1d27", borderRadius: 10, padding: 16, border: "1px solid #422006", position: "sticky", top: 0 }}>
                       <div style={{ fontWeight: 700, color: "#fb923c", marginBottom: 12, fontSize: 14 }}>รายละเอียด</div>
                       {[
+                        ["เลขที่จอง", detail.bookingNumber],
+                        ["สถานะ", statusLabel(detail.status)],
                         ["ชื่อ", detail.name],
                         ["บริษัท", detail.company],
                         ["เบอร์", detail.phone],

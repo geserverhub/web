@@ -53,6 +53,7 @@ echo "Importing $BACKUP ..."
 echo "Applying energy + M-Factory migrations (idempotent)..."
 "${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-energy-geserverhub.sql"
 "${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-mfactory-inquiry.sql"
+"${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-mfactory-booking-v2.sql"
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
   if [[ -n "$DB_PASSWORD" ]]; then
