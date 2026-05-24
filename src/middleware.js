@@ -27,6 +27,6 @@ export function middleware(req) {
 export const config = {
   matcher: [
     "/api/auth/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css)$).*)",
   ],
 };
