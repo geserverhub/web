@@ -56,7 +56,9 @@ export default function ResortGrid() {
         >
           <img
             src={`/m-resort/${filename}`}
-            alt={`รีสอร์ท M-Factory รูปที่ ${i + 1}`}
+            alt={`รีสอร์ทส่วนตัว M-Resort ลาดหลุมแก้ว ภาพที่ ${i + 1}`}
+            loading="lazy"
+            decoding="async"
             style={{
               width: "100%",
               height: "100%",
