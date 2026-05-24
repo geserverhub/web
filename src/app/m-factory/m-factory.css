@@ -27,7 +27,7 @@ html:has(.m-factory-layout) {
   line-height: inherit;
 }
 
-.m-factory-layout button {
+.m-factory-layout button:not(.mf-lang-btn):not(.mf-type-option):not(.mf-submit-btn) {
   border: none;
   background: none;
   padding: 0;
@@ -461,7 +461,7 @@ html:has(.m-factory-layout) {
   -webkit-text-size-adjust: 100%;
   box-sizing: border-box;
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   touch-action: auto;
 }
 
@@ -486,11 +486,116 @@ html:has(.m-factory-layout) {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1.25rem;
-  padding-right: 2.5rem;
+  padding: 0.875rem 2.5rem 0.875rem 0.875rem;
+  min-height: 52px;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .m-factory-layout.mf-booking .mf-lang-btn {
   min-height: 44px;
+  min-width: 52px;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m-factory-layout.mf-booking .mf-lang-btn-active {
+  background-color: #fff;
+  color: #1d4ed8;
+}
+
+.m-factory-layout.mf-booking .mf-lang-btn:not(.mf-lang-btn-active) {
+  background-color: rgba(59, 130, 246, 0.4);
+  color: #fff;
+}
+
+.m-factory-layout.mf-booking .mf-warehouse-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.m-factory-layout.mf-booking .mf-warehouse-option {
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: 52px;
+  padding: 1rem;
+  text-align: left;
+}
+
+.m-factory-layout.mf-booking .mf-warehouse-label {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.m-factory-layout.mf-booking .mf-type-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.m-factory-layout.mf-booking label.mf-type-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.875rem 1rem;
+  margin: 0;
+  border: 2px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background-color: #fff;
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.15);
+  touch-action: auto;
+  user-select: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.m-factory-layout.mf-booking .mf-type-radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.m-factory-layout.mf-booking .mf-type-label {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.m-factory-layout.mf-booking .mf-type-option-active {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+.m-factory-layout.mf-booking .mf-field {
+  position: relative;
+  z-index: 1;
 }
 
 .m-factory-layout.mf-booking .mf-file-btn {
