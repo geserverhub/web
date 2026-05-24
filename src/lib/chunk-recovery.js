@@ -46,6 +46,7 @@ export const CHUNK_RECOVERY_INLINE_SCRIPT = `(function(){
   }
   window.__geHardReload=hardReload;
   window.addEventListener('error',function(e){
+    if(e.target&&e.target.tagName==='LINK'){reloadOnce();return;}
     if(isChunkErr(e&&e.message))reloadOnce();
   });
   window.addEventListener('unhandledrejection',function(e){

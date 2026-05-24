@@ -1,4 +1,5 @@
 import { Kanit } from "next/font/google";
+import "./m-factory.css";
 
 const kanit = Kanit({
   subsets: ["latin", "thai"],
