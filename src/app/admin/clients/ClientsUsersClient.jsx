@@ -262,6 +262,22 @@ export default function ClientsUsersClient({ session }) {
     }
   }, []);
 
+  const loadMomoData = useCallback(async () => {
+    setMomoLoading(true);
+    try {
+      const [prodRes, taskRes] = await Promise.all([
+        fetch("/api/partner/products"),
+        fetch("/api/partner/tasks"),
+      ]);
+      const prods = await readJsonResponse(prodRes);
+      const tasks = await readJsonResponse(taskRes);
+      setPartnerProducts(Array.isArray(prods) ? prods : []);
+      setPartnerTasks(Array.isArray(tasks) ? tasks : []);
+    } catch { /* silent */ } finally {
+      setMomoLoading(false);
+    }
+  }, []);
+
   const switchToMomoTab = useCallback(() => {
     setTab("momo");
     loadMomoData();
@@ -322,22 +338,6 @@ export default function ClientsUsersClient({ session }) {
   const loadPartnerTxns = useCallback(async () => {
     const d = await readJsonResponse(await fetch("/api/admin/partner-transactions"));
     setPartnerTxns(d.transactions || []);
-  }, []);
-
-  const loadMomoData = useCallback(async () => {
-    setMomoLoading(true);
-    try {
-      const [prodRes, taskRes] = await Promise.all([
-        fetch("/api/partner/products"),
-        fetch("/api/partner/tasks"),
-      ]);
-      const prods = await readJsonResponse(prodRes);
-      const tasks = await readJsonResponse(taskRes);
-      setPartnerProducts(Array.isArray(prods) ? prods : []);
-      setPartnerTasks(Array.isArray(tasks) ? tasks : []);
-    } catch { /* silent */ } finally {
-      setMomoLoading(false);
-    }
   }, []);
 
   const loadCustomers = useCallback(async () => {
