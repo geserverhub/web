@@ -165,7 +165,7 @@ export default function BookingClient() {
   }
 
   return (
-    <div className="mf-booking min-h-screen bg-gradient-to-br from-blue-100 via-white to-cyan-100 p-4 md:p-8 text-black">
+    <div className="m-factory-layout mf-booking min-h-screen bg-gradient-to-br from-blue-100 via-white to-cyan-100 p-4 md:p-8 text-black">
       <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
         <div className="bg-gradient-to-r from-blue-700 to-cyan-500 text-white p-6 md:p-8 flex flex-wrap justify-between items-center gap-4">
           <div>
