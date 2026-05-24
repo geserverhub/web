@@ -34,7 +34,7 @@ fi
 bash scripts/ensure-env-local.sh
 bash scripts/ensure-mysql-user.sh
 
-echo "==> [3/4] npm ci + database restore + build"
+echo "==> [3/4] npm ci + database migrate + build"
 unset NODE_ENV
 if ! npm ci --ignore-scripts --no-audit --no-fund; then
   echo "WARN: npm ci failed — clean node_modules and retry"
@@ -42,7 +42,7 @@ if ! npm ci --ignore-scripts --no-audit --no-fund; then
   npm ci --ignore-scripts --no-audit --no-fund
 fi
 
-bash scripts/db-restore.sh database/geserverhub.sql
+bash scripts/db-migrate.sh
 
 rm -rf .next
 npm run build

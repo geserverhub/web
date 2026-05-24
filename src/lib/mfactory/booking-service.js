@@ -11,6 +11,25 @@ function parseBookingDate(value) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+function makeBookingNumber() {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `MF-${date}-${suffix}`;
+}
+
+/** @param {import('@prisma/client').PrismaClient} prisma */
+async function nextBookingNumber(prisma) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const bookingNumber = makeBookingNumber();
+    const existing = await prisma.mFactoryInquiry.findUnique({
+      where: { bookingNumber },
+      select: { id: true },
+    });
+    if (!existing) return bookingNumber;
+  }
+  return `MF-${Date.now().toString(36).toUpperCase()}`;
+}
+
 /**
  * @param {Record<string, unknown>} body
  */
@@ -19,7 +38,7 @@ export async function createMFactoryBooking(body) {
 
   const name = trim(body.name);
   if (!name) {
-    return { ok: false, status: 400, error: 'กรุณากรอกชื่อ' };
+    return { ok: false, status: 400, error: 'กรุณากรอกชื่อ - นามสกุล' };
   }
 
   const company = trim(body.company);
@@ -29,7 +48,33 @@ export async function createMFactoryBooking(body) {
   const address = trim(body.address);
   const warehouse = trim(body.warehouse);
   const rentalType = trim(body.rentalType);
+
+  if (!phone) {
+    return { ok: false, status: 400, error: 'กรุณากรอกเบอร์โทร' };
+  }
+  if (!email) {
+    return { ok: false, status: 400, error: 'กรุณากรอกอีเมล' };
+  }
+  if (!address) {
+    return { ok: false, status: 400, error: 'กรุณากรอกที่อยู่' };
+  }
+  if (!warehouse) {
+    return { ok: false, status: 400, error: 'กรุณาเลือกประเภทโกดัง' };
+  }
+  if (!rentalType) {
+    return { ok: false, status: 400, error: 'กรุณาเลือกประเภทการจอง' };
+  }
+
   const paymentRef = trim(body.paymentRef || body.paymentFileName);
+  if (!paymentRef) {
+    return { ok: false, status: 400, error: 'กรุณาอัปโหลดหลักฐานการชำระเงิน' };
+  }
+
+  const termsAccepted = body.termsAccepted !== false && body.termsAccepted !== 'false';
+  if (!termsAccepted) {
+    return { ok: false, status: 400, error: 'กรุณาติกยอมรับเงื่อนไขการจอง' };
+  }
+
   const message = trim(body.message);
   const type = trim(body.type) || 'factory';
   const lang = trim(body.lang) || 'th';
@@ -40,6 +85,8 @@ export async function createMFactoryBooking(body) {
   if (!prisma) {
     return { ok: false, status: 503, error: 'Database unavailable' };
   }
+
+  const bookingNumber = await nextBookingNumber(prisma);
 
   const inquiry = await prisma.mFactoryInquiry.create({
     data: {
@@ -57,6 +104,9 @@ export async function createMFactoryBooking(body) {
       rentalType: rentalType || null,
       paymentRef: paymentRef || null,
       message: message || null,
+      bookingNumber,
+      status: 'PENDING',
+      termsAccepted: true,
     },
   });
 
@@ -64,6 +114,7 @@ export async function createMFactoryBooking(body) {
     ok: true,
     status: 201,
     id: inquiry.id,
+    bookingNumber: inquiry.bookingNumber,
     createdAt: inquiry.createdAt,
   };
 }
@@ -90,6 +141,8 @@ export async function listMFactoryBookings(opts = {}) {
     count: rows.length,
     bookings: rows.map((r) => ({
       id: r.id,
+      bookingNumber: r.bookingNumber,
+      status: r.status,
       type: r.type,
       lang: r.lang,
       source: r.source,
@@ -104,6 +157,7 @@ export async function listMFactoryBookings(opts = {}) {
       rentalType: r.rentalType,
       paymentRef: r.paymentRef,
       message: r.message,
+      termsAccepted: r.termsAccepted,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     })),

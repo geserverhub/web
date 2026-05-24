@@ -13,7 +13,13 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: result.error }, { status: result.status });
     }
     return NextResponse.json(
-      { success: true, ok: true, id: result.id, createdAt: result.createdAt },
+      {
+        success: true,
+        ok: true,
+        id: result.id,
+        bookingNumber: result.bookingNumber,
+        createdAt: result.createdAt,
+      },
       { status: result.status }
     );
   } catch (err) {
