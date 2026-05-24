@@ -20,19 +20,57 @@ function CustomerSiteInit({ children }) {
 
 export default function CustomerDashboardShell({ children }) {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [authState, setAuthState] = useState('checking');
 
   useEffect(() => {
-    const token = localStorage.getItem(GE_ADMIN_TOKEN_KEY);
-    if (!token) {
+    let redirectTimer;
+    let safetyTimer;
+
+    function goLogin() {
+      setAuthState('redirect');
       router.replace('/customer-dashboard-login');
-    } else {
-      setReady(true);
+      redirectTimer = window.setTimeout(() => {
+        if (!window.location.pathname.includes('customer-dashboard-login')) {
+          window.location.assign('/customer-dashboard-login');
+        }
+      }, 800);
     }
+
+    try {
+      const token = localStorage.getItem(GE_ADMIN_TOKEN_KEY)?.trim();
+      if (!token) {
+        goLogin();
+      } else {
+        setAuthState('ready');
+      }
+    } catch {
+      window.location.assign('/customer-dashboard-login');
+    }
+
+    safetyTimer = window.setTimeout(() => {
+      setAuthState((current) => {
+        if (current === 'ready') return current;
+        const token = localStorage.getItem(GE_ADMIN_TOKEN_KEY)?.trim();
+        if (token) return 'ready';
+        if (current !== 'redirect') goLogin();
+        return current;
+      });
+    }, 4000);
+
+    return () => {
+      if (redirectTimer) window.clearTimeout(redirectTimer);
+      if (safetyTimer) window.clearTimeout(safetyTimer);
+    };
   }, [router]);
 
-  if (!ready) {
-    return <div className="cd-loading">Loading…</div>;
+  if (authState !== 'ready') {
+    return (
+      <div className="cd-loading">
+        {authState === 'redirect'
+          ? 'กำลังไปหน้าเข้าสู่ระบบ… / Redirecting to login…'
+          : 'Loading…'}
+      </div>
+    );
   }
 
   return (
