@@ -599,11 +599,38 @@ html:has(.m-factory-layout) {
 }
 
 .m-factory-layout.mf-booking .mf-file-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  min-height: 64px;
   word-break: break-word;
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.15);
+  touch-action: manipulation;
+  z-index: 1;
+}
+
+.m-factory-layout.mf-booking .mf-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.m-factory-layout.mf-booking .mf-file-text {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .m-factory-layout.mf-booking .mf-checkbox {
