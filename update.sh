@@ -37,15 +37,19 @@ if ! ls .next/static/chunks/app/customer-dashboard/page-*.js >/dev/null 2>&1; th
   exit 1
 fi
 
-echo "==> restart app"
+echo "==> verify m-factory booking css"
+if [[ ! -f public/m-factory/booking.css ]]; then
+  echo "ERROR: public/m-factory/booking.css missing"
+  exit 1
+fi
+
+echo "==> restart app (single ge-web from $ROOT)"
 if command -v pm2 >/dev/null 2>&1; then
-  if pm2 describe ge-web >/dev/null 2>&1; then
-    pm2 restart ge-web
-  else
-    pm2 start npm --name ge-web -- start
-    pm2 save
-  fi
+  pm2 delete ge-web 2>/dev/null || true
+  pm2 start npm --name ge-web --cwd "$ROOT" -- start
+  pm2 save
   pm2 status ge-web
+  echo "WARN: if ngrok still shows old pages, stop duplicate 'geserverhub' pm2 app or point ngrok to port 3005"
 else
   echo "PM2 not installed. Start manually: npm run start"
   echo "Or install PM2: npm install -g pm2 && pm2 start npm --name ge-web -- start"
