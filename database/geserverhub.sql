@@ -1,13 +1,14 @@
--- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19  Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: goeunserverhub
 -- ------------------------------------------------------
--- Server version	8.0.45-0ubuntu0.22.04.1
+-- Server version	10.11.14-MariaDB-0ubuntu0.24.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -21,20 +22,20 @@
 
 DROP TABLE IF EXISTS `Account`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Account` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `userId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `providerAccountId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `refresh_token` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `access_token` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `expires_at` int DEFAULT NULL,
-  `token_type` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `scope` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `id_token` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `session_state` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(191) NOT NULL,
+  `userId` varchar(191) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `provider` varchar(191) NOT NULL,
+  `providerAccountId` varchar(191) NOT NULL,
+  `refresh_token` text DEFAULT NULL,
+  `access_token` text DEFAULT NULL,
+  `expires_at` int(11) DEFAULT NULL,
+  `token_type` varchar(191) DEFAULT NULL,
+  `scope` varchar(191) DEFAULT NULL,
+  `id_token` text DEFAULT NULL,
+  `session_state` varchar(191) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Account_provider_providerAccountId_key` (`provider`,`providerAccountId`),
   KEY `Account_userId_idx` (`userId`),
@@ -57,31 +58,31 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `CargoOrder`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `CargoOrder` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `number` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `senderName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `senderPhone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `receiverName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `receiverPhone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `receiverAddress` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `direction` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'TH_TO_KR',
+  `id` varchar(191) NOT NULL,
+  `number` varchar(191) NOT NULL,
+  `senderName` varchar(191) NOT NULL,
+  `senderPhone` varchar(191) DEFAULT NULL,
+  `receiverName` varchar(191) NOT NULL,
+  `receiverPhone` varchar(191) DEFAULT NULL,
+  `receiverAddress` text DEFAULT NULL,
+  `direction` varchar(191) NOT NULL DEFAULT 'TH_TO_KR',
   `weightKg` decimal(8,2) DEFAULT NULL,
-  `sizeNote` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `itemDesc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `currency` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'THB',
-  `income` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `expense` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'รับพัสดุแล้ว',
-  `trackingCode` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `passportNo` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `imageUrl` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `parcelImageUrl` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `sizeNote` varchar(191) DEFAULT NULL,
+  `itemDesc` text DEFAULT NULL,
+  `currency` varchar(191) NOT NULL DEFAULT 'THB',
+  `income` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `expense` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `status` varchar(191) NOT NULL DEFAULT 'รับพัสดุแล้ว',
+  `trackingCode` varchar(191) DEFAULT NULL,
+  `passportNo` varchar(191) DEFAULT NULL,
+  `imageUrl` text DEFAULT NULL,
+  `parcelImageUrl` text DEFAULT NULL,
+  `notes` text DEFAULT NULL,
   `shippedAt` datetime(3) DEFAULT NULL,
   `deliveredAt` datetime(3) DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `CargoOrder_number_key` (`number`),
@@ -106,23 +107,24 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Client`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Client` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `status` enum('ONLINE','MAINTENANCE','COMING_SOON','OFFLINE') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'COMING_SOON',
-  `contactEmail` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `contactPhone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `contactFax` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `systemUrl` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `logoUrl` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(191) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `slug` varchar(191) NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` enum('ONLINE','MAINTENANCE','COMING_SOON','OFFLINE') NOT NULL DEFAULT 'COMING_SOON',
+  `contactEmail` varchar(191) DEFAULT NULL,
+  `contactPhone` varchar(191) DEFAULT NULL,
+  `contactFax` varchar(191) DEFAULT NULL,
+  `systemUrl` varchar(191) DEFAULT NULL,
+  `logoUrl` varchar(191) DEFAULT NULL,
+  `lineUserId` varchar(191) DEFAULT NULL,
   `domainRegisteredAt` datetime(3) DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
-  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `nameTh` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `nameTh` varchar(191) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Client_slug_key` (`slug`),
   KEY `Client_slug_idx` (`slug`),
@@ -136,7 +138,12 @@ CREATE TABLE `Client` (
 
 LOCK TABLES `Client` WRITE;
 /*!40000 ALTER TABLE `Client` DISABLE KEYS */;
-INSERT INTO `Client` VALUES ('cmo6viudt0001qhga9f5j4jzc','M-Factory','m-factory',NULL,'ONLINE','m.factoryandresort@gmail.com','+66 095-241-1833',NULL,'https://m-factoryandresort.com',NULL,NULL,'2026-04-20 07:28:50.513','2026-04-20 07:28:50.513',NULL,NULL),('cmo6viueb0002qhgad1v22u6k','M-Group','m-group',NULL,'ONLINE','sale@m-group.in.th','089-4871144',NULL,NULL,NULL,NULL,'2026-04-20 07:28:50.531','2026-04-20 07:28:50.531',NULL,NULL),('cmo6viuen0003qhga32hwcu3n','GOEUN SERVER HUB','goeun-server-hub','','ONLINE','goeunserverhub@gmail.com','+66081-234567',NULL,'ge-serverhub.com','/uploads/logos/1776694124366-rd4x8l.jpg',NULL,'2026-04-20 07:28:50.543','2026-04-20 14:08:48.344','',NULL),('cmo6x1sht0008qhvqygcgasiq','M-retsort','m-retsort','เอ็มรีสอร์ท  บริการที่พัก บรรยากาศส่วนตัว','ONLINE','mukhngamnuch@gmail.com','095-241-1833',NULL,'https://m-factoryandresort.com/','/uploads/logos/1776692894976-ecji3u.jpg',NULL,'2026-04-20 08:11:34.146','2026-04-20 15:02:10.074','เอ็มรีสอร์ท 222 ซอย คลองโซน 6 ตำบล ลาดหลุมแก้ว อำเภอลาดหลุมแก้ว ปทุมธานี 12140  ','เอ็มรีสอร์ท'),('cmo9bve0m0000qhtikd261ug2','Green Retail Group','green-retail-group','ระบบมอนิเตอริ่ง ผู้ใช้ Demo','ONLINE','it@green-retail.example.com','02-555-1199',NULL,'/customer-dashboard-login',NULL,NULL,'2026-04-22 00:42:02.038','2026-04-22 01:21:00.734',NULL,NULL);
+INSERT INTO `Client` VALUES
+('cmo6viudt0001qhga9f5j4jzc','M-Factory','m-factory','','ONLINE','m.factoryandresort@gmail.com','+66 095-241-1833',NULL,'https://m-factoryandresort.com','/uploads/logos/1779620304878-zx1tuk.jpg',NULL,NULL,'2026-04-20 07:28:50.513','2026-05-24 10:58:27.411','','เอ็มเฟคเตอร์รี่'),
+('cmo6viueb0002qhgad1v22u6k','M-Group','m-group',NULL,'ONLINE','sale@m-group.in.th','089-4871144',NULL,NULL,NULL,NULL,NULL,'2026-04-20 07:28:50.531','2026-04-20 07:28:50.531',NULL,NULL),
+('cmo6viuen0003qhga32hwcu3n','GOEUN SERVER HUB','goeun-server-hub','','ONLINE','goeunserverhub@gmail.com','+66081-234567',NULL,'ge-serverhub.com','/uploads/logos/1776694124366-rd4x8l.jpg',NULL,NULL,'2026-04-20 07:28:50.543','2026-04-20 14:08:48.344','',NULL),
+('cmo6x1sht0008qhvqygcgasiq','M-retsort','m-retsort','เอ็มรีสอร์ท  บริการที่พัก บรรยากาศส่วนตัว','ONLINE','mukhngamnuch@gmail.com','095-241-1833',NULL,'https://m-factoryandresort.com/','/uploads/logos/1776692894976-ecji3u.jpg',NULL,NULL,'2026-04-20 08:11:34.146','2026-04-20 15:02:10.074','เอ็มรีสอร์ท 222 ซอย คลองโซน 6 ตำบล ลาดหลุมแก้ว อำเภอลาดหลุมแก้ว ปทุมธานี 12140  ','เอ็มรีสอร์ท'),
+('cmo9bve0m0000qhtikd261ug2','Green Retail Group','green-retail-group','ระบบมอนิเตอริ่ง ผู้ใช้ Demo','ONLINE','it@green-retail.example.com','02-555-1199',NULL,'/customer-dashboard-login',NULL,NULL,NULL,'2026-04-22 00:42:02.038','2026-04-22 01:21:00.734',NULL,NULL);
 /*!40000 ALTER TABLE `Client` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -146,11 +153,11 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `ClientService`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ClientService` (
-  `clientId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `serviceId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `assignedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `clientId` varchar(191) NOT NULL,
+  `serviceId` varchar(191) NOT NULL,
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   PRIMARY KEY (`clientId`,`serviceId`),
   KEY `ClientService_clientId_idx` (`clientId`),
   KEY `ClientService_serviceId_idx` (`serviceId`),
@@ -174,17 +181,17 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Customer`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Customer` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `clientId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `idCard` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(191) NOT NULL,
+  `clientId` varchar(191) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `phone` varchar(191) DEFAULT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `idCard` varchar(191) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `Customer_clientId_idx` (`clientId`),
@@ -208,20 +215,20 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Expense`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Expense` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `number` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(191) NOT NULL,
+  `number` varchar(191) NOT NULL,
+  `category` varchar(191) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `currency` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'THB',
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `date` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `currency` varchar(191) NOT NULL DEFAULT 'THB',
+  `notes` text DEFAULT NULL,
+  `date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
-  `receiptFile` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `receiptNumber` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'รอชำระ',
+  `receiptFile` varchar(191) DEFAULT NULL,
+  `receiptNumber` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'รอชำระ',
   PRIMARY KEY (`id`),
   UNIQUE KEY `Expense_number_key` (`number`),
   KEY `Expense_category_idx` (`category`),
@@ -235,7 +242,15 @@ CREATE TABLE `Expense` (
 
 LOCK TABLES `Expense` WRITE;
 /*!40000 ALTER TABLE `Expense` DISABLE KEYS */;
-INSERT INTO `Expense` VALUES ('cmo6xw4ux0000qhckz881fb94','EXP260420-00001','ค่าเช่าเซิร์ฟเวอร์/โดเมน',32000.00,'KRW','รอแก้ไขตามยอดที่ชำระจริง     ชำระค่าโดเมนหลัก ge-serverhub.com','2027-04-16 00:00:00.000','2026-04-20 08:35:09.849','2026-04-20 08:35:09.849',NULL,NULL,'รอชำระ'),('cmo7bf9yg0000qhhdecedr56b','EXP260420-00002','ค่าเช่าเซิร์ฟเวอร์/โดเมน',18702.00,'KRW','ge-serverhub.com     Invoice number NKBQJH4J-0005\n','2026-04-17 00:00:00.000','2026-04-20 14:53:57.929','2026-04-20 14:53:57.929','[\"/uploads/receipts/1776696837141-z8m2uo.jpg\",\"/uploads/receipts/1776696837367-9666uz.pdf\"]','2802-8830','แนบใบเสร็จแล้ว'),('cmo7bhvm40001qhhdcbg6qh4i','EXP260420-00003','ค่าเช่าเซิร์ฟเวอร์/โดเมน',18702.00,'KRW','m-factoryandresort.com    Invoice number NKBQJH4J-0006','2026-04-20 00:00:00.000','2026-04-20 14:55:59.309','2026-04-20 14:55:59.309','[\"/uploads/receipts/1776696958957-cz79s2.jpg\",\"/uploads/receipts/1776696959136-2dhbkm.pdf\"]','2646-1755','แนบใบเสร็จแล้ว'),('cmo7bkujm0002qhhdiv26ryxd','EXP260420-00004','ค่าบริการภายนอก',32831.00,'KRW','Claude Pro   AI code   Invoice number K6CHS41L-0004','2026-04-18 00:00:00.000','2026-04-20 14:58:17.890','2026-04-20 14:58:17.890','[\"/uploads/receipts/1776697097592-kc7bgc.jpg\",\"/uploads/receipts/1776697097743-l337lk.pdf\"]','2624-8386-0931','แนบใบเสร็จแล้ว'),('cmo7bowl50003qhhdnqudjasn','EXP260421-00001','ค่าบริการภายนอก',30251.00,'KRW','ngrok Inc.  Forward IP getaway  Local to Public      Invoice number DYWNCD-00006','2026-04-17 00:00:00.000','2026-04-20 15:01:27.161','2026-04-20 15:01:27.161','[\"/uploads/receipts/1776697286801-yz5wcq.pdf\",\"/uploads/receipts/1776697287014-fj59bl.jpg\"]','DYWNCD-00006','แนบใบเสร็จแล้ว');
+INSERT INTO `Expense` VALUES
+('cmo6xw4ux0000qhckz881fb94','EXP260420-00001','ค่าเช่าเซิร์ฟเวอร์/โดเมน',32000.00,'KRW','รอแก้ไขตามยอดที่ชำระจริง     ชำระค่าโดเมนหลัก ge-serverhub.com','2027-04-16 00:00:00.000','2026-04-20 08:35:09.849','2026-04-20 08:35:09.849',NULL,NULL,'รอชำระ'),
+('cmo7bf9yg0000qhhdecedr56b','EXP260420-00002','ค่าเช่าเซิร์ฟเวอร์/โดเมน',18702.00,'KRW','ge-serverhub.com     Invoice number NKBQJH4J-0005\n','2026-04-17 00:00:00.000','2026-04-20 14:53:57.929','2026-04-20 14:53:57.929','[\"/uploads/receipts/1776696837141-z8m2uo.jpg\",\"/uploads/receipts/1776696837367-9666uz.pdf\"]','2802-8830','แนบใบเสร็จแล้ว'),
+('cmo7bhvm40001qhhdcbg6qh4i','EXP260420-00003','ค่าเช่าเซิร์ฟเวอร์/โดเมน',18702.00,'KRW','m-factoryandresort.com    Invoice number NKBQJH4J-0006','2026-04-20 00:00:00.000','2026-04-20 14:55:59.309','2026-04-20 14:55:59.309','[\"/uploads/receipts/1776696958957-cz79s2.jpg\",\"/uploads/receipts/1776696959136-2dhbkm.pdf\"]','2646-1755','แนบใบเสร็จแล้ว'),
+('cmo7bkujm0002qhhdiv26ryxd','EXP260420-00004','ค่าบริการภายนอก',32831.00,'KRW','Claude Pro   AI code   Invoice number K6CHS41L-0004','2026-04-18 00:00:00.000','2026-04-20 14:58:17.890','2026-04-20 14:58:17.890','[\"/uploads/receipts/1776697097592-kc7bgc.jpg\",\"/uploads/receipts/1776697097743-l337lk.pdf\"]','2624-8386-0931','แนบใบเสร็จแล้ว'),
+('cmo7bowl50003qhhdnqudjasn','EXP260421-00001','ค่าบริการภายนอก',30251.00,'KRW','ngrok Inc.  Forward IP getaway  Local to Public      Invoice number DYWNCD-00006','2026-04-17 00:00:00.000','2026-04-20 15:01:27.161','2026-04-20 15:01:27.161','[\"/uploads/receipts/1776697286801-yz5wcq.pdf\",\"/uploads/receipts/1776697287014-fj59bl.jpg\"]','DYWNCD-00006','แนบใบเสร็จแล้ว'),
+('cmpjihj2v0000jhpitmghqvv8','EXP260524-00001','ค่าแรง/เงินเดือน',3000.00,'THB','ค่าแรงนักศึกษาฝึกงาน  3 คน   2 วัน','2026-05-24 00:00:00.000','2026-05-24 08:24:36.824','2026-05-24 08:24:36.824',NULL,NULL,'แนบใบเสร็จแล้ว'),
+('cmpjisgd60000jhonylkatvjx','EXP260524-00002','ค่าอุปกรณ์/ซอฟต์แวร์',650000.00,'KRW','ซื้อเครื่อง PC SERVER+ ค่าส่ง','2026-05-24 00:00:00.000','2026-05-24 08:33:06.522','2026-05-24 08:33:06.522',NULL,NULL,'แนบใบเสร็จแล้ว'),
+('cmpjiy2jx0000jhabv4us9cxi','EXP260524-00003','ค่าอุปกรณ์/ซอฟต์แวร์',300000.00,'KRW','Calud ai รายปี ','2026-05-24 00:00:00.000','2026-05-24 08:37:28.557','2026-05-24 08:37:28.557',NULL,NULL,'แนบใบเสร็จแล้ว');
 /*!40000 ALTER TABLE `Expense` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -245,21 +260,21 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Invoice`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Invoice` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `number` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `receiptNumber` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `clientId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `userId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(191) NOT NULL,
+  `number` varchar(191) NOT NULL,
+  `receiptNumber` varchar(191) DEFAULT NULL,
+  `clientId` varchar(191) NOT NULL,
+  `userId` varchar(191) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `currency` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'THB',
-  `status` enum('PENDING','PAID','OVERDUE','CANCELLED') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `currency` varchar(191) NOT NULL DEFAULT 'THB',
+  `status` enum('PENDING','PAID','OVERDUE','CANCELLED') NOT NULL DEFAULT 'PENDING',
   `dueDate` datetime(3) DEFAULT NULL,
   `paidAt` datetime(3) DEFAULT NULL,
-  `stripeId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `stripeId` varchar(191) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Invoice_number_key` (`number`),
@@ -268,7 +283,7 @@ CREATE TABLE `Invoice` (
   KEY `Invoice_clientId_idx` (`clientId`),
   KEY `Invoice_status_idx` (`status`),
   KEY `Invoice_userId_fkey` (`userId`),
-  CONSTRAINT `Invoice_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Invoice_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `Invoice_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -279,8 +294,64 @@ CREATE TABLE `Invoice` (
 
 LOCK TABLES `Invoice` WRITE;
 /*!40000 ALTER TABLE `Invoice` DISABLE KEYS */;
-INSERT INTO `Invoice` VALUES ('cmo6vyr9g0001qhvq03kwyvp4','INV260420-00001','RCP260417-0001','cmo6viudt0001qhga9f5j4jzc',NULL,2000.00,'THB','PAID','2026-04-16 00:00:00.000','2026-04-20 07:41:12.962',NULL,'ค่าบรืการดูแลระบบ เดือน เมษายน 2569','2026-04-20 07:41:12.964','2026-04-20 07:41:12.964'),('cmo6vzowk0003qhvqlwjuhobj','INV260420-00002',NULL,'cmo6viudt0001qhga9f5j4jzc',NULL,2000.00,'THB','PENDING','2026-05-16 00:00:00.000',NULL,NULL,'ค่าบริการดูแลระบบ','2026-04-20 07:41:56.564','2026-04-20 07:41:56.564'),('cmo6w7ju80005qhvq0gqqy4kb','INV260420-00003',NULL,'cmo6viudt0001qhga9f5j4jzc',NULL,1500.00,'THB','PAID','2026-04-16 00:00:00.000','2026-04-20 07:48:03.246',NULL,'ค่าเช่า โดเมน รายปี  ','2026-04-20 07:48:03.248','2026-04-20 07:48:03.248'),('cmo6w9pq40007qhvqc4td6ml9','INV260420-00004',NULL,'cmo6viudt0001qhga9f5j4jzc',NULL,1500.00,'THB','PENDING','2027-04-16 00:00:00.000',NULL,NULL,'ค่าบริการ เช่าโดเมน รายปี ','2026-04-20 07:49:44.189','2026-04-20 07:49:44.189'),('cmo6x7v2k000eqhvqhvds8z2k','INV260420-00005',NULL,'cmo6x1sht0008qhvqygcgasiq',NULL,3500.00,'THB','PENDING','2026-04-27 00:00:00.000',NULL,NULL,'ค่ายิงแอดเฟสบุ๊ค รายสัปดาห์','2026-04-20 08:16:17.420','2026-04-20 08:16:17.420'),('cmo6xa2gz000gqhvq6hzxwilh','INV260420-00006',NULL,'cmo6x1sht0008qhvqygcgasiq',NULL,3500.00,'THB','PAID','2026-04-13 00:00:00.000','2026-04-20 08:18:00.321',NULL,'ค่ายิงแอดเฟสบุ๊ค รายสัปดาห์','2026-04-20 08:18:00.323','2026-04-20 08:18:00.323');
+INSERT INTO `Invoice` VALUES
+('cmo6vyr9g0001qhvq03kwyvp4','INV260420-00001','RCP260417-0001','cmo6viudt0001qhga9f5j4jzc',NULL,2000.00,'THB','PAID','2026-04-16 00:00:00.000','2026-04-20 07:41:12.962',NULL,'ค่าบรืการดูแลระบบ เดือน เมษายน 2569','2026-04-20 07:41:12.964','2026-04-20 07:41:12.964'),
+('cmo6vzowk0003qhvqlwjuhobj','INV260420-00002',NULL,'cmo6viudt0001qhga9f5j4jzc',NULL,2000.00,'THB','PENDING','2026-05-16 00:00:00.000',NULL,NULL,'ค่าบริการดูแลระบบ','2026-04-20 07:41:56.564','2026-04-20 07:41:56.564'),
+('cmo6w7ju80005qhvq0gqqy4kb','INV260420-00003',NULL,'cmo6viudt0001qhga9f5j4jzc',NULL,1500.00,'THB','PAID','2026-04-16 00:00:00.000','2026-04-20 07:48:03.246',NULL,'ค่าเช่า โดเมน รายปี  ','2026-04-20 07:48:03.248','2026-04-20 07:48:03.248'),
+('cmo6w9pq40007qhvqc4td6ml9','INV260420-00004',NULL,'cmo6viudt0001qhga9f5j4jzc',NULL,1500.00,'THB','PENDING','2027-04-16 00:00:00.000',NULL,NULL,'ค่าบริการ เช่าโดเมน รายปี ','2026-04-20 07:49:44.189','2026-04-20 07:49:44.189'),
+('cmo6x7v2k000eqhvqhvds8z2k','INV260420-00005',NULL,'cmo6x1sht0008qhvqygcgasiq',NULL,3500.00,'THB','PAID','2026-04-27 00:00:00.000','2026-05-24 08:25:17.386',NULL,'ค่ายิงแอดเฟสบุ๊ค รายสัปดาห์','2026-04-20 08:16:17.420','2026-05-24 08:25:17.387'),
+('cmo6xa2gz000gqhvq6hzxwilh','INV260420-00006',NULL,'cmo6x1sht0008qhvqygcgasiq',NULL,3500.00,'THB','PAID','2026-04-13 00:00:00.000','2026-04-20 08:18:00.321',NULL,'ค่ายิงแอดเฟสบุ๊ค รายสัปดาห์','2026-04-20 08:18:00.323','2026-04-20 08:18:00.323'),
+('cmpjkqpg2qfkoqhtlbvc3krhb5q','INV260425-00001',NULL,'cmo6viuen0003qhga32hwcu3n',NULL,150000.00,'KRW','PAID','2026-04-25 00:00:00.000','2026-04-25 00:00:00.000',NULL,'ค่าบริการดูแลระบบ','2026-04-25 00:00:00.000','2026-04-25 00:00:00.000'),
+('cmpjkqpg6272zqhalnr9ka7046p','INV260425-00003',NULL,'cmo6viuen0003qhga32hwcu3n',NULL,30000.00,'KRW','PAID','2026-04-25 00:00:00.000','2026-04-25 00:00:00.000',NULL,'ค่าบริการดูแลระบบ','2026-04-25 00:00:00.000','2026-04-25 00:00:00.000'),
+('cmpjkqpg6dv8lqhyc69vg6psfl2','INV260425-00002',NULL,'cmo6viuen0003qhga32hwcu3n',NULL,300000.00,'KRW','PAID','2026-04-25 00:00:00.000','2026-04-25 00:00:00.000',NULL,'ค่าบริการดูแลระบบ','2026-04-25 00:00:00.000','2026-04-25 00:00:00.000');
 /*!40000 ALTER TABLE `Invoice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `MFactoryInquiry`
+--
+
+DROP TABLE IF EXISTS `MFactoryInquiry`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `MFactoryInquiry` (
+  `id` varchar(191) NOT NULL,
+  `type` varchar(191) NOT NULL DEFAULT 'factory',
+  `lang` varchar(191) NOT NULL DEFAULT 'th',
+  `source` varchar(191) DEFAULT NULL,
+  `company` varchar(191) DEFAULT NULL,
+  `name` varchar(191) NOT NULL,
+  `phone` varchar(191) DEFAULT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `taxId` varchar(191) DEFAULT NULL,
+  `bookingDate` date DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `warehouse` text DEFAULT NULL,
+  `rentalType` varchar(191) DEFAULT NULL,
+  `paymentRef` varchar(191) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `bookingNumber` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'PENDING',
+  `termsAccepted` tinyint(1) NOT NULL DEFAULT 1,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `MFactoryInquiry_bookingNumber_key` (`bookingNumber`),
+  KEY `MFactoryInquiry_createdAt_idx` (`createdAt`),
+  KEY `MFactoryInquiry_type_idx` (`type`),
+  KEY `MFactoryInquiry_status_idx` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `MFactoryInquiry`
+--
+
+LOCK TABLES `MFactoryInquiry` WRITE;
+/*!40000 ALTER TABLE `MFactoryInquiry` DISABLE KEYS */;
+INSERT INTO `MFactoryInquiry` VALUES
+('cmpjmu2lz0000jhmne18f47fn','factory','th','mfac-booking','000','000','00','000@gmail.com','000','2026-05-24','0000','โกดังลาดหลุมแก้ว ปทุมธานี ขนาด 120 ตรม. ค่าเช่า เดือนละ 15,000 บาท','เช่า','/uploads/mfactory/1779618362605-0e3lg9r.jpg',NULL,'MF-20260524-LWOJ','PENDING',1,'2026-05-24 10:26:20.471','2026-05-24 10:26:20.471');
+/*!40000 ALTER TABLE `MFactoryInquiry` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -289,18 +360,18 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Notification`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Notification` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` enum('INVOICE','SYSTEM_ALERT','WELCOME','PASSWORD_RESET') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `channel` enum('EMAIL','LINE','PUSH') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `recipient` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subject` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sent` tinyint(1) NOT NULL DEFAULT '0',
+  `id` varchar(191) NOT NULL,
+  `type` enum('INVOICE','SYSTEM_ALERT','WELCOME','PASSWORD_RESET') NOT NULL,
+  `channel` enum('EMAIL','LINE','PUSH') NOT NULL,
+  `recipient` varchar(191) NOT NULL,
+  `subject` varchar(191) DEFAULT NULL,
+  `body` text NOT NULL,
+  `sent` tinyint(1) NOT NULL DEFAULT 0,
   `sentAt` datetime(3) DEFAULT NULL,
-  `error` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `error` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   PRIMARY KEY (`id`),
   KEY `Notification_sent_idx` (`sent`),
   KEY `Notification_type_idx` (`type`)
@@ -322,22 +393,23 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `PartnerProduct`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `PartnerProduct` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `model` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `brand` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `currency` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'KRW',
-  `imageUrls` text COLLATE utf8mb4_unicode_ci,
-  `clientId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(191) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `model` varchar(191) DEFAULT NULL,
+  `brand` varchar(191) DEFAULT NULL,
+  `currency` varchar(191) NOT NULL DEFAULT 'KRW',
+  `imageUrls` text DEFAULT NULL,
+  `clientId` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   `costPrice` decimal(14,2) DEFAULT NULL,
   `sellPrice` decimal(14,2) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `PartnerProduct_name_idx` (`name`),
-  KEY `PartnerProduct_clientId_idx` (`clientId`)
+  KEY `PartnerProduct_clientId_idx` (`clientId`),
+  CONSTRAINT `PartnerProduct_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -347,7 +419,12 @@ CREATE TABLE `PartnerProduct` (
 
 LOCK TABLES `PartnerProduct` WRITE;
 /*!40000 ALTER TABLE `PartnerProduct` DISABLE KEYS */;
-INSERT INTO `PartnerProduct` VALUES ('cmph1wrdv0001qhujairlnt97','AI Smart Energy Monitor (Basic)','SEM-B100','MOMOGE SPACE','KRW','[\"/momoge/Logo-brand.png\"]','cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.602','2026-05-22 15:05:01.602',89000.00,129000.00),('cmph1wree0003qhujn57sbuvp','Current Sensor Module 100A','CSM-100A','MOMOGE SPACE','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.622','2026-05-22 15:05:01.622',45000.00,69000.00),('cmph1wrer0005qhuj7wlp09e0','3-Phase Power Logger','PL-3P200','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.635','2026-05-22 15:05:01.635',180000.00,249000.00),('cmph1wrf10007qhujlatgiq8j','Cloud Dashboard Annual Plan','CD-12M','MOMOGE SPACE','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.646','2026-05-22 15:05:01.646',120000.00,198000.00),('cmph1wrfb0009qhujfnx5jq6b','Installation & Commissioning','SVC-INST','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.655','2026-05-22 15:05:01.655',150000.00,220000.00);
+INSERT INTO `PartnerProduct` VALUES
+('cmph1wrdv0001qhujairlnt97','AI Smart Energy Monitor (Basic)','SEM-B100','MOMOGE SPACE','KRW','[\"/momoge/Logo-brand.png\"]','cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.602','2026-05-22 15:05:01.602',89000.00,129000.00),
+('cmph1wree0003qhujn57sbuvp','Current Sensor Module 100A','CSM-100A','MOMOGE SPACE','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.622','2026-05-22 15:05:01.622',45000.00,69000.00),
+('cmph1wrer0005qhuj7wlp09e0','3-Phase Power Logger','PL-3P200','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.635','2026-05-22 15:05:01.635',180000.00,249000.00),
+('cmph1wrf10007qhujlatgiq8j','Cloud Dashboard Annual Plan','CD-12M','MOMOGE SPACE','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.646','2026-05-22 15:05:01.646',120000.00,198000.00),
+('cmph1wrfb0009qhujfnx5jq6b','Installation & Commissioning','SVC-INST','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.655','2026-05-22 15:05:01.655',150000.00,220000.00);
 /*!40000 ALTER TABLE `PartnerProduct` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -357,18 +434,18 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `PartnerTask`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `PartnerTask` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OPERATION',
-  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
-  `priority` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'NORMAL',
-  `brand` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'MOMOGE SPACE',
+  `id` varchar(191) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `type` varchar(191) NOT NULL DEFAULT 'OPERATION',
+  `status` varchar(191) NOT NULL DEFAULT 'PENDING',
+  `priority` varchar(191) NOT NULL DEFAULT 'NORMAL',
+  `brand` varchar(191) NOT NULL DEFAULT 'MOMOGE SPACE',
   `dueDate` datetime(3) DEFAULT NULL,
   `completedAt` datetime(3) DEFAULT NULL,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `PartnerTask_type_idx` (`type`),
@@ -383,7 +460,8 @@ CREATE TABLE `PartnerTask` (
 
 LOCK TABLES `PartnerTask` WRITE;
 /*!40000 ALTER TABLE `PartnerTask` DISABLE KEYS */;
-INSERT INTO `PartnerTask` VALUES ('cmowezidp0000qhyqthb1w761','전력 품질 보정값 측정을 위한 테스트 장비를 확인하고 있습니다.','OPERATION','IN_PROGRESS','NORMAL','MOMOGE SPACE','2026-05-30 00:00:00.000',NULL,'고객 출고 전에 테스트할 수 있는 소형 전력 품질 개선 장비와 전류 데이터 측정용 테스트 장비를 검토하고 있습니다.','2026-05-08 04:27:55.208','2026-05-08 05:53:07.897');
+INSERT INTO `PartnerTask` VALUES
+('cmowezidp0000qhyqthb1w761','전력 품질 보정값 측정을 위한 테스트 장비를 확인하고 있습니다.','OPERATION','IN_PROGRESS','NORMAL','MOMOGE SPACE','2026-05-30 00:00:00.000',NULL,'고객 출고 전에 테스트할 수 있는 소형 전력 품질 개선 장비와 전류 데이터 측정용 테스트 장비를 검토하고 있습니다.','2026-05-08 04:27:55.208','2026-05-08 05:53:07.897');
 /*!40000 ALTER TABLE `PartnerTask` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -393,23 +471,23 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `PartnerTransaction`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `PartnerTransaction` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `number` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `brand` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'MOMOGE SPACE',
-  `type` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'SALE',
-  `description` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `customerName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(191) NOT NULL,
+  `number` varchar(191) NOT NULL,
+  `brand` varchar(191) NOT NULL DEFAULT 'MOMOGE SPACE',
+  `type` varchar(191) NOT NULL DEFAULT 'SALE',
+  `description` varchar(191) DEFAULT NULL,
+  `customerName` varchar(191) DEFAULT NULL,
   `amount` decimal(14,2) NOT NULL,
-  `currency` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'KRW',
-  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'COMPLETED',
-  `category` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `date` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `currency` varchar(191) NOT NULL DEFAULT 'KRW',
+  `status` varchar(191) NOT NULL DEFAULT 'COMPLETED',
+  `category` varchar(191) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
-  `receiptFile` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `receiptFile` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `PartnerTransaction_number_key` (`number`),
   KEY `PartnerTransaction_type_idx` (`type`),
@@ -425,7 +503,15 @@ CREATE TABLE `PartnerTransaction` (
 
 LOCK TABLES `PartnerTransaction` WRITE;
 /*!40000 ALTER TABLE `PartnerTransaction` DISABLE KEYS */;
-INSERT INTO `PartnerTransaction` VALUES ('cmowmc6fu0000qhwtm76e9295','EXP20260508-0002','MOMOGE SPACE','EXPENSE','Meter + CT','Shanghai Fangqiu Electric Co.,Ltd',158.00,'USD','PENDING','ค่าอุปกรณ์','C/I NO : FQ26-KR01   Energy Meter  EM4373 2 PCS , Current transformer : SCT-T24','2026-05-08 00:00:00.000','2026-05-08 07:53:43.578','2026-05-08 07:53:43.578',NULL);
+INSERT INTO `PartnerTransaction` VALUES
+('cmowmc6fu0000qhwtm76e9295','EXP20260508-0002','MOMOGE SPACE','EXPENSE','Meter + CT','Shanghai Fangqiu Electric Co.,Ltd',158.00,'USD','PENDING','ค่าอุปกรณ์','C/I NO : FQ26-KR01   Energy Meter  EM4373 2 PCS , Current transformer : SCT-T24','2026-05-08 00:00:00.000','2026-05-08 07:53:43.578','2026-05-08 07:53:43.578',NULL),
+('exp_import_01','EXP20260417-0001','MOMOGE SPACE','EXPENSE','ge-serverhub.com — Invoice NKBQJH4J-0005','Porkbun / Domain Registrar',18702.00,'KRW','COMPLETED','ค่าเช่าเซิร์ฟเวอร์/โดเมน','EXP260420-00002 | ge-serverhub.com Invoice number NKBQJH4J-0005','2026-04-17 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776696837141-z8m2uo.jpg\",\"/uploads/receipts/1776696837367-9666uz.pdf\"]'),
+('exp_import_02','EXP20260417-0002','MOMOGE SPACE','EXPENSE','ngrok Inc. — Forward IP Gateway — Invoice DYWNCD-00006','ngrok Inc.',30251.00,'KRW','COMPLETED','ค่าบริการภายนอก','EXP260421-00001 | ngrok Inc. Forward IP getaway Local to Public Invoice DYWNCD-00006','2026-04-17 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776697286801-yz5wcq.pdf\",\"/uploads/receipts/1776697287014-fj59bl.jpg\"]'),
+('exp_import_03','EXP20260418-0001','MOMOGE SPACE','EXPENSE','Claude Pro AI code — Invoice K6CHS41L-0004','Anthropic / Claude',32831.00,'KRW','COMPLETED','ค่าบริการภายนอก','EXP260420-00004 | Claude Pro AI code Invoice number K6CHS41L-0004','2026-04-18 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776697097592-kc7bgc.jpg\",\"/uploads/receipts/1776697097743-l337lk.pdf\"]'),
+('exp_import_04','EXP20260420-0001','MOMOGE SPACE','EXPENSE','m-factoryandresort.com — Invoice NKBQJH4J-0006','Porkbun / Domain Registrar',18702.00,'KRW','COMPLETED','ค่าเช่าเซิร์ฟเวอร์/โดเมน','EXP260420-00003 | m-factoryandresort.com Invoice number NKBQJH4J-0006','2026-04-20 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776696958957-cz79s2.jpg\",\"/uploads/receipts/1776696959136-2dhbkm.pdf\"]'),
+('exp_import_05','EXP20260524-0001','MOMOGE SPACE','EXPENSE','ค่าแรงนักศึกษาฝึกงาน 3 คน 2 วัน','นักศึกษาฝึกงาน',3000.00,'THB','COMPLETED','ค่าแรง/เงินเดือน','EXP260524-00001 | ค่าแรงนักศึกษาฝึกงาน 3 คน 2 วัน','2026-05-24 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000',NULL),
+('exp_import_06','EXP20260524-0002','MOMOGE SPACE','EXPENSE','ซื้อเครื่อง PC SERVER + ค่าส่ง','ผู้จำหน่าย PC Server',650000.00,'KRW','COMPLETED','ค่าอุปกรณ์/ซอฟต์แวร์','EXP260524-00002 | ซื้อเครื่อง PC SERVER+ ค่าส่ง','2026-05-24 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000',NULL),
+('exp_import_07','EXP20260524-0003','MOMOGE SPACE','EXPENSE','Cloud AI รายปี','Cloud AI Provider',300000.00,'KRW','COMPLETED','ค่าอุปกรณ์/ซอฟต์แวร์','EXP260524-00003 | Cloud AI รายปี','2026-05-24 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000',NULL);
 /*!40000 ALTER TABLE `PartnerTransaction` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -435,28 +521,28 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Product`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Product` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `sku` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nameEn` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nameZh` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sku` varchar(191) NOT NULL,
+  `category` varchar(191) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `nameEn` varchar(191) NOT NULL,
+  `nameZh` varchar(191) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   `priceWholesale` decimal(10,2) NOT NULL,
-  `unit` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `minOrder` int NOT NULL DEFAULT '1',
-  `minWholesale` int NOT NULL DEFAULT '10',
-  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `img` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `stock` int NOT NULL DEFAULT '0',
-  `rating` decimal(3,1) NOT NULL DEFAULT '5.0',
-  `sold` int NOT NULL DEFAULT '0',
-  `active` tinyint(1) NOT NULL DEFAULT '1',
-  `promotion` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `unit` varchar(191) NOT NULL,
+  `minOrder` int(11) NOT NULL DEFAULT 1,
+  `minWholesale` int(11) NOT NULL DEFAULT 10,
+  `desc` text DEFAULT NULL,
+  `img` varchar(191) DEFAULT NULL,
+  `stock` int(11) NOT NULL DEFAULT 0,
+  `rating` decimal(3,1) NOT NULL DEFAULT 5.0,
+  `sold` int(11) NOT NULL DEFAULT 0,
+  `active` tinyint(1) NOT NULL DEFAULT 1,
+  `promotion` varchar(191) DEFAULT NULL,
   `promotionPrice` decimal(10,2) DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Product_sku_key` (`sku`),
@@ -471,7 +557,55 @@ CREATE TABLE `Product` (
 
 LOCK TABLES `Product` WRITE;
 /*!40000 ALTER TABLE `Product` DISABLE KEYS */;
-INSERT INTO `Product` VALUES (1,'AG-001','agri','ถังพ่นยา 20 ลิตร','20L Spray Tank','20升喷药桶',890.00,750.00,'ถัง',1,10,'ถังพ่นยาสะพายหลัง 20 ลิตร ปั๊มมือ ทนทาน เหมาะสำหรับพ่นยาฆ่าแมลงและปุ๋ย',NULL,150,4.5,320,1,NULL,NULL,'2026-04-20 16:14:06.231','2026-04-20 16:14:06.231'),(2,'AG-002','agri','เครื่องตัดหญ้า 2 จังหวะ','2-Stroke Brush Cutter','二冲程割草机',3200.00,2800.00,'เครื่อง',1,5,'เครื่องตัดหญ้าแบบสะพายหลัง เครื่องยนต์ 2 จังหวะ กำลัง 26cc น้ำหนักเบา ใช้งานง่าย',NULL,80,4.7,210,1,NULL,NULL,'2026-04-20 16:14:06.249','2026-04-20 16:14:06.249'),(3,'AG-003','agri','ปั๊มน้ำไฟฟ้า 0.5 แรงม้า','0.5 HP Water Pump','0.5马力水泵',1450.00,1250.00,'เครื่อง',1,5,'ปั๊มน้ำอัตโนมัติสำหรับสวนเกษตร ทนทาน ประหยัดไฟ',NULL,60,4.4,185,1,NULL,NULL,'2026-04-20 16:14:06.261','2026-04-20 16:14:06.261'),(4,'AG-004','agri','สายยาง PVC 1 นิ้ว (50 เมตร)','PVC Hose 1 inch 50m','1寸PVC水管50米',650.00,520.00,'ม้วน',1,10,'สายยาง PVC คุณภาพสูง ทนแรงดันน้ำ ไม่แข็งตัวในอากาศเย็น',NULL,200,4.3,450,1,NULL,NULL,'2026-04-20 16:14:06.272','2026-04-20 16:14:06.272'),(5,'AG-005','agri','เครื่องชั่งดิจิตอล 100 กก.','100kg Digital Scale','100公斤数字秤',2100.00,1850.00,'เครื่อง',1,3,'เครื่องชั่งดิจิตอลแสดงผลแม่นยำ ทนทาน เหมาะสำหรับงานเกษตรและคลังสินค้า',NULL,45,4.6,98,1,NULL,NULL,'2026-04-20 16:14:06.282','2026-04-20 16:14:06.282'),(6,'RB-001','rubber','จอกยางพารา (100 ชิ้น)','Rubber Latex Cup x100','乳胶杯100个',380.00,300.00,'แพ็ค',1,20,'จอกรองน้ำยางพาราคุณภาพดี ทนทาน ใช้ได้นาน',NULL,500,4.5,620,1,NULL,NULL,'2026-04-20 16:14:06.292','2026-04-20 16:14:06.292'),(7,'RB-002','rubber','จักรรีดยาง รีดน้ำยางสด','Rubber Wringer Machine','橡胶压榨机',5500.00,4900.00,'เครื่อง',1,2,'จักรรีดยางพาราสดแบบมือหมุน โครงเหล็ก แข็งแรง ทนทาน',NULL,30,4.8,75,1,NULL,NULL,'2026-04-20 16:14:06.301','2026-04-20 16:14:06.301'),(8,'RB-003','rubber','มีดกรีดยาง สแตนเลส (แพ็ค 5)','Rubber Tapping Knife x5','割胶刀不锈钢5把',220.00,175.00,'แพ็ค',1,20,'มีดกรีดยางพาราสแตนเลสคุณภาพสูง คมทนนาน จับถนัดมือ',NULL,300,4.4,380,1,NULL,NULL,'2026-04-20 16:14:06.311','2026-04-20 16:14:06.311'),(9,'FS-001','fishing','เชือกอวนไนล่อน 3 มม. (100 เมตร)','Nylon Net Rope 3mm 100m','3mm尼龙绳100米',480.00,400.00,'ม้วน',1,20,'เชือกอวนไนล่อนความแข็งแรงสูง ทนน้ำทะเล เหมาะสำหรับงานประมงและเกษตร',NULL,400,4.5,520,1,NULL,NULL,'2026-04-20 16:14:06.319','2026-04-20 16:14:06.319'),(10,'FS-002','fishing','ตาข่ายพลาสติก 1.5×50 เมตร','Plastic Net 1.5×50m','塑料网1.5×50米',750.00,620.00,'ม้วน',1,10,'ตาข่ายพลาสติก HDPE ช่องตาข่าย 2 นิ้ว ทนแสงแดด UV ใช้งานได้หลายปี',NULL,180,4.6,290,1,NULL,NULL,'2026-04-20 16:14:06.330','2026-04-20 16:14:06.330'),(11,'FS-003','fishing','ตาข่ายลวดกัลวาไนซ์ 1×30 เมตร','Galvanized Wire Mesh 1×30m','镀锌铁丝网1×30米',1200.00,980.00,'ม้วน',1,5,'ตาข่ายลวดกัลวาไนซ์ทนสนิม ช่องตาข่าย 1 นิ้ว เหมาะสำหรับงานรั้วและกรง',NULL,120,4.7,175,1,NULL,NULL,'2026-04-20 16:14:06.344','2026-04-20 16:14:06.344'),(12,'CS-001','construction','สแลนกรองแสง 70% (2×50 เมตร)','70% Shade Cloth 2×50m','70%遮阳网2×50米',1650.00,1400.00,'ม้วน',1,5,'สแลนกรองแสง 70% สีดำ ใยสังเคราะห์ HDPE ทนทาน ลดอุณหภูมิ ป้องกัน UV',NULL,90,4.5,240,1,NULL,NULL,'2026-04-20 16:14:06.354','2026-04-20 16:14:06.354'),(13,'CS-002','construction','มุ้งไนล่อน 1.2×30 เมตร','Nylon Mesh 1.2×30m','尼龙防虫网1.2×30米',980.00,820.00,'ม้วน',1,10,'มุ้งไนล่อนกันแมลง ตาถี่ ใช้คลุมผักและโรงเรือนเกษตร ทนทาน',NULL,150,4.4,320,1,NULL,NULL,'2026-04-20 16:14:06.362','2026-04-20 16:14:06.362'),(14,'SF-001','safety','ถุงมือยางกันสารเคมี (คู่)','Chemical Rubber Gloves','防化学品橡胶手套',85.00,65.00,'คู่',5,100,'ถุงมือยางธรรมชาติ กันสารเคมี น้ำยาง และสิ่งสกปรก ยาวถึงข้อศอก',NULL,1000,4.5,850,1,NULL,NULL,'2026-04-20 16:14:06.372','2026-04-20 16:14:06.372'),(15,'SF-002','safety','รองเท้าบูทยาง Safety (คู่)','Rubber Safety Boots','橡胶安全靴',390.00,320.00,'คู่',1,12,'รองเท้าบูทยาง PVC กันน้ำ กันสารเคมี พื้นกันลื่น เหมาะงานเกษตรและก่อสร้าง',NULL,200,4.6,420,1,NULL,NULL,'2026-04-20 16:14:06.382','2026-04-20 16:14:06.382'),(16,'SF-003','safety','หมวกนิรภัย Safety Helmet','Safety Helmet','安全帽',185.00,145.00,'ใบ',1,20,'หมวกนิรภัยมาตรฐาน มอก. ABS รับแรงกระแทก ปรับขนาดได้ หลายสี',NULL,350,4.3,560,1,NULL,NULL,'2026-04-20 16:14:06.392','2026-04-20 16:14:06.392'),(17,'MC-001','misc','ไฟสปอร์ตไลท์ LED 100W','LED Spotlight 100W','100W LED射灯',890.00,740.00,'ดวง',1,10,'ไฟสปอร์ตไลท์ LED 100W กันน้ำ IP65 แสงขาว 6500K เหมาะกลางแจ้งและโรงงาน',NULL,120,4.7,290,1,NULL,NULL,'2026-04-20 16:14:06.404','2026-04-20 16:14:06.404'),(18,'MC-002','misc','ไฟล้อม LED สายยาว 10 เมตร','LED String Light 10m','LED灯串10米',350.00,280.00,'ชุด',1,20,'ไฟประดับ LED สายยาว 10 เมตร กันน้ำ ใช้ได้ทั้งในและนอกอาคาร',NULL,250,4.4,380,1,NULL,NULL,'2026-04-20 16:14:06.415','2026-04-20 16:14:06.415'),(19,'AG-006','agri','โดรนพ่นยา 10 ลิตร (เช่า)','10L Drone Sprayer (Rental)','10升无人机喷药(租赁)',1500.00,1200.00,'วัน',1,3,'บริการเช่าโดรนพ่นยา 10 ลิตร พร้อมนักบิน บินได้ 15 ไร่/ชม.',NULL,5,4.9,45,1,NULL,NULL,'2026-04-20 16:14:06.424','2026-04-20 16:14:06.424'),(20,'CS-003','construction','ลวดผูกเหล็ก 1 กก.','Binding Wire 1kg','绑扎铁丝1公斤',65.00,50.00,'ม้วน',5,50,'ลวดผูกเหล็กอ่อน ชุบดำ ขนาด 18 เบอร์ ใช้ผูกเหล็กก่อสร้าง',NULL,800,4.2,970,1,NULL,NULL,'2026-04-20 16:14:06.432','2026-04-20 16:14:06.432'),(21,'AG-007','agri','ถาดเพาะกล้า 50 หลุม','50-Cell Seedling Tray','50孔育苗盘',35.00,25.00,'ใบ',10,100,'ถาดเพาะกล้าพลาสติก 50 หลุม ทนทาน ใช้ซ้ำได้ เหมาะสำหรับเพาะพืชผักและไม้ดอก','/m-group-products/1.png',500,4.4,380,1,NULL,NULL,'2026-04-20 16:14:06.440','2026-04-20 16:14:06.440'),(22,'AG-008','agri','เครื่องพ่นยาไฟฟ้า 12V 16 ลิตร','12V Electric Sprayer 16L','12V电动喷雾器16升',1290.00,1050.00,'เครื่อง',1,5,'เครื่องพ่นยาไฟฟ้าสะพายหลัง 16 ลิตร ใช้แบตเตอรี่ 12V ปรับแรงดันได้ หัวพ่น 4 แบบ','/m-group-products/2.png',70,4.6,155,1,NULL,NULL,'2026-04-20 16:14:06.448','2026-04-20 16:14:06.448'),(23,'AG-009','agri','ปั๊มหอยโข่ง 1 แรงม้า','Centrifugal Pump 1HP','1马力离心泵',1850.00,1600.00,'เครื่อง',1,3,'ปั๊มหอยโข่งมอเตอร์ 1 แรงม้า ดูดน้ำได้ลึก 8 เมตร อัตราการไหล 100 ลิตร/นาที','/m-group-products/4.png',40,4.5,88,1,NULL,NULL,'2026-04-20 16:14:06.456','2026-04-20 16:14:06.456'),(24,'AG-010','agri','จอบด้ามไม้ เหล็กหล่อ','Iron Hoe with Wooden Handle','铸铁锄头木柄',185.00,145.00,'เล่ม',1,20,'จอบเหล็กหล่อคุณภาพสูง ด้ามไม้แข็งแรง เหมาะสำหรับขุดดิน พรวนดิน และปลูกพืช','/m-group-products/6.png',250,4.3,310,1,NULL,NULL,'2026-04-20 16:14:06.464','2026-04-20 16:14:06.464'),(25,'AG-011','agri','รถไถเดินตาม 6 แรงม้า','6HP Power Tiller','6马力手扶拖拉机',28500.00,25000.00,'เครื่อง',1,1,'รถไถเดินตาม เครื่องยนต์ดีเซล 6 แรงม้า ไถ พรวน และสูบน้ำได้ น้ำหนักเบา ใช้งานง่าย','/m-group-products/7.png',12,4.8,34,1,NULL,NULL,'2026-04-20 16:14:06.472','2026-04-20 16:14:06.472'),(26,'AG-012','agri','อาหารไก่ เนื้อ 30 กก.','Broiler Chicken Feed 30kg','肉鸡饲料30公斤',520.00,450.00,'กระสอบ',1,20,'อาหารไก่เนื้อ สูตรครบถ้วน โปรตีนสูง วิตามินและแร่ธาตุครบ เร่งการเจริญเติบโต','/m-group-products/5.png',200,4.5,420,1,NULL,NULL,'2026-04-20 16:14:06.480','2026-04-20 16:14:06.480'),(27,'AG-013','agri','สายยางดำ PE 3/4 นิ้ว (100 เมตร)','PE Hose 3/4 inch 100m','3/4寸PE黑管100米',980.00,820.00,'ม้วน',1,5,'สายยางดำ PE ทนแดด ทนน้ำ ใช้สำหรับระบบน้ำหยดและสปริงเกลอร์ในสวนเกษตร',NULL,150,4.4,265,1,NULL,NULL,'2026-04-20 16:14:06.488','2026-04-20 16:14:06.488'),(28,'RB-004','rubber','อีทีฟอน 39% (Ethephon) 1 ลิตร','Ethephon 39% 1L','乙烯利39%溶液1升',280.00,230.00,'ขวด',1,24,'สารกระตุ้นน้ำยางพาราอีทีฟอน 39% ใช้ทาหน้ายาง เพิ่มผลผลิตน้ำยาง ได้รับการรับรอง','/m-group-products/9.png',200,4.7,480,1,NULL,NULL,'2026-04-20 16:14:06.496','2026-04-20 16:14:06.496'),(29,'RB-005','rubber','กล่องใส่น้ำยาง 2 ลิตร (แพ็ค 50)','Latex Box 2L x50','2升乳胶盒50个装',290.00,230.00,'แพ็ค',1,10,'กล่องบรรจุน้ำยางพาราขนาด 2 ลิตร ทรงสี่เหลี่ยม มีฝาปิด สะอาด ปลอดภัย ส่งโรงงาน',NULL,300,4.5,290,1,NULL,NULL,'2026-04-20 16:14:06.504','2026-04-20 16:14:06.504'),(30,'RB-006','rubber','ถังน้ำยาง HDPE 20 ลิตร','HDPE Latex Tank 20L','HDPE乳胶桶20升',185.00,145.00,'ใบ',1,20,'ถังน้ำยาง HDPE 20 ลิตร ฝาเกลียว ทนทาน ไม่เป็นสนิม ใช้เก็บและขนส่งน้ำยางพารา',NULL,400,4.6,340,1,NULL,NULL,'2026-04-20 16:14:06.514','2026-04-20 16:14:06.514'),(31,'RB-007','rubber','เสาฉากยางพารา เหล็กชุบ (แพ็ค 10)','Rubber Tapping Stand x10','橡胶采集架10个',340.00,280.00,'แพ็ค',1,10,'เสาฉากสำหรับวางจอกรองน้ำยาง ทำจากเหล็กชุบกันสนิม แข็งแรง ติดตั้งง่าย','/m-group-products/8.png',180,4.4,210,1,NULL,NULL,'2026-04-20 16:14:06.524','2026-04-20 16:14:06.524'),(32,'FS-004','fishing','เชือก PE 3 เส้น 6 มม. (100 เมตร)','PE Rope 3-Strand 6mm 100m','PE三股绳6mm100米',560.00,460.00,'ม้วน',1,10,'เชือก PE 3 เส้น ขนาด 6 มม. ทนน้ำทะเล แรงดึง 500 กก. สีขาว ใช้ในงานประมงและเกษตร',NULL,300,4.5,410,1,NULL,NULL,'2026-04-20 16:14:06.531','2026-04-20 16:14:06.531'),(33,'FS-005','fishing','อวนล้อม ตา 1.5 นิ้ว ยาว 100 เมตร','Surrounding Net 1.5inch 100m','围网1.5寸100米',2200.00,1850.00,'ม้วน',1,3,'อวนล้อมไนล่อน ตาห่าง 1.5 นิ้ว ยาว 100 เมตร ลึก 3 เมตร ทนทาน ทนแดด UV','/m-group-products/10.png',60,4.6,85,1,NULL,NULL,'2026-04-20 16:14:06.540','2026-04-20 16:14:06.540'),(34,'FS-006','fishing','ตะกั่วถ่วงน้ำหนัก 1 กก.','Fishing Lead Sinkers 1kg','渔铅坠1公斤',120.00,95.00,'กก.',1,20,'ตะกั่วถ่วงน้ำหนักสำหรับงานประมง หล่อจากตะกั่วบริสุทธิ์ หลากหลายขนาด',NULL,250,4.3,320,1,NULL,NULL,'2026-04-20 16:14:06.548','2026-04-20 16:14:06.548'),(35,'FS-007','fishing','เชือกกล้วย PP 3 มม. (200 เมตร)','PP Rope 3mm 200m','PP绳3mm200米',180.00,140.00,'ม้วน',2,30,'เชือกกล้วย PP สีเหลือง-ดำ ขนาด 3 มม. ยาว 200 เมตร เหนียว ทนทาน ราคาประหยัด',NULL,600,4.4,780,1,NULL,NULL,'2026-04-20 16:14:06.556','2026-04-20 16:14:06.556'),(36,'CS-004','construction','รถเข็นมือ ล้อยาง 100 กก.','Wheelbarrow 100kg Rubber Wheel','橡胶轮手推车100公斤',1450.00,1200.00,'คัน',1,3,'รถเข็นมือ โครงเหล็กหนา ล้อยางเติมลม ความจุ 100 กก. เหมาะสำหรับงานก่อสร้างและเกษตร','/m-group-products/12.png',45,4.7,120,1,NULL,NULL,'2026-04-20 16:14:06.564','2026-04-20 16:14:06.564'),(37,'CS-005','construction','สแลนกรองแสง 50% (1×50 เมตร)','50% Shade Cloth 1×50m','50%遮阳网1×50米',780.00,640.00,'ม้วน',1,10,'สแลนกรองแสง 50% สีเขียว ใยสังเคราะห์ HDPE กันแดด กันฝุ่น ใช้ในโรงเรือนและก่อสร้าง',NULL,110,4.5,195,1,NULL,NULL,'2026-04-20 16:14:06.574','2026-04-20 16:14:06.574'),(38,'CS-006','construction','ท่อ PVC ชั้น 8.5 ขนาด 4 นิ้ว (4 เมตร)','PVC Pipe Class 8.5 4inch 4m','4寸PVC管8.5级4米',320.00,260.00,'ท่อน',1,20,'ท่อ PVC ชั้น 8.5 ขนาด 4 นิ้ว ยาว 4 เมตร มอก.17-2532 ทนแรงดัน เหมาะงานระบบน้ำและก่อสร้าง',NULL,80,4.3,145,1,NULL,NULL,'2026-04-20 16:14:06.581','2026-04-20 16:14:06.581'),(39,'CS-007','construction','แผ่นโปลีคาร์บอเนต 4 มม. (1.22×2.44 เมตร)','Polycarbonate Sheet 4mm 1.22×2.44m','4mm聚碳酸酯板1.22×2.44米',1380.00,1150.00,'แผ่น',1,5,'แผ่นโปลีคาร์บอเนตใส 4 มม. กันกระแทก กันแดด UV ใช้ทำหลังคา โรงเรือน และหน้าต่าง',NULL,55,4.6,98,1,NULL,NULL,'2026-04-20 16:14:06.591','2026-04-20 16:14:06.591'),(40,'SF-004','safety','แว่นตานิรภัย กันสะเก็ด','Safety Goggles Anti-Splatter','防溅安全护目镜',65.00,48.00,'อัน',5,50,'แว่นตานิรภัยโพลีคาร์บอเนต กันสะเก็ด กันสารเคมี มาตรฐาน ANSI Z87.1','/m-group-products/11.png',500,4.5,680,1,NULL,NULL,'2026-04-20 16:14:06.598','2026-04-20 16:14:06.598'),(41,'SF-005','safety','ชุด PPE กันสารเคมี (ชิ้น)','Chemical PPE Coverall','化学防护服',480.00,390.00,'ชุด',1,20,'ชุด PPE กันสารเคมีแบบทั้งตัว วัสดุโพลีโพรพีลีน กันไอระเหย กันสารเคมีกลุ่ม A-C',NULL,150,4.4,240,1,NULL,NULL,'2026-04-20 16:14:06.616','2026-04-20 16:14:06.616'),(42,'SF-006','safety','หน้ากากกรองฝุ่น N95 (กล่อง 20 ชิ้น)','N95 Dust Mask Box of 20','N95防尘口罩盒装20个',340.00,280.00,'กล่อง',1,10,'หน้ากากกรองฝุ่น N95 มาตรฐาน กรองฝุ่น PM2.5 เชื้อโรค และสารเคมีบางชนิด',NULL,300,4.6,520,1,NULL,NULL,'2026-04-20 16:14:06.624','2026-04-20 16:14:06.624'),(43,'SF-007','safety','เข็มขัดนิรภัย 2 จุด (Full Body Harness)','Full Body Harness 2-Point','全身安全带双挂点',890.00,720.00,'ชุด',1,10,'เข็มขัดนิรภัยแบบ Full Body รับน้ำหนักได้ถึง 140 กก. มาตรฐาน EN361 เหมาะงานสูง',NULL,80,4.7,145,1,NULL,NULL,'2026-04-20 16:14:06.631','2026-04-20 16:14:06.631'),(44,'MC-003','misc','กระทะอลูมิเนียม 36 ซม.','Aluminum Wok 36cm','36厘米铝锅',320.00,255.00,'ใบ',1,12,'กระทะอลูมิเนียมหล่อ ขนาด 36 ซม. ก้นหนา 4 มม. ให้ความร้อนสม่ำเสมอ น้ำหนักเบา','/m-group-products/14.png',180,4.4,260,1,NULL,NULL,'2026-04-20 16:14:06.640','2026-04-20 16:14:06.640'),(45,'MC-004','misc','เครื่องชั่งแบบห้อย 50 กก.','Hanging Scale 50kg','50公斤吊秤',290.00,230.00,'เครื่อง',1,10,'เครื่องชั่งแบบห้อย สเกล 50 กก. อ่านค่าง่าย สปริงเหล็กกล้า เหมาะสำหรับชั่งสินค้าเกษตร','/m-group-products/16.png',120,4.3,190,1,NULL,NULL,'2026-04-20 16:14:06.649','2026-04-20 16:14:06.649'),(46,'MC-005','misc','ธูปขาว 3 หุน (1 กล่อง)','White Incense Sticks 3 hua (1 box)','白香3分装（1盒）',85.00,65.00,'กล่อง',1,20,'ธูปขาวคุณภาพดี กลิ่นหอมอ่อน ไม่ฉุน ขนาด 3 หุน บรรจุกล่อง ใช้ไหว้บูชา','/m-group-products/18.png',400,4.5,580,1,NULL,NULL,'2026-04-20 16:14:06.656','2026-04-20 16:14:06.656'),(47,'MC-006','misc','กล่องลัง ลูกฟูก 5 ชั้น (20×30×25 ซม.)','5-Layer Corrugated Box 20×30×25cm','5层瓦楞纸箱20×30×25厘米',28.00,20.00,'ใบ',20,200,'กล่องลังลูกฟูก 5 ชั้น ขนาด 20×30×25 ซม. แข็งแรง ทนน้ำหนัก เหมาะบรรจุสินค้าทั่วไป','/m-group-products/15.png',1000,4.2,1250,1,NULL,NULL,'2026-04-20 16:14:06.663','2026-04-20 16:14:06.663'),(48,'MC-007','misc','ไฟสปอร์ตไลท์ LED 200W กันน้ำ','LED Floodlight 200W Waterproof','200W防水LED泛光灯',1650.00,1380.00,'ดวง',1,5,'ไฟสปอร์ตไลท์ LED 200W IP66 กันน้ำ กันฝุ่น แสงขาว 6500K ประหยัดไฟ ทนทาน','/m-group-products/13.png',75,4.7,165,1,NULL,NULL,'2026-04-20 16:14:06.672','2026-04-20 16:14:06.672');
+INSERT INTO `Product` VALUES
+(1,'AG-001','agri','ถังพ่นยา 20 ลิตร','20L Spray Tank','20升喷药桶',890.00,750.00,'ถัง',1,10,'ถังพ่นยาสะพายหลัง 20 ลิตร ปั๊มมือ ทนทาน เหมาะสำหรับพ่นยาฆ่าแมลงและปุ๋ย',NULL,150,4.5,320,1,NULL,NULL,'2026-04-20 16:14:06.231','2026-04-20 16:14:06.231'),
+(2,'AG-002','agri','เครื่องตัดหญ้า 2 จังหวะ','2-Stroke Brush Cutter','二冲程割草机',3200.00,2800.00,'เครื่อง',1,5,'เครื่องตัดหญ้าแบบสะพายหลัง เครื่องยนต์ 2 จังหวะ กำลัง 26cc น้ำหนักเบา ใช้งานง่าย',NULL,80,4.7,210,1,NULL,NULL,'2026-04-20 16:14:06.249','2026-04-20 16:14:06.249'),
+(3,'AG-003','agri','ปั๊มน้ำไฟฟ้า 0.5 แรงม้า','0.5 HP Water Pump','0.5马力水泵',1450.00,1250.00,'เครื่อง',1,5,'ปั๊มน้ำอัตโนมัติสำหรับสวนเกษตร ทนทาน ประหยัดไฟ',NULL,60,4.4,185,1,NULL,NULL,'2026-04-20 16:14:06.261','2026-04-20 16:14:06.261'),
+(4,'AG-004','agri','สายยาง PVC 1 นิ้ว (50 เมตร)','PVC Hose 1 inch 50m','1寸PVC水管50米',650.00,520.00,'ม้วน',1,10,'สายยาง PVC คุณภาพสูง ทนแรงดันน้ำ ไม่แข็งตัวในอากาศเย็น',NULL,200,4.3,450,1,NULL,NULL,'2026-04-20 16:14:06.272','2026-04-20 16:14:06.272'),
+(5,'AG-005','agri','เครื่องชั่งดิจิตอล 100 กก.','100kg Digital Scale','100公斤数字秤',2100.00,1850.00,'เครื่อง',1,3,'เครื่องชั่งดิจิตอลแสดงผลแม่นยำ ทนทาน เหมาะสำหรับงานเกษตรและคลังสินค้า',NULL,45,4.6,98,1,NULL,NULL,'2026-04-20 16:14:06.282','2026-04-20 16:14:06.282'),
+(6,'RB-001','rubber','จอกยางพารา (100 ชิ้น)','Rubber Latex Cup x100','乳胶杯100个',380.00,300.00,'แพ็ค',1,20,'จอกรองน้ำยางพาราคุณภาพดี ทนทาน ใช้ได้นาน',NULL,500,4.5,620,1,NULL,NULL,'2026-04-20 16:14:06.292','2026-04-20 16:14:06.292'),
+(7,'RB-002','rubber','จักรรีดยาง รีดน้ำยางสด','Rubber Wringer Machine','橡胶压榨机',5500.00,4900.00,'เครื่อง',1,2,'จักรรีดยางพาราสดแบบมือหมุน โครงเหล็ก แข็งแรง ทนทาน',NULL,30,4.8,75,1,NULL,NULL,'2026-04-20 16:14:06.301','2026-04-20 16:14:06.301'),
+(8,'RB-003','rubber','มีดกรีดยาง สแตนเลส (แพ็ค 5)','Rubber Tapping Knife x5','割胶刀不锈钢5把',220.00,175.00,'แพ็ค',1,20,'มีดกรีดยางพาราสแตนเลสคุณภาพสูง คมทนนาน จับถนัดมือ',NULL,300,4.4,380,1,NULL,NULL,'2026-04-20 16:14:06.311','2026-04-20 16:14:06.311'),
+(9,'FS-001','fishing','เชือกอวนไนล่อน 3 มม. (100 เมตร)','Nylon Net Rope 3mm 100m','3mm尼龙绳100米',480.00,400.00,'ม้วน',1,20,'เชือกอวนไนล่อนความแข็งแรงสูง ทนน้ำทะเล เหมาะสำหรับงานประมงและเกษตร',NULL,400,4.5,520,1,NULL,NULL,'2026-04-20 16:14:06.319','2026-04-20 16:14:06.319'),
+(10,'FS-002','fishing','ตาข่ายพลาสติก 1.5×50 เมตร','Plastic Net 1.5×50m','塑料网1.5×50米',750.00,620.00,'ม้วน',1,10,'ตาข่ายพลาสติก HDPE ช่องตาข่าย 2 นิ้ว ทนแสงแดด UV ใช้งานได้หลายปี',NULL,180,4.6,290,1,NULL,NULL,'2026-04-20 16:14:06.330','2026-04-20 16:14:06.330'),
+(11,'FS-003','fishing','ตาข่ายลวดกัลวาไนซ์ 1×30 เมตร','Galvanized Wire Mesh 1×30m','镀锌铁丝网1×30米',1200.00,980.00,'ม้วน',1,5,'ตาข่ายลวดกัลวาไนซ์ทนสนิม ช่องตาข่าย 1 นิ้ว เหมาะสำหรับงานรั้วและกรง',NULL,120,4.7,175,1,NULL,NULL,'2026-04-20 16:14:06.344','2026-04-20 16:14:06.344'),
+(12,'CS-001','construction','สแลนกรองแสง 70% (2×50 เมตร)','70% Shade Cloth 2×50m','70%遮阳网2×50米',1650.00,1400.00,'ม้วน',1,5,'สแลนกรองแสง 70% สีดำ ใยสังเคราะห์ HDPE ทนทาน ลดอุณหภูมิ ป้องกัน UV',NULL,90,4.5,240,1,NULL,NULL,'2026-04-20 16:14:06.354','2026-04-20 16:14:06.354'),
+(13,'CS-002','construction','มุ้งไนล่อน 1.2×30 เมตร','Nylon Mesh 1.2×30m','尼龙防虫网1.2×30米',980.00,820.00,'ม้วน',1,10,'มุ้งไนล่อนกันแมลง ตาถี่ ใช้คลุมผักและโรงเรือนเกษตร ทนทาน',NULL,150,4.4,320,1,NULL,NULL,'2026-04-20 16:14:06.362','2026-04-20 16:14:06.362'),
+(14,'SF-001','safety','ถุงมือยางกันสารเคมี (คู่)','Chemical Rubber Gloves','防化学品橡胶手套',85.00,65.00,'คู่',5,100,'ถุงมือยางธรรมชาติ กันสารเคมี น้ำยาง และสิ่งสกปรก ยาวถึงข้อศอก',NULL,1000,4.5,850,1,NULL,NULL,'2026-04-20 16:14:06.372','2026-04-20 16:14:06.372'),
+(15,'SF-002','safety','รองเท้าบูทยาง Safety (คู่)','Rubber Safety Boots','橡胶安全靴',390.00,320.00,'คู่',1,12,'รองเท้าบูทยาง PVC กันน้ำ กันสารเคมี พื้นกันลื่น เหมาะงานเกษตรและก่อสร้าง',NULL,200,4.6,420,1,NULL,NULL,'2026-04-20 16:14:06.382','2026-04-20 16:14:06.382'),
+(16,'SF-003','safety','หมวกนิรภัย Safety Helmet','Safety Helmet','安全帽',185.00,145.00,'ใบ',1,20,'หมวกนิรภัยมาตรฐาน มอก. ABS รับแรงกระแทก ปรับขนาดได้ หลายสี',NULL,350,4.3,560,1,NULL,NULL,'2026-04-20 16:14:06.392','2026-04-20 16:14:06.392'),
+(17,'MC-001','misc','ไฟสปอร์ตไลท์ LED 100W','LED Spotlight 100W','100W LED射灯',890.00,740.00,'ดวง',1,10,'ไฟสปอร์ตไลท์ LED 100W กันน้ำ IP65 แสงขาว 6500K เหมาะกลางแจ้งและโรงงาน',NULL,120,4.7,290,1,NULL,NULL,'2026-04-20 16:14:06.404','2026-04-20 16:14:06.404'),
+(18,'MC-002','misc','ไฟล้อม LED สายยาว 10 เมตร','LED String Light 10m','LED灯串10米',350.00,280.00,'ชุด',1,20,'ไฟประดับ LED สายยาว 10 เมตร กันน้ำ ใช้ได้ทั้งในและนอกอาคาร',NULL,250,4.4,380,1,NULL,NULL,'2026-04-20 16:14:06.415','2026-04-20 16:14:06.415'),
+(19,'AG-006','agri','โดรนพ่นยา 10 ลิตร (เช่า)','10L Drone Sprayer (Rental)','10升无人机喷药(租赁)',1500.00,1200.00,'วัน',1,3,'บริการเช่าโดรนพ่นยา 10 ลิตร พร้อมนักบิน บินได้ 15 ไร่/ชม.',NULL,5,4.9,45,1,NULL,NULL,'2026-04-20 16:14:06.424','2026-04-20 16:14:06.424'),
+(20,'CS-003','construction','ลวดผูกเหล็ก 1 กก.','Binding Wire 1kg','绑扎铁丝1公斤',65.00,50.00,'ม้วน',5,50,'ลวดผูกเหล็กอ่อน ชุบดำ ขนาด 18 เบอร์ ใช้ผูกเหล็กก่อสร้าง',NULL,800,4.2,970,1,NULL,NULL,'2026-04-20 16:14:06.432','2026-04-20 16:14:06.432'),
+(21,'AG-007','agri','ถาดเพาะกล้า 50 หลุม','50-Cell Seedling Tray','50孔育苗盘',35.00,25.00,'ใบ',10,100,'ถาดเพาะกล้าพลาสติก 50 หลุม ทนทาน ใช้ซ้ำได้ เหมาะสำหรับเพาะพืชผักและไม้ดอก','/m-group-products/1.png',500,4.4,380,1,NULL,NULL,'2026-04-20 16:14:06.440','2026-04-20 16:14:06.440'),
+(22,'AG-008','agri','เครื่องพ่นยาไฟฟ้า 12V 16 ลิตร','12V Electric Sprayer 16L','12V电动喷雾器16升',1290.00,1050.00,'เครื่อง',1,5,'เครื่องพ่นยาไฟฟ้าสะพายหลัง 16 ลิตร ใช้แบตเตอรี่ 12V ปรับแรงดันได้ หัวพ่น 4 แบบ','/m-group-products/2.png',70,4.6,155,1,NULL,NULL,'2026-04-20 16:14:06.448','2026-04-20 16:14:06.448'),
+(23,'AG-009','agri','ปั๊มหอยโข่ง 1 แรงม้า','Centrifugal Pump 1HP','1马力离心泵',1850.00,1600.00,'เครื่อง',1,3,'ปั๊มหอยโข่งมอเตอร์ 1 แรงม้า ดูดน้ำได้ลึก 8 เมตร อัตราการไหล 100 ลิตร/นาที','/m-group-products/4.png',40,4.5,88,1,NULL,NULL,'2026-04-20 16:14:06.456','2026-04-20 16:14:06.456'),
+(24,'AG-010','agri','จอบด้ามไม้ เหล็กหล่อ','Iron Hoe with Wooden Handle','铸铁锄头木柄',185.00,145.00,'เล่ม',1,20,'จอบเหล็กหล่อคุณภาพสูง ด้ามไม้แข็งแรง เหมาะสำหรับขุดดิน พรวนดิน และปลูกพืช','/m-group-products/6.png',250,4.3,310,1,NULL,NULL,'2026-04-20 16:14:06.464','2026-04-20 16:14:06.464'),
+(25,'AG-011','agri','รถไถเดินตาม 6 แรงม้า','6HP Power Tiller','6马力手扶拖拉机',28500.00,25000.00,'เครื่อง',1,1,'รถไถเดินตาม เครื่องยนต์ดีเซล 6 แรงม้า ไถ พรวน และสูบน้ำได้ น้ำหนักเบา ใช้งานง่าย','/m-group-products/7.png',12,4.8,34,1,NULL,NULL,'2026-04-20 16:14:06.472','2026-04-20 16:14:06.472'),
+(26,'AG-012','agri','อาหารไก่ เนื้อ 30 กก.','Broiler Chicken Feed 30kg','肉鸡饲料30公斤',520.00,450.00,'กระสอบ',1,20,'อาหารไก่เนื้อ สูตรครบถ้วน โปรตีนสูง วิตามินและแร่ธาตุครบ เร่งการเจริญเติบโต','/m-group-products/5.png',200,4.5,420,1,NULL,NULL,'2026-04-20 16:14:06.480','2026-04-20 16:14:06.480'),
+(27,'AG-013','agri','สายยางดำ PE 3/4 นิ้ว (100 เมตร)','PE Hose 3/4 inch 100m','3/4寸PE黑管100米',980.00,820.00,'ม้วน',1,5,'สายยางดำ PE ทนแดด ทนน้ำ ใช้สำหรับระบบน้ำหยดและสปริงเกลอร์ในสวนเกษตร',NULL,150,4.4,265,1,NULL,NULL,'2026-04-20 16:14:06.488','2026-04-20 16:14:06.488'),
+(28,'RB-004','rubber','อีทีฟอน 39% (Ethephon) 1 ลิตร','Ethephon 39% 1L','乙烯利39%溶液1升',280.00,230.00,'ขวด',1,24,'สารกระตุ้นน้ำยางพาราอีทีฟอน 39% ใช้ทาหน้ายาง เพิ่มผลผลิตน้ำยาง ได้รับการรับรอง','/m-group-products/9.png',200,4.7,480,1,NULL,NULL,'2026-04-20 16:14:06.496','2026-04-20 16:14:06.496'),
+(29,'RB-005','rubber','กล่องใส่น้ำยาง 2 ลิตร (แพ็ค 50)','Latex Box 2L x50','2升乳胶盒50个装',290.00,230.00,'แพ็ค',1,10,'กล่องบรรจุน้ำยางพาราขนาด 2 ลิตร ทรงสี่เหลี่ยม มีฝาปิด สะอาด ปลอดภัย ส่งโรงงาน',NULL,300,4.5,290,1,NULL,NULL,'2026-04-20 16:14:06.504','2026-04-20 16:14:06.504'),
+(30,'RB-006','rubber','ถังน้ำยาง HDPE 20 ลิตร','HDPE Latex Tank 20L','HDPE乳胶桶20升',185.00,145.00,'ใบ',1,20,'ถังน้ำยาง HDPE 20 ลิตร ฝาเกลียว ทนทาน ไม่เป็นสนิม ใช้เก็บและขนส่งน้ำยางพารา',NULL,400,4.6,340,1,NULL,NULL,'2026-04-20 16:14:06.514','2026-04-20 16:14:06.514'),
+(31,'RB-007','rubber','เสาฉากยางพารา เหล็กชุบ (แพ็ค 10)','Rubber Tapping Stand x10','橡胶采集架10个',340.00,280.00,'แพ็ค',1,10,'เสาฉากสำหรับวางจอกรองน้ำยาง ทำจากเหล็กชุบกันสนิม แข็งแรง ติดตั้งง่าย','/m-group-products/8.png',180,4.4,210,1,NULL,NULL,'2026-04-20 16:14:06.524','2026-04-20 16:14:06.524'),
+(32,'FS-004','fishing','เชือก PE 3 เส้น 6 มม. (100 เมตร)','PE Rope 3-Strand 6mm 100m','PE三股绳6mm100米',560.00,460.00,'ม้วน',1,10,'เชือก PE 3 เส้น ขนาด 6 มม. ทนน้ำทะเล แรงดึง 500 กก. สีขาว ใช้ในงานประมงและเกษตร',NULL,300,4.5,410,1,NULL,NULL,'2026-04-20 16:14:06.531','2026-04-20 16:14:06.531'),
+(33,'FS-005','fishing','อวนล้อม ตา 1.5 นิ้ว ยาว 100 เมตร','Surrounding Net 1.5inch 100m','围网1.5寸100米',2200.00,1850.00,'ม้วน',1,3,'อวนล้อมไนล่อน ตาห่าง 1.5 นิ้ว ยาว 100 เมตร ลึก 3 เมตร ทนทาน ทนแดด UV','/m-group-products/10.png',60,4.6,85,1,NULL,NULL,'2026-04-20 16:14:06.540','2026-04-20 16:14:06.540'),
+(34,'FS-006','fishing','ตะกั่วถ่วงน้ำหนัก 1 กก.','Fishing Lead Sinkers 1kg','渔铅坠1公斤',120.00,95.00,'กก.',1,20,'ตะกั่วถ่วงน้ำหนักสำหรับงานประมง หล่อจากตะกั่วบริสุทธิ์ หลากหลายขนาด',NULL,250,4.3,320,1,NULL,NULL,'2026-04-20 16:14:06.548','2026-04-20 16:14:06.548'),
+(35,'FS-007','fishing','เชือกกล้วย PP 3 มม. (200 เมตร)','PP Rope 3mm 200m','PP绳3mm200米',180.00,140.00,'ม้วน',2,30,'เชือกกล้วย PP สีเหลือง-ดำ ขนาด 3 มม. ยาว 200 เมตร เหนียว ทนทาน ราคาประหยัด',NULL,600,4.4,780,1,NULL,NULL,'2026-04-20 16:14:06.556','2026-04-20 16:14:06.556'),
+(36,'CS-004','construction','รถเข็นมือ ล้อยาง 100 กก.','Wheelbarrow 100kg Rubber Wheel','橡胶轮手推车100公斤',1450.00,1200.00,'คัน',1,3,'รถเข็นมือ โครงเหล็กหนา ล้อยางเติมลม ความจุ 100 กก. เหมาะสำหรับงานก่อสร้างและเกษตร','/m-group-products/12.png',45,4.7,120,1,NULL,NULL,'2026-04-20 16:14:06.564','2026-04-20 16:14:06.564'),
+(37,'CS-005','construction','สแลนกรองแสง 50% (1×50 เมตร)','50% Shade Cloth 1×50m','50%遮阳网1×50米',780.00,640.00,'ม้วน',1,10,'สแลนกรองแสง 50% สีเขียว ใยสังเคราะห์ HDPE กันแดด กันฝุ่น ใช้ในโรงเรือนและก่อสร้าง',NULL,110,4.5,195,1,NULL,NULL,'2026-04-20 16:14:06.574','2026-04-20 16:14:06.574'),
+(38,'CS-006','construction','ท่อ PVC ชั้น 8.5 ขนาด 4 นิ้ว (4 เมตร)','PVC Pipe Class 8.5 4inch 4m','4寸PVC管8.5级4米',320.00,260.00,'ท่อน',1,20,'ท่อ PVC ชั้น 8.5 ขนาด 4 นิ้ว ยาว 4 เมตร มอก.17-2532 ทนแรงดัน เหมาะงานระบบน้ำและก่อสร้าง',NULL,80,4.3,145,1,NULL,NULL,'2026-04-20 16:14:06.581','2026-04-20 16:14:06.581'),
+(39,'CS-007','construction','แผ่นโปลีคาร์บอเนต 4 มม. (1.22×2.44 เมตร)','Polycarbonate Sheet 4mm 1.22×2.44m','4mm聚碳酸酯板1.22×2.44米',1380.00,1150.00,'แผ่น',1,5,'แผ่นโปลีคาร์บอเนตใส 4 มม. กันกระแทก กันแดด UV ใช้ทำหลังคา โรงเรือน และหน้าต่าง',NULL,55,4.6,98,1,NULL,NULL,'2026-04-20 16:14:06.591','2026-04-20 16:14:06.591'),
+(40,'SF-004','safety','แว่นตานิรภัย กันสะเก็ด','Safety Goggles Anti-Splatter','防溅安全护目镜',65.00,48.00,'อัน',5,50,'แว่นตานิรภัยโพลีคาร์บอเนต กันสะเก็ด กันสารเคมี มาตรฐาน ANSI Z87.1','/m-group-products/11.png',500,4.5,680,1,NULL,NULL,'2026-04-20 16:14:06.598','2026-04-20 16:14:06.598'),
+(41,'SF-005','safety','ชุด PPE กันสารเคมี (ชิ้น)','Chemical PPE Coverall','化学防护服',480.00,390.00,'ชุด',1,20,'ชุด PPE กันสารเคมีแบบทั้งตัว วัสดุโพลีโพรพีลีน กันไอระเหย กันสารเคมีกลุ่ม A-C',NULL,150,4.4,240,1,NULL,NULL,'2026-04-20 16:14:06.616','2026-04-20 16:14:06.616'),
+(42,'SF-006','safety','หน้ากากกรองฝุ่น N95 (กล่อง 20 ชิ้น)','N95 Dust Mask Box of 20','N95防尘口罩盒装20个',340.00,280.00,'กล่อง',1,10,'หน้ากากกรองฝุ่น N95 มาตรฐาน กรองฝุ่น PM2.5 เชื้อโรค และสารเคมีบางชนิด',NULL,300,4.6,520,1,NULL,NULL,'2026-04-20 16:14:06.624','2026-04-20 16:14:06.624'),
+(43,'SF-007','safety','เข็มขัดนิรภัย 2 จุด (Full Body Harness)','Full Body Harness 2-Point','全身安全带双挂点',890.00,720.00,'ชุด',1,10,'เข็มขัดนิรภัยแบบ Full Body รับน้ำหนักได้ถึง 140 กก. มาตรฐาน EN361 เหมาะงานสูง',NULL,80,4.7,145,1,NULL,NULL,'2026-04-20 16:14:06.631','2026-04-20 16:14:06.631'),
+(44,'MC-003','misc','กระทะอลูมิเนียม 36 ซม.','Aluminum Wok 36cm','36厘米铝锅',320.00,255.00,'ใบ',1,12,'กระทะอลูมิเนียมหล่อ ขนาด 36 ซม. ก้นหนา 4 มม. ให้ความร้อนสม่ำเสมอ น้ำหนักเบา','/m-group-products/14.png',180,4.4,260,1,NULL,NULL,'2026-04-20 16:14:06.640','2026-04-20 16:14:06.640'),
+(45,'MC-004','misc','เครื่องชั่งแบบห้อย 50 กก.','Hanging Scale 50kg','50公斤吊秤',290.00,230.00,'เครื่อง',1,10,'เครื่องชั่งแบบห้อย สเกล 50 กก. อ่านค่าง่าย สปริงเหล็กกล้า เหมาะสำหรับชั่งสินค้าเกษตร','/m-group-products/16.png',120,4.3,190,1,NULL,NULL,'2026-04-20 16:14:06.649','2026-04-20 16:14:06.649'),
+(46,'MC-005','misc','ธูปขาว 3 หุน (1 กล่อง)','White Incense Sticks 3 hua (1 box)','白香3分装（1盒）',85.00,65.00,'กล่อง',1,20,'ธูปขาวคุณภาพดี กลิ่นหอมอ่อน ไม่ฉุน ขนาด 3 หุน บรรจุกล่อง ใช้ไหว้บูชา','/m-group-products/18.png',400,4.5,580,1,NULL,NULL,'2026-04-20 16:14:06.656','2026-04-20 16:14:06.656'),
+(47,'MC-006','misc','กล่องลัง ลูกฟูก 5 ชั้น (20×30×25 ซม.)','5-Layer Corrugated Box 20×30×25cm','5层瓦楞纸箱20×30×25厘米',28.00,20.00,'ใบ',20,200,'กล่องลังลูกฟูก 5 ชั้น ขนาด 20×30×25 ซม. แข็งแรง ทนน้ำหนัก เหมาะบรรจุสินค้าทั่วไป','/m-group-products/15.png',1000,4.2,1250,1,NULL,NULL,'2026-04-20 16:14:06.663','2026-04-20 16:14:06.663'),
+(48,'MC-007','misc','ไฟสปอร์ตไลท์ LED 200W กันน้ำ','LED Floodlight 200W Waterproof','200W防水LED泛光灯',1650.00,1380.00,'ดวง',1,5,'ไฟสปอร์ตไลท์ LED 200W IP66 กันน้ำ กันฝุ่น แสงขาว 6500K ประหยัดไฟ ทนทาน','/m-group-products/13.png',75,4.7,165,1,NULL,NULL,'2026-04-20 16:14:06.672','2026-04-20 16:14:06.672');
 /*!40000 ALTER TABLE `Product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -481,29 +615,29 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Receipt`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Receipt` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `number` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `clientId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `currency` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'THB',
-  `issuedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(191) NOT NULL,
+  `number` varchar(191) NOT NULL,
+  `clientId` varchar(191) NOT NULL,
+  `currency` varchar(191) NOT NULL DEFAULT 'THB',
+  `issuedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `subtotal` decimal(10,2) NOT NULL,
   `total` decimal(10,2) NOT NULL,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
-  `customerAddress` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `customerEmail` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `customerName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `customerPhone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `customerId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `customerAddress` text DEFAULT NULL,
+  `customerEmail` varchar(191) DEFAULT NULL,
+  `customerName` varchar(191) NOT NULL DEFAULT '',
+  `customerPhone` varchar(191) DEFAULT NULL,
+  `customerId` varchar(191) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Receipt_number_key` (`number`),
   KEY `Receipt_clientId_idx` (`clientId`),
   KEY `Receipt_issuedAt_idx` (`issuedAt`),
   KEY `Receipt_customerId_idx` (`customerId`),
-  CONSTRAINT `Receipt_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Receipt_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `Receipt_customerId_fkey` FOREIGN KEY (`customerId`) REFERENCES `Customer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -514,7 +648,9 @@ CREATE TABLE `Receipt` (
 
 LOCK TABLES `Receipt` WRITE;
 /*!40000 ALTER TABLE `Receipt` DISABLE KEYS */;
-INSERT INTO `Receipt` VALUES ('cmo79kw8y0001qh3axzagqao9','RCP260420-00001','cmo6x1sht0008qhvqygcgasiq','THB','2026-04-18 15:00:00.000',6600.00,6400.00,NULL,'2026-04-20 14:02:20.866','2026-04-20 14:31:00.246',NULL,NULL,'Mr.Thanate  Phongthai',NULL,NULL);
+INSERT INTO `Receipt` VALUES
+('cmo79kw8y0001qh3axzagqao9','RCP260420-00001','cmo6x1sht0008qhvqygcgasiq','THB','2026-04-18 15:00:00.000',6600.00,6400.00,NULL,'2026-04-20 14:02:20.866','2026-04-20 14:31:00.246',NULL,NULL,'Mr.Thanate  Phongthai',NULL,NULL),
+('cmpjnfvzk0001jh1f3j2837id','RCP260524-00001','cmo6viudt0001qhga9f5j4jzc','THB','2026-05-23 15:00:00.000',0.00,0.00,'เลขที่จอง: MF-20260524-LWOJ\nบริษัท: 000\nเลขภาษี: 000','2026-05-24 10:43:18.321','2026-05-24 10:43:18.321','0000','000@gmail.com','000','00',NULL);
 /*!40000 ALTER TABLE `Receipt` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -524,18 +660,18 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `ReceiptItem`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ReceiptItem` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `receiptId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `quantity` decimal(10,2) NOT NULL DEFAULT '1.00',
+  `id` varchar(191) NOT NULL,
+  `receiptId` varchar(191) NOT NULL,
+  `description` varchar(191) NOT NULL,
+  `quantity` decimal(10,2) NOT NULL DEFAULT 1.00,
   `unitPrice` decimal(10,2) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `sortOrder` int NOT NULL DEFAULT '0',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `discountAmount` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `discountPercent` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `sortOrder` int(11) NOT NULL DEFAULT 0,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `discountAmount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discountPercent` decimal(5,2) NOT NULL DEFAULT 0.00,
   PRIMARY KEY (`id`),
   KEY `ReceiptItem_receiptId_idx` (`receiptId`),
   KEY `ReceiptItem_sortOrder_idx` (`sortOrder`),
@@ -549,7 +685,11 @@ CREATE TABLE `ReceiptItem` (
 
 LOCK TABLES `ReceiptItem` WRITE;
 /*!40000 ALTER TABLE `ReceiptItem` DISABLE KEYS */;
-INSERT INTO `ReceiptItem` VALUES ('cmo7alqxl0000qhlqksfrlv6r','cmo79kw8y0001qh3axzagqao9','วันที่เข้าพัก 18-19 เมษายน 2569   1 คืน 2 วัน',1.00,800.00,800.00,0,'2026-04-20 14:31:00.246',0.00,0.00),('cmo7alqxl0001qhlqx4xo613o','cmo79kw8y0001qh3axzagqao9','วันที่เข้าพัก 19-21 เมษายน 2569   2 คืน 3 วัน  ห้อง VIP',2.00,900.00,1800.00,1,'2026-04-20 14:31:00.246',0.00,0.00),('cmo7alqxl0002qhlqzwbvhqp1','cmo79kw8y0001qh3axzagqao9','วันที่เข้าพัก 21-26 เมษายน 2569   5 คืน 6 วัน',5.00,800.00,3800.00,2,'2026-04-20 14:31:00.246',0.00,5.00);
+INSERT INTO `ReceiptItem` VALUES
+('cmo7alqxl0000qhlqksfrlv6r','cmo79kw8y0001qh3axzagqao9','วันที่เข้าพัก 18-19 เมษายน 2569   1 คืน 2 วัน',1.00,800.00,800.00,0,'2026-04-20 14:31:00.246',0.00,0.00),
+('cmo7alqxl0001qhlqx4xo613o','cmo79kw8y0001qh3axzagqao9','วันที่เข้าพัก 19-21 เมษายน 2569   2 คืน 3 วัน  ห้อง VIP',2.00,900.00,1800.00,1,'2026-04-20 14:31:00.246',0.00,0.00),
+('cmo7alqxl0002qhlqzwbvhqp1','cmo79kw8y0001qh3axzagqao9','วันที่เข้าพัก 21-26 เมษายน 2569   5 คืน 6 วัน',5.00,800.00,3800.00,2,'2026-04-20 14:31:00.246',0.00,5.00),
+('cmpjnfvzk0002jh1fd5zxlekm','cmpjnfvzk0001jh1f3j2837id','222222',1.00,0.00,0.00,0,'2026-05-24 10:43:18.321',0.00,0.00);
 /*!40000 ALTER TABLE `ReceiptItem` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -559,15 +699,15 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Service`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Service` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `highlight` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(191) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `description` text DEFAULT NULL,
+  `highlight` varchar(191) NOT NULL,
   `price` decimal(10,2) DEFAULT NULL,
-  `active` tinyint(1) NOT NULL DEFAULT '1',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `active` tinyint(1) NOT NULL DEFAULT 1,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -579,7 +719,13 @@ CREATE TABLE `Service` (
 
 LOCK TABLES `Service` WRITE;
 /*!40000 ALTER TABLE `Service` DISABLE KEYS */;
-INSERT INTO `Service` VALUES ('cmo6wquzl0000qhusugfmjreb','บริการดูแลระบบ',NULL,'ดูแลและบำรุงรักษาระบบ',NULL,1,'2026-04-20 08:03:04.161','2026-04-20 08:03:04.161'),('cmo6wqv010001qhusjh92gzm0','บริการเช่าโดเมนรายปี',NULL,'จดและต่ออายุโดเมน',NULL,1,'2026-04-20 08:03:04.178','2026-04-20 08:03:04.178'),('cmo6wqv0d0002qhusw3mzpmyc','บริการยิงแอด',NULL,'โฆษณา Facebook/Google',NULL,1,'2026-04-20 08:03:04.189','2026-04-20 08:03:04.189'),('cmo6wqv110003qhusi1vpkl2m','บริการออกแบบหน้าเว็บ',NULL,'UI/UX Design',NULL,1,'2026-04-20 08:03:04.213','2026-04-20 08:03:04.213'),('cmo6wqv1h0004qhusezds6zuw','บริการพัฒนาระบบ',NULL,'พัฒนาซอฟต์แวร์ตามความต้องการ',NULL,1,'2026-04-20 08:03:04.230','2026-04-20 08:03:04.230'),('cmo6wqv1y0005qhusaxeobrwk','บริการอื่นๆ',NULL,'บริการเสริมอื่นๆ',NULL,1,'2026-04-20 08:03:04.246','2026-04-20 08:03:04.246');
+INSERT INTO `Service` VALUES
+('cmo6wquzl0000qhusugfmjreb','บริการดูแลระบบ',NULL,'ดูแลและบำรุงรักษาระบบ',NULL,1,'2026-04-20 08:03:04.161','2026-04-20 08:03:04.161'),
+('cmo6wqv010001qhusjh92gzm0','บริการเช่าโดเมนรายปี',NULL,'จดและต่ออายุโดเมน',NULL,1,'2026-04-20 08:03:04.178','2026-04-20 08:03:04.178'),
+('cmo6wqv0d0002qhusw3mzpmyc','บริการยิงแอด',NULL,'โฆษณา Facebook/Google',NULL,1,'2026-04-20 08:03:04.189','2026-04-20 08:03:04.189'),
+('cmo6wqv110003qhusi1vpkl2m','บริการออกแบบหน้าเว็บ',NULL,'UI/UX Design',NULL,1,'2026-04-20 08:03:04.213','2026-04-20 08:03:04.213'),
+('cmo6wqv1h0004qhusezds6zuw','บริการพัฒนาระบบ',NULL,'พัฒนาซอฟต์แวร์ตามความต้องการ',NULL,1,'2026-04-20 08:03:04.230','2026-04-20 08:03:04.230'),
+('cmo6wqv1y0005qhusaxeobrwk','บริการอื่นๆ',NULL,'บริการเสริมอื่นๆ',NULL,1,'2026-04-20 08:03:04.246','2026-04-20 08:03:04.246');
 /*!40000 ALTER TABLE `Service` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -589,11 +735,11 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `Session`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Session` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sessionToken` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `userId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(191) NOT NULL,
+  `sessionToken` varchar(191) NOT NULL,
+  `userId` varchar(191) NOT NULL,
   `expires` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Session_sessionToken_key` (`sessionToken`),
@@ -617,19 +763,19 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `User`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `User` (
-  `id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `username` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(191) NOT NULL,
+  `name` varchar(191) DEFAULT NULL,
+  `username` varchar(191) DEFAULT NULL,
+  `email` varchar(191) NOT NULL,
   `emailVerified` datetime(3) DEFAULT NULL,
-  `image` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `password` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `role` enum('SUPER_ADMIN','ADMIN','CLIENT','PARTNER') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'CLIENT',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `image` varchar(191) DEFAULT NULL,
+  `password` varchar(191) DEFAULT NULL,
+  `role` enum('SUPER_ADMIN','ADMIN','CLIENT','PARTNER') NOT NULL DEFAULT 'CLIENT',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
-  `clientId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `clientId` varchar(191) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `User_email_key` (`email`),
   UNIQUE KEY `User_username_key` (`username`),
@@ -645,7 +791,11 @@ CREATE TABLE `User` (
 
 LOCK TABLES `User` WRITE;
 /*!40000 ALTER TABLE `User` DISABLE KEYS */;
-INSERT INTO `User` VALUES ('c43585d0ad80aeca6ea58f153','Partner01','ge-server-hub-1','partner01@geserverhub.local',NULL,NULL,'$2b$12$P0J5qt02Y.64EWCY5umIIeoZ/N1SyISZ5UfFUXbHz8GdD1m3q/FcS','PARTNER','2026-05-10 14:07:39.000','2026-05-17 11:13:32.696','cmo6viuen0003qhga32hwcu3n'),('cmo6viud90000qhga458at56f','Super Admin','goeun','superadmin',NULL,NULL,'$2b$12$jVYDMZUa22ZAHxRI54IfS.fNKCvNSYvD39PqjQZgLLONHPAHlN7XG','SUPER_ADMIN','2026-04-20 07:28:50.494','2026-05-10 14:30:41.000','cmo6viuen0003qhga32hwcu3n'),('cmox6qo9t0000jhpk0qz39m5a','Partner User','partner01','partner',NULL,NULL,'$2b$12$6DsH.oWNPaUBsswnWnN5fe5wyAnM1XzmaCTNEjaneChkUDIYhJF2m','PARTNER','2026-05-08 17:24:52.193','2026-05-22 13:49:59.508','cmo6viuen0003qhga32hwcu3n'),('green-retail-user-001','Green Retail Demo','greenretail','demo@green-retail.example.com',NULL,NULL,'$2b$10$VB86P90EmP6i/IMuTtYLMu9cpFT.AYp6pIm.yyax5oJfa4WUrHAaS','CLIENT','2026-04-22 13:09:06.000','2026-04-22 13:09:06.000',NULL),('momoge01','momoge space','MOMOGE SPACE  DEMO','momoge-space@example.com',NULL,NULL,'$2b$12$YJ4BQ1PCBjtCnhNCGmIrpO6kAnPjagugpaXp.g.3SeFUpt6yrVTqK','CLIENT','2026-04-22 13:09:06.000','2026-05-22 13:50:51.783','cmo9bve0m0000qhtikd261ug2');
+INSERT INTO `User` VALUES
+('c43585d0ad80aeca6ea58f153','Partner01','ge-server-hub-1','partner01@geserverhub.local',NULL,NULL,'$2b$12$P0J5qt02Y.64EWCY5umIIeoZ/N1SyISZ5UfFUXbHz8GdD1m3q/FcS','PARTNER','2026-05-10 14:07:39.000','2026-05-17 11:13:32.696','cmo6viuen0003qhga32hwcu3n'),
+('cmo6viud90000qhga458at56f','Super Admin','goeun','superadmin',NULL,NULL,'$2b$12$v/ZT7S8SB8ulN38mMENNAeHKjt57WbE9/S2PMnl0ENfAxudxiUIJ2','SUPER_ADMIN','2026-04-20 07:28:50.494','2026-05-10 14:30:41.000','cmo6viuen0003qhga32hwcu3n'),
+('cmox6qo9t0000jhpk0qz39m5a','Partner User','partner01','partner',NULL,NULL,'$2b$12$6DsH.oWNPaUBsswnWnN5fe5wyAnM1XzmaCTNEjaneChkUDIYhJF2m','PARTNER','2026-05-08 17:24:52.193','2026-05-22 13:49:59.508','cmo6viuen0003qhga32hwcu3n'),
+('momoge01','momoge space','MOMOGE SPACE  DEMO','momoge-space@example.com',NULL,NULL,'$2b$12$YJ4BQ1PCBjtCnhNCGmIrpO6kAnPjagugpaXp.g.3SeFUpt6yrVTqK','CLIENT','2026-04-22 13:09:06.000','2026-05-22 13:50:51.783','cmo9bve0m0000qhtikd261ug2');
 /*!40000 ALTER TABLE `User` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -655,10 +805,10 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `VerificationToken`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `VerificationToken` (
-  `identifier` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `identifier` varchar(191) NOT NULL,
+  `token` varchar(191) NOT NULL,
   `expires` datetime(3) NOT NULL,
   UNIQUE KEY `VerificationToken_token_key` (`token`),
   UNIQUE KEY `VerificationToken_identifier_token_key` (`identifier`,`token`)
@@ -675,23 +825,95 @@ LOCK TABLES `VerificationToken` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ai_settings`
+--
+
+DROP TABLE IF EXISTS `ai_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ai_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `openai_api_key` varchar(512) DEFAULT NULL,
+  `openai_model` varchar(64) NOT NULL DEFAULT 'gpt-4o-mini',
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ai_settings_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ai_settings`
+--
+
+LOCK TABLES `ai_settings` WRITE;
+/*!40000 ALTER TABLE `ai_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ai_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `device_connectivity`
+--
+
+DROP TABLE IF EXISTS `device_connectivity`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `device_connectivity` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `device_id` int(11) NOT NULL,
+  `gateway_model` varchar(50) DEFAULT 'T310',
+  `serial_port` varchar(100) DEFAULT '/dev/ttyS1',
+  `baud_rate` int(11) NOT NULL DEFAULT 9600,
+  `parity` varchar(10) NOT NULL DEFAULT 'none',
+  `data_bits` tinyint(4) NOT NULL DEFAULT 8,
+  `stop_bits` tinyint(4) NOT NULL DEFAULT 1,
+  `slave_before` int(11) NOT NULL DEFAULT 1,
+  `slave_metrics` int(11) NOT NULL DEFAULT 2,
+  `reg_v_l1` int(11) NOT NULL DEFAULT 0,
+  `reg_v_l2` int(11) NOT NULL DEFAULT 2,
+  `reg_v_l3` int(11) NOT NULL DEFAULT 4,
+  `scale_voltage` decimal(10,4) NOT NULL DEFAULT 10.0000,
+  `mqtt_topic` varchar(255) DEFAULT NULL,
+  `publish_interval_sec` int(11) NOT NULL DEFAULT 30,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `notes` text DEFAULT NULL,
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_device_connectivity_device` (`device_id`),
+  KEY `idx_device_connectivity_enabled` (`enabled`),
+  CONSTRAINT `device_connectivity_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `device_connectivity`
+--
+
+LOCK TABLES `device_connectivity` WRITE;
+/*!40000 ALTER TABLE `device_connectivity` DISABLE KEYS */;
+/*!40000 ALTER TABLE `device_connectivity` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `device_notifications`
 --
 
 DROP TABLE IF EXISTS `device_notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `device_notifications` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `device_id` int DEFAULT NULL,
-  `site` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci,
-  `severity` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'info',
-  `is_read` tinyint(1) DEFAULT '0',
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `device_id` int(11) DEFAULT NULL,
+  `site` varchar(50) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `severity` varchar(50) DEFAULT 'info',
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` datetime(6) DEFAULT current_timestamp(6),
   PRIMARY KEY (`id`),
-  KEY `idx_notifications_site` (`site`)
+  KEY `idx_notifications_site` (`site`),
+  KEY `device_notifications_device_id_fkey` (`device_id`),
+  CONSTRAINT `device_notifications_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -710,30 +932,30 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `devices` (
-  `deviceID` int NOT NULL AUTO_INCREMENT,
-  `deviceName` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `geID` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `series_no` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `ipAddress` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `location` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `site` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'thailand',
-  `status` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OK',
-  `beforeMeterNo` varchar(255) COLLATE utf8mb4_general_ci DEFAULT '1',
-  `metricsMeterNo` varchar(255) COLLATE utf8mb4_general_ci DEFAULT '2',
-  `U_email` varchar(225) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `P_email` varchar(225) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `phone` varchar(225) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `pass_phone` varchar(225) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `create_by` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'administrator',
+  `deviceID` int(11) NOT NULL AUTO_INCREMENT,
+  `deviceName` varchar(255) NOT NULL,
+  `geID` varchar(255) DEFAULT NULL,
+  `series_no` varchar(50) DEFAULT NULL,
+  `ipAddress` varchar(45) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `site` varchar(20) DEFAULT 'thailand',
+  `status` varchar(50) DEFAULT 'OK',
+  `beforeMeterNo` varchar(255) DEFAULT '1',
+  `metricsMeterNo` varchar(255) DEFAULT '2',
+  `U_email` varchar(225) NOT NULL DEFAULT '',
+  `P_email` varchar(225) NOT NULL DEFAULT '',
+  `phone` varchar(225) NOT NULL DEFAULT '',
+  `pass_phone` varchar(225) NOT NULL DEFAULT '',
+  `created_at` datetime(6) DEFAULT current_timestamp(6),
+  `updated_at` datetime(6) DEFAULT current_timestamp(6) ON UPDATE current_timestamp(6),
+  `create_by` varchar(100) DEFAULT 'administrator',
   `latitude` decimal(10,8) DEFAULT NULL,
   `longitude` decimal(11,8) DEFAULT NULL,
-  `customerName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `customerPhone` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `customerAddress` text COLLATE utf8mb4_general_ci,
+  `customerName` varchar(255) DEFAULT NULL,
+  `customerPhone` varchar(50) DEFAULT NULL,
+  `customerAddress` text DEFAULT NULL,
   PRIMARY KEY (`deviceID`),
   UNIQUE KEY `unique_geID` (`geID`),
   KEY `idx_devices_site` (`site`)
@@ -746,8 +968,50 @@ CREATE TABLE `devices` (
 
 LOCK TABLES `devices` WRITE;
 /*!40000 ALTER TABLE `devices` DISABLE KEYS */;
-INSERT INTO `devices` VALUES (1,'GE01','GE01','GE2024010001','192.168.1.46','Seongnam Research Institute','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'GE Energy Demo','010-8105-0384',NULL),(2,'GE02','GE02','GE2024010002','192.168.1.2','Republic of Korea','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'Green Retail Demo','010-8105-0384',NULL),(3,'GE-TH01','GE-TH01','GE2024010007','192.168.1.3','Bangkok','thailand','OFF','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','02-555-1199','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'Thailand Demo','02-555-1199',NULL);
+INSERT INTO `devices` VALUES
+(1,'GE01','GE01','GE2024010001','192.168.1.46','Seongnam Research Institute','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'GE Energy Demo','010-8105-0384',NULL),
+(2,'GE02','GE02','GE2024010002','192.168.1.2','Republic of Korea','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'Green Retail Demo','010-8105-0384',NULL),
+(3,'GE-TH01','GE-TH01','GE2024010007','192.168.1.3','Bangkok','thailand','OFF','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','02-555-1199','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'Thailand Demo','02-555-1199',NULL);
 /*!40000 ALTER TABLE `devices` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mqtt_settings`
+--
+
+DROP TABLE IF EXISTS `mqtt_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mqtt_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `site` varchar(20) NOT NULL DEFAULT 'thailand',
+  `host` varchar(255) NOT NULL,
+  `port` int(11) NOT NULL DEFAULT 1883,
+  `username` varchar(255) DEFAULT NULL,
+  `password` varchar(512) DEFAULT NULL,
+  `topic` varchar(255) DEFAULT NULL,
+  `topic_prefix` varchar(255) DEFAULT 'ge',
+  `interval` int(11) NOT NULL DEFAULT 30,
+  `gateway_model` varchar(50) DEFAULT 'T310',
+  `serial_port` varchar(100) DEFAULT '/dev/ttyS1',
+  `baud_rate` int(11) NOT NULL DEFAULT 9600,
+  `parity` varchar(10) NOT NULL DEFAULT 'none',
+  `data_bits` tinyint(4) NOT NULL DEFAULT 8,
+  `stop_bits` tinyint(4) NOT NULL DEFAULT 1,
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_mqtt_user_site` (`user_id`,`site`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mqtt_settings`
+--
+
+LOCK TABLES `mqtt_settings` WRITE;
+/*!40000 ALTER TABLE `mqtt_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mqtt_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -756,12 +1020,12 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `power_records`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `power_records` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `device_id` int NOT NULL,
-  `before_meter_no` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `metrics_meter_no` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `device_id` int(11) NOT NULL,
+  `before_meter_no` varchar(255) DEFAULT NULL,
+  `metrics_meter_no` varchar(255) DEFAULT NULL,
   `record_time` datetime NOT NULL,
   `before_L1` decimal(10,2) DEFAULT NULL,
   `before_L2` decimal(10,2) DEFAULT NULL,
@@ -783,16 +1047,17 @@ CREATE TABLE `power_records` (
   `metrics_PF` decimal(6,3) DEFAULT NULL,
   `metrics_THD` decimal(8,3) DEFAULT NULL,
   `metrics_F` decimal(8,3) DEFAULT NULL,
-  `energy_reduction` decimal(12,3) GENERATED ALWAYS AS ((`before_kWh` - `metrics_kWh`)) STORED,
-  `co2_reduction` decimal(12,4) GENERATED ALWAYS AS (((`before_kWh` - `metrics_kWh`) * 0.5135)) STORED,
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `created_by` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Auto ge-monitor',
-  `deviceID` int DEFAULT NULL,
-  `series_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `energy_reduction` decimal(12,3) GENERATED ALWAYS AS (`before_kWh` - `metrics_kWh`) STORED,
+  `co2_reduction` decimal(12,4) GENERATED ALWAYS AS ((`before_kWh` - `metrics_kWh`) * 0.5135) STORED,
+  `created_at` datetime(6) DEFAULT current_timestamp(6),
+  `updated_at` datetime(6) DEFAULT current_timestamp(6) ON UPDATE current_timestamp(6),
+  `created_by` varchar(100) NOT NULL DEFAULT 'Auto ge-monitor',
+  `deviceID` int(11) DEFAULT NULL,
+  `series_no` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_power_records_device_id` (`device_id`),
-  KEY `idx_power_records_record_time` (`record_time`)
+  KEY `idx_power_records_record_time` (`record_time`),
+  CONSTRAINT `power_records_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -802,7 +1067,43 @@ CREATE TABLE `power_records` (
 
 LOCK TABLES `power_records` WRITE;
 /*!40000 ALTER TABLE `power_records` DISABLE KEYS */;
-INSERT INTO `power_records` (`id`, `device_id`, `before_meter_no`, `metrics_meter_no`, `record_time`, `before_L1`, `before_L2`, `before_L3`, `before_kWh`, `before_P`, `before_Q`, `before_S`, `before_PF`, `before_THD`, `before_F`, `metrics_L1`, `metrics_L2`, `metrics_L3`, `metrics_kWh`, `metrics_P`, `metrics_Q`, `metrics_S`, `metrics_PF`, `metrics_THD`, `metrics_F`, `created_at`, `updated_at`, `created_by`, `deviceID`, `series_no`) VALUES (1,1,NULL,NULL,'2025-06-15 12:00:00',220.00,NULL,NULL,9360.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,7114.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.567026','2026-05-23 13:56:56.567026','seed',NULL,NULL),(2,1,NULL,NULL,'2025-07-15 12:00:00',220.00,NULL,NULL,9240.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6838.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.579283','2026-05-23 13:56:56.579283','seed',NULL,NULL),(3,1,NULL,NULL,'2025-08-15 12:00:00',220.00,NULL,NULL,9120.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6566.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.622443','2026-05-23 13:56:56.622443','seed',NULL,NULL),(4,1,NULL,NULL,'2025-09-15 12:00:00',220.00,NULL,NULL,9000.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6840.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.655891','2026-05-23 13:56:56.655891','seed',NULL,NULL),(5,1,NULL,NULL,'2025-10-15 12:00:00',220.00,NULL,NULL,8880.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6571.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.711706','2026-05-23 13:56:56.711706','seed',NULL,NULL),(6,1,NULL,NULL,'2025-11-15 12:00:00',220.00,NULL,NULL,8760.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6307.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.730212','2026-05-23 13:56:56.730212','seed',NULL,NULL),(7,1,NULL,NULL,'2025-12-15 12:00:00',220.00,NULL,NULL,8640.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6566.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.742174','2026-05-23 13:56:56.742174','seed',NULL,NULL),(8,1,NULL,NULL,'2026-01-15 12:00:00',220.00,NULL,NULL,8520.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6305.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.754046','2026-05-23 13:56:56.754046','seed',NULL,NULL),(9,1,NULL,NULL,'2026-02-15 12:00:00',220.00,NULL,NULL,8400.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6048.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.767611','2026-05-23 13:56:56.767611','seed',NULL,NULL),(10,1,NULL,NULL,'2026-03-15 12:00:00',220.00,NULL,NULL,8280.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6293.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.779890','2026-05-23 13:56:56.779890','seed',NULL,NULL),(11,1,NULL,NULL,'2026-04-15 12:00:00',220.00,NULL,NULL,8160.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6038.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.789783','2026-05-23 13:56:56.789783','seed',NULL,NULL),(12,1,NULL,NULL,'2026-05-15 12:00:00',220.00,NULL,NULL,8040.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,5789.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.810125','2026-05-23 13:56:56.810125','seed',NULL,NULL),(13,2,NULL,NULL,'2025-06-15 12:00:00',220.00,NULL,NULL,9400.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,7144.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.825499','2026-05-23 13:56:56.825499','seed',NULL,NULL),(14,2,NULL,NULL,'2025-07-15 12:00:00',220.00,NULL,NULL,9280.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6867.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.836588','2026-05-23 13:56:56.836588','seed',NULL,NULL),(15,2,NULL,NULL,'2025-08-15 12:00:00',220.00,NULL,NULL,9160.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6595.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.848495','2026-05-23 13:56:56.848495','seed',NULL,NULL),(16,2,NULL,NULL,'2025-09-15 12:00:00',220.00,NULL,NULL,9040.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6870.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.858006','2026-05-23 13:56:56.858006','seed',NULL,NULL),(17,2,NULL,NULL,'2025-10-15 12:00:00',220.00,NULL,NULL,8920.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6601.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.870424','2026-05-23 13:56:56.870424','seed',NULL,NULL),(18,2,NULL,NULL,'2025-11-15 12:00:00',220.00,NULL,NULL,8800.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6336.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.880699','2026-05-23 13:56:56.880699','seed',NULL,NULL),(19,2,NULL,NULL,'2025-12-15 12:00:00',220.00,NULL,NULL,8680.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6597.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.896027','2026-05-23 13:56:56.896027','seed',NULL,NULL),(20,2,NULL,NULL,'2026-01-15 12:00:00',220.00,NULL,NULL,8560.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6334.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.909867','2026-05-23 13:56:56.909867','seed',NULL,NULL),(21,2,NULL,NULL,'2026-02-15 12:00:00',220.00,NULL,NULL,8440.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6077.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.982331','2026-05-23 13:56:56.982331','seed',NULL,NULL),(22,2,NULL,NULL,'2026-03-15 12:00:00',220.00,NULL,NULL,8320.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6323.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:56.997272','2026-05-23 13:56:56.997272','seed',NULL,NULL),(23,2,NULL,NULL,'2026-04-15 12:00:00',220.00,NULL,NULL,8200.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6068.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.019805','2026-05-23 13:56:57.019805','seed',NULL,NULL),(24,2,NULL,NULL,'2026-05-15 12:00:00',220.00,NULL,NULL,8080.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,5818.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.058365','2026-05-23 13:56:57.058365','seed',NULL,NULL),(25,3,NULL,NULL,'2025-06-15 12:00:00',220.00,NULL,NULL,9440.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,7174.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.074193','2026-05-23 13:56:57.074193','seed',NULL,NULL),(26,3,NULL,NULL,'2025-07-15 12:00:00',220.00,NULL,NULL,9320.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6897.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.084442','2026-05-23 13:56:57.084442','seed',NULL,NULL),(27,3,NULL,NULL,'2025-08-15 12:00:00',220.00,NULL,NULL,9200.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6624.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.092585','2026-05-23 13:56:57.092585','seed',NULL,NULL),(28,3,NULL,NULL,'2025-09-15 12:00:00',220.00,NULL,NULL,9080.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6901.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.102690','2026-05-23 13:56:57.102690','seed',NULL,NULL),(29,3,NULL,NULL,'2025-10-15 12:00:00',220.00,NULL,NULL,8960.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6630.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.112117','2026-05-23 13:56:57.112117','seed',NULL,NULL),(30,3,NULL,NULL,'2025-11-15 12:00:00',220.00,NULL,NULL,8840.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6365.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.122021','2026-05-23 13:56:57.122021','seed',NULL,NULL),(31,3,NULL,NULL,'2025-12-15 12:00:00',220.00,NULL,NULL,8720.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6627.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.131670','2026-05-23 13:56:57.131670','seed',NULL,NULL),(32,3,NULL,NULL,'2026-01-15 12:00:00',220.00,NULL,NULL,8600.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6364.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.155416','2026-05-23 13:56:57.155416','seed',NULL,NULL),(33,3,NULL,NULL,'2026-02-15 12:00:00',220.00,NULL,NULL,8480.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6106.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.167558','2026-05-23 13:56:57.167558','seed',NULL,NULL),(34,3,NULL,NULL,'2026-03-15 12:00:00',220.00,NULL,NULL,8360.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6354.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.178234','2026-05-23 13:56:57.178234','seed',NULL,NULL),(35,3,NULL,NULL,'2026-04-15 12:00:00',220.00,NULL,NULL,8240.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6098.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.189071','2026-05-23 13:56:57.189071','seed',NULL,NULL),(36,3,NULL,NULL,'2026-05-15 12:00:00',220.00,NULL,NULL,8120.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,5846.000,NULL,NULL,NULL,NULL,NULL,NULL,'2026-05-23 13:56:57.198602','2026-05-23 13:56:57.198602','seed',NULL,NULL);
+INSERT INTO `power_records` VALUES
+(1,1,NULL,NULL,'2025-06-15 12:00:00',220.00,NULL,NULL,9360.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,7114.000,NULL,NULL,NULL,NULL,NULL,NULL,2246.000,1153.3210,'2026-05-23 13:56:56.567026','2026-05-23 13:56:56.567026','seed',NULL,NULL),
+(2,1,NULL,NULL,'2025-07-15 12:00:00',220.00,NULL,NULL,9240.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6838.000,NULL,NULL,NULL,NULL,NULL,NULL,2402.000,1233.4270,'2026-05-23 13:56:56.579283','2026-05-23 13:56:56.579283','seed',NULL,NULL),
+(3,1,NULL,NULL,'2025-08-15 12:00:00',220.00,NULL,NULL,9120.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6566.000,NULL,NULL,NULL,NULL,NULL,NULL,2554.000,1311.4790,'2026-05-23 13:56:56.622443','2026-05-23 13:56:56.622443','seed',NULL,NULL),
+(4,1,NULL,NULL,'2025-09-15 12:00:00',220.00,NULL,NULL,9000.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6840.000,NULL,NULL,NULL,NULL,NULL,NULL,2160.000,1109.1600,'2026-05-23 13:56:56.655891','2026-05-23 13:56:56.655891','seed',NULL,NULL),
+(5,1,NULL,NULL,'2025-10-15 12:00:00',220.00,NULL,NULL,8880.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6571.000,NULL,NULL,NULL,NULL,NULL,NULL,2309.000,1185.6715,'2026-05-23 13:56:56.711706','2026-05-23 13:56:56.711706','seed',NULL,NULL),
+(6,1,NULL,NULL,'2025-11-15 12:00:00',220.00,NULL,NULL,8760.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6307.000,NULL,NULL,NULL,NULL,NULL,NULL,2453.000,1259.6155,'2026-05-23 13:56:56.730212','2026-05-23 13:56:56.730212','seed',NULL,NULL),
+(7,1,NULL,NULL,'2025-12-15 12:00:00',220.00,NULL,NULL,8640.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6566.000,NULL,NULL,NULL,NULL,NULL,NULL,2074.000,1064.9990,'2026-05-23 13:56:56.742174','2026-05-23 13:56:56.742174','seed',NULL,NULL),
+(8,1,NULL,NULL,'2026-01-15 12:00:00',220.00,NULL,NULL,8520.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6305.000,NULL,NULL,NULL,NULL,NULL,NULL,2215.000,1137.4025,'2026-05-23 13:56:56.754046','2026-05-23 13:56:56.754046','seed',NULL,NULL),
+(9,1,NULL,NULL,'2026-02-15 12:00:00',220.00,NULL,NULL,8400.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6048.000,NULL,NULL,NULL,NULL,NULL,NULL,2352.000,1207.7520,'2026-05-23 13:56:56.767611','2026-05-23 13:56:56.767611','seed',NULL,NULL),
+(10,1,NULL,NULL,'2026-03-15 12:00:00',220.00,NULL,NULL,8280.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6293.000,NULL,NULL,NULL,NULL,NULL,NULL,1987.000,1020.3245,'2026-05-23 13:56:56.779890','2026-05-23 13:56:56.779890','seed',NULL,NULL),
+(11,1,NULL,NULL,'2026-04-15 12:00:00',220.00,NULL,NULL,8160.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6038.000,NULL,NULL,NULL,NULL,NULL,NULL,2122.000,1089.6470,'2026-05-23 13:56:56.789783','2026-05-23 13:56:56.789783','seed',NULL,NULL),
+(12,1,NULL,NULL,'2026-05-15 12:00:00',220.00,NULL,NULL,8040.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,5789.000,NULL,NULL,NULL,NULL,NULL,NULL,2251.000,1155.8885,'2026-05-23 13:56:56.810125','2026-05-23 13:56:56.810125','seed',NULL,NULL),
+(13,2,NULL,NULL,'2025-06-15 12:00:00',220.00,NULL,NULL,9400.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,7144.000,NULL,NULL,NULL,NULL,NULL,NULL,2256.000,1158.4560,'2026-05-23 13:56:56.825499','2026-05-23 13:56:56.825499','seed',NULL,NULL),
+(14,2,NULL,NULL,'2025-07-15 12:00:00',220.00,NULL,NULL,9280.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6867.000,NULL,NULL,NULL,NULL,NULL,NULL,2413.000,1239.0755,'2026-05-23 13:56:56.836588','2026-05-23 13:56:56.836588','seed',NULL,NULL),
+(15,2,NULL,NULL,'2025-08-15 12:00:00',220.00,NULL,NULL,9160.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6595.000,NULL,NULL,NULL,NULL,NULL,NULL,2565.000,1317.1275,'2026-05-23 13:56:56.848495','2026-05-23 13:56:56.848495','seed',NULL,NULL),
+(16,2,NULL,NULL,'2025-09-15 12:00:00',220.00,NULL,NULL,9040.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6870.000,NULL,NULL,NULL,NULL,NULL,NULL,2170.000,1114.2950,'2026-05-23 13:56:56.858006','2026-05-23 13:56:56.858006','seed',NULL,NULL),
+(17,2,NULL,NULL,'2025-10-15 12:00:00',220.00,NULL,NULL,8920.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6601.000,NULL,NULL,NULL,NULL,NULL,NULL,2319.000,1190.8065,'2026-05-23 13:56:56.870424','2026-05-23 13:56:56.870424','seed',NULL,NULL),
+(18,2,NULL,NULL,'2025-11-15 12:00:00',220.00,NULL,NULL,8800.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6336.000,NULL,NULL,NULL,NULL,NULL,NULL,2464.000,1265.2640,'2026-05-23 13:56:56.880699','2026-05-23 13:56:56.880699','seed',NULL,NULL),
+(19,2,NULL,NULL,'2025-12-15 12:00:00',220.00,NULL,NULL,8680.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6597.000,NULL,NULL,NULL,NULL,NULL,NULL,2083.000,1069.6205,'2026-05-23 13:56:56.896027','2026-05-23 13:56:56.896027','seed',NULL,NULL),
+(20,2,NULL,NULL,'2026-01-15 12:00:00',220.00,NULL,NULL,8560.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6334.000,NULL,NULL,NULL,NULL,NULL,NULL,2226.000,1143.0510,'2026-05-23 13:56:56.909867','2026-05-23 13:56:56.909867','seed',NULL,NULL),
+(21,2,NULL,NULL,'2026-02-15 12:00:00',220.00,NULL,NULL,8440.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6077.000,NULL,NULL,NULL,NULL,NULL,NULL,2363.000,1213.4005,'2026-05-23 13:56:56.982331','2026-05-23 13:56:56.982331','seed',NULL,NULL),
+(22,2,NULL,NULL,'2026-03-15 12:00:00',220.00,NULL,NULL,8320.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6323.000,NULL,NULL,NULL,NULL,NULL,NULL,1997.000,1025.4595,'2026-05-23 13:56:56.997272','2026-05-23 13:56:56.997272','seed',NULL,NULL),
+(23,2,NULL,NULL,'2026-04-15 12:00:00',220.00,NULL,NULL,8200.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6068.000,NULL,NULL,NULL,NULL,NULL,NULL,2132.000,1094.7820,'2026-05-23 13:56:57.019805','2026-05-23 13:56:57.019805','seed',NULL,NULL),
+(24,2,NULL,NULL,'2026-05-15 12:00:00',220.00,NULL,NULL,8080.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,5818.000,NULL,NULL,NULL,NULL,NULL,NULL,2262.000,1161.5370,'2026-05-23 13:56:57.058365','2026-05-23 13:56:57.058365','seed',NULL,NULL),
+(25,3,NULL,NULL,'2025-06-15 12:00:00',220.00,NULL,NULL,9440.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,7174.000,NULL,NULL,NULL,NULL,NULL,NULL,2266.000,1163.5910,'2026-05-23 13:56:57.074193','2026-05-23 13:56:57.074193','seed',NULL,NULL),
+(26,3,NULL,NULL,'2025-07-15 12:00:00',220.00,NULL,NULL,9320.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6897.000,NULL,NULL,NULL,NULL,NULL,NULL,2423.000,1244.2105,'2026-05-23 13:56:57.084442','2026-05-23 13:56:57.084442','seed',NULL,NULL),
+(27,3,NULL,NULL,'2025-08-15 12:00:00',220.00,NULL,NULL,9200.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6624.000,NULL,NULL,NULL,NULL,NULL,NULL,2576.000,1322.7760,'2026-05-23 13:56:57.092585','2026-05-23 13:56:57.092585','seed',NULL,NULL),
+(28,3,NULL,NULL,'2025-09-15 12:00:00',220.00,NULL,NULL,9080.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6901.000,NULL,NULL,NULL,NULL,NULL,NULL,2179.000,1118.9165,'2026-05-23 13:56:57.102690','2026-05-23 13:56:57.102690','seed',NULL,NULL),
+(29,3,NULL,NULL,'2025-10-15 12:00:00',220.00,NULL,NULL,8960.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6630.000,NULL,NULL,NULL,NULL,NULL,NULL,2330.000,1196.4550,'2026-05-23 13:56:57.112117','2026-05-23 13:56:57.112117','seed',NULL,NULL),
+(30,3,NULL,NULL,'2025-11-15 12:00:00',220.00,NULL,NULL,8840.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6365.000,NULL,NULL,NULL,NULL,NULL,NULL,2475.000,1270.9125,'2026-05-23 13:56:57.122021','2026-05-23 13:56:57.122021','seed',NULL,NULL),
+(31,3,NULL,NULL,'2025-12-15 12:00:00',220.00,NULL,NULL,8720.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6627.000,NULL,NULL,NULL,NULL,NULL,NULL,2093.000,1074.7555,'2026-05-23 13:56:57.131670','2026-05-23 13:56:57.131670','seed',NULL,NULL),
+(32,3,NULL,NULL,'2026-01-15 12:00:00',220.00,NULL,NULL,8600.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6364.000,NULL,NULL,NULL,NULL,NULL,NULL,2236.000,1148.1860,'2026-05-23 13:56:57.155416','2026-05-23 13:56:57.155416','seed',NULL,NULL),
+(33,3,NULL,NULL,'2026-02-15 12:00:00',220.00,NULL,NULL,8480.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6106.000,NULL,NULL,NULL,NULL,NULL,NULL,2374.000,1219.0490,'2026-05-23 13:56:57.167558','2026-05-23 13:56:57.167558','seed',NULL,NULL),
+(34,3,NULL,NULL,'2026-03-15 12:00:00',220.00,NULL,NULL,8360.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6354.000,NULL,NULL,NULL,NULL,NULL,NULL,2006.000,1030.0810,'2026-05-23 13:56:57.178234','2026-05-23 13:56:57.178234','seed',NULL,NULL),
+(35,3,NULL,NULL,'2026-04-15 12:00:00',220.00,NULL,NULL,8240.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,6098.000,NULL,NULL,NULL,NULL,NULL,NULL,2142.000,1099.9170,'2026-05-23 13:56:57.189071','2026-05-23 13:56:57.189071','seed',NULL,NULL),
+(36,3,NULL,NULL,'2026-05-15 12:00:00',220.00,NULL,NULL,8120.000,NULL,NULL,NULL,NULL,NULL,NULL,45.00,NULL,NULL,5846.000,NULL,NULL,NULL,NULL,NULL,NULL,2274.000,1167.6990,'2026-05-23 13:56:57.198602','2026-05-23 13:56:57.198602','seed',NULL,NULL);
 /*!40000 ALTER TABLE `power_records` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -812,16 +1113,17 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `power_records_preinstall`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `power_records_preinstall` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `device_id` int NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `device_id` int(11) NOT NULL,
   `record_time` datetime NOT NULL,
   `before_kWh` decimal(12,3) DEFAULT NULL,
   `metrics_kWh` decimal(12,3) DEFAULT NULL,
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
+  `created_at` datetime(6) DEFAULT current_timestamp(6),
   PRIMARY KEY (`id`),
-  KEY `idx_preinstall_device` (`device_id`)
+  KEY `idx_preinstall_device` (`device_id`),
+  CONSTRAINT `power_records_preinstall_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -840,19 +1142,19 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `support_tickets`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `support_tickets` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `ticket_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` int NOT NULL DEFAULT '1',
-  `subject` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `priority` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Normal',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Open',
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `created_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'system',
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ticket_id` varchar(50) NOT NULL,
+  `user_id` int(11) NOT NULL DEFAULT 1,
+  `subject` text NOT NULL,
+  `type` varchar(100) NOT NULL,
+  `priority` varchar(50) NOT NULL DEFAULT 'Normal',
+  `status` varchar(50) NOT NULL DEFAULT 'Open',
+  `description` text DEFAULT NULL,
+  `created_at` datetime(6) DEFAULT current_timestamp(6),
+  `updated_at` datetime(6) DEFAULT current_timestamp(6) ON UPDATE current_timestamp(6),
+  `created_by` varchar(100) DEFAULT 'system',
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_ticket_id` (`ticket_id`),
   KEY `idx_tickets_user` (`user_id`),
@@ -875,19 +1177,19 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `user_feedback`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_feedback` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int DEFAULT NULL,
-  `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `rating` int DEFAULT '0',
-  `branch` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pending',
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `created_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'anonymous',
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `category` varchar(100) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `rating` int(11) DEFAULT 0,
+  `branch` varchar(50) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `created_at` datetime(6) DEFAULT current_timestamp(6),
+  `updated_at` datetime(6) DEFAULT current_timestamp(6) ON UPDATE current_timestamp(6),
+  `created_by` varchar(100) DEFAULT 'anonymous',
   PRIMARY KEY (`id`),
   KEY `idx_feedback_status` (`status`),
   KEY `idx_feedback_branch` (`branch`)
@@ -904,159 +1206,6 @@ LOCK TABLES `user_feedback` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `mqtt_settings`
---
-
-DROP TABLE IF EXISTS `mqtt_settings`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `mqtt_settings` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `site` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'thailand',
-  `host` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `port` int NOT NULL DEFAULT '1883',
-  `username` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `password` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `topic` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `topic_prefix` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT 'ge',
-  `interval` int NOT NULL DEFAULT '30',
-  `gateway_model` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'T310',
-  `serial_port` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '/dev/ttyS1',
-  `baud_rate` int NOT NULL DEFAULT '9600',
-  `parity` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'none',
-  `data_bits` tinyint NOT NULL DEFAULT '8',
-  `stop_bits` tinyint NOT NULL DEFAULT '1',
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mqtt_user_site` (`user_id`,`site`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `mqtt_settings`
---
-
-LOCK TABLES `mqtt_settings` WRITE;
-/*!40000 ALTER TABLE `mqtt_settings` DISABLE KEYS */;
-/*!40000 ALTER TABLE `mqtt_settings` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `device_connectivity`
---
-
-DROP TABLE IF EXISTS `device_connectivity`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `device_connectivity` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `device_id` int NOT NULL,
-  `gateway_model` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'T310',
-  `serial_port` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '/dev/ttyS1',
-  `baud_rate` int NOT NULL DEFAULT '9600',
-  `parity` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'none',
-  `data_bits` tinyint NOT NULL DEFAULT '8',
-  `stop_bits` tinyint NOT NULL DEFAULT '1',
-  `slave_before` int NOT NULL DEFAULT '1',
-  `slave_metrics` int NOT NULL DEFAULT '2',
-  `reg_v_l1` int NOT NULL DEFAULT '0',
-  `reg_v_l2` int NOT NULL DEFAULT '2',
-  `reg_v_l3` int NOT NULL DEFAULT '4',
-  `scale_voltage` decimal(10,4) NOT NULL DEFAULT '10.0000',
-  `mqtt_topic` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `publish_interval_sec` int NOT NULL DEFAULT '30',
-  `enabled` tinyint(1) NOT NULL DEFAULT '1',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_device_connectivity_device` (`device_id`),
-  KEY `idx_device_connectivity_enabled` (`enabled`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `device_connectivity`
---
-
-LOCK TABLES `device_connectivity` WRITE;
-/*!40000 ALTER TABLE `device_connectivity` DISABLE KEYS */;
-/*!40000 ALTER TABLE `device_connectivity` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `ai_settings`
---
-
-DROP TABLE IF EXISTS `ai_settings`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ai_settings` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `openai_api_key` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `openai_model` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'gpt-4o-mini',
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_ai_settings_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ai_settings`
---
-
-LOCK TABLES `ai_settings` WRITE;
-/*!40000 ALTER TABLE `ai_settings` DISABLE KEYS */;
-/*!40000 ALTER TABLE `ai_settings` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `MFactoryInquiry`
---
-
-DROP TABLE IF EXISTS `MFactoryInquiry`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `MFactoryInquiry` (
-  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'factory',
-  `lang` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'th',
-  `source` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `company` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `taxId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bookingDate` date DEFAULT NULL,
-  `address` text COLLATE utf8mb4_unicode_ci,
-  `warehouse` text COLLATE utf8mb4_unicode_ci,
-  `rentalType` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `paymentRef` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci,
-  `bookingNumber` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
-  `termsAccepted` tinyint(1) NOT NULL DEFAULT 1,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `MFactoryInquiry_bookingNumber_key` (`bookingNumber`),
-  KEY `MFactoryInquiry_createdAt_idx` (`createdAt`),
-  KEY `MFactoryInquiry_type_idx` (`type`),
-  KEY `MFactoryInquiry_status_idx` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `MFactoryInquiry`
---
-
-LOCK TABLES `MFactoryInquiry` WRITE;
-/*!40000 ALTER TABLE `MFactoryInquiry` DISABLE KEYS */;
-/*!40000 ALTER TABLE `MFactoryInquiry` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Dumping routines for database 'goeunserverhub'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1069,4 +1218,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-22 (energy mqtt/connectivity/ai + MFactoryInquiry tables included)
+-- Dump completed on 2026-05-24 20:18:23
