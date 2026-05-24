@@ -26,11 +26,32 @@ git reset --hard origin/main
 echo "==> verify git is current (must match github.com/geserverhub/web main)"
 git log -1 --oneline
 
-echo "==> npm ci"
-npm ci
+echo "==> stop app before npm ci (release node_modules/next file locks)"
+if command -v pm2 >/dev/null 2>&1; then
+  pm2 delete ge-web 2>/dev/null || true
+  pm2 delete geserverhub 2>/dev/null || true
+fi
+if [[ -f scripts/kill-port.mjs ]]; then
+  node scripts/kill-port.mjs 3005 || true
+else
+  fuser -k 3005/tcp 2>/dev/null || true
+fi
+sleep 1
 
-echo "==> clean .next"
-rm -rf .next
+echo "==> clean node_modules and .next"
+rm -rf node_modules .next
+
+echo "==> npm ci (skip postinstall; run prisma after clean extract)"
+unset NODE_ENV
+if ! npm ci --ignore-scripts --no-audit --no-fund; then
+  echo "WARN: npm ci failed once — clearing cache and retrying"
+  npm cache clean --force
+  rm -rf node_modules
+  npm ci --ignore-scripts --no-audit --no-fund
+fi
+
+echo "==> prisma generate"
+npx prisma generate
 
 echo "==> npm run build"
 npm run build
@@ -46,20 +67,8 @@ if ! grep -rq "m-factory-layout\|mf-booking" .next 2>/dev/null; then
   echo "WARN: m-factory styles not found in .next (layout import may be missing)"
 fi
 
-echo "==> free port 3005 (kill orphan next-server not managed by PM2)"
-if [[ -f scripts/kill-port.mjs ]]; then
-  node scripts/kill-port.mjs 3005 || true
-else
-  fuser -k 3005/tcp 2>/dev/null || true
-fi
-sleep 1
-
 echo "==> restart app (single ge-web from $ROOT)"
 if command -v pm2 >/dev/null 2>&1; then
-  echo "==> stop legacy/conflicting pm2 apps on port 3005"
-  pm2 delete ge-web 2>/dev/null || true
-  pm2 delete geserverhub 2>/dev/null || true
-
   pm2 start npm --name ge-web --cwd "$ROOT" -- start
   pm2 save
   pm2 status
@@ -79,7 +88,6 @@ if command -v pm2 >/dev/null 2>&1; then
   else
     echo "ERROR: /m-factory still serves stale HTML"
     echo "       Expected: m-factoryandresort.com + mf-booking in HTML"
-    echo "       Fix: node scripts/kill-port.mjs 3005 && pm2 delete ge-web && pm2 start npm --name ge-web --cwd \"$ROOT\" -- start"
     exit 1
   fi
   CSS_LINKS="$(echo "$HTML" | grep -o '_next/static/css/[^"]*' | sort -u | wc -l | tr -d ' ')"
