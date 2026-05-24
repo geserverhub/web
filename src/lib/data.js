@@ -95,7 +95,7 @@ export const fallbackClients = [
     contact_email: "m.factoryandresort@gmail.com",
     contact_phone: "+66 095-241-1833",
     thumbnail: "/m-factory/LINE_ALBUM_12369_260417_1.jpg",
-    system_url: "/m-factory/booking",
+    system_url: "https://m-factoryandresort.com/",
   },
   {
     id: 4,
@@ -179,6 +179,7 @@ const PORTAL_URL_OVERRIDES = {
   "green-retail-group": "/energy-dashboard-login",
   "green-retail-energy": "/energy-dashboard-login",
   "m-group": "/m-group",
+  "m-factory": "https://m-factoryandresort.com/",
 };
 
 /** Resolve portal URL for API cards when DB systemUrl is empty or invalid. */

@@ -17,6 +17,9 @@ const CLIENT_CARD_OVERRIDES = {
   "m-group": {
     system_url: "/m-group",
   },
+  "m-factory": {
+    system_url: "https://m-factoryandresort.com/",
+  },
 };
 
 export const dynamic = "force-dynamic";
