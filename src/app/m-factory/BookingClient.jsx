@@ -450,7 +450,7 @@ export default function BookingClient() {
             </div>
           </div>
 
-          <div className="hidden sm:block text-center pt-2">
+          <div className="mf-submit-wrap text-center pt-2">
             <button
               type="submit"
               disabled={!canSubmit}
@@ -460,18 +460,18 @@ export default function BookingClient() {
             </button>
           </div>
         </form>
+      </div>
 
-        {/* Fixed bottom bar — mobile only */}
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl">
-          <button
-            type="submit"
-            form="mf-booking-form"
-            disabled={!canSubmit}
-            className="mf-submit-btn w-full bg-gradient-to-r from-emerald-500 to-green-600 active:from-emerald-700 active:to-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 min-h-[54px] rounded-2xl text-base font-bold shadow-lg"
-          >
-            {status === "loading" ? `⏳ ${t.submitting}` : `✅ ${t.confirm}`}
-          </button>
-        </div>
+      {/* Fixed bottom bar — mobile */}
+      <div className="mf-submit-bar">
+        <button
+          type="submit"
+          form="mf-booking-form"
+          disabled={!canSubmit}
+          className="mf-submit-btn w-full bg-gradient-to-r from-emerald-500 to-green-600 active:from-emerald-700 active:to-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 min-h-[54px] rounded-2xl text-base font-bold shadow-lg"
+        >
+          {status === "loading" ? `⏳ ${t.submitting}` : `✅ ${t.confirm}`}
+        </button>
       </div>
     </div>
   );
