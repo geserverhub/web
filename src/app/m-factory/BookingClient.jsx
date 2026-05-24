@@ -110,12 +110,12 @@ function RequiredHint({ text }) {
 }
 
 const inputClass =
-  "mf-input w-full border-2 border-black rounded-xl p-3 min-h-[48px] text-base";
+  "mf-input w-full border-2 border-blue-200 focus:border-blue-500 focus:outline-none rounded-xl p-3.5 min-h-[52px] text-base bg-white transition-colors";
 const selectClass =
-  "mf-select w-full border-2 border-black rounded-xl p-3 min-h-[48px] text-base";
-const sectionClass = "mf-section bg-gray-50 border-2 border-gray-200 rounded-2xl p-4 sm:p-6";
-const sectionTitleClass = "mf-section-title text-xl sm:text-2xl font-bold mb-4 sm:mb-6";
-const labelClass = "mf-label block mb-2 font-semibold text-base";
+  "mf-select w-full border-2 border-blue-200 focus:border-blue-500 focus:outline-none rounded-xl p-3.5 min-h-[52px] text-base bg-white transition-colors";
+const sectionClass = "mf-section bg-white border border-blue-100 rounded-2xl p-5 sm:p-7 shadow-sm";
+const sectionTitleClass = "mf-section-title text-lg sm:text-xl font-bold mb-5 text-blue-800 flex items-center gap-2";
+const labelClass = "mf-label block mb-2 font-semibold text-gray-700 text-sm sm:text-base";
 
 export default function BookingClient() {
   const [language, setLanguage] = useState("th");
@@ -237,46 +237,44 @@ export default function BookingClient() {
   }
 
   return (
-    <div className="m-factory-layout mf-booking mf-page min-h-screen bg-gradient-to-br from-blue-100 via-white to-cyan-100 px-3 py-4 sm:p-4 md:p-8 text-black">
-      <div className="mf-card max-w-6xl mx-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl">
-        <header className="mf-header bg-gradient-to-r from-blue-700 to-cyan-500 text-white p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-4">
-          <div className="mf-header-main min-w-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">{t.title}</h1>
-            <p className="mt-2 text-base sm:text-lg leading-snug">{t.subtitle}</p>
-            <a
-              href="https://m-factoryandresort.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-3 text-sm underline text-white/90 hover:text-white break-words"
-            >
-              {t.siteLink} →
-            </a>
-          </div>
-          <div className="mf-lang grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => setLanguage("th")}
-              className={`mf-lang-btn min-h-[44px] px-4 py-2.5 rounded-xl font-bold shadow text-base ${
-                language === "th" ? "bg-white text-blue-700" : "bg-blue-600/40 text-white"
-              }`}
-            >
-              TH
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage("en")}
-              className={`mf-lang-btn min-h-[44px] px-4 py-2.5 rounded-xl font-bold shadow text-base ${
-                language === "en" ? "bg-white text-blue-700" : "bg-blue-600/40 text-white"
-              }`}
-            >
-              EN
-            </button>
+    <div className="m-factory-layout mf-booking mf-page min-h-screen bg-gradient-to-br from-blue-50 via-white to-sky-50 px-0 py-0 sm:px-4 sm:py-6 md:px-8 md:py-10 text-black">
+      <div className="mf-card max-w-4xl mx-auto bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden">
+        {/* Header */}
+        <header className="mf-header bg-gradient-to-r from-blue-800 via-blue-600 to-cyan-500 text-white p-5 sm:p-7 md:p-10">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="mf-header-main min-w-0">
+              <div className="text-xs font-semibold tracking-widest text-blue-200 uppercase mb-1">🏭 M-Factory · Ladlumkaew, Pathum Thani</div>
+              <h1 className="text-3xl sm:text-4xl font-black leading-tight">{t.title}</h1>
+              <p className="mt-1.5 text-base sm:text-lg text-blue-100 leading-snug">{t.subtitle}</p>
+              <a
+                href="https://m-factoryandresort.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-3 text-sm bg-white/20 hover:bg-white/30 transition px-3 py-1.5 rounded-lg text-white font-medium"
+              >
+                🔗 {t.siteLink}
+              </a>
+            </div>
+            <div className="mf-lang flex gap-2 shrink-0">
+              {["th", "en"].map(lang => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  className={`min-h-[44px] min-w-[52px] px-4 py-2 rounded-xl font-bold shadow text-sm transition ${
+                    language === lang ? "bg-white text-blue-700 shadow-lg" : "bg-blue-500/40 text-white hover:bg-blue-500/60"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
-        <form id="mf-booking-form" onSubmit={handleSubmit} className="mf-form p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-8 pb-28 sm:pb-8">
+        <form id="mf-booking-form" onSubmit={handleSubmit} className="mf-form p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 pb-28 sm:pb-8 bg-slate-50">
           <div className={sectionClass}>
-            <h2 className={sectionTitleClass}>{t.bookingInfo}</h2>
+            <h2 className={sectionTitleClass}>📋 {t.bookingInfo}</h2>
             <div className="mf-field-grid grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className={labelClass}>{t.company}</label>
@@ -361,7 +359,7 @@ export default function BookingClient() {
           </div>
 
           <div className={sectionClass}>
-            <h2 className={sectionTitleClass}>{t.warehouseInfo}</h2>
+            <h2 className={sectionTitleClass}>🏭 {t.warehouseInfo}</h2>
             <div className="mf-field-grid grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className={labelClass}>
@@ -400,9 +398,9 @@ export default function BookingClient() {
           </div>
 
           <div className={sectionClass}>
-            <h2 className={`${sectionTitleClass} mb-2`}>{t.payment}</h2>
+            <h2 className={`${sectionTitleClass} mb-2`}>💳 {t.payment}</h2>
             <RequiredHint text={t.requiredUpload} />
-            <label className="mf-file-btn mt-4 w-full min-h-[52px] border-2 border-black rounded-xl p-3 sm:p-4 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-100 transition text-base text-center break-all">
+            <label className="mf-file-btn mt-4 w-full min-h-[64px] border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition text-sm sm:text-base text-center break-all gap-1 text-blue-700 font-medium">
               {paymentUploading ? t.uploading : form.paymentFileName || t.pickFile}
               <input
                 type="file"
@@ -414,8 +412,8 @@ export default function BookingClient() {
             </label>
           </div>
 
-          <div className="mf-qr-section bg-white border-2 border-blue-200 rounded-2xl p-4 sm:p-6 text-center">
-            <h2 className="text-lg sm:text-2xl font-bold mb-4 leading-snug">{t.visitProject}</h2>
+          <div className="mf-qr-section bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-5 sm:p-7 text-center shadow-sm">
+            <h2 className="text-base sm:text-xl font-bold mb-4 leading-snug text-blue-800">📱 {t.visitProject}</h2>
             <div className="flex justify-center">
               <img
                 src="/m-factory/qr-line.jpg"
@@ -427,13 +425,13 @@ export default function BookingClient() {
             </div>
           </div>
 
-          <div className="mf-terms bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold mb-4">⚠️ {t.termsTitle}</h2>
-            <ul className="mf-terms-list list-disc ml-5 sm:ml-6 space-y-2 sm:space-y-3 text-base sm:text-lg leading-relaxed">
-              <li>{t.term1}</li>
-              <li>{t.term2}</li>
-              <li>{t.term3}</li>
-              <li>{t.term4}</li>
+          <div className="mf-terms bg-amber-50 border border-amber-300 rounded-2xl p-5 sm:p-7 shadow-sm">
+            <h2 className="text-base sm:text-lg font-bold mb-4 text-amber-800">⚠️ {t.termsTitle}</h2>
+            <ul className="mf-terms-list list-none space-y-2.5 text-sm sm:text-base leading-relaxed text-amber-900">
+              <li className="flex gap-2"><span className="shrink-0">•</span>{t.term1}</li>
+              <li className="flex gap-2"><span className="shrink-0">•</span>{t.term2}</li>
+              <li className="flex gap-2"><span className="shrink-0">•</span>{t.term3}</li>
+              <li className="flex gap-2"><span className="shrink-0">•</span>{t.term4}</li>
             </ul>
             <div className="mt-4">
               <label className="mf-check-row flex items-start gap-3 cursor-pointer">
@@ -452,25 +450,26 @@ export default function BookingClient() {
             </div>
           </div>
 
-          <div className="mf-submit-wrap hidden sm:block text-center">
+          <div className="hidden sm:block text-center pt-2">
             <button
               type="submit"
               disabled={!canSubmit}
-              className="mf-submit-btn w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-green-600 sm:hover:scale-105 transition disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 sm:px-12 py-4 min-h-[52px] rounded-2xl text-lg sm:text-xl font-bold shadow-lg"
+              className="mf-submit-btn bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 hover:scale-105 active:scale-100 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 text-white px-12 py-4 min-h-[56px] rounded-2xl text-lg font-bold shadow-xl"
             >
-              {status === "loading" ? t.submitting : t.confirm}
+              {status === "loading" ? `⏳ ${t.submitting}` : `✅ ${t.confirm}`}
             </button>
           </div>
         </form>
 
-        <div className="mf-submit-bar sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* Fixed bottom bar — mobile only */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl">
           <button
             type="submit"
             form="mf-booking-form"
             disabled={!canSubmit}
-            className="mf-submit-btn w-full max-w-6xl mx-auto block bg-gradient-to-r from-emerald-500 to-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 min-h-[52px] rounded-2xl text-lg font-bold shadow-lg"
+            className="mf-submit-btn w-full bg-gradient-to-r from-emerald-500 to-green-600 active:from-emerald-700 active:to-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 min-h-[54px] rounded-2xl text-base font-bold shadow-lg"
           >
-            {status === "loading" ? t.submitting : t.confirm}
+            {status === "loading" ? `⏳ ${t.submitting}` : `✅ ${t.confirm}`}
           </button>
         </div>
       </div>
