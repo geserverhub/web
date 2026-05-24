@@ -117,6 +117,9 @@ export default function DevicesSettingPage() {
   const [createMsg, setCreateMsg] = useState<string | null>(null);
   const [clientReady, setClientReady] = useState(false);
   const [installationType, setInstallationType] = useState<'pre_install' | 'installed'>('installed');
+  const [addFormSite, setAddFormSite] = useState<'thailand' | 'korea'>('thailand');
+  const [geocodeLoading, setGeocodeLoading] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
   const [editingRecordScope, setEditingRecordScope] = useState<number | null>(null);
   const [selectedRecordScope, setSelectedRecordScope] = useState<'pre_install' | 'installed' | null>(null);
   const [updatingRecordScope, setUpdatingRecordScope] = useState(false);
@@ -181,11 +184,41 @@ export default function DevicesSettingPage() {
     return Number.isFinite(numericValue) ? numericValue : undefined;
   };
 
+  const siteDisplayLocation = (site: 'thailand' | 'korea') =>
+    site === 'korea' ? (locale === 'ko' ? '대한민국' : 'Korea') : locale === 'th' ? 'ประเทศไทย' : 'Thailand';
+
+  async function geocodeFromAddress(
+    address: string,
+    site: 'thailand' | 'korea',
+    apply: (lat: string, lon: string) => void
+  ) {
+    const country = site === 'korea' ? 'South Korea' : 'Thailand';
+    const query = [address.trim(), country].filter(Boolean).join(', ');
+    if (!address.trim()) {
+      setGeocodeError(locale === 'th' ? 'กรุณากรอกที่อยู่ก่อนค้นหาพิกัด' : 'Enter an address first');
+      return;
+    }
+    setGeocodeLoading(true);
+    setGeocodeError(null);
+    try {
+      const res = await fetch(`/api/ge-energy/geocode?q=${encodeURIComponent(query)}`);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.lat || !body.lon) {
+        throw new Error(body.error || 'Geocode failed');
+      }
+      apply(String(body.lat), String(body.lon));
+    } catch (err: unknown) {
+      setGeocodeError(err instanceof Error ? err.message : 'Geocode failed');
+    } finally {
+      setGeocodeLoading(false);
+    }
+  }
+
   // Preload product names for the device selector
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const res = await fetch('/api/kenergy/products?limit=200&sortBy=name');
+        const res = await fetch('/api/ge-energy/products?limit=200&sortBy=name');
         const json = (await res.json()) as ProductResponse;
         if (json?.products?.length) {
           setProductNames(
@@ -265,7 +298,7 @@ export default function DevicesSettingPage() {
     if (!confirm(confirmMsg)) return;
 
     try {
-      const response = await fetch(`/api/kenergy/devices-setting?deviceId=${device.deviceID}`, {
+      const response = await fetch(`/api/ge-energy/devices-setting?deviceId=${device.deviceID}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -287,7 +320,7 @@ export default function DevicesSettingPage() {
     setSaving(true);
     setSaveMsg(null);
     try {
-      const res = await fetch('/api/kenergy/devices-setting', {
+      const res = await fetch('/api/ge-energy/devices-setting', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -316,7 +349,7 @@ export default function DevicesSettingPage() {
     
     setUpdatingRecordScope(true);
     try {
-      const res = await fetch('/api/kenergy/devices-setting', {
+      const res = await fetch('/api/ge-energy/devices-setting', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -338,19 +371,16 @@ export default function DevicesSettingPage() {
   }
 
   function openAddModal() {
+    const site: 'thailand' | 'korea' =
+      selectedSite === 'korea' ? 'korea' : 'thailand';
+    setAddFormSite(site);
     setAddForm({
       deviceName: '',
-      ksaveID: nextKsaveId(selectedSite),
-      seriesNo: nextSerialNo(selectedSite),
+      ksaveID: '',
+      seriesNo: '',
       ipAddress: '',
       phone: '',
-      location: selectedSite === 'korea'
-        ? 'Korea'
-        : selectedSite === 'vietnam'
-          ? 'Vietnam'
-          : selectedSite === 'malaysia'
-            ? 'Malaysia'
-            : 'Thailand',
+      location: siteDisplayLocation(site),
       latitude: '',
       longitude: '',
       customerName: '',
@@ -362,6 +392,7 @@ export default function DevicesSettingPage() {
     setCustomerSearchTerm('');
     setCustomerResults([]);
     setCreateMsg(null);
+    setGeocodeError(null);
     setShowAddModal(true);
   }
 
@@ -374,7 +405,7 @@ export default function DevicesSettingPage() {
     setCreating(true);
     setCreateMsg(null);
     try {
-      const res = await fetch('/api/kenergy/devices-setting', {
+      const res = await fetch('/api/ge-energy/devices-setting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -382,7 +413,8 @@ export default function DevicesSettingPage() {
           customerId: addForm.customer_id ?? null,
           latitude: parseCoordinate(addForm.latitude),
           longitude: parseCoordinate(addForm.longitude),
-          site: selectedSite,
+          site: addFormSite,
+          location: addForm.location?.trim() || siteDisplayLocation(addFormSite),
           recordScope: installationType
         }),
       });
@@ -408,7 +440,7 @@ export default function DevicesSettingPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/kenergy/devices-setting?site=${selectedSite}`);
+      const response = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`);
       const data = await response.json();
 
       if (data.success) {
@@ -481,7 +513,7 @@ export default function DevicesSettingPage() {
           ipAddress: 'IP Address',
           lastUpdate: 'อัปเดตล่าสุด',
           registerDate: 'วันที่ลงทะเบียน',
-          tableHeaders: ['#', 'แก้ไข', 'ชื่อเครื่อง', 'KSAVE ID', 'ชื่อลูกค้า', 'เบอร์โทร', 'ที่อยู่', 'อีเมลเจ้าของ', 'ประเภทการติดตั้ง', 'สถานะ', 'IP Address', 'อัปเดตล่าสุด', 'ลงทะเบียน'],
+          tableHeaders: ['#', 'แก้ไข', 'ชื่อเครื่อง', 'รหัสมิเตอร์', 'ชื่อลูกค้า', 'เบอร์โทร', 'ที่อยู่', 'อีเมลเจ้าของ', 'ประเภทมิเตอร์', 'สถานะ', 'IP Address', 'อัปเดตล่าสุด', 'ลงทะเบียน'],
           settingsBadge: 'ตั้งค่าอุปกรณ์',
           edit: 'แก้ไข',
           delete: 'ลบ',
@@ -502,15 +534,21 @@ export default function DevicesSettingPage() {
           ownerEmailLabel: 'อีเมลเจ้าของ / Owner Email',
           serialNoLabel: 'หมายเลขซีเรียล / Serial no',
           locationLabel: 'สถานที่ / Location',
-          locationNameLabel: 'ชื่อสถานที่ / Location name',
+          locationNameLabel: 'ประเทศ / Country',
+          siteThailand: 'ไทย',
+          siteKorea: 'เกาหลี',
+          meterCodeLabel: 'รหัสมิเตอร์ / Meter code',
+          meterCodePlaceholder: 'กรอกเอง',
           latitudeLabel: 'ละติจูด / Latitude',
           longitudeLabel: 'ลองจิจูด / Longitude',
-          devicePhoneLabel: 'เบอร์โทรเครื่อง / Device Phone',
+          geocodeBtn: 'ค้นหาพิกัดจากที่อยู่',
+          geocodeHint: 'ใช้ที่อยู่ลูกค้าเพื่อเติมละติจูดและลองจิจูด',
+          devicePhoneLabel: 'เบอร์โทรเครื่องมิเตอร์ / Meter Phone',
           deviceNamePlaceholder: 'ชื่อเครื่อง',
           ownerEmailPlaceholder: 'อีเมลเจ้าของ',
           locationPlaceholder: 'สถานที่',
           devicePhonePlaceholder: 'เช่น 02-123-4567 หรือ +66 81-234-5678',
-          serialNoPlaceholder: 'เช่น KS2024010001',
+          serialNoPlaceholder: 'กรอกเอง',
           saving: 'กำลังบันทึก...',
           saved: '✓ บันทึกแล้ว!',
           save: 'บันทึก',
@@ -528,11 +566,12 @@ export default function DevicesSettingPage() {
           created: '✓ เพิ่มสำเร็จ!',
           createError: 'เพิ่มไม่สำเร็จ กรุณาตรวจสอบชื่อเครื่องแล้วลองใหม่',
           deviceNameRequired: 'ชื่อเครื่องจำเป็นต้องกรอก',
-          installationTypeLabel: '📦 ประเภทการติดตั้ง / Installation Type',
-          preInstallLabel: '📝 ก่อนติดตั้ง',
-          preInstallDesc: 'Pre-Installation',
-          installedLabel: '✓ ติดตั้งจริง',
-          installedDesc: 'Installed'
+          installationTypeLabel: '📦 ประเภทการติดตั้งมิเตอร์ / Installation meter Type',
+          preInstallLabel: 'มิเตอร์ INPUT',
+          preInstallDesc: 'Meter INPUT',
+          installedLabel: 'มิเตอร์ OUTPUT',
+          installedDesc: 'Meter OUTPUT',
+          customerSearchPlaceholder: 'ค้นหา ชื่อลูกค้า, เบอร์โทร, ที่อยู่...'
         };
       case 'ko':
         return {
@@ -572,15 +611,21 @@ export default function DevicesSettingPage() {
           ownerEmailLabel: '소유자 이메일 / Owner Email',
           serialNoLabel: '시리얼 번호 / Serial no',
           locationLabel: '위치 / Location',
-          locationNameLabel: '위치명 / Location name',
+          locationNameLabel: '국가 / Country',
+          siteThailand: '태국',
+          siteKorea: '한국',
+          meterCodeLabel: '미터 코드 / Meter code',
+          meterCodePlaceholder: '직접 입력',
           latitudeLabel: '위도 / Latitude',
           longitudeLabel: '경도 / Longitude',
-          devicePhoneLabel: '장치 전화번호 / Device Phone',
+          geocodeBtn: '주소로 좌표 검색',
+          geocodeHint: '고객 주소로 위도·경도를 채웁니다',
+          devicePhoneLabel: '미터 전화번호 / Meter Phone',
           deviceNamePlaceholder: '장치명',
           ownerEmailPlaceholder: '소유자 이메일',
           locationPlaceholder: '위치',
           devicePhonePlaceholder: '예: 02-123-4567 또는 +82 10-1234-5678',
-          serialNoPlaceholder: '예: KS2024010001',
+          serialNoPlaceholder: '직접 입력',
           saving: '저장 중...',
           saved: '✓ 저장 완료!',
           save: '저장',
@@ -598,11 +643,12 @@ export default function DevicesSettingPage() {
           created: '✓ 추가 완료!',
           createError: '추가 실패. 장치명을 확인 후 다시 시도하세요.',
           deviceNameRequired: '장치명은 필수입니다',
-          installationTypeLabel: '📦 설치 유형 / Installation Type',
-          preInstallLabel: '📝 설치 전',
-          preInstallDesc: 'Pre-Installation',
-          installedLabel: '✓ 설치 완료',
-          installedDesc: 'Installed'
+          installationTypeLabel: '📦 미터 설치 유형 / Installation meter Type',
+          preInstallLabel: '미터 INPUT',
+          preInstallDesc: 'Meter INPUT',
+          installedLabel: '미터 OUTPUT',
+          installedDesc: 'Meter OUTPUT',
+          customerSearchPlaceholder: '고객명, 전화, 주소 검색...'
         };
       default:
         return {
@@ -621,7 +667,7 @@ export default function DevicesSettingPage() {
           ipAddress: 'IP Address',
           lastUpdate: 'Last Update',
           registerDate: 'Register Date',
-          tableHeaders: ['#', 'Edit', 'Device Name', 'KSAVE ID', 'Customer Name', 'Phone', 'Address', 'Owner Email', 'Installation Type', 'Status', 'IP Address', 'Last Update', 'Registered'],
+          tableHeaders: ['#', 'Edit', 'Device Name', 'Meter code', 'Customer Name', 'Phone', 'Address', 'Owner Email', 'Meter Type', 'Status', 'IP Address', 'Last Update', 'Registered'],
           settingsBadge: 'Device Settings',
           edit: 'Edit',
           delete: 'Delete',
@@ -642,15 +688,21 @@ export default function DevicesSettingPage() {
           ownerEmailLabel: 'Owner Email',
           serialNoLabel: 'Serial no',
           locationLabel: 'Location',
-          locationNameLabel: 'Location name',
+          locationNameLabel: 'Country',
+          siteThailand: 'Thailand',
+          siteKorea: 'Korea',
+          meterCodeLabel: 'Meter code',
+          meterCodePlaceholder: 'Enter manually',
           latitudeLabel: 'Latitude',
           longitudeLabel: 'Longitude',
-          devicePhoneLabel: 'Device Phone',
+          geocodeBtn: 'Find coordinates from address',
+          geocodeHint: 'Uses customer address to fill latitude and longitude',
+          devicePhoneLabel: 'Meter phone',
           deviceNamePlaceholder: 'Device Name',
           ownerEmailPlaceholder: 'email@example.com',
           locationPlaceholder: 'Location',
           devicePhonePlaceholder: 'e.g. +66 81-234-5678',
-          serialNoPlaceholder: 'e.g. KS2024010001',
+          serialNoPlaceholder: 'Enter manually',
           saving: 'Saving...',
           saved: '✓ Saved!',
           save: 'Save',
@@ -668,11 +720,12 @@ export default function DevicesSettingPage() {
           created: '✓ Created!',
           createError: 'Create failed. Please check required fields and try again.',
           deviceNameRequired: 'Device name is required',
-          installationTypeLabel: '📦 Installation Type',
-          preInstallLabel: '📝 Pre-Installation',
-          preInstallDesc: 'Pre-Installation',
-          installedLabel: '✓ Installed',
-          installedDesc: 'Installed'
+          installationTypeLabel: '📦 Installation meter Type',
+          preInstallLabel: 'Meter INPUT',
+          preInstallDesc: 'Meter INPUT',
+          installedLabel: 'Meter OUTPUT',
+          installedDesc: 'Meter OUTPUT',
+          customerSearchPlaceholder: 'Search customer name, phone, address...'
         };
     }
   })();
@@ -1068,7 +1121,7 @@ export default function DevicesSettingPage() {
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{ui.deviceInfo}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">KSAVE ID</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{ui.meterCodeLabel || 'รหัสมิเตอร์'}</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 font-mono">
                       {viewingDevice.ksaveID || '-'}
                     </div>
@@ -1342,12 +1395,12 @@ export default function DevicesSettingPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">KSAVE ID</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{ui.meterCodeLabel || 'รหัสมิเตอร์'}</label>
                   <input
                     value={addForm.ksaveID ?? ''}
                     onChange={e => setAddForm(f => ({ ...f, ksaveID: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder={`KSAVE-${siteCode(selectedSite)}-000001`}
+                    placeholder={ui.meterCodePlaceholder || 'กรอกเอง'}
                   />
                 </div>
                 <div>
@@ -1356,17 +1409,23 @@ export default function DevicesSettingPage() {
                     value={addForm.seriesNo ?? ''}
                     onChange={e => setAddForm(f => ({ ...f, seriesNo: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder={nextSerialNo(selectedSite)}
+                    placeholder={ui.serialNoPlaceholder || 'กรอกเอง'}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{ui.locationNameLabel || ui.locationLabel}</label>
-                  <input
-                    value={addForm.location ?? ''}
-                    onChange={e => setAddForm(f => ({ ...f, location: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder={ui.locationPlaceholder}
-                  />
+                  <select
+                    value={addFormSite}
+                    onChange={(e) => {
+                      const site = e.target.value as 'thailand' | 'korea';
+                      setAddFormSite(site);
+                      setAddForm((f) => ({ ...f, location: siteDisplayLocation(site) }));
+                    }}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  >
+                    <option value="thailand">{ui.siteThailand || 'ไทย'}</option>
+                    <option value="korea">{ui.siteKorea || 'เกาหลี'}</option>
+                  </select>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
@@ -1426,7 +1485,7 @@ export default function DevicesSettingPage() {
                         value={customerSearchTerm}
                         onChange={e => setCustomerSearchTerm(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder={ui.searchPlaceholder || 'ค้นหาลูกค้าจากฐานข้อมูล'}
+                        placeholder={ui.customerSearchPlaceholder || ui.searchPlaceholder || 'ค้นหา ชื่อลูกค้า, เบอร์โทร, ที่อยู่...'}
                       />
                       <button
                         type="button"
@@ -1504,6 +1563,24 @@ export default function DevicesSettingPage() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                     placeholder={ui.addressPlaceholder}
                   />
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    disabled={geocodeLoading}
+                    onClick={() =>
+                      geocodeFromAddress(
+                        addForm.customerAddress || addForm.location || '',
+                        addFormSite,
+                        (lat, lon) => setAddForm((f) => ({ ...f, latitude: lat, longitude: lon }))
+                      )
+                    }
+                    className="w-full px-3 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white rounded-xl text-sm font-semibold transition"
+                  >
+                    {geocodeLoading ? ui.loading : ui.geocodeBtn || 'ค้นหาพิกัดจากที่อยู่'}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">{ui.geocodeHint}</p>
+                  {geocodeError && <p className="text-xs text-red-500 mt-1">{geocodeError}</p>}
                 </div>
               </div>
             </div>

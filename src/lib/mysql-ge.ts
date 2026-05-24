@@ -9,10 +9,7 @@ export { GESERVERHUB_DATABASE, getGeserverhubConnectionConfig };
 /** @deprecated Prefer queryGeserverhub */
 export const queryGe = queryGeserverhub;
 
-/** @deprecated Use queryGeserverhub */
-export const queryKsave = queryGeserverhub;
-
-/** @deprecated Use queryGeserverhub — same geserverhub pool, not ksystem */
+/** @deprecated Use queryGeserverhub — same goeunserverhub pool */
 export const queryUser = queryGeserverhub;
 
 export async function getAllDevices(): Promise<unknown[]> {
@@ -77,6 +74,3 @@ export async function getDeviceByGeId(geID: string): Promise<unknown | null> {
     return null;
   }
 }
-
-/** @deprecated Use getDeviceByGeId */
-export const getDeviceByKsaveId = getDeviceByGeId;

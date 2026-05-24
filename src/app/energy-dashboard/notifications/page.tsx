@@ -40,7 +40,7 @@ export default function NotificationsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/kenergy/device-notifications?site=${selectedSite}`);
+      const response = await fetch(`/api/ge-energy/device-notifications?site=${selectedSite}`);
       const data = await response.json();
 
       if (data.success) {
@@ -70,7 +70,7 @@ export default function NotificationsPage() {
     setSubmitStatus(null);
 
     try {
-      const response = await fetch('/api/kenergy/device-notifications', {
+      const response = await fetch('/api/ge-energy/device-notifications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

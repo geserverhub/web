@@ -92,7 +92,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           error:
-            'Database connection failed. Start dev in WSL (npm run dev:wsl) or create geserverhub user on Windows MySQL.',
+            'Database connection failed. Start dev in WSL (npm run dev:wsl) or create goeunserverhub DB user on Windows MySQL.',
         },
         { status: 503 }
       );

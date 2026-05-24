@@ -50,8 +50,6 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
-  /* ลดพื้นขาวรอบโลโก้ PNG (บนพื้นสว่าง) */
-  mix-blend-mode: multiply;
 }
 
 .momo-header-actions {

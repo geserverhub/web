@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import MartClient from "./MartClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "สินค้า มาร์ท — GOEUN SERVER HUB" };
+export const metadata = { title: "สินค้า มาร์ท — GE SERVER HUB" };
 
 export default async function MartPage() {
   const session = await auth();

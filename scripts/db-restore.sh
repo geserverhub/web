@@ -25,9 +25,9 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-3306}"
 DB_USER="${DB_USER:-root}"
 DB_PASSWORD="${DB_PASSWORD:-}"
-DB_NAME="${DB_NAME:-geserverhub}"
+DB_NAME="${DB_NAME:-goeunserverhub}"
 
-BACKUP="${1:-$ROOT/backups/20260508_173742/goeunserverhub_db.sql}"
+BACKUP="${1:-$ROOT/database/geserverhub.sql}"
 if [[ ! -f "$BACKUP" ]]; then
   echo "Backup not found: $BACKUP"
   echo "Run: git pull geserverhub main"
@@ -49,6 +49,10 @@ echo "Creating database '$DB_NAME' if missing..."
 
 echo "Importing $BACKUP ..."
 "${MYSQL[@]}" "$DB_NAME" < "$BACKUP"
+
+echo "Applying energy + M-Factory migrations (idempotent)..."
+"${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-energy-geserverhub.sql"
+"${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-mfactory-inquiry.sql"
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
   if [[ -n "$DB_PASSWORD" ]]; then

@@ -48,7 +48,7 @@ async function main() {
       systemUrl: null,
     },
     {
-      name: "GOEUN SERVER HUB",
+      name: "GE SERVER HUB",
       slug: "goeun-server-hub",
       status: "ONLINE",
       contactEmail: "goeunserverhub@gmail.com",
@@ -66,14 +66,14 @@ async function main() {
     console.log("✅ client:", client.name);
   }
 
-  // ── LINK superadmin to GOEUN SERVER HUB ──
+  // ── LINK superadmin to GE SERVER HUB ──
   const geClient = await prisma.client.findUnique({ where: { slug: "goeun-server-hub" } });
   if (geClient) {
     await prisma.user.update({
       where: { email: "superadmin" },
       data: { clientId: geClient.id },
     });
-    console.log("✅ linked superadmin → GOEUN SERVER HUB");
+    console.log("✅ linked superadmin → GE SERVER HUB");
   }
 
   console.log("\n🎉 Seed complete.");

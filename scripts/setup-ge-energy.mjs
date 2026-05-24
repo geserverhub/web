@@ -1,5 +1,5 @@
 /**
- * Create GE energy tables in geserverhub and seed demo data when empty.
+ * Create GE energy tables in goeunserverhub and seed demo data when empty.
  * Usage: node scripts/setup-ge-energy.mjs
  */
 import { config } from 'dotenv';
@@ -11,7 +11,7 @@ import mysql from 'mysql2/promise';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env.local') });
 
-const DB_NAME = 'geserverhub';
+const DB_NAME = 'goeunserverhub';
 
 function getConfig() {
   const url = process.env.DATABASE_URL;
@@ -50,7 +50,7 @@ async function main() {
 
   const sql = readFileSync(resolve(__dirname, '../prisma/migrate-energy-geserverhub.sql'), 'utf8');
   await admin.query(sql);
-  console.log('Migration applied on geserverhub.');
+  console.log('Migration applied on goeunserverhub.');
   await admin.end();
 
   const db = await mysql.createConnection({ ...cfg, database: DB_NAME });
@@ -97,7 +97,7 @@ async function main() {
     WHERE d.site = 'korea'
   `);
   console.log(`Korea monthly buckets: ${monthlyCount}`);
-  console.log('Done — all energy data uses geserverhub only.');
+  console.log('Done — all energy data uses goeunserverhub only.');
   await db.end();
 }
 

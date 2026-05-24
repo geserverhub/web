@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import { fallbackClients } from "@/lib/data";
+import { fallbackClients, resolveClientPortalUrl } from "@/lib/data";
 
 /** Keep homepage client cards in sync when DB rows lag behind fallback/seed data. */
 const CLIENT_CARD_OVERRIDES = {
@@ -7,10 +7,15 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail: "/uploads/logos/G-monitoring.png",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
+    system_url: "/energy-dashboard-login",
   },
   "green-retail-energy": {
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
+    system_url: "/energy-dashboard-login",
+  },
+  "m-group": {
+    system_url: "/m-group",
   },
 };
 
@@ -33,7 +38,7 @@ export async function GET() {
     return Response.json({
       clients: rows.map((c) => {
         const patch = CLIENT_CARD_OVERRIDES[c.slug] || {};
-        return {
+        const row = {
           id: c.id,
           name: c.name,
           slug: c.slug,
@@ -42,8 +47,12 @@ export async function GET() {
           contact_email: patch.contact_email ?? c.contactEmail,
           contact_phone: patch.contact_phone ?? c.contactPhone,
           contact_fax: c.contactFax || null,
-          system_url: c.systemUrl,
+          system_url: patch.system_url ?? c.systemUrl,
           thumbnail: patch.thumbnail ?? c.logoUrl,
+        };
+        return {
+          ...row,
+          system_url: resolveClientPortalUrl(row),
         };
       }),
     });

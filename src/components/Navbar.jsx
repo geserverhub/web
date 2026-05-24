@@ -37,7 +37,7 @@ export default function Navbar({ ui, currentLanguage, setCurrentLanguage, query,
         <a href="#contact" className="agency-topbar-link">
           {ui.navContact}
         </a>
-        <a href="https://strong-dory-enabled.ngrok-free.app/auth/select" className="btn agency-btn-primary agency-topbar-cta">
+        <a href="/auth/select" className="btn agency-btn-primary agency-topbar-cta">
           {ui.navLogin || "เข้าสู่ระบบ"}
         </a>
       </div>

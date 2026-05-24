@@ -185,7 +185,7 @@ export default function CurrentMonitorPage() {
 
   const fetchCustomers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/kenergy/customers-by-site?site=${selectedSite}`);
+      const res = await fetch(`/api/ge-energy/customers-by-site?site=${selectedSite}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.customers)) {
         const names = json.customers.map((c: { customerName: string }) => c.customerName);
@@ -198,7 +198,7 @@ export default function CurrentMonitorPage() {
 
   const fetchDevices = useCallback(async () => {
     try {
-      const res = await fetch(`/api/kenergy/devices-setting?site=${selectedSite}`);
+      const res = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`);
       const json = await res.json();
       if (!json.success || !Array.isArray(json.data)) {
         setDevices([]);
@@ -229,7 +229,7 @@ export default function CurrentMonitorPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/kenergy/device-monitoring?deviceId=${encodeURIComponent(selectedDevice)}`, {
+      const res = await fetch(`/api/ge-energy/device-monitoring?deviceId=${encodeURIComponent(selectedDevice)}`, {
         cache: 'no-store',
       });
       const json = await res.json();
@@ -253,7 +253,7 @@ export default function CurrentMonitorPage() {
     try {
       setChartLoading(true);
       const res = await fetch(
-        `/api/kenergy/current-history?deviceId=${encodeURIComponent(selectedDevice)}&hours=0.5`,
+        `/api/ge-energy/current-history?deviceId=${encodeURIComponent(selectedDevice)}&hours=0.5`,
         { cache: 'no-store' }
       );
       const json = await res.json();

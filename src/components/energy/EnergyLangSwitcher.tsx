@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale } from '@/lib/LocaleContext';
+import { GE_LANG_KEY } from '@/lib/ge-storage-keys';
 
 const ENERGY_LANGS = [
   { value: 'th' as const, label: 'ไทย' },
@@ -14,8 +15,8 @@ function applyLocale(setLocale: (l: string) => void, code: EnergyLocale) {
   setLocale(code);
   try {
     localStorage.setItem('locale', code);
-    localStorage.setItem('k_system_lang', code);
-    window.dispatchEvent(new CustomEvent('k-system-lang', { detail: code }));
+    localStorage.setItem(GE_LANG_KEY, code);
+    window.dispatchEvent(new CustomEvent('ge-lang-changed', { detail: code }));
     window.dispatchEvent(new CustomEvent('locale-changed', { detail: { locale: code } }));
   } catch {
     /* ignore */

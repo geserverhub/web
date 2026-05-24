@@ -49,24 +49,6 @@ interface PowerRecordRow {
   metrics?: PowerSnapshot
 }
 
-interface ParsedDeviceData {
-  location?: string
-  ok?: boolean
-  current?: NumericValue
-  P?: NumericValue
-  p?: NumericValue
-  Q?: NumericValue
-  q?: NumericValue
-  S?: NumericValue
-  s?: NumericValue
-  PF?: NumericValue
-  pf?: NumericValue
-  THD?: NumericValue
-  thd?: NumericValue
-  F?: NumericValue
-  f?: NumericValue
-}
-
 export default function CompareMonitoringPage() {
   const router = useRouter()
   const [rows, setRows] = useState<PowerRecordRow[]>([])
@@ -82,7 +64,7 @@ export default function CompareMonitoringPage() {
       setError(null)
       try {
         // Fetch from MySQL power_records API instead of InfluxDB
-        const res = await fetch('/api/kenergy/power-records?limit=100')
+        const res = await fetch('/api/ge-energy/power-records?limit=100')
         const body = await res.json().catch(() => ({}))
         if (!res.ok) {
           if (mounted) setError(body?.error || 'Failed to load')
@@ -163,29 +145,10 @@ export default function CompareMonitoringPage() {
 
   // ComparisonCard: render a single device card comparing Power Before and Power Metrics
   function ComparisonCard({ device, displayName, items }: { device: string; displayName?: string; items: PowerRecordRow[] }) {
-    const [parsed, setParsed] = useState<ParsedDeviceData | null>(null)
-
-    useEffect(() => {
-      let mounted = true
-      async function fetchParsed() {
-        try {
-          const res = await fetch(`/api/kenergy/influx/device?id=${encodeURIComponent(device)}`)
-          const body = await res.json().catch(() => ({}))
-          if (!mounted) return
-          if (res.ok && body && body.parsed) setParsed(body.parsed as ParsedDeviceData)
-        } catch {
-          // ignore
-        }
-      }
-      fetchParsed()
-      return () => { mounted = false }
-    }, [device])
-
     const sorted = items.slice().sort((a, b) => (new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime()))
     const latest = sorted[0]
 
-    // prefer parsed values from /api/influx/device when available
-    const location = parsed?.location ?? latest?.location ?? '—'
+    const location = latest?.location ?? '—'
 
     // K-Save ID should be the ksaveID from database
     const ksaveId = latest?.ksave || device || '—'
@@ -199,7 +162,7 @@ export default function CompareMonitoringPage() {
     const beforeMeterNo = latest?.beforeMeterNo || '—'
     const metricsMeterNo = latest?.metricsMeterNo || '—'
 
-    const statusOn = parsed?.ok ?? latest?.ok ?? false
+    const statusOn = latest?.ok ?? false
 
     // Extract both Power Before and Power Metrics
     const before = latest?.power_before ?? latest?.before ?? {}
@@ -215,13 +178,13 @@ export default function CompareMonitoringPage() {
     const before_F = Number(before?.F ?? before?.f ?? 0) || 0
 
     // Power Metrics values (current state)
-    const metrics_I = Number(parsed?.current ?? latest?.current ?? metrics?.current ?? latest?._value ?? 0) || 0
-    const metrics_P = Number(parsed?.P ?? parsed?.p ?? metrics.P ?? metrics.p ?? latest?.P ?? 0) || 0
-    const metrics_Q = Number(parsed?.Q ?? parsed?.q ?? metrics.Q ?? metrics.q ?? latest?.Q ?? 0) || 0
-    const metrics_S = Number(parsed?.S ?? parsed?.s ?? metrics.S ?? metrics.s ?? latest?.S ?? 0) || 0
-    const metrics_PF = Number(parsed?.PF ?? parsed?.pf ?? metrics.PF ?? metrics.pf ?? latest?.PF ?? 0) || 0
-    const metrics_THD = Number(parsed?.THD ?? parsed?.thd ?? metrics.THD ?? metrics.thd ?? latest?.THD ?? 0) || 0
-    const metrics_F = Number(parsed?.F ?? parsed?.f ?? metrics.F ?? metrics.f ?? latest?.F ?? 0) || 0
+    const metrics_I = Number(latest?.current ?? metrics?.current ?? latest?._value ?? 0) || 0
+    const metrics_P = Number(metrics.P ?? metrics.p ?? latest?.P ?? 0) || 0
+    const metrics_Q = Number(metrics.Q ?? metrics.q ?? latest?.Q ?? 0) || 0
+    const metrics_S = Number(metrics.S ?? metrics.s ?? latest?.S ?? 0) || 0
+    const metrics_PF = Number(metrics.PF ?? metrics.pf ?? latest?.PF ?? 0) || 0
+    const metrics_THD = Number(metrics.THD ?? metrics.thd ?? latest?.THD ?? 0) || 0
+    const metrics_F = Number(metrics.F ?? metrics.f ?? latest?.F ?? 0) || 0
 
     // Calculate savings/differences
     const savings_I = before_I - metrics_I

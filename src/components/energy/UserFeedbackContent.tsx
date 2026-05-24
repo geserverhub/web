@@ -41,7 +41,7 @@ export default function UserFeedbackContent() {
     setSuccess(false);
 
     try {
-      const res = await fetch('/api/kenergy/user-feedback', {
+      const res = await fetch('/api/ge-energy/user-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

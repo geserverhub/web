@@ -1,4 +1,4 @@
-# GOEUN dev server — run in PowerShell, keep window open
+# GE dev server — run in PowerShell, keep window open
 Set-Location $PSScriptRoot
 $ip = (wsl hostname -I).Trim().Split()[0]
 Write-Host ""

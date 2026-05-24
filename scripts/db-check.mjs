@@ -6,12 +6,20 @@ import mysql from 'mysql2/promise';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env.local') });
 
+const REQUIRED_DB = 'goeunserverhub';
+const dbName = (process.env.DB_NAME || 'goeunserverhub').trim();
+
+if (dbName.toLowerCase() !== REQUIRED_DB) {
+  console.error(`FAIL — DB_NAME must be ${REQUIRED_DB} for this app, got "${dbName}".`);
+  process.exit(1);
+}
+
 const opts = {
   host: process.env.DB_HOST || '127.0.0.1',
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  database: dbName === REQUIRED_DB ? dbName : REQUIRED_DB,
 };
 
 console.log('Platform:', process.platform);

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { parseJsonResponse } from '@/lib/parse-json-response';
+import { GE_ADMIN_TOKEN_KEY, GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 
 export default function CustomerMomogeLoginPage() {
   const router = useRouter();
@@ -38,8 +39,8 @@ export default function CustomerMomogeLoginPage() {
         return;
       }
 
-      localStorage.setItem('k_system_admin_token', data.token || '');
-      localStorage.setItem('k_system_admin_user', JSON.stringify({
+      localStorage.setItem(GE_ADMIN_TOKEN_KEY, data.token || '');
+      localStorage.setItem(GE_ADMIN_USER_KEY, JSON.stringify({
         userId: data.userId,
         username: data.username,
         name: data.name,
@@ -103,24 +104,22 @@ export default function CustomerMomogeLoginPage() {
       }}>
         {/* Logo & Header */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{
-            width: 100,
-            height: 100,
-            borderRadius: 20,
-            overflow: 'hidden',
-            display: 'inline-block',
-            marginBottom: 20,
-            border: '2px solid #1e293b',
-            boxShadow: '0 4px 24px rgba(29,78,216,0.3)',
-          }}>
-            <Image
-              src="/momoge/Logo-brand.png"
-              alt="Momoge Logo"
-              width={100}
-              height={100}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-            />
-          </div>
+          <Image
+            src="/momoge/Logo-brand.png"
+            alt="Momoge Logo"
+            width={200}
+            height={120}
+            style={{
+              display: 'inline-block',
+              marginBottom: 20,
+              objectFit: 'contain',
+              width: 'auto',
+              height: 120,
+              maxWidth: 280,
+              background: 'transparent',
+            }}
+            priority
+          />
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f8fafc', margin: 0 }}>
             Momoge
           </h1>

@@ -14,7 +14,7 @@ const conn = await mysql.createConnection({
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER || 'geserverhub',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'geserverhub',
+  database: process.env.DB_NAME || 'goeunserverhub',
   multipleStatements: true,
 });
 
