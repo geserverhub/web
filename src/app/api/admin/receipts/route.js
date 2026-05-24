@@ -85,7 +85,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { clientId, customerName, customerAddress, customerPhone, customerEmail, currency, issuedAt, notes, vatRate } = body;
+    const { clientId, customerName, customerAddress, customerPhone, customerEmail, currency, issuedAt, notes } = body;
     const items = normalizeReceiptItems(body.items);
 
     if (!clientId) {
@@ -116,9 +116,7 @@ export async function POST(req) {
     const number = await genReceiptNumber();
     const subtotal = roundMoney(items.reduce((sum, item) => sum + item.subtotal, 0));
     const netAfterDiscount = roundMoney(items.reduce((sum, item) => sum + item.amount, 0));
-    const parsedVatRate = vatRate !== undefined && vatRate !== "" && vatRate !== null ? Math.max(0, Math.min(100, Number(vatRate))) : null;
-    const vatAmount = parsedVatRate ? roundMoney(netAfterDiscount * parsedVatRate / 100) : 0;
-    const total = roundMoney(netAfterDiscount + vatAmount);
+    const total = roundMoney(netAfterDiscount);
 
     const receipt = await prisma.receipt.create({
       data: {
@@ -132,7 +130,6 @@ export async function POST(req) {
         issuedAt: issuedAt ? new Date(`${issuedAt}T00:00:00`) : new Date(),
         notes: notes || null,
         subtotal,
-        vatRate: parsedVatRate,
         total,
         items: {
           create: items.map((item) => ({
