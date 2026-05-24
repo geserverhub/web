@@ -1294,6 +1294,7 @@ export default function ClientsUsersClient({ session }) {
   const printReceipt = (receipt) => {
     const issuer = clients.find(c => c.id === receipt.clientId) || receipt.client || {};
     const issuerName = issuer.nameTh || issuer.name || "—";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const issuerAddressHtml = String(issuer.address || "").replace(/\n/g, "<br/>");
     const customerAddressHtml = String(receipt.customerAddress || "").replace(/\n/g, "<br/>");
     const issuedDateLabel = new Date(receipt.issuedAt).toLocaleDateString("th-TH");
@@ -1651,7 +1652,7 @@ export default function ClientsUsersClient({ session }) {
           <div class="head">
             <div class="issuer">
               ${issuer.logoUrl
-                ? `<img class="logo" src="${issuer.logoUrl}" alt="${issuerName}" />`
+                ? `<img class="logo" src="${issuer.logoUrl.startsWith("http") ? issuer.logoUrl : origin + issuer.logoUrl}" alt="${issuerName}" />`
                 : `<div class="logo-fallback">${String(issuerName || "R").trim().charAt(0).toUpperCase() || "R"}</div>`
               }
               <div>
