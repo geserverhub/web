@@ -81,6 +81,7 @@ model Client {
   address      String?  @db.Text
   systemUrl          String?
   logoUrl            String?
+  lineUserId         String?
   domainRegisteredAt DateTime?
   createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
