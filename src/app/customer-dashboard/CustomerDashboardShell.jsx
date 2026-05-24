@@ -69,6 +69,11 @@ export default function CustomerDashboardShell({ children }) {
         {authState === 'redirect'
           ? 'กำลังไปหน้าเข้าสู่ระบบ… / Redirecting to login…'
           : 'Loading…'}
+        <noscript>
+          <p style={{ marginTop: 12 }}>
+            <a href="/customer-dashboard-login">เข้าสู่ระบบ / Sign in</a>
+          </p>
+        </noscript>
       </div>
     );
   }
