@@ -163,6 +163,18 @@ export default function ClientsUsersClient({ session }) {
   // partner transactions (for ledger)
   const [partnerTxns, setPartnerTxns] = useState([]);
 
+  // momo tab
+  const [partnerProducts, setPartnerProducts] = useState([]);
+  const [partnerTasks, setPartnerTasks] = useState([]);
+  const [momoLoading, setMomoLoading] = useState(false);
+  const [momoProductModal, setMomoProductModal] = useState(false);
+  const [editMomoProductId, setEditMomoProductId] = useState(null);
+  const [savingMomoProduct, setSavingMomoProduct] = useState(false);
+  const [momoProductForm, setMomoProductForm] = useState({ name: "", model: "", brand: "MOMOGE SPACE", costPrice: "", sellPrice: "", currency: "KRW" });
+  const [momoTaskModal, setMomoTaskModal] = useState(false);
+  const [savingMomoTask, setSavingMomoTask] = useState(false);
+  const [momoTaskForm, setMomoTaskForm] = useState({ title: "", type: "OPERATION", status: "PENDING", priority: "NORMAL", brand: "MOMOGE SPACE", dueDate: "", notes: "" });
+
   const [kpiOpen, setKpiOpen] = useState(false);
 
   // payment notification modal
@@ -234,6 +246,51 @@ export default function ClientsUsersClient({ session }) {
     }
   }, []);
 
+  const switchToMFactoryTab = useCallback(async () => {
+    setTab("mfactory");
+    setMfactorySearch("");
+    setMfactoryDetailId(null);
+    setMfactoryLoading(true);
+    try {
+      const d = await readJsonResponse(await fetch("/api/admin/mfactory-bookings"));
+      setMfactoryBookings(d.bookings || []);
+    } catch (e) {
+      showToast(e.message, false);
+      setMfactoryBookings([]);
+    } finally {
+      setMfactoryLoading(false);
+    }
+  }, []);
+
+  const switchToMomoTab = useCallback(() => {
+    setTab("momo");
+    loadMomoData();
+  }, [loadMomoData]);
+
+  const openMFactoryReceipt = useCallback((booking = null) => {
+    const mfClient = { id: "cmo6viudt0001qhga9f5j4jzc" };
+    setEditReceiptId(null);
+    setReceiptForm({
+      clientId: mfClient.id,
+      customerName: booking?.name || "",
+      customerAddress: booking?.address || "",
+      customerPhone: booking?.phone || "",
+      customerEmail: booking?.email || "",
+      currency: "THB",
+      issuedAt: new Date().toISOString().slice(0, 10),
+      notes: booking
+        ? [
+            booking.bookingNumber ? `เลขที่จอง: ${booking.bookingNumber}` : "",
+            booking.company ? `บริษัท: ${booking.company}` : "",
+            booking.taxId ? `เลขภาษี: ${booking.taxId}` : "",
+          ].filter(Boolean).join("\n")
+        : "",
+      items: [createEmptyReceiptItem()],
+    });
+    setTab("receipts");
+    setReceiptModal(true);
+  }, []);
+
   const loadServices = useCallback(async () => {
     const d = await readJsonResponse(await fetch("/api/admin/services"));
     setServices(d.services || []);
@@ -265,6 +322,22 @@ export default function ClientsUsersClient({ session }) {
   const loadPartnerTxns = useCallback(async () => {
     const d = await readJsonResponse(await fetch("/api/admin/partner-transactions"));
     setPartnerTxns(d.transactions || []);
+  }, []);
+
+  const loadMomoData = useCallback(async () => {
+    setMomoLoading(true);
+    try {
+      const [prodRes, taskRes] = await Promise.all([
+        fetch("/api/partner/products"),
+        fetch("/api/partner/tasks"),
+      ]);
+      const prods = await readJsonResponse(prodRes);
+      const tasks = await readJsonResponse(taskRes);
+      setPartnerProducts(Array.isArray(prods) ? prods : []);
+      setPartnerTasks(Array.isArray(tasks) ? tasks : []);
+    } catch { /* silent */ } finally {
+      setMomoLoading(false);
+    }
   }, []);
 
   const loadCustomers = useCallback(async () => {
@@ -2092,8 +2165,8 @@ export default function ClientsUsersClient({ session }) {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
-          {[["clients", "🏢 ลูกค้า"], ["users", "👤 Users"], ["invoices", "💳 การชำระเงิน"], ["receipts", "🧾 ใบเสร็จรับเงิน"], ["expenses", "📝 ค่าใช้จ่าย"]].map(([key, label]) => (
-            <button key={key} onClick={() => setTab(key)} style={{
+          {[["clients", "🏢 ลูกค้า"], ["users", "👤 Users"], ["invoices", "💳 การชำระเงิน"], ["receipts", "🧾 ใบเสร็จรับเงิน"], ["expenses", "📝 ค่าใช้จ่าย"], ["mfactory", "🏭 เอ็มเฟคตอรี่"]].map(([key, label]) => (
+            <button key={key} onClick={() => key === "mfactory" ? switchToMFactoryTab() : setTab(key)} style={{
               ...S.btn(tab === key ? "#1e3a5f" : "#1e2130", tab === key ? "#7eb8f7" : "#8b8fa8"),
               border: tab === key ? "1px solid #3b82f6" : "1px solid #2a2d3a",
               padding: "9px 20px", fontSize: 14,
@@ -2116,7 +2189,7 @@ export default function ClientsUsersClient({ session }) {
             ✈️ บริการคาโก้ ไทย-เกาหลี
           </button>
           <button style={{ ...S.btn("#1a0a2a", "#d946ef"), border: "1px solid #a21caf", padding: "9px 20px", fontSize: 14, fontWeight: 700 }}
-            onClick={() => setTab("momo")}>
+            onClick={switchToMomoTab}>
             🏠 MoMo Space Partner
           </button>
           {tab === "expenses" && (
@@ -2149,7 +2222,6 @@ export default function ClientsUsersClient({ session }) {
                 )}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button style={S.btn("#422006", "#fb923c")} onClick={openMFactoryBookings}>🏭 ฟอร์มจอง M-Factory</button>
                 <button style={S.btn("#1e3a5f", "#7eb8f7")} onClick={openAddClient}>+ เพิ่มลูกค้าใหม่</button>
                 <button style={S.btn("#0f2b3d", "#67e8f9")} onClick={openClientEditPicker}>🛠️ แก้ไขข้อมูลลูกค้า</button>
               </div>
@@ -3011,21 +3083,376 @@ export default function ClientsUsersClient({ session }) {
           </div>
         )}
 
+        {/* ── MFACTORY TAB ── */}
+        {tab === "mfactory" && (
+          <div style={S.card}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#fb923c" }}>🏭 เอ็มเฟคตอรี่</div>
+                <div style={{ color: "#8b8fa8", fontSize: 12, marginTop: 4 }}>
+                  คำขอจองจากฟอร์ม{" "}
+                  <Link href="/m-factory" target="_blank" style={{ color: "#7eb8f7" }}>/m-factory</Link>
+                  {mfactoryBookings.length > 0 && ` · ${mfactoryBookings.length} รายการ`}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button style={{ ...S.btn("#1a2a1a", "#fb923c"), border: "1px solid #ea580c", padding: "8px 16px", fontSize: 13, fontWeight: 700 }}
+                  onClick={() => openMFactoryReceipt()}>
+                  🧾 ออกใบเสร็จ เอ็มเฟคเตอร์รี่
+                </button>
+                <button style={S.btn("#1e2130", "#8b8fa8")} disabled={mfactoryLoading} onClick={switchToMFactoryTab}>
+                  {mfactoryLoading ? "⏳ โหลด..." : "🔄 รีเฟรช"}
+                </button>
+              </div>
+            </div>
+
+            <input
+              style={{ ...S.input, maxWidth: 360, marginBottom: 16 }}
+              placeholder="🔍 ค้นหาชื่อ / บริษัท / เบอร์ / อีเมล..."
+              value={mfactorySearch}
+              onChange={e => setMfactorySearch(e.target.value)}
+            />
+
+            {mfactoryLoading ? (
+              <div style={{ padding: 48, textAlign: "center", color: "#8b8fa8" }}>กำลังโหลด...</div>
+            ) : (() => {
+              const q = mfactorySearch.trim().toLowerCase();
+              const rows = mfactoryBookings.filter(b => {
+                if (!q) return true;
+                return [b.bookingNumber, b.name, b.company, b.phone, b.email, b.taxId].filter(Boolean).join(" ").toLowerCase().includes(q);
+              });
+              const detail = rows.find(b => b.id === mfactoryDetailId) || null;
+              const fmtDate = (d) => d ? new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "—";
+              const rentalLabel = (v) => v === "rent" ? "เช่า" : v === "buy" ? "ซื้อ" : v || "—";
+              const statusLabel = (s) => {
+                if (s === "CONFIRMED") return "ยืนยันแล้ว";
+                if (s === "CANCELLED") return "ยกเลิก";
+                if (s === "REVIEWED") return "ตรวจแล้ว";
+                return "รอตรวจ";
+              };
+              const statusColor = (s) => {
+                if (s === "CONFIRMED") return "#4ade80";
+                if (s === "CANCELLED") return "#f87171";
+                if (s === "REVIEWED") return "#a78bfa";
+                return "#fbbf24";
+              };
+
+              if (rows.length === 0) {
+                return (
+                  <div style={{ padding: 48, textAlign: "center", color: "#8b8fa8", border: "2px dashed #2a2d3a", borderRadius: 8 }}>
+                    {mfactoryBookings.length === 0 ? "ยังไม่มีคำขอจองจากฟอร์ม" : "ไม่พบรายการที่ตรงกับคำค้นหา"}
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: detail ? "1fr 300px" : "1fr", gap: 16, alignItems: "start" }}>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+                      <thead>
+                        <tr>
+                          {["เลขที่", "ส่งเมื่อ", "ชื่อ", "บริษัท", "สถานะ", "ประเภท", ""].map(h => (
+                            <th key={h} style={S.th}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map(b => (
+                          <tr key={b.id} style={{ background: mfactoryDetailId === b.id ? "#1f2937" : undefined }}>
+                            <td style={S.td}><span style={{ fontFamily: "monospace", fontSize: 11, color: "#fbbf24" }}>{b.bookingNumber || "—"}</span></td>
+                            <td style={S.td}>{fmtDate(b.createdAt)}</td>
+                            <td style={S.td}><span style={{ fontWeight: 600 }}>{b.name}</span></td>
+                            <td style={S.td}>{b.company || <span style={{ color: "#4a5070" }}>—</span>}</td>
+                            <td style={S.td}>
+                              <span style={{ background: "#1e2130", color: statusColor(b.status), borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
+                                {statusLabel(b.status)}
+                              </span>
+                            </td>
+                            <td style={S.td}>{rentalLabel(b.rentalType)}</td>
+                            <td style={S.td}>
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <button
+                                  style={{ ...S.btn("#422006", "#fb923c"), padding: "4px 10px", fontSize: 11 }}
+                                  onClick={() => setMfactoryDetailId(mfactoryDetailId === b.id ? null : b.id)}>
+                                  {mfactoryDetailId === b.id ? "ปิด" : "ดู"}
+                                </button>
+                                <button
+                                  style={{ ...S.btn("#1a2a1a", "#5ecb8a"), padding: "4px 10px", fontSize: 11 }}
+                                  onClick={() => openMFactoryReceipt(b)}>
+                                  🧾
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {detail && (
+                    <div style={{ background: "#1a1d27", borderRadius: 10, padding: 16, border: "1px solid #422006", position: "sticky", top: 16 }}>
+                      <div style={{ fontWeight: 700, color: "#fb923c", marginBottom: 12, fontSize: 14 }}>รายละเอียด</div>
+                      {[
+                        ["เลขที่จอง", detail.bookingNumber],
+                        ["สถานะ", statusLabel(detail.status)],
+                        ["ชื่อ", detail.name],
+                        ["บริษัท", detail.company],
+                        ["เบอร์", detail.phone],
+                        ["อีเมล", detail.email],
+                        ["เลขภาษี", detail.taxId],
+                        ["วันจอง", fmtDate(detail.bookingDate)],
+                        ["ที่อยู่", detail.address],
+                        ["โกดัง", detail.warehouse],
+                        ["ประเภท", rentalLabel(detail.rentalType)],
+                        ["ภาษา", detail.lang === "en" ? "EN" : "TH"],
+                        ["แหล่งที่มา", detail.source],
+                      ].map(([label, val]) => (
+                        <div key={label} style={{ marginBottom: 8 }}>
+                          <div style={{ color: "#8b8fa8", fontSize: 10, marginBottom: 2 }}>{label}</div>
+                          <div style={{ color: "#e2e8f0", fontSize: 12, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{val || "—"}</div>
+                        </div>
+                      ))}
+                      <button
+                        style={{ ...S.btn("#1a2a1a", "#5ecb8a"), width: "100%", padding: "8px 0", fontSize: 13, fontWeight: 700, marginTop: 12 }}
+                        onClick={() => openMFactoryReceipt(detail)}>
+                        🧾 ออกใบเสร็จ เอ็มเฟคเตอร์รี่
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
         {/* ── MOMO TAB ── */}
         {tab === "momo" && (
           <div style={S.card}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
-              <div style={{ fontSize: 40 }}>🏠</div>
-              <div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: "#d946ef" }}>MoMo Space Partner</div>
-                <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>พาร์ทเนอร์พื้นที่และบริการ · 파트너 공간 서비스</div>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ fontSize: 40 }}>🏠</div>
+                <div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#d946ef" }}>MoMo Space Partner</div>
+                  <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>พาร์ทเนอร์พื้นที่และบริการ · 파트너 공간 서비스</div>
+                </div>
+              </div>
+              <button style={{ ...S.btn("#1e2130", "#8b8fa8"), fontSize: 12 }} onClick={loadMomoData} disabled={momoLoading}>
+                {momoLoading ? "⏳ โหลด..." : "🔄 รีเฟรช"}
+              </button>
+            </div>
+
+            {/* KPI row */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12, marginBottom: 24 }}>
+              {[
+                { icon: "📦", label: "สินค้า / Products", val: partnerProducts.length, color: "#a78bfa" },
+                { icon: "📋", label: "งาน / Tasks", val: partnerTasks.length, color: "#60a5fa" },
+                { icon: "💸", label: "Transactions", val: partnerTxns.length, color: "#fbbf24" },
+                { icon: "💰", label: "รายรับ KRW", val: `₩${partnerTxns.filter(t => t.currency === "KRW" && ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(t.type)).reduce((s, t) => s + Number(t.amount), 0).toLocaleString("ko-KR")}`, color: "#4ade80" },
+              ].map(k => (
+                <div key={k.label} style={{ background: "#1a1d27", borderRadius: 10, padding: "14px 16px", border: "1px solid #2a2d3a" }}>
+                  <div style={{ fontSize: 22 }}>{k.icon}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: k.color, margin: "4px 0 2px" }}>{k.val}</div>
+                  <div style={{ fontSize: 11, color: "#8b8fa8" }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Products section */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, color: "#a78bfa", fontSize: 15 }}>📦 สินค้า / Products</div>
+                <button style={{ ...S.btn("#1e1b4b", "#a78bfa"), fontSize: 12, padding: "6px 14px" }} onClick={() => {
+                  setEditMomoProductId(null);
+                  setMomoProductForm({ name: "", model: "", brand: "MOMOGE SPACE", costPrice: "", sellPrice: "", currency: "KRW" });
+                  setMomoProductModal(true);
+                }}>+ เพิ่มสินค้า</button>
+              </div>
+              {momoLoading ? (
+                <div style={{ padding: 24, textAlign: "center", color: "#8b8fa8" }}>โหลด...</div>
+              ) : partnerProducts.length === 0 ? (
+                <div style={{ padding: 24, textAlign: "center", color: "#4a5070", background: "#1a1d27", borderRadius: 8 }}>ยังไม่มีสินค้า</div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr>{["ชื่อสินค้า", "Model", "Brand", "ต้นทุน", "ราคาขาย", "สกุลเงิน", ""].map(h => (
+                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#8b8fa8", fontWeight: 600, borderBottom: "1px solid #2a2d3a", whiteSpace: "nowrap" }}>{h}</th>
+                      ))}</tr>
+                    </thead>
+                    <tbody>
+                      {partnerProducts.map(p => (
+                        <tr key={p.id} style={{ borderBottom: "1px solid #1e2130" }}>
+                          <td style={{ padding: "8px 10px", color: "#e8eaf0", fontWeight: 600 }}>{p.name}</td>
+                          <td style={{ padding: "8px 10px", color: "#8b8fa8" }}>{p.model || "—"}</td>
+                          <td style={{ padding: "8px 10px", color: "#a78bfa" }}>{p.brand || "—"}</td>
+                          <td style={{ padding: "8px 10px", color: "#f87171" }}>{p.costPrice ? Number(p.costPrice).toLocaleString("ko-KR") : "—"}</td>
+                          <td style={{ padding: "8px 10px", color: "#4ade80", fontWeight: 700 }}>{p.sellPrice ? Number(p.sellPrice).toLocaleString("ko-KR") : "—"}</td>
+                          <td style={{ padding: "8px 10px" }}><span style={{ background: "#1e1b4b", color: "#a78bfa", borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{p.currency}</span></td>
+                          <td style={{ padding: "8px 10px" }}>
+                            <button style={{ ...S.btn("#1e2d3d", "#60a5fa"), fontSize: 11, padding: "4px 10px" }} onClick={() => {
+                              setEditMomoProductId(p.id);
+                              setMomoProductForm({ name: p.name, model: p.model || "", brand: p.brand || "MOMOGE SPACE", costPrice: p.costPrice || "", sellPrice: p.sellPrice || "", currency: p.currency || "KRW" });
+                              setMomoProductModal(true);
+                            }}>✏️</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Tasks section */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, color: "#60a5fa", fontSize: 15 }}>📋 งาน / Tasks</div>
+                <button style={{ ...S.btn("#1e2d3d", "#60a5fa"), fontSize: 12, padding: "6px 14px" }} onClick={() => {
+                  setMomoTaskForm({ title: "", type: "OPERATION", status: "PENDING", priority: "NORMAL", brand: "MOMOGE SPACE", dueDate: "", notes: "" });
+                  setMomoTaskModal(true);
+                }}>+ เพิ่มงาน</button>
+              </div>
+              {partnerTasks.length === 0 ? (
+                <div style={{ padding: 24, textAlign: "center", color: "#4a5070", background: "#1a1d27", borderRadius: 8 }}>ยังไม่มีงาน</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {partnerTasks.map(t => {
+                    const statusColor = t.status === "DONE" ? "#4ade80" : t.status === "IN_PROGRESS" ? "#fbbf24" : "#8b8fa8";
+                    const statusLabel = { PENDING: "รอดำเนินการ", IN_PROGRESS: "กำลังดำเนินการ", DONE: "เสร็จแล้ว" }[t.status] || t.status;
+                    return (
+                      <div key={t.id} style={{ background: "#1a1d27", borderRadius: 8, padding: "12px 16px", border: "1px solid #2a2d3a", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: "#e8eaf0", marginBottom: 4 }}>{t.title}</div>
+                          <div style={{ fontSize: 12, color: "#8b8fa8" }}>{t.brand} · {t.type} · {t.priority}</div>
+                          {t.notes && <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{t.notes}</div>}
+                        </div>
+                        <span style={{ background: "#0a0c12", color: statusColor, border: `1px solid ${statusColor}`, borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{statusLabel}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Partner Transactions section */}
+            <div>
+              <div style={{ fontWeight: 700, color: "#fbbf24", fontSize: 15, marginBottom: 12 }}>💸 Partner Transactions</div>
+              {partnerTxns.length === 0 ? (
+                <div style={{ padding: 24, textAlign: "center", color: "#4a5070", background: "#1a1d27", borderRadius: 8 }}>ยังไม่มีรายการ</div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr>{["เลขที่", "Brand", "ประเภท", "ยอดเงิน", "สกุลเงิน", "สถานะ", "วันที่"].map(h => (
+                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#8b8fa8", fontWeight: 600, borderBottom: "1px solid #2a2d3a", whiteSpace: "nowrap" }}>{h}</th>
+                      ))}</tr>
+                    </thead>
+                    <tbody>
+                      {partnerTxns.map(t => (
+                        <tr key={t.id} style={{ borderBottom: "1px solid #1e2130" }}>
+                          <td style={{ padding: "8px 10px", color: "#7eb8f7", fontWeight: 600 }}>{t.number}</td>
+                          <td style={{ padding: "8px 10px", color: "#a78bfa" }}>{t.brand || "—"}</td>
+                          <td style={{ padding: "8px 10px", color: "#e8eaf0" }}>{t.type}</td>
+                          <td style={{ padding: "8px 10px", color: ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(t.type) ? "#4ade80" : "#f87171", fontWeight: 700 }}>{Number(t.amount).toLocaleString()}</td>
+                          <td style={{ padding: "8px 10px" }}><span style={{ background: "#1e1b4b", color: "#a78bfa", borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{t.currency}</span></td>
+                          <td style={{ padding: "8px 10px", color: t.status === "COMPLETED" ? "#4ade80" : "#fbbf24" }}>{t.status}</td>
+                          <td style={{ padding: "8px 10px", color: "#8b8fa8" }}>{t.date ? new Date(t.date).toLocaleDateString("th-TH") : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── MOMO PRODUCT MODAL ── */}
+        {momoProductModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+            <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 480, border: "1px solid #2a2d3a" }}>
+              <h5 style={{ margin: "0 0 20px", color: "#a78bfa" }}>{editMomoProductId ? "✏️ แก้ไขสินค้า" : "📦 เพิ่มสินค้าใหม่"}</h5>
+              <div style={{ display: "grid", gap: 12 }}>
+                <div><label style={S.label}>ชื่อสินค้า *</label><input style={S.input} value={momoProductForm.name} onChange={e => setMomoProductForm(p => ({ ...p, name: e.target.value }))} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div><label style={S.label}>Model</label><input style={S.input} value={momoProductForm.model} onChange={e => setMomoProductForm(p => ({ ...p, model: e.target.value }))} /></div>
+                  <div><label style={S.label}>Brand</label><input style={S.input} value={momoProductForm.brand} onChange={e => setMomoProductForm(p => ({ ...p, brand: e.target.value }))} /></div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <div><label style={S.label}>ต้นทุน</label><input style={S.input} type="number" value={momoProductForm.costPrice} onChange={e => setMomoProductForm(p => ({ ...p, costPrice: e.target.value }))} /></div>
+                  <div><label style={S.label}>ราคาขาย</label><input style={S.input} type="number" value={momoProductForm.sellPrice} onChange={e => setMomoProductForm(p => ({ ...p, sellPrice: e.target.value }))} /></div>
+                  <div><label style={S.label}>สกุลเงิน</label>
+                    <select style={S.input} value={momoProductForm.currency} onChange={e => setMomoProductForm(p => ({ ...p, currency: e.target.value }))}>
+                      <option value="KRW">KRW</option><option value="THB">THB</option><option value="USD">USD</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+                <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setMomoProductModal(false)}>ยกเลิก</button>
+                <button style={S.btn("#1e1b4b", "#a78bfa")} disabled={savingMomoProduct} onClick={async () => {
+                  if (!momoProductForm.name.trim()) { showToast("กรุณากรอกชื่อสินค้า", false); return; }
+                  setSavingMomoProduct(true);
+                  try {
+                    const url = editMomoProductId ? `/api/partner/products/${editMomoProductId}` : "/api/partner/products";
+                    const method = editMomoProductId ? "PUT" : "POST";
+                    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(momoProductForm) });
+                    if (!res.ok) throw new Error((await res.json()).error || "บันทึกไม่สำเร็จ");
+                    showToast(editMomoProductId ? "แก้ไขสำเร็จ" : "เพิ่มสินค้าแล้ว");
+                    setMomoProductModal(false);
+                    loadMomoData();
+                  } catch (e) { showToast(e.message, false); } finally { setSavingMomoProduct(false); }
+                }}>{savingMomoProduct ? "⏳ บันทึก..." : "💾 บันทึก"}</button>
               </div>
             </div>
-            <div style={{ padding: 40, textAlign: "center", background: "#1a1d27", borderRadius: 12, border: "2px dashed #4a1a60" }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🚧</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#d946ef", marginBottom: 8 }}>กำลังพัฒนา</div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>ระบบจัดการ MoMo Space Partner กำลังอยู่ระหว่างการพัฒนา</div>
-              <div style={{ fontSize: 12, color: "#4a1a60", marginTop: 4 }}>Coming soon · 준비 중입니다</div>
+          </div>
+        )}
+
+        {/* ── MOMO TASK MODAL ── */}
+        {momoTaskModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+            <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 460, border: "1px solid #2a2d3a" }}>
+              <h5 style={{ margin: "0 0 20px", color: "#60a5fa" }}>📋 เพิ่มงาน</h5>
+              <div style={{ display: "grid", gap: 12 }}>
+                <div><label style={S.label}>ชื่องาน *</label><input style={S.input} value={momoTaskForm.title} onChange={e => setMomoTaskForm(p => ({ ...p, title: e.target.value }))} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div><label style={S.label}>ประเภท</label>
+                    <select style={S.input} value={momoTaskForm.type} onChange={e => setMomoTaskForm(p => ({ ...p, type: e.target.value }))}>
+                      <option value="OPERATION">OPERATION</option><option value="SALES">SALES</option><option value="SUPPORT">SUPPORT</option><option value="FINANCE">FINANCE</option>
+                    </select>
+                  </div>
+                  <div><label style={S.label}>ลำดับความสำคัญ</label>
+                    <select style={S.input} value={momoTaskForm.priority} onChange={e => setMomoTaskForm(p => ({ ...p, priority: e.target.value }))}>
+                      <option value="LOW">LOW</option><option value="NORMAL">NORMAL</option><option value="HIGH">HIGH</option><option value="URGENT">URGENT</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div><label style={S.label}>สถานะ</label>
+                    <select style={S.input} value={momoTaskForm.status} onChange={e => setMomoTaskForm(p => ({ ...p, status: e.target.value }))}>
+                      <option value="PENDING">รอดำเนินการ</option><option value="IN_PROGRESS">กำลังดำเนินการ</option><option value="DONE">เสร็จแล้ว</option>
+                    </select>
+                  </div>
+                  <div><label style={S.label}>Brand</label><input style={S.input} value={momoTaskForm.brand} onChange={e => setMomoTaskForm(p => ({ ...p, brand: e.target.value }))} /></div>
+                </div>
+                <div><label style={S.label}>กำหนดเสร็จ</label><input style={S.input} type="date" value={momoTaskForm.dueDate} onChange={e => setMomoTaskForm(p => ({ ...p, dueDate: e.target.value }))} /></div>
+                <div><label style={S.label}>หมายเหตุ</label><textarea style={{ ...S.input, height: 64, resize: "vertical" }} value={momoTaskForm.notes} onChange={e => setMomoTaskForm(p => ({ ...p, notes: e.target.value }))} /></div>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+                <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setMomoTaskModal(false)}>ยกเลิก</button>
+                <button style={S.btn("#1e2d3d", "#60a5fa")} disabled={savingMomoTask} onClick={async () => {
+                  if (!momoTaskForm.title.trim()) { showToast("กรุณากรอกชื่องาน", false); return; }
+                  setSavingMomoTask(true);
+                  try {
+                    const res = await fetch("/api/partner/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(momoTaskForm) });
+                    if (!res.ok) throw new Error((await res.json()).error || "บันทึกไม่สำเร็จ");
+                    showToast("เพิ่มงานแล้ว");
+                    setMomoTaskModal(false);
+                    loadMomoData();
+                  } catch (e) { showToast(e.message, false); } finally { setSavingMomoTask(false); }
+                }}>{savingMomoTask ? "⏳ บันทึก..." : "💾 บันทึก"}</button>
+              </div>
             </div>
           </div>
         )}
@@ -3253,7 +3680,7 @@ export default function ClientsUsersClient({ session }) {
           PARTNER_INCOME_TYPES.has(t.type) &&
           (!ledgerPaidOnly || t.status === "COMPLETED")
         );
-        const goeunClientId = clients.find(c => c.name === "GE SERVER HUB")?.id;
+        const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
         const curReceipts = receipts.filter(r => (r.currency || "THB") === ledgerCurrency && r.clientId === goeunClientId);
 
         // Build combined ledger rows sorted by date
