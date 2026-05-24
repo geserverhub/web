@@ -27,8 +27,8 @@ export default function EnergyDashboardLayout({ children }: { children: React.Re
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0f172a',
-        color: '#94a3b8',
+        background: 'linear-gradient(160deg, #064e3b 0%, #047857 50%, #065f46 100%)',
+        color: '#d1fae5',
         fontFamily: 'system-ui, sans-serif',
         fontSize: 14,
       }}>

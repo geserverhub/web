@@ -1,0 +1,148 @@
+/* GE Energy Tech — unified green dimensional theme */
+
+.energy-app {
+  --eg-green-50: #ecfdf5;
+  --eg-green-100: #d1fae5;
+  --eg-green-500: #10b981;
+  --eg-green-600: #059669;
+  --eg-green-700: #047857;
+  --eg-green-800: #065f46;
+  --eg-shadow: 0 6px 28px rgba(5, 150, 105, 0.1), 0 2px 6px rgba(15, 23, 42, 0.05);
+  --eg-shadow-lg: 0 14px 48px rgba(5, 150, 105, 0.16), 0 4px 14px rgba(15, 23, 42, 0.07);
+  --eg-shadow-card: 0 8px 32px rgba(5, 150, 105, 0.12), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.energy-app {
+  background: linear-gradient(145deg, #d1fae5 0%, #ecfdf5 22%, #f0fdf4 45%, #f8fafc 100%);
+}
+
+.energy-main {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 70% 45% at 100% 0%, rgba(16, 185, 129, 0.14), transparent 58%),
+    radial-gradient(ellipse 55% 35% at 0% 100%, rgba(5, 150, 105, 0.1), transparent 52%),
+    linear-gradient(180deg, rgba(236, 253, 245, 0.55) 0%, rgba(248, 250, 252, 0.35) 100%);
+}
+
+.energy-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.energy-page {
+  position: relative;
+  z-index: 1;
+  padding: 1.25rem;
+  min-height: 100%;
+}
+
+.energy-header {
+  position: relative;
+  z-index: 120;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(236, 253, 245, 0.92) 100%
+  ) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.22) !important;
+  box-shadow: 0 4px 28px rgba(5, 150, 105, 0.1), 0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+}
+
+/* Elevated panels */
+.energy-main .bg-white.rounded-xl,
+.energy-main .bg-white.rounded-2xl,
+.energy-main .bg-white.rounded-3xl {
+  border-color: rgba(16, 185, 129, 0.14) !important;
+  box-shadow: var(--eg-shadow-card) !important;
+}
+
+.energy-main .border-gray-100,
+.energy-main .border-gray-200 {
+  border-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.energy-main .shadow-sm {
+  box-shadow: var(--eg-shadow) !important;
+}
+
+.energy-main .shadow-lg,
+.energy-main .shadow-xl {
+  box-shadow: var(--eg-shadow-lg) !important;
+}
+
+/* Hero banner — green depth */
+.energy-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #065f46 0%, #047857 38%, #059669 68%, #0d9488 100%);
+  box-shadow: var(--eg-shadow-lg);
+}
+
+.energy-hero::before {
+  content: "";
+  position: absolute;
+  top: -4rem;
+  right: -4rem;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  filter: blur(32px);
+  pointer-events: none;
+}
+
+.energy-hero::after {
+  content: "";
+  position: absolute;
+  bottom: -2rem;
+  left: 28%;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.energy-hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* Tables & inputs — subtle green focus */
+.energy-main input:focus,
+.energy-main select:focus,
+.energy-main textarea:focus {
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+.energy-main .bg-gray-50.rounded-xl,
+.energy-main tr.bg-gray-50,
+.energy-main thead tr.bg-gray-50 {
+  background: rgba(236, 253, 245, 0.65) !important;
+}
+
+.energy-main .hover\:bg-gray-50:hover {
+  background: rgba(209, 250, 229, 0.5) !important;
+}
+
+/* Notification dropdown in header */
+.energy-notif-panel {
+  border-color: rgba(16, 185, 129, 0.15) !important;
+  box-shadow: var(--eg-shadow-lg) !important;
+}
+
+.energy-notif-panel .bg-gray-50 {
+  background: rgba(236, 253, 245, 0.8) !important;
+}

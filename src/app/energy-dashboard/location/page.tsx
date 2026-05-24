@@ -78,18 +78,17 @@ export default function LocationPage() {
   }
 
   return (
-    <div className="h-full flex flex-col p-5 gap-4 bg-gray-50">
+    <div className="energy-page h-full flex flex-col gap-4">
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 shadow-xl shrink-0">
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
-        <div className="relative z-10 px-8 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="energy-hero shrink-0">
+        <div className="energy-hero-inner px-8 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">
               <Navigation className="w-3.5 h-3.5" /> Location
             </div>
             <h1 className="text-2xl font-black text-white mb-0.5">{t('devicesLocation') || 'Devices Location'}</h1>
-            <p className="text-rose-100 text-xs">Live map of all registered devices</p>
+            <p className="text-emerald-100 text-xs">Live map of all registered devices</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-5 bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/20">
@@ -109,7 +108,7 @@ export default function LocationPage() {
                   className="pl-8 pr-3 py-2 bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl text-xs text-white placeholder-white/60 focus:outline-none focus:bg-white/30 w-44" />
                 <Search className="w-3.5 h-3.5 text-white/60 absolute left-2.5 top-1/2 -translate-y-1/2" />
               </div>
-              <button className="flex items-center gap-1.5 px-3 py-2 bg-white text-rose-600 font-bold text-xs rounded-xl hover:bg-rose-50 transition-all shadow-md">
+              <button className="flex items-center gap-1.5 px-3 py-2 bg-white text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-all shadow-md">
                 <MapPin className="w-3.5 h-3.5" /> {t('setLocation') || 'Set Location'}
               </button>
               <button className="p-2 bg-white/20 hover:bg-white/30 rounded-xl border border-white/20 transition-all">

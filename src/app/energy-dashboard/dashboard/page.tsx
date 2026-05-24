@@ -800,7 +800,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-5 space-y-5 bg-gray-50 min-h-screen">
+    <div className="energy-page space-y-5">
       {hasFocusedDevice && (
         <div className="rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
           <div>
@@ -819,11 +819,8 @@ export default function DashboardPage() {
       )}
 
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 shadow-xl">
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-        <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-white/5 rounded-full blur-xl" />
-
-        <div className="relative z-10 px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div className="energy-hero">
+        <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
               <span className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse" />
@@ -858,7 +855,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
         {/* Total Devices */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-5 text-white group hover:shadow-xl transition-all">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl shadow-lg p-5 text-white group hover:shadow-xl transition-all">
           <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full" />
           <div className="absolute -right-1 -top-6 w-16 h-16 bg-white/5 rounded-full" />
           <div className="flex items-center justify-between mb-4">
@@ -870,7 +867,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <p className="text-4xl font-black text-white leading-none mb-1">{stats.totalDevices}</p>
-          <p className="text-blue-100 text-xs font-medium">{uiCopy.totalDevices}</p>
+          <p className="text-emerald-100 text-xs font-medium">{uiCopy.totalDevices}</p>
         </div>
 
         {/* Online */}

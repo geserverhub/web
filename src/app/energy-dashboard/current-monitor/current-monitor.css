@@ -1,0 +1,333 @@
+/* GE Energy Tech — current monitor (green theme) */
+.cm-page {
+  --cm-green-50: #f0fdf4;
+  --cm-green-100: #dcfce7;
+  --cm-green-200: #bbf7d0;
+  --cm-green-500: #22c55e;
+  --cm-green-600: #16a34a;
+  --cm-green-700: #15803d;
+  --cm-green-800: #166534;
+  --cm-green-900: #14532d;
+  min-height: 100%;
+  background: transparent;
+}
+
+.cm-hero {
+  background: linear-gradient(135deg, #065f46 0%, var(--cm-green-700) 38%, var(--cm-green-600) 68%, #0d9488 100%);
+  border-radius: 1.25rem;
+  padding: 0.875rem 1rem;
+  color: #fff;
+  box-shadow: 0 14px 48px rgba(5, 150, 105, 0.22), 0 4px 12px rgba(15, 23, 42, 0.08);
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.cm-hero::before {
+  content: "";
+  position: absolute;
+  top: -3rem;
+  right: -3rem;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+.cm-hero-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.cm-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.cm-brand-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.cm-logo {
+  width: auto;
+  height: 44px;
+  max-width: 72px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: transparent;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.12));
+}
+
+.cm-brand-short {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.cm-company {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0.15rem 0 0;
+  opacity: 0.95;
+}
+
+.cm-company-sub {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  opacity: 0.82;
+  margin: 0.2rem 0 0;
+  line-height: 1.4;
+}
+
+.cm-lang-bar {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cm-lang-btn {
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cm-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cm-lang-btn.active {
+  background: #fff;
+  color: var(--cm-green-800);
+}
+
+.cm-title-block h1 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+  color: var(--cm-green-900);
+}
+
+.cm-title-block p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.cm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: var(--cm-green-600);
+  color: #fff;
+  transition: background 0.15s;
+}
+
+.cm-btn-primary:hover:not(:disabled) {
+  background: var(--cm-green-700);
+}
+
+.cm-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cm-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.625rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--cm-green-200);
+  background: #fff;
+  color: var(--cm-green-800);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cm-btn-outline:hover {
+  background: var(--cm-green-50);
+  border-color: var(--cm-green-500);
+}
+
+.cm-badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--cm-green-100);
+  color: var(--cm-green-800);
+  border: 1px solid var(--cm-green-200);
+}
+
+.cm-badge-off {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.cm-panel {
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid var(--cm-green-100);
+  box-shadow: 0 8px 32px rgba(5, 150, 105, 0.1), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.cm-panel label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--cm-green-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.cm-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--cm-green-200);
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  background: var(--cm-green-50);
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cm-select-btn:hover {
+  border-color: var(--cm-green-500);
+  background: #fff;
+}
+
+.cm-dropdown {
+  position: absolute;
+  z-index: 30;
+  margin-top: 0.25rem;
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--cm-green-200);
+  border-radius: 0.625rem;
+  box-shadow: 0 10px 30px rgba(22, 101, 52, 0.12);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.cm-dropdown button {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cm-dropdown button:hover {
+  background: var(--cm-green-50);
+}
+
+.cm-dropdown button:last-child {
+  border-bottom: none;
+}
+
+.cm-empty {
+  border: 2px dashed var(--cm-green-200);
+  border-radius: 1rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.cm-chart-panel {
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid var(--cm-green-100);
+  box-shadow: 0 8px 32px rgba(5, 150, 105, 0.1), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  padding: 1.25rem;
+}
+
+.cm-chart-panel h2 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--cm-green-800);
+  margin: 0 0 1rem;
+}
+
+.cm-error {
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.cm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .cm-logo {
+    height: 48px;
+    max-width: 80px;
+  }
+
+  .cm-brand-short {
+    font-size: 1rem;
+  }
+
+  .cm-company {
+    font-size: 0.8125rem;
+  }
+}
