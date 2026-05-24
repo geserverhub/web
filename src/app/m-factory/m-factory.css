@@ -1,5 +1,11 @@
 /* M-Factory booking — self-contained styles (Bootstrap/Tailwind chunk fallback) */
 
+/* Allow pinch-zoom when M-Factory pages are open */
+body:has(.m-factory-layout) {
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-text-size-adjust: 100%;
+}
+
 /* Reset Bootstrap globals inside this layout */
 .m-factory-layout,
 .m-factory-layout *,
@@ -40,6 +46,11 @@
   min-height: 100vh;
   color: #111;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
 }
 
 .m-factory-layout .min-h-screen {
@@ -445,6 +456,8 @@
 .m-factory-layout.mf-booking.mf-page {
   -webkit-text-size-adjust: 100%;
   box-sizing: border-box;
+  max-width: 100vw;
+  overflow-x: clip;
 }
 
 .m-factory-layout.mf-booking .mf-input,
@@ -472,7 +485,7 @@
 }
 
 .m-factory-layout.mf-booking .mf-lang-btn {
-  touch-action: manipulation;
+  min-height: 44px;
 }
 
 .m-factory-layout.mf-booking .mf-file-btn {
@@ -490,7 +503,6 @@
 }
 
 .m-factory-layout.mf-booking .mf-submit-btn {
-  touch-action: manipulation;
   width: 100%;
 }
 

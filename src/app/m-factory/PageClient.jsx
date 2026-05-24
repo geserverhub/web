@@ -755,6 +755,10 @@ export default function PageClient() {
         fontFamily: "'Itim', 'Inter', sans-serif",
         background: "#f8faff",
         color: NAVY,
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "clip",
+        touchAction: "pan-x pan-y pinch-zoom",
       }}
     >
       {/* ── Navbar ── */}
