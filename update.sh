@@ -18,6 +18,8 @@ if [[ ! -f .env.local ]]; then
 fi
 
 echo "==> git pull origin main"
+# Drop stale local kenergy copies (invalid UTF-8) before pull restores tracked re-exports
+[[ -d src/app/api/kenergy ]] && rm -rf src/app/api/kenergy
 git pull origin main
 
 echo "==> npm ci"
