@@ -238,7 +238,7 @@ export default function BookingClient() {
 
   return (
     <div className="m-factory-layout mf-booking mf-page min-h-screen bg-gradient-to-br from-blue-50 via-white to-sky-50 px-0 py-0 sm:px-4 sm:py-6 md:px-8 md:py-10 text-black">
-      <div className="mf-card max-w-4xl mx-auto bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden">
+      <div className="mf-card max-w-4xl mx-auto bg-white sm:rounded-3xl sm:shadow-2xl">
         {/* Header */}
         <header className="mf-header bg-gradient-to-r from-blue-800 via-blue-600 to-cyan-500 text-white p-5 sm:p-7 md:p-10">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">

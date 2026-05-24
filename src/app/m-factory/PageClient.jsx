@@ -757,8 +757,8 @@ export default function PageClient() {
         color: NAVY,
         width: "100%",
         maxWidth: "100%",
-        overflowX: "clip",
-        touchAction: "pan-x pan-y pinch-zoom",
+        overflowX: "auto",
+        touchAction: "auto",
       }}
     >
       {/* ── Navbar ── */}
