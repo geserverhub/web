@@ -22,16 +22,16 @@ async function main() {
     where: { username: USERNAME },
     update: {
       password: hash,
-      role: 'SUPER_ADMIN',
-      name: 'Super Admin',
+      role: 'ADMIN',
+      name: 'pavinee boknoi',
       email: 'superadmin',
     },
     create: {
       username: USERNAME,
       email: 'superadmin',
-      name: 'Super Admin',
+      name: 'pavinee boknoi',
       password: hash,
-      role: 'SUPER_ADMIN',
+      role: 'ADMIN',
     },
   });
   console.log('OK — energy login ready:', user.username, '/', user.email, 'role:', user.role);

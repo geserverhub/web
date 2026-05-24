@@ -20,7 +20,9 @@ const translations = {
     backHome: '← กลับหน้าหลัก',
     invalidCredentials: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
     connectionError: 'เชื่อมต่อไม่สำเร็จ',
+    serverDown: 'เซิร์ฟเวอร์ไม่ทำงาน — รัน npm run dev:wsl ใน WSL แล้วเปิด http://<WSL-IP>:3005',
     serverError: 'เซิร์ฟเวอร์ไม่พร้อม — ลองรีสตาร์ท dev server หรือรัน npx prisma generate',
+    dbUnavailable: 'เชื่อมต่อฐานข้อมูลไม่ได้ — รัน npm run dev:wsl ใน WSL แล้วลองใหม่',
   },
   en: {
     brand: 'MOMOGE SPACE',
@@ -35,7 +37,9 @@ const translations = {
     backHome: '← Back to home',
     invalidCredentials: 'Invalid username or password',
     connectionError: 'Connection error',
+    serverDown: 'Dev server is not running. Run npm run dev:wsl in WSL, then open http://<WSL-IP>:3005',
     serverError: 'Server unavailable — restart dev server or run npx prisma generate',
+    dbUnavailable: 'Database unavailable — run npm run dev:wsl in WSL, then open the site again',
   },
   ko: {
     brand: 'MOMOGE SPACE',
@@ -50,15 +54,26 @@ const translations = {
     backHome: '← 홈으로',
     invalidCredentials: '사용자명 또는 비밀번호가 올바르지 않습니다',
     connectionError: '연결 오류',
-    serverError: '서버 오류 — dev server 재시작 또는 npx prisma generate 실행',
+    serverDown: '서버가 꺼져 있습니다. WSL에서 npm run dev:wsl 실행 후 http://<WSL-IP>:3005 로 접속하세요.',
+    serverError: 'DB 연결 실패 — WSL에서 npm run dev:wsl 실행 후 다시 로그인하세요',
+    dbUnavailable: '데이터베이스에 연결할 수 없습니다. WSL에서 npm run dev:wsl 을 실행한 뒤 http://localhost:3005 또는 WSL IP로 접속하세요.',
   },
 };
 
 const langOptions = [
   { code: 'th', label: 'ไทย' },
-  { code: 'en', label: 'English' },
   { code: 'ko', label: '한국어' },
+  { code: 'en', label: 'EN' },
 ];
+
+/** Bump when public/momoge/Logo-brand.png changes (cache bust) */
+const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
+
+const companyNames = {
+  th: 'บริษัท จีอี อีเนอร์จี่ เทค จำกัด',
+  en: 'GE Energy Tech Co., Ltd.',
+  ko: '(주식회사)지이 에너지텍',
+};
 
 export default function EnergyDashboardLoginPage() {
   const router = useRouter();
@@ -106,6 +121,11 @@ export default function EnergyDashboardLoginPage() {
         return;
       }
 
+      if (res.status === 503 || data.error?.includes('Database')) {
+        setError(t('dbUnavailable') || data.error);
+        return;
+      }
+
       if (data.error && !res.ok) {
         setError(data.error);
         return;
@@ -122,6 +142,7 @@ export default function EnergyDashboardLoginPage() {
         username: data.username,
         name: data.name,
         email: data.email,
+        role: data.role,
         site: data.site,
         typeID: data.typeID,
         departmentID: data.departmentID,
@@ -129,7 +150,12 @@ export default function EnergyDashboardLoginPage() {
 
       router.push('/energy-dashboard/current-monitor');
     } catch (err) {
-      setError(err.message || t('connectionError'));
+      const msg = String(err?.message || '');
+      setError(
+        msg === 'Failed to fetch' || msg.includes('fetch')
+          ? t('serverDown')
+          : msg || t('connectionError')
+      );
     } finally {
       setLoading(false);
     }
@@ -141,21 +167,21 @@ export default function EnergyDashboardLoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0369a1 0%, #0c4a6e 100%)',
+      background: 'linear-gradient(135deg, #15803d 0%, #166534 45%, #0c4a6e 100%)',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       position: 'relative',
     }}>
       <div style={{
         position: 'absolute',
-        top: 20,
-        right: 20,
+        top: 12,
+        right: 12,
         display: 'inline-flex',
-        gap: 6,
-        background: 'rgba(255,255,255,0.95)',
-        border: '1px solid rgba(3,105,161,0.2)',
+        gap: 2,
+        background: 'rgba(255,255,255,0.92)',
+        border: '1px solid rgba(22,101,52,0.25)',
         borderRadius: 999,
-        padding: 4,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+        padding: 3,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
       }}>
         {langOptions.map((lang) => (
           <button
@@ -165,13 +191,14 @@ export default function EnergyDashboardLoginPage() {
             style={{
               border: 'none',
               borderRadius: 999,
-              padding: '6px 12px',
+              padding: '3px 8px',
               cursor: 'pointer',
               fontWeight: 700,
-              fontSize: 12,
-              color: language === lang.code ? '#fff' : '#0369a1',
+              fontSize: 10,
+              lineHeight: 1.2,
+              color: language === lang.code ? '#fff' : '#166534',
               background: language === lang.code
-                ? 'linear-gradient(135deg, #0369a1, #0c4a6e)'
+                ? 'linear-gradient(135deg, #16a34a, #15803d)'
                 : 'transparent',
             }}
           >
@@ -188,23 +215,37 @@ export default function EnergyDashboardLoginPage() {
         maxWidth: 420,
         boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/momoge/Logo-brand.png"
-            alt="Momoge Logo"
-            width={100}
-            height={100}
-            style={{
-              display: 'inline-block',
-              marginBottom: 16,
-              objectFit: 'contain',
-              width: 'auto',
-              height: 100,
-              maxWidth: 160,
-              background: 'transparent',
-            }}
-          />
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{
+            maxWidth: 'min(72vw, 200px)',
+            margin: '0 auto 10px',
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={LOGO_SRC}
+              alt="MOMOGE SPACE"
+              width={200}
+              height={88}
+              style={{
+                display: 'block',
+                margin: '0 auto',
+                objectFit: 'contain',
+                width: '100%',
+                height: 'auto',
+                maxHeight: 88,
+                background: 'transparent',
+              }}
+            />
+          </div>
+          <p style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: '#166534',
+            margin: '0 0 6px',
+            lineHeight: 1.35,
+          }}>
+            {companyNames[language] || companyNames.th}
+          </p>
           <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
             {t('brand')}
           </div>

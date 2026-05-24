@@ -298,10 +298,9 @@ export default function MeterSetingPage() {
   }, [currentPage, totalPages])
 
   return (
-    <div className="p-5 space-y-5 bg-gray-50 min-h-screen">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-600 via-cyan-600 to-teal-600 shadow-xl">
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-        <div className="relative z-10 px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="energy-page space-y-5">
+      <div className="energy-hero">
+        <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
               <LayoutIcon className="w-3.5 h-3.5" /> {copy.badge}
@@ -327,7 +326,7 @@ export default function MeterSetingPage() {
             </div>
             <Link
               href="/add-machine"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-sky-700 font-bold text-sm rounded-xl hover:bg-sky-50 transition-all shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 font-bold text-sm rounded-xl hover:bg-emerald-50 transition-all shadow-md"
             >
               <Plus className="w-4 h-4" /> {copy.addDevice}
             </Link>

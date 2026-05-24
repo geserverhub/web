@@ -2,16 +2,71 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { parseJsonResponse } from '@/lib/parse-json-response';
+import './customer-dashboard-login.css';
+
+const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
+
+const companyNames = {
+  th: 'บริษัท จีอี อีเนอร์จี่ เทค จำกัด',
+  en: 'GE Energy Tech Co., Ltd.',
+  ko: '(주식회사)지이 에너지텍',
+};
+
+const copy = {
+  th: {
+    mobileHint: 'เข้าใช้งานบนสมาร์ทโฟน',
+    username: 'ชื่อผู้ใช้',
+    password: 'รหัสผ่าน',
+    usernamePh: 'กรอกชื่อผู้ใช้',
+    passwordPh: 'กรอกรหัสผ่าน',
+    signIn: 'เข้าสู่ระบบ',
+    signingIn: 'กำลังเข้าสู่ระบบ…',
+    back: '← กลับหน้าเมนูหลัก',
+    invalid: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+    connection: 'เชื่อมต่อไม่สำเร็จ',
+    server: 'เซิร์ฟเวอร์ไม่พร้อม — ลองใหม่อีกครั้ง',
+  },
+  en: {
+    mobileHint: 'Sign in on your smartphone',
+    username: 'Username',
+    password: 'Password',
+    usernamePh: 'Enter username',
+    passwordPh: 'Enter password',
+    signIn: 'Sign in',
+    signingIn: 'Signing in…',
+    back: '← Main menu',
+    invalid: 'Invalid username or password',
+    connection: 'Connection error',
+    server: 'Server unavailable — try again',
+  },
+  ko: {
+    mobileHint: '스마트폰으로 로그인',
+    username: '사용자명',
+    password: '비밀번호',
+    usernamePh: '사용자명 입력',
+    passwordPh: '비밀번호 입력',
+    signIn: '로그인',
+    signingIn: '로그인 중…',
+    back: '← 메인 메뉴',
+    invalid: '사용자명 또는 비밀번호가 올바르지 않습니다',
+    connection: '연결 오류',
+    server: '서버를 사용할 수 없습니다',
+  },
+};
 
 export default function CustomerDashboardLoginPage() {
   const router = useRouter();
+  const [lang, setLang] = useState('th');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const t = copy[lang] || copy.th;
+  const company = companyNames[lang] || companyNames.th;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -27,13 +82,13 @@ export default function CustomerDashboardLoginPage() {
 
       const data = await parseJsonResponse(res);
 
-      if (data._html || data.error) {
-        setError(data.error || 'Server error — run: npx prisma generate && restart dev server');
+      if (data._html || data._parseError) {
+        setError(data.error || t.server);
         return;
       }
 
       if (!res.ok) {
-        setError(data.error || 'Invalid username or password');
+        setError(data.error || t.invalid);
         return;
       }
 
@@ -50,147 +105,142 @@ export default function CustomerDashboardLoginPage() {
 
       router.push('/customer-dashboard');
     } catch (err) {
-      setError(err.message || 'Connection error');
+      setError(err?.message || t.connection);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-    }}>
-      <div style={{
-        background: '#fff',
-        borderRadius: 20,
-        padding: '48px 40px',
-        width: '100%',
-        maxWidth: 420,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-      }}>
-        {/* Icon */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 72, height: 72,
-            background: 'linear-gradient(135deg, #16a34a, #15803d)',
-            borderRadius: '50%',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 16,
-          }}>
-            <Users size={36} color="#fff" />
+    <div className="cdl-page">
+      <div
+        className="cdl-lang"
+        style={{
+          position: 'absolute',
+          top: 'max(0.75rem, env(safe-area-inset-top))',
+          right: 'max(0.75rem, env(safe-area-inset-right))',
+          zIndex: 2,
+          display: 'inline-flex',
+          gap: 2,
+          background: 'rgba(255,255,255,0.92)',
+          border: '1px solid rgba(22,101,52,0.25)',
+          borderRadius: 999,
+          padding: 3,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
+        }}
+      >
+        {[
+          { code: 'th', label: 'ไทย' },
+          { code: 'ko', label: '한국어' },
+          { code: 'en', label: 'EN' },
+        ].map((opt) => (
+          <button
+            key={opt.code}
+            type="button"
+            onClick={() => setLang(opt.code)}
+            style={{
+              border: 'none',
+              borderRadius: 999,
+              padding: '4px 9px',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: 10,
+              color: lang === opt.code ? '#fff' : '#166534',
+              background:
+                lang === opt.code
+                  ? 'linear-gradient(135deg, #16a34a, #15803d)'
+                  : 'transparent',
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="cdl-card">
+        <header className="cdl-brand">
+          <div className="cdl-logo-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={LOGO_SRC}
+              alt={company}
+              width={200}
+              height={88}
+              className="cdl-logo"
+            />
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-            Green Retail Group
-          </h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
-            ระบบมอนิเตอริ่ง ผู้ใช้ Demo
+          <h1 className="cdl-title">{company}</h1>
+          <div className="cdl-mobile-badge">
+            <Smartphone size={14} strokeWidth={2.5} aria-hidden />
+            {t.mobileHint}
+          </div>
+          <p className="cdl-contact">
+            goeunserverhub@gmail.com
+            <span aria-hidden> · </span>
+            010-8105-0384
           </p>
-          <div style={{ marginTop: 10, fontSize: 12, color: '#94a3b8' }}>
-            <span>goeunserverhub@gmail.com</span>
-            <span style={{ margin: '0 6px' }}>·</span>
-            <span>010-8105-0384</span>
-          </div>
-        </div>
+        </header>
 
         <form onSubmit={handleSubmit}>
-          {/* Username */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-              Username
+          <div className="cdl-field">
+            <label className="cdl-label" htmlFor="cdl-username">
+              {t.username}
             </label>
-            <div style={{ position: 'relative' }}>
-              <User size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+            <div className="cdl-input-wrap">
+              <User size={18} className="cdl-input-icon" aria-hidden />
               <input
+                id="cdl-username"
                 type="text"
+                inputMode="text"
+                autoComplete="username"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                placeholder="Enter username"
-                style={{
-                  width: '100%', padding: '10px 12px 10px 38px',
-                  borderRadius: 10, border: '2px solid #e5e7eb',
-                  fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.target.style.borderColor = '#16a34a'}
-                onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                placeholder={t.usernamePh}
+                className="cdl-input"
               />
             </div>
           </div>
 
-          {/* Password */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-              Password
+          <div className="cdl-field">
+            <label className="cdl-label" htmlFor="cdl-password">
+              {t.password}
             </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+            <div className="cdl-input-wrap">
+              <Lock size={18} className="cdl-input-icon" aria-hidden />
               <input
+                id="cdl-password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Enter password"
-                style={{
-                  width: '100%', padding: '10px 38px 10px 38px',
-                  borderRadius: 10, border: '2px solid #e5e7eb',
-                  fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.target.style.borderColor = '#16a34a'}
-                onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                placeholder={t.passwordPh}
+                className="cdl-input"
               />
               <button
                 type="button"
+                className="cdl-toggle-pw"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0 }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          {error && (
-            <div style={{
-              background: '#fef2f2', border: '1px solid #fecaca',
-              borderRadius: 8, padding: '10px 14px',
-              color: '#dc2626', fontSize: 13, marginBottom: 16,
-            }}>
-              {error}
-            </div>
-          )}
+          {error ? <div className="cdl-error" role="alert">{error}</div> : null}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%', padding: '12px',
-              background: loading ? '#86efac' : 'linear-gradient(135deg, #16a34a, #15803d)',
-              color: '#fff', border: 'none', borderRadius: 10,
-              fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button type="submit" className="cdl-submit" disabled={loading}>
+            {loading ? t.signingIn : t.signIn}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <a
-            href="/"
-            style={{ fontSize: 13, color: '#16a34a', textDecoration: 'none' }}
-            onClick={(e) => { e.preventDefault(); window.location.href = '/'; }}
-          >
-            ← กลับหน้าหลัก
+        <footer className="cdl-footer">
+          <a href="/energy-dashboard/dashboard" className="cdl-back">
+            {t.back}
           </a>
-        </div>
+        </footer>
       </div>
     </div>
   );

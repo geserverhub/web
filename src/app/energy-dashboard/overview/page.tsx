@@ -56,7 +56,7 @@ export default function OverviewPage() {
   // Loading State
   if (loading && devices.length === 0) {
     return (
-      <div className="p-5 space-y-5 animate-pulse">
+      <div className="energy-page space-y-5 animate-pulse">
         <div className="h-36 bg-gradient-to-r from-slate-200 to-slate-100 rounded-3xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -71,19 +71,17 @@ export default function OverviewPage() {
   const offlineCount = devices.length - onlineCount;
 
   return (
-    <div className="p-5 space-y-5 bg-gray-50 min-h-screen">
+    <div className="energy-page space-y-5">
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 shadow-xl">
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-        <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-white/5 rounded-full blur-xl" />
-        <div className="relative z-10 px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div className="energy-hero">
+        <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
               <Server className="w-3.5 h-3.5" /> K Energy Save
             </div>
             <h1 className="text-3xl font-black text-white mb-1">{t('devicesOverview') || 'Devices Overview'}</h1>
-            <p className="text-blue-100 text-sm">All registered devices across your sites</p>
+            <p className="text-emerald-100 text-sm">All registered devices across your sites</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {[
@@ -94,7 +92,7 @@ export default function OverviewPage() {
               <div key={kpi.label} className={`flex flex-col items-center bg-gradient-to-br ${kpi.color} backdrop-blur-sm rounded-2xl px-5 py-3 min-w-[80px] border border-white/20`}>
                 <kpi.icon className="w-4 h-4 text-white/70 mb-1" />
                 <span className="text-2xl font-black text-white leading-none">{kpi.val}</span>
-                <span className="text-blue-100 text-xs mt-0.5">{kpi.label}</span>
+                <span className="text-emerald-100 text-xs mt-0.5">{kpi.label}</span>
               </div>
             ))}
             <div className="flex gap-2">
@@ -103,7 +101,7 @@ export default function OverviewPage() {
                 <RefreshCw className={`w-5 h-5 text-white ${loading ? 'animate-spin' : ''}`} />
               </button>
               <button onClick={() => router.push('/devices-setting')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-blue-700 font-bold text-sm rounded-xl hover:bg-blue-50 transition-all shadow-md">
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 font-bold text-sm rounded-xl hover:bg-emerald-50 transition-all shadow-md">
                 <Plus className="w-4 h-4" /> {t('addDevice') || 'Add Device'}
               </button>
             </div>

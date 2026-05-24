@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSite } from '@/lib/SiteContext';
 import { useLocale } from '@/lib/LocaleContext';
 import MonitorCard from '@/components/MonitorCard';
@@ -24,6 +25,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import './current-monitor.css';
 
 interface Device {
   deviceID: string;
@@ -39,10 +41,23 @@ interface MonitoringMetrics {
   powerFactor?: number;
 }
 
+const brandShort = {
+  th: 'GE Energy Tech',
+  en: 'GE Energy Tech',
+  ko: 'GE Energy Tech',
+};
+
+const companyNames = {
+  th: 'บริษัท จีอี อีเนอร์จี่ เทค จำกัด',
+  en: 'GE Energy Tech Co., Ltd.',
+  ko: '(주식회사)지이 에너지텍',
+};
+
 const labels = {
   th: {
     title: 'มอนิเตอร์กระแสไฟเรียลไทม์',
     subtitle: 'รับค่ากระแส (A) จากอุปกรณ์แบบเรียลไทม์',
+    tagline: 'ระบบติดตามพลังงานอัจฉริยะ',
     customer: 'ลูกค้า',
     device: 'อุปกรณ์',
     allCustomers: 'ทุกลูกค้า',
@@ -61,10 +76,15 @@ const labels = {
     l3: 'เฟส L3',
     avg: 'เฉลี่ย 3 เฟส',
     errorLoad: 'โหลดข้อมูลไม่สำเร็จ',
+    site: 'ไซต์',
+    langTh: 'ไทย',
+    langKo: '한국어',
+    langEn: 'English',
   },
   en: {
     title: 'Real-time Current Monitor',
     subtitle: 'Live current (A) readings from your devices',
+    tagline: 'Smart energy monitoring system',
     customer: 'Customer',
     device: 'Device',
     allCustomers: 'All customers',
@@ -83,10 +103,15 @@ const labels = {
     l3: 'Phase L3',
     avg: '3-phase average',
     errorLoad: 'Failed to load data',
+    site: 'Site',
+    langTh: 'ไทย',
+    langKo: '한국어',
+    langEn: 'English',
   },
   ko: {
     title: '실시간 전류 모니터',
     subtitle: '장치에서 실시간 전류(A) 값을 표시합니다',
+    tagline: '스마트 에너지 모니터링 시스템',
     customer: '고객',
     device: '장치',
     allCustomers: '전체 고객',
@@ -105,10 +130,17 @@ const labels = {
     l3: 'L3 상',
     avg: '3상 평균',
     errorLoad: '데이터 로드 실패',
+    site: '사이트',
+    langTh: 'ไทย',
+    langKo: '한국어',
+    langEn: 'English',
   },
 };
 
 type LocaleKey = keyof typeof labels;
+const ENERGY_LOCALES: LocaleKey[] = ['th', 'ko', 'en'];
+
+const CHART_COLORS = ['#15803d', '#22c55e', '#4ade80'];
 
 function formatTimeLabel(val: string) {
   if (!val) return '';
@@ -116,11 +148,17 @@ function formatTimeLabel(val: string) {
   return space > 0 ? val.slice(space + 1, space + 6) : val;
 }
 
+function resolveLang(locale: string): LocaleKey {
+  return ENERGY_LOCALES.includes(locale as LocaleKey) ? (locale as LocaleKey) : 'th';
+}
+
 export default function CurrentMonitorPage() {
   const { selectedSite } = useSite();
   const { locale } = useLocale();
-  const lang = (labels[locale as LocaleKey] ? locale : 'th') as LocaleKey;
+  const lang = resolveLang(locale);
   const ui = labels[lang];
+  const company = companyNames[lang];
+  const brand = brandShort[lang];
 
   const [customers, setCustomers] = useState<string[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
@@ -260,62 +298,83 @@ export default function CurrentMonitorPage() {
   const selectedDeviceInfo = devices.find((d) => d.deviceID === selectedDevice);
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Activity className="w-6 h-6 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">{ui.title}</h1>
+    <div className="energy-page cm-page max-w-6xl mx-auto">
+      <section className="cm-hero" aria-label="GE Energy Tech">
+        <div className="cm-hero-inner">
+          <div className="cm-brand">
+            <Image
+              src="/momoge/Logo-brand.png"
+              alt={brand}
+              width={72}
+              height={44}
+              className="cm-logo"
+              priority
+            />
+            <div className="cm-brand-text">
+              <p className="cm-brand-short">{brand}</p>
+              <p className="cm-company">{company}</p>
+              <p className="cm-company-sub">{ui.tagline}</p>
+            </div>
           </div>
-          <p className="text-sm text-gray-500">{ui.subtitle}</p>
-          <p className="text-xs text-gray-400 mt-1">Site: {selectedSite}</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+      </section>
+
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
+        <div className="cm-title-block">
+          <div className="flex items-center gap-2 mb-1">
+            <Activity className="w-6 h-6 text-emerald-600" />
+            <h1>{ui.title}</h1>
+          </div>
+          <p>{ui.subtitle}</p>
+        </div>
+        <div className="cm-toolbar">
           {isLive ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+            <span className="cm-badge-live">
               <Wifi className="w-3.5 h-3.5" /> {ui.live}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-bold">
+            <span className="cm-badge-live cm-badge-off">
               <WifiOff className="w-3.5 h-3.5" /> {ui.offline}
             </span>
           )}
           <button
             type="button"
-            onClick={() => { fetchLiveMetrics(); fetchCurrentHistory(); }}
+            onClick={() => {
+              fetchLiveMetrics();
+              fetchCurrentHistory();
+            }}
             disabled={!selectedDevice || loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+            className="cm-btn-primary"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             {ui.refresh}
           </button>
-          <Link
-            href="/energy-dashboard/monitor"
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"
-          >
+          <Link href="/energy-dashboard/monitor" className="cm-btn-outline">
             {ui.fullMonitor}
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6 flex flex-wrap gap-3">
+      <div className="cm-panel flex flex-wrap gap-3 items-end">
         <div className="relative min-w-[200px] flex-1">
-          <label className="text-xs font-semibold text-gray-500 block mb-1">{ui.customer}</label>
+          <label>{ui.customer}</label>
           <button
             type="button"
             onClick={() => setShowCustomerMenu(!showCustomerMenu)}
-            className="w-full flex items-center justify-between px-3 py-2 border border-gray-200 rounded-lg text-sm"
+            className="cm-select-btn"
           >
             <span className="truncate">{selectedCustomer || ui.allCustomers}</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-emerald-600 shrink-0" />
           </button>
           {showCustomerMenu && (
-            <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            <div className="cm-dropdown">
               <button
                 type="button"
-                className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50"
-                onClick={() => { setSelectedCustomer(''); setShowCustomerMenu(false); }}
+                onClick={() => {
+                  setSelectedCustomer('');
+                  setShowCustomerMenu(false);
+                }}
               >
                 {ui.allCustomers}
               </button>
@@ -323,8 +382,10 @@ export default function CurrentMonitorPage() {
                 <button
                   key={name}
                   type="button"
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50"
-                  onClick={() => { setSelectedCustomer(name); setShowCustomerMenu(false); }}
+                  onClick={() => {
+                    setSelectedCustomer(name);
+                    setShowCustomerMenu(false);
+                  }}
                 >
                   {name}
                 </button>
@@ -334,36 +395,35 @@ export default function CurrentMonitorPage() {
         </div>
 
         <div className="relative min-w-[220px] flex-1">
-          <label className="text-xs font-semibold text-gray-500 block mb-1">{ui.device}</label>
+          <label>{ui.device}</label>
           <button
             type="button"
             onClick={() => setShowDeviceMenu(!showDeviceMenu)}
-            className="w-full flex items-center justify-between px-3 py-2 border border-gray-200 rounded-lg text-sm"
+            className="cm-select-btn"
           >
             <span className="truncate">
               {selectedDeviceInfo
                 ? `${selectedDeviceInfo.deviceName} (${selectedDevice})`
                 : ui.selectDevice}
             </span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-emerald-600 shrink-0" />
           </button>
           {showDeviceMenu && (
-            <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+            <div className="cm-dropdown">
               {devices.length === 0 ? (
-                <p className="px-3 py-2 text-sm text-gray-400">—</p>
+                <p className="px-3 py-2 text-sm text-slate-400">—</p>
               ) : (
                 devices.map((d) => (
                   <button
                     key={d.deviceID}
                     type="button"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b border-gray-50 last:border-0"
                     onClick={() => {
                       setSelectedDevice(d.deviceID);
                       setShowDeviceMenu(false);
                     }}
                   >
-                    <span className="font-medium">{d.deviceName}</span>
-                    <span className="block text-xs text-gray-400">{d.deviceID}</span>
+                    <span className="font-medium block">{d.deviceName}</span>
+                    <span className="text-xs text-slate-400">{d.deviceID}</span>
                   </button>
                 ))
               )}
@@ -374,37 +434,33 @@ export default function CurrentMonitorPage() {
         {(selectedCustomer || selectedDevice) && (
           <button
             type="button"
-            className="self-end p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-slate-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-50"
             onClick={() => {
               setSelectedCustomer('');
               setSelectedDevice('');
               setMetrics(null);
               setChartData([]);
             }}
-            aria-label="Clear"
+            aria-label="Clear filters"
           >
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
-      )}
+      {error && <div className="cm-error">{error}</div>}
 
-      {!selectedDevice && (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center text-gray-500">
-          {ui.noDevice}
-        </div>
-      )}
+      {!selectedDevice && <div className="cm-empty">{ui.noDevice}</div>}
 
       {selectedDevice && (
         <>
           {lastUpdate && (
-            <p className="text-xs text-gray-400 mb-3">{ui.lastUpdate}: {lastUpdate}</p>
+            <p className="text-xs text-slate-500 mb-3">
+              {ui.lastUpdate}: <span className="font-medium text-emerald-800">{lastUpdate}</span>
+            </p>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="cm-stats-grid">
             {phaseLabels.map((label, i) => (
               <MonitorCard
                 key={label}
@@ -412,7 +468,7 @@ export default function CurrentMonitorPage() {
                 value={metrics?.current?.[i]}
                 unit="A"
                 lastUpdate={lastUpdate}
-                color="blue"
+                color="green"
                 icon="current"
                 highlight={i === 0}
               />
@@ -428,23 +484,44 @@ export default function CurrentMonitorPage() {
             />
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-            <h2 className="text-sm font-bold text-gray-800 mb-4">{ui.chartTitle}</h2>
+          <div className="cm-chart-panel">
+            <h2>{ui.chartTitle}</h2>
             {chartLoading && chartData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400 text-sm">{ui.loading}</div>
+              <div className="h-64 flex items-center justify-center text-slate-400 text-sm">{ui.loading}</div>
             ) : chartData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400 text-sm">{ui.noChart}</div>
+              <div className="h-64 flex items-center justify-center text-slate-400 text-sm">{ui.noChart}</div>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#dcfce7" />
                   <XAxis dataKey="time" tickFormatter={formatTimeLabel} tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} unit="A" />
                   <Tooltip labelFormatter={(l) => String(l)} />
                   <Legend />
-                  <Line type="monotone" dataKey="currentL1" name={ui.l1} stroke="#3b82f6" dot={false} strokeWidth={2} />
-                  <Line type="monotone" dataKey="currentL2" name={ui.l2} stroke="#8b5cf6" dot={false} strokeWidth={2} />
-                  <Line type="monotone" dataKey="currentL3" name={ui.l3} stroke="#06b6d4" dot={false} strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="currentL1"
+                    name={ui.l1}
+                    stroke={CHART_COLORS[0]}
+                    dot={false}
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="currentL2"
+                    name={ui.l2}
+                    stroke={CHART_COLORS[1]}
+                    dot={false}
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="currentL3"
+                    name={ui.l3}
+                    stroke={CHART_COLORS[2]}
+                    dot={false}
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             )}

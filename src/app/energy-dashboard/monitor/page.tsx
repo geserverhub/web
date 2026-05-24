@@ -284,18 +284,19 @@ export default function MonitorPage() {
   );
 
   return (
-    <div className="min-h-full bg-gray-50 p-6">
+    <div className="energy-page space-y-5">
       {/* ── Page Header ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="energy-hero">
+        <div className="energy-hero-inner px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-white">
             {t('devicesMonitor') || 'Device Monitor'}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Real-time electrical measurements</p>
+          <p className="text-sm text-emerald-100 mt-0.5">Real-time electrical measurements</p>
         </div>
 
         {lastUpdate && (
-          <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 bg-white/95 rounded-lg px-3 py-2 shadow-sm border border-emerald-100">
             {isLive
               ? <><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /><span className="text-xs text-green-600 font-medium">Live</span></>
               : <WifiOff className="w-4 h-4 text-gray-400" />
@@ -304,6 +305,7 @@ export default function MonitorPage() {
             <span className="text-xs text-gray-500">{isClient ? new Date(lastUpdate).toLocaleString() : lastUpdate}</span>
           </div>
         )}
+        </div>
       </div>
 
       {/* ── Controls ── */}
