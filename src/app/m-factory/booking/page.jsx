@@ -340,7 +340,7 @@ export default function Home() {
             <div className="flex justify-center">
 
               <img
-                src="/qr-line.jpg"
+                src="/m-factory/qr-line.jpg"
                 alt="QR Code"
                 className="w-72 rounded-2xl shadow-lg"
               />
