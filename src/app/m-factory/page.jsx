@@ -5,6 +5,9 @@ export const metadata = {
   description: "จองโกดัง M-Factory ลาดหลุมแก้ว ปทุมธานี ขาย-ให้เช่าโกดังโรงงาน",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function MFactoryPage() {
   return <BookingClient />;
 }

@@ -58,6 +58,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/m-factory/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        ],
+      },
     ];
   },
   async rewrites() {
