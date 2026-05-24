@@ -1,34 +1,26 @@
 #!/usr/bin/env bash
-# Deploy / update GE Server Hub on Linux (GE-SERVER)
+# GEserverhub local update: pull web.git → restore DB → build → run
 # Usage: cd ~/GEserverhub && bash update.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-echo "==> GE Server Hub update @ $ROOT"
+echo "==> GEserverhub update @ $ROOT"
 
 if [[ ! -f package.json ]]; then
-  echo "ERROR: package.json not found. Run from project root (~/GEserverhub)."
+  echo "ERROR: run from project root (~/GEserverhub)"
   exit 1
 fi
 
-if [[ ! -f .env.local ]]; then
-  echo "WARN: .env.local missing — copy from .env.local.example and configure DB."
-fi
-
-echo "==> git pull origin main"
-# Drop stale local kenergy copies (invalid UTF-8) before pull restores tracked re-exports
-[[ -d src/app/api/kenergy ]] && rm -rf src/app/api/kenergy
+echo "==> [1/4] git pull origin main (geserverhub/web)"
 git fetch origin main
-git reset --hard origin/main
-
-echo "==> verify git is current (must match github.com/geserverhub/web main)"
+git pull --ff-only origin main
 git log -1 --oneline
 
-echo "==> stop app before npm ci (release node_modules/next file locks)"
+echo "==> [2/4] stop app (free port 3005 before install)"
 if command -v pm2 >/dev/null 2>&1; then
-  pm2 delete ge-web 2>/dev/null || true
+  pm2 stop ge-web 2>/dev/null || true
   pm2 delete geserverhub 2>/dev/null || true
 fi
 if [[ -f scripts/kill-port.mjs ]]; then
@@ -36,65 +28,31 @@ if [[ -f scripts/kill-port.mjs ]]; then
 else
   fuser -k 3005/tcp 2>/dev/null || true
 fi
-sleep 1
 
-echo "==> clean node_modules and .next"
-rm -rf node_modules .next
-
-echo "==> npm ci (skip postinstall; run prisma after clean extract)"
+echo "==> [3/4] npm ci + database restore + build"
 unset NODE_ENV
 if ! npm ci --ignore-scripts --no-audit --no-fund; then
-  echo "WARN: npm ci failed once — clearing cache and retrying"
-  npm cache clean --force
+  echo "WARN: npm ci failed — clean node_modules and retry"
   rm -rf node_modules
   npm ci --ignore-scripts --no-audit --no-fund
 fi
 
-echo "==> prisma generate"
-npx prisma generate
+bash scripts/db-restore.sh database/geserverhub.sql
 
-echo "==> npm run build"
+rm -rf .next
 npm run build
 
-echo "==> verify customer-dashboard chunks"
-if ! ls .next/static/chunks/app/customer-dashboard/page-*.js >/dev/null 2>&1; then
-  echo "ERROR: customer-dashboard page chunk missing after build"
-  exit 1
-fi
-
-echo "==> verify m-factory CSS bundled in layout"
-if ! grep -rq "m-factory-layout\|mf-booking" .next 2>/dev/null; then
-  echo "WARN: m-factory styles not found in .next (layout import may be missing)"
-fi
-
-echo "==> restart app (single ge-web from $ROOT)"
+echo "==> [4/4] run (pm2 ge-web on port 3005)"
 if command -v pm2 >/dev/null 2>&1; then
-  pm2 start npm --name ge-web --cwd "$ROOT" -- start
+  if pm2 describe ge-web >/dev/null 2>&1; then
+    pm2 restart ge-web --update-env
+  else
+    pm2 start npm --name ge-web --cwd "$ROOT" -- start
+  fi
   pm2 save
   pm2 status
-
-  echo "==> who listens on 3005?"
-  (ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null || true) | grep 3005 || true
-
-  echo "==> smoke test local (wait for next start)"
-  sleep 5
-  HTML="$(curl -sf "http://127.0.0.1:3005/m-factory" || true)"
-  if [[ -z "$HTML" ]]; then
-    echo "ERROR: /m-factory returned empty response"
-    exit 1
-  fi
-  if echo "$HTML" | grep -q 'm-factoryandresort.com' && echo "$HTML" | grep -q 'mf-booking'; then
-    echo "OK: /m-factory serves current booking page"
-  else
-    echo "ERROR: /m-factory still serves stale HTML"
-    echo "       Expected: m-factoryandresort.com + mf-booking in HTML"
-    exit 1
-  fi
-  CSS_LINKS="$(echo "$HTML" | grep -o '_next/static/css/[^"]*' | sort -u | wc -l | tr -d ' ')"
-  echo "OK: $CSS_LINKS bundled CSS link(s) in /m-factory HTML"
 else
-  echo "PM2 not installed. Start manually: npm run start"
-  echo "Or install PM2: npm install -g pm2 && pm2 start npm --name ge-web -- start"
+  echo "PM2 not found — run: npm run start"
 fi
 
-echo "==> Done. App listens on port 3005 (next start -p 3005)"
+echo "==> Done. http://127.0.0.1:3005"
