@@ -504,14 +504,7 @@ CREATE TABLE `PartnerTransaction` (
 LOCK TABLES `PartnerTransaction` WRITE;
 /*!40000 ALTER TABLE `PartnerTransaction` DISABLE KEYS */;
 INSERT INTO `PartnerTransaction` VALUES
-('cmowmc6fu0000qhwtm76e9295','EXP20260508-0002','MOMOGE SPACE','EXPENSE','Meter + CT','Shanghai Fangqiu Electric Co.,Ltd',158.00,'USD','PENDING','ค่าอุปกรณ์','C/I NO : FQ26-KR01   Energy Meter  EM4373 2 PCS , Current transformer : SCT-T24','2026-05-08 00:00:00.000','2026-05-08 07:53:43.578','2026-05-08 07:53:43.578',NULL),
-('exp_import_01','EXP20260417-0001','MOMOGE SPACE','EXPENSE','ge-serverhub.com — Invoice NKBQJH4J-0005','Porkbun / Domain Registrar',18702.00,'KRW','COMPLETED','ค่าเช่าเซิร์ฟเวอร์/โดเมน','EXP260420-00002 | ge-serverhub.com Invoice number NKBQJH4J-0005','2026-04-17 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776696837141-z8m2uo.jpg\",\"/uploads/receipts/1776696837367-9666uz.pdf\"]'),
-('exp_import_02','EXP20260417-0002','MOMOGE SPACE','EXPENSE','ngrok Inc. — Forward IP Gateway — Invoice DYWNCD-00006','ngrok Inc.',30251.00,'KRW','COMPLETED','ค่าบริการภายนอก','EXP260421-00001 | ngrok Inc. Forward IP getaway Local to Public Invoice DYWNCD-00006','2026-04-17 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776697286801-yz5wcq.pdf\",\"/uploads/receipts/1776697287014-fj59bl.jpg\"]'),
-('exp_import_03','EXP20260418-0001','MOMOGE SPACE','EXPENSE','Claude Pro AI code — Invoice K6CHS41L-0004','Anthropic / Claude',32831.00,'KRW','COMPLETED','ค่าบริการภายนอก','EXP260420-00004 | Claude Pro AI code Invoice number K6CHS41L-0004','2026-04-18 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776697097592-kc7bgc.jpg\",\"/uploads/receipts/1776697097743-l337lk.pdf\"]'),
-('exp_import_04','EXP20260420-0001','MOMOGE SPACE','EXPENSE','m-factoryandresort.com — Invoice NKBQJH4J-0006','Porkbun / Domain Registrar',18702.00,'KRW','COMPLETED','ค่าเช่าเซิร์ฟเวอร์/โดเมน','EXP260420-00003 | m-factoryandresort.com Invoice number NKBQJH4J-0006','2026-04-20 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000','[\"/uploads/receipts/1776696958957-cz79s2.jpg\",\"/uploads/receipts/1776696959136-2dhbkm.pdf\"]'),
-('exp_import_05','EXP20260524-0001','MOMOGE SPACE','EXPENSE','ค่าแรงนักศึกษาฝึกงาน 3 คน 2 วัน','นักศึกษาฝึกงาน',3000.00,'THB','COMPLETED','ค่าแรง/เงินเดือน','EXP260524-00001 | ค่าแรงนักศึกษาฝึกงาน 3 คน 2 วัน','2026-05-24 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000',NULL),
-('exp_import_06','EXP20260524-0002','MOMOGE SPACE','EXPENSE','ซื้อเครื่อง PC SERVER + ค่าส่ง','ผู้จำหน่าย PC Server',650000.00,'KRW','COMPLETED','ค่าอุปกรณ์/ซอฟต์แวร์','EXP260524-00002 | ซื้อเครื่อง PC SERVER+ ค่าส่ง','2026-05-24 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000',NULL),
-('exp_import_07','EXP20260524-0003','MOMOGE SPACE','EXPENSE','Cloud AI รายปี','Cloud AI Provider',300000.00,'KRW','COMPLETED','ค่าอุปกรณ์/ซอฟต์แวร์','EXP260524-00003 | Cloud AI รายปี','2026-05-24 00:00:00.000','2026-05-24 20:18:02.000','2026-05-24 20:18:02.000',NULL);
+('cmowmc6fu0000qhwtm76e9295','EXP20260508-0002','MOMOGE SPACE','EXPENSE','Meter + CT','Shanghai Fangqiu Electric Co.,Ltd',158.00,'USD','PENDING','ค่าอุปกรณ์','C/I NO : FQ26-KR01   Energy Meter  EM4373 2 PCS , Current transformer : SCT-T24','2026-05-08 00:00:00.000','2026-05-08 07:53:43.578','2026-05-08 07:53:43.578',NULL);
 /*!40000 ALTER TABLE `PartnerTransaction` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1218,4 +1211,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-24 20:18:23
+-- Dump completed on 2026-05-24 20:26:10
