@@ -1,16 +1,82 @@
-/* M-Factory booking ??scoped Tailwind fallbacks when global CSS chunks fail to load */
-.m-factory-layout {
-  min-height: 100vh;
-  padding: 1rem;
-  color: #111;
-  background: linear-gradient(to bottom right, #dbeafe, #fff, #cffafe);
+/* M-Factory booking — self-contained styles (Bootstrap/Tailwind chunk fallback) */
+
+/* Reset Bootstrap globals inside this layout */
+.m-factory-layout,
+.m-factory-layout *,
+.m-factory-layout *::before,
+.m-factory-layout *::after {
   box-sizing: border-box;
 }
 
+.m-factory-layout button,
+.m-factory-layout input,
+.m-factory-layout select,
+.m-factory-layout textarea {
+  margin: 0;
+  font: inherit;
+  line-height: inherit;
+}
+
+.m-factory-layout button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.m-factory-layout h1,
+.m-factory-layout h2 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.m-factory-layout a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.m-factory-layout {
+  min-height: 100vh;
+  color: #111;
+  box-sizing: border-box;
+}
+
+.m-factory-layout .min-h-screen {
+  min-height: 100vh;
+}
+
+.m-factory-layout .text-black {
+  color: #000;
+}
+
+.m-factory-layout .mf-booking {
+  min-height: 100vh;
+  padding: 1rem;
+  color: #000;
+  background: linear-gradient(to bottom right, #dbeafe, #fff, #cffafe);
+}
+
 @media (min-width: 768px) {
-  .m-factory-layout {
+  .m-factory-layout .mf-booking {
     padding: 2rem;
   }
+
+  .m-factory-layout .mf-booking .md\:p-8 {
+    padding: 2rem;
+  }
+}
+
+.m-factory-layout .bg-gradient-to-br {
+  background: linear-gradient(to bottom right, #dbeafe, #fff, #cffafe);
+}
+
+.m-factory-layout .from-blue-100 {
+  /* gradient handled by bg-gradient-to-br / .mf-booking */
+}
+
+.m-factory-layout .p-4 {
+  padding: 1rem;
 }
 
 .m-factory-layout .max-w-6xl {
@@ -42,6 +108,22 @@
 
 .m-factory-layout .bg-gradient-to-r {
   background: linear-gradient(to right, #1d4ed8, #06b6d4);
+}
+
+.m-factory-layout .bg-gradient-to-r {
+  background: linear-gradient(to right, #1d4ed8, #06b6d4);
+}
+
+.m-factory-layout .transition {
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.m-factory-layout button[type="submit"]:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.m-factory-layout .opacity-60 {
+  opacity: 0.6;
 }
 
 .m-factory-layout .text-white {
@@ -306,8 +388,8 @@
 }
 
 .m-factory-layout .bg-gradient-to-r.from-emerald-500,
-.m-factory-layout .bg-gradient-to-r {
-  /* submit button gradient handled below */
+.m-factory-layout button[type="submit"] {
+  background: linear-gradient(to right, #10b981, #16a34a);
 }
 
 .m-factory-layout button[type="submit"] {
