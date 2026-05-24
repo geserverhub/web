@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
 import EnergyLangSwitcher from '@/components/energy/EnergyLangSwitcher';
 import { formatEnergyDisplayUser } from '@/lib/energy/display-user';
+import { GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 
 const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
 
@@ -30,7 +31,7 @@ export default function CustomerDashboardHeader() {
   useEffect(() => {
     setMounted(true);
     try {
-      const raw = localStorage.getItem('k_system_admin_user');
+      const raw = localStorage.getItem(GE_ADMIN_USER_KEY);
       if (raw) setUser(JSON.parse(raw));
     } catch {
       setUser(null);

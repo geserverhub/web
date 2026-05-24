@@ -69,6 +69,8 @@ const langOptions = [
 /** Bump when public/momoge/Logo-brand.png changes (cache bust) */
 const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
 
+const HOME_URL = 'https://ge-serverhub.com';
+
 const companyNames = {
   th: 'บริษัท จีอี อีเนอร์จี่ เทค จำกัด',
   en: 'GE Energy Tech Co., Ltd.',
@@ -346,9 +348,8 @@ export default function EnergyDashboardLoginPage() {
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <a
-            href="/"
+            href={HOME_URL}
             style={{ fontSize: 13, color: '#0369a1', textDecoration: 'none' }}
-            onClick={(e) => { e.preventDefault(); window.location.href = '/'; }}
           >
             {t('backHome')}
           </a>

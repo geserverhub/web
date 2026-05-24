@@ -226,7 +226,7 @@ export default function MeterSetingPage() {
   const fetchDevices = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/kenergy/meter-seting')
+      const res = await fetch('/api/ge-energy/meter-seting')
       const json = await res.json()
 
       if (!res.ok || !json.success) {

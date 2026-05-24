@@ -16,7 +16,7 @@ const sqlPath =
   process.argv[2] ||
   'C:/Users/note/Downloads/User (4).sql';
 
-const dbName = process.env.DB_NAME || 'geserverhub';
+const dbName = process.env.DB_NAME || 'goeunserverhub';
 
 const conn = await mysql.createConnection({
   host: process.env.DB_HOST || '127.0.0.1',

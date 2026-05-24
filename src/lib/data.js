@@ -13,7 +13,7 @@ export const languageOptions = [
 ];
 
 export const fallbackProfile = {
-  brand_name: "GOEUN SERVER HUB",
+  brand_name: "GE SERVER HUB",
   headline: "ศูนย์กลางระบบลูกค้าและหน้าโปรโมทบริการของคุณ",
   subheadline:
     "รวมหน้าแนะนำบริการ, ช่องทางติดต่อ, และทางเข้าระบบสำหรับลูกค้าหลายรายไว้ในเว็บเดียว",
@@ -83,7 +83,7 @@ export const fallbackClients = [
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    thumbnail: "/uploads/logos/G-monitoring.png",
+    thumbnail: "momoge/momoge-space.jpg",
     system_url: "/energy-dashboard-login",
   },
   {
@@ -95,7 +95,7 @@ export const fallbackClients = [
     contact_email: "m.factoryandresort@gmail.com",
     contact_phone: "+66 095-241-1833",
     thumbnail: "/m-factory/LINE_ALBUM_12369_260417_1.jpg",
-    system_url: "https://m-factoryandresort.com",
+    system_url: "/m-factory",
   },
   {
     id: 4,
@@ -172,6 +172,38 @@ export const filterOptions = [
   { key: "maintenance", label: "บำรุงรักษา" },
   { key: "coming-soon", label: "เร็ว ๆ นี้" },
 ];
+
+const fallbackBySlug = Object.fromEntries(fallbackClients.map((c) => [c.slug, c]));
+
+const PORTAL_URL_OVERRIDES = {
+  "green-retail-group": "/energy-dashboard-login",
+  "green-retail-energy": "/energy-dashboard-login",
+  "m-group": "/m-group",
+};
+
+/** Resolve portal URL for API cards when DB systemUrl is empty or invalid. */
+export function resolveClientPortalUrl(client) {
+  if (!client) return null;
+  const status = String(client.status || "").toLowerCase();
+  if (status === "coming-soon" || status === "maintenance") return null;
+
+  const slug = client.slug;
+  const raw = String(client.system_url ?? client.systemUrl ?? "").trim();
+  let url =
+    raw && raw !== "#"
+      ? raw
+      : PORTAL_URL_OVERRIDES[slug] || fallbackBySlug[slug]?.system_url || "";
+
+  url = String(url).trim();
+  if (!url || url === "#") return null;
+  if (url.startsWith("/") || /^https?:\/\//i.test(url)) return url;
+  if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}/i.test(url)) return `https://${url}`;
+  return url;
+}
+
+export function isExternalPortalUrl(url) {
+  return Boolean(url && /^https?:\/\//i.test(url));
+}
 
 export function clientPortalUrl(slug) {
   return `${backendBaseUrl}/portal/${slug}`;

@@ -133,6 +133,11 @@ export default function ClientsUsersClient({ session }) {
 
   // filters
   const [clientSearch, setClientSearch] = useState("");
+  const [mfactoryModal, setMfactoryModal] = useState(false);
+  const [mfactoryBookings, setMfactoryBookings] = useState([]);
+  const [mfactoryLoading, setMfactoryLoading] = useState(false);
+  const [mfactorySearch, setMfactorySearch] = useState("");
+  const [mfactoryDetailId, setMfactoryDetailId] = useState(null);
   const [filterClientStatus, setFilterClientStatus] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [filterUserRole, setFilterUserRole] = useState("");
@@ -211,6 +216,22 @@ export default function ClientsUsersClient({ session }) {
   const loadClients = useCallback(async () => {
     const d = await readJsonResponse(await fetch("/api/admin/clients"));
     setClients(d.clients || []);
+  }, []);
+
+  const openMFactoryBookings = useCallback(async () => {
+    setMfactoryModal(true);
+    setMfactoryLoading(true);
+    setMfactorySearch("");
+    setMfactoryDetailId(null);
+    try {
+      const d = await readJsonResponse(await fetch("/api/admin/mfactory-bookings"));
+      setMfactoryBookings(d.bookings || []);
+    } catch (e) {
+      showToast(e.message, false);
+      setMfactoryBookings([]);
+    } finally {
+      setMfactoryLoading(false);
+    }
   }, []);
 
   const loadServices = useCallback(async () => {
@@ -913,7 +934,7 @@ export default function ClientsUsersClient({ session }) {
             <div class="doc-num">${exp.number}</div>
           </div>
           <div class="header-right">
-            <strong>GOEUN SERVER HUB</strong><br/>
+            <strong>GE SERVER HUB</strong><br/>
             인쇄일시: ${new Date().toLocaleString("ko-KR")}
           </div>
         </div>
@@ -934,7 +955,7 @@ export default function ClientsUsersClient({ session }) {
         ${attachmentRows}
 
         <div class="footer">
-          <div class="footer-co">GOEUN SERVER HUB · goeunserverhub.com</div>
+          <div class="footer-co">GE SERVER HUB · goeunserverhub.com</div>
           <button class="print-btn" onclick="window.print()">🖨️ 인쇄</button>
         </div>
 
@@ -997,7 +1018,7 @@ export default function ClientsUsersClient({ session }) {
       </style>
     </head><body>
       <h2>📋 지출 보고서</h2>
-      <div class="sub">GOEUN SERVER HUB · 인쇄일시: ${new Date().toLocaleString("ko-KR")} · 총 ${expenses.length}건</div>
+      <div class="sub">GE SERVER HUB · 인쇄일시: ${new Date().toLocaleString("ko-KR")} · 총 ${expenses.length}건</div>
       <table>
         <thead><tr>
           <th>번호</th><th>카테고리</th><th>금액</th><th>상태</th><th>영수증 번호</th><th>비고</th><th>날짜</th>
@@ -1066,7 +1087,7 @@ export default function ClientsUsersClient({ session }) {
 <div class="paper">
   <div class="no-print"><button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button></div>
   <h1>✈️ ใบแจ้งค่าใช้จ่ายคาโก้</h1>
-  <div class="sub">GOEUN SERVER HUB · บริการส่งสินค้าไทย-เกาหลี ทางเครื่องบิน</div>
+  <div class="sub">GE SERVER HUB · บริการส่งสินค้าไทย-เกาหลี ทางเครื่องบิน</div>
   <hr class="divider"/>
   <table style="margin-bottom:16px">
     <tr><th>เลขที่พัสดุ</th><td><strong style="font-family:monospace">${o.number}</strong></td><th>วันที่รับ</th><td>${dateStr}</td></tr>
@@ -1087,7 +1108,7 @@ export default function ClientsUsersClient({ session }) {
       <td class="profit">${sym}${fmt(profit)}</td>
     </tr>
   </table>
-  <div class="footer">© GOEUN SERVER HUB · พิมพ์เมื่อ ${new Date().toLocaleString("th-TH")}</div>
+  <div class="footer">© GE SERVER HUB · พิมพ์เมื่อ ${new Date().toLocaleString("th-TH")}</div>
 </div></body></html>`);
     win.document.close();
   };
@@ -1188,7 +1209,7 @@ export default function ClientsUsersClient({ session }) {
         @media print { .attach-card { page-break-inside: avoid; } button { display: none; } }
       </style></head><body>
       <h2>${isInv ? `รายงาน Invoice — ${modeLabel}` : `📋 지출 보고서 — ${modeLabel}`}</h2>
-      <div class="sub">${isInv ? `พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")} · รายการทั้งหมด ${items.length} รายการ` : `인쇄일시: ${new Date().toLocaleString("ko-KR")} · 총 ${items.length}건 · GOEUN SERVER HUB`}</div>
+      <div class="sub">${isInv ? `พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")} · รายการทั้งหมด ${items.length} รายการ` : `인쇄일시: ${new Date().toLocaleString("ko-KR")} · 총 ${items.length}건 · GE SERVER HUB`}</div>
       <table><thead><tr>${headers}</tr></thead><tbody>${rows || `<tr><td colspan="${colspan}" style="text-align:center;padding:24px;color:#888">${isInv ? "ไม่พบรายการ" : "항목 없음"}</td></tr>`}</tbody></table>
       <div class="total">${isInv ? `รวมทั้งสิ้น: ${totalAmt.toLocaleString("th-TH")} ${items[0]?.currency || "THB"}` : `합계: ${totalAmt.toLocaleString("ko-KR")} ${items[0]?.currency || "KRW"}`}</div>
       ${attachmentHtml}
@@ -1791,7 +1812,7 @@ export default function ClientsUsersClient({ session }) {
       "tfoot td{font-weight:800;background:#f0f0f0;border-top:2px solid #333}" +
       "@media print{button{display:none}}" +
       "</style></head><body>" +
-      "<div style='font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:4px'>GOEUN SERVER HUB</div>" +
+      "<div style='font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:4px'>GE SERVER HUB</div>" +
       "<h2 style='margin:0 0 4px'>\ud83d\udcd2 " + L.title + " (" + currency + ")</h2>" +
       "<div class='sub'>" + L.printedAt + ": " + new Date().toLocaleString(L.locale) + "</div>" +
       "<div class='summary'>" +
@@ -2128,6 +2149,7 @@ export default function ClientsUsersClient({ session }) {
                 )}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button style={S.btn("#422006", "#fb923c")} onClick={openMFactoryBookings}>🏭 ฟอร์มจอง M-Factory</button>
                 <button style={S.btn("#1e3a5f", "#7eb8f7")} onClick={openAddClient}>+ เพิ่มลูกค้าใหม่</button>
                 <button style={S.btn("#0f2b3d", "#67e8f9")} onClick={openClientEditPicker}>🛠️ แก้ไขข้อมูลลูกค้า</button>
               </div>
@@ -3009,6 +3031,135 @@ export default function ClientsUsersClient({ session }) {
         )}
       </div>
 
+      {/* ── M-FACTORY BOOKINGS MODAL ── */}
+      {mfactoryModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 24, overflowY: "auto" }}>
+          <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 1100, border: "1px solid #2a2d3a", marginTop: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <h5 style={{ margin: 0, color: "#fb923c", fontSize: 18 }}>🏭 คำขอจอง M-Factory</h5>
+                <div style={{ color: "#8b8fa8", fontSize: 12, marginTop: 6 }}>
+                  ข้อมูลจากฟอร์มที่ <Link href="/m-factory" target="_blank" style={{ color: "#7eb8f7" }}>/m-factory</Link>
+                  {mfactoryBookings.length > 0 && ` · ${mfactoryBookings.length} รายการ`}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button style={S.btn("#1e2130", "#8b8fa8")} disabled={mfactoryLoading} onClick={openMFactoryBookings}>
+                  {mfactoryLoading ? "⏳ โหลด..." : "🔄 รีเฟรช"}
+                </button>
+                <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setMfactoryModal(false)}>✕</button>
+              </div>
+            </div>
+
+            <input
+              style={{ ...S.input, maxWidth: 360, marginBottom: 16 }}
+              placeholder="🔍 ค้นหาชื่อ / บริษัท / เบอร์ / อีเมล..."
+              value={mfactorySearch}
+              onChange={e => setMfactorySearch(e.target.value)}
+            />
+
+            {mfactoryLoading ? (
+              <div style={{ padding: 48, textAlign: "center", color: "#8b8fa8" }}>กำลังโหลด...</div>
+            ) : (() => {
+              const q = mfactorySearch.trim().toLowerCase();
+              const rows = mfactoryBookings.filter(b => {
+                if (!q) return true;
+                const hay = [b.name, b.company, b.phone, b.email, b.taxId].filter(Boolean).join(" ").toLowerCase();
+                return hay.includes(q);
+              });
+              const detail = rows.find(b => b.id === mfactoryDetailId) || null;
+              const fmtDate = (d) => d ? new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "—";
+              const rentalLabel = (v) => (v === "rent" ? "เช่า" : v === "buy" ? "ซื้อ" : v || "—");
+              const paymentLink = (ref) => {
+                if (!ref) return null;
+                if (ref.startsWith("http://") || ref.startsWith("https://") || ref.startsWith("/")) {
+                  return ref.startsWith("/") ? ref : ref;
+                }
+                return `/uploads/mfactory/${ref}`;
+              };
+
+              if (rows.length === 0) {
+                return (
+                  <div style={{ padding: 48, textAlign: "center", color: "#8b8fa8", border: "2px dashed #2a2d3a", borderRadius: 8 }}>
+                    {mfactoryBookings.length === 0 ? "ยังไม่มีคำขอจองจากฟอร์ม" : "ไม่พบรายการที่ตรงกับคำค้นหา"}
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: detail ? "1fr 320px" : "1fr", gap: 16, alignItems: "start" }}>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
+                      <thead>
+                        <tr>
+                          {["ส่งเมื่อ", "ชื่อ", "บริษัท", "เบอร์", "วันจอง", "ประเภท", ""].map(h => (
+                            <th key={h} style={S.th}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map(b => (
+                          <tr key={b.id} style={{ background: mfactoryDetailId === b.id ? "#1f2937" : undefined }}>
+                            <td style={S.td}>{fmtDate(b.createdAt)}</td>
+                            <td style={S.td}><span style={{ fontWeight: 600 }}>{b.name}</span></td>
+                            <td style={S.td}>{b.company || <span style={{ color: "#4a5070" }}>—</span>}</td>
+                            <td style={S.td}>{b.phone || "—"}</td>
+                            <td style={S.td}>{fmtDate(b.bookingDate)}</td>
+                            <td style={S.td}>{rentalLabel(b.rentalType)}</td>
+                            <td style={S.td}>
+                              <button
+                                style={{ ...S.btn("#422006", "#fb923c"), padding: "4px 10px", fontSize: 11 }}
+                                onClick={() => setMfactoryDetailId(mfactoryDetailId === b.id ? null : b.id)}
+                              >
+                                {mfactoryDetailId === b.id ? "ปิด" : "ดู"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {detail && (
+                    <div style={{ background: "#1a1d27", borderRadius: 10, padding: 16, border: "1px solid #422006", position: "sticky", top: 0 }}>
+                      <div style={{ fontWeight: 700, color: "#fb923c", marginBottom: 12, fontSize: 14 }}>รายละเอียด</div>
+                      {[
+                        ["ชื่อ", detail.name],
+                        ["บริษัท", detail.company],
+                        ["เบอร์", detail.phone],
+                        ["อีเมล", detail.email],
+                        ["เลขภาษี", detail.taxId],
+                        ["วันจอง", fmtDate(detail.bookingDate)],
+                        ["ที่อยู่", detail.address],
+                        ["โกดัง", detail.warehouse],
+                        ["ประเภท", rentalLabel(detail.rentalType)],
+                        ["ภาษา", detail.lang === "en" ? "EN" : "TH"],
+                        ["แหล่งที่มา", detail.source],
+                      ].map(([label, val]) => (
+                        <div key={label} style={{ marginBottom: 10 }}>
+                          <div style={{ color: "#8b8fa8", fontSize: 10, marginBottom: 2 }}>{label}</div>
+                          <div style={{ color: "#e2e8f0", fontSize: 12, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{val || "—"}</div>
+                        </div>
+                      ))}
+                      {paymentLink(detail.paymentRef) && (
+                        <a
+                          href={paymentLink(detail.paymentRef)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ ...S.btn("#14532d", "#4ade80"), display: "inline-block", marginTop: 8, textDecoration: "none" }}
+                        >
+                          🧾 ดูสลิปชำระเงิน
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
       {/* ── CARGO MODAL ── */}
       {cargoModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: 24, overflowY: "auto" }}>
@@ -3094,7 +3245,7 @@ export default function ClientsUsersClient({ session }) {
           PARTNER_INCOME_TYPES.has(t.type) &&
           (!ledgerPaidOnly || t.status === "COMPLETED")
         );
-        const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
+        const goeunClientId = clients.find(c => c.name === "GE SERVER HUB")?.id;
         const curReceipts = receipts.filter(r => (r.currency || "THB") === ledgerCurrency && r.clientId === goeunClientId);
 
         // Build combined ledger rows sorted by date
@@ -3170,7 +3321,7 @@ export default function ClientsUsersClient({ session }) {
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <div>
-                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GOEUN SERVER HUB</div>
+                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GE SERVER HUB</div>
                   <h5 style={{ margin: 0, color: "#4ade80", fontSize: 17 }}>📒 บัญชีรายรับ-รายจ่าย</h5>
                 </div>
                 <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setLedgerModal(false)}>✕</button>
@@ -3378,7 +3529,7 @@ export default function ClientsUsersClient({ session }) {
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <div>
-                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GOEUN SERVER HUB</div>
+                  <div style={{ color: "#8b8fa8", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>GE SERVER HUB</div>
                   <h5 style={{ margin: 0, color: "#4ade80", fontSize: 17 }}>💰 แจ้งเตือนค่าบริการรายเดือน — {monthTH}</h5>
                 </div>
                 <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setPaymentNotiModal(false)}>✕</button>

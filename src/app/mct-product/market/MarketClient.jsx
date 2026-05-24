@@ -279,7 +279,7 @@ export default function MarketClient({ session }) {
     <div style={S.bg}>
       <nav style={S.nav}>
         <div>
-          <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 2 }}>GOEUN SERVER HUB</div>
+          <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 2 }}>GE SERVER HUB</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#f472b6" }}>🛍️ สินค้า มาร์ท</div>
           <div style={{ fontSize: 12, color: "#8b8fa8" }}>{String(session?.user?.role || "")}</div>
         </div>

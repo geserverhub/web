@@ -144,7 +144,7 @@ export default function MonitorPage() {
   const fetchCustomers = useCallback(async () => {
     try {
       setCustomersLoading(true);
-      const res = await fetch(`/api/kenergy/customers-by-site?site=${selectedSite}`);
+      const res = await fetch(`/api/ge-energy/customers-by-site?site=${selectedSite}`);
       const json = await res.json();
       if (json.success) {
         setCustomers(json.customers || []);
@@ -164,7 +164,7 @@ export default function MonitorPage() {
   const fetchDevicesForCustomer = useCallback(async (customerName: string) => {
     try {
       setDevicesLoading(true);
-      const res = await fetch(`/api/kenergy/devices-setting?site=${selectedSite}`);
+      const res = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`);
       const json = await res.json();
       if (json.success) {
         const customerDevices = (json.devices as DeviceSettingsRecord[]).filter((d) => d.customerName === customerName);
@@ -191,7 +191,7 @@ export default function MonitorPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/kenergy/device-monitoring?deviceId=${selectedDevice}`);
+      const res = await fetch(`/api/ge-energy/device-monitoring?deviceId=${selectedDevice}`);
       const json = await res.json();
       if (json.success) {
         setMonitoringData(json.data.metrics);
@@ -215,7 +215,7 @@ export default function MonitorPage() {
       const per = p ?? period;
       const fr  = f ?? fromDate;
       const to_ = t ?? toDate;
-      const res = await fetch(`/api/kenergy/device-history?deviceId=${selectedDevice}&period=${per}&from=${fr}&to=${to_}&limit=1440`);
+      const res = await fetch(`/api/ge-energy/device-history?deviceId=${selectedDevice}&period=${per}&from=${fr}&to=${to_}&limit=1440`);
       const json = await res.json();
       if (json.success) setHistory((json.history || []) as ChartPoint[]);
     } catch (err) {
@@ -230,7 +230,7 @@ export default function MonitorPage() {
     try {
       setEnergyLoading(true);
       const d = date ?? energyDate;
-      const res = await fetch(`/api/kenergy/device-history?deviceId=${selectedDevice}&period=hour&from=${d}&to=${d}&limit=48`);
+      const res = await fetch(`/api/ge-energy/device-history?deviceId=${selectedDevice}&period=hour&from=${d}&to=${d}&limit=48`);
       const json = await res.json();
       if (json.success) setEnergyHistory((json.history || []) as ChartPoint[]);
     } catch (err) {
@@ -246,7 +246,7 @@ export default function MonitorPage() {
       setHistDataLoading(true);
       const fr = f ?? histFromDate;
       const to_ = t ?? histToDate;
-      const res = await fetch(`/api/kenergy/device-history?deviceId=${selectedDevice}&period=hour&from=${fr}&to=${to_}&limit=720`);
+      const res = await fetch(`/api/ge-energy/device-history?deviceId=${selectedDevice}&period=hour&from=${fr}&to=${to_}&limit=720`);
       const json = await res.json();
       if (json.success) setHistData((json.history || []) as ChartPoint[]);
     } catch (err) {
@@ -906,7 +906,7 @@ export default function MonitorPage() {
                   <p className="text-2xl font-bold text-red-700 tabular-nums">
                     {monitoringData.thdBefore != null ? `${monitoringData.thdBefore.toFixed(2)}%` : '—'}
                   </p>
-                  <p className="text-xs text-red-500 mt-0.5">Before K-Save</p>
+                  <p className="text-xs text-red-500 mt-0.5">Before GE</p>
                 </div>
               </div>
 
@@ -929,7 +929,7 @@ export default function MonitorPage() {
                   <p className="text-2xl font-bold text-green-700 tabular-nums">
                     {monitoringData.thdAfter != null ? `${monitoringData.thdAfter.toFixed(2)}%` : '—'}
                   </p>
-                  <p className="text-xs text-green-500 mt-0.5">With K-Save</p>
+                  <p className="text-xs text-green-500 mt-0.5">With GE</p>
                 </div>
               </div>
 

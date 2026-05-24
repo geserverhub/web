@@ -1,17 +1,10 @@
-import mysql from 'mysql2/promise';
+import mysql, { type RowDataPacket } from 'mysql2/promise';
 
-/** Single database for this Next.js app — never ksystem. */
-export const GESERVERHUB_DATABASE = 'geserverhub';
-
-const FORBIDDEN_DATABASES = new Set(['ksystem', 'k_system', 'ksave']);
+/** Single database for this Next.js app — goeunserverhub only. */
+export const GESERVERHUB_DATABASE = 'goeunserverhub';
 
 function assertGeserverhubDatabase(name: string): void {
   const normalized = name.trim().toLowerCase();
-  if (FORBIDDEN_DATABASES.has(normalized)) {
-    throw new Error(
-      `[geserverhub-db] Refusing to connect to "${name}". This app uses geserverhub only; ksystem is a separate system.`
-    );
-  }
   if (normalized !== GESERVERHUB_DATABASE) {
     throw new Error(
       `[geserverhub-db] DATABASE_URL must target "${GESERVERHUB_DATABASE}", got "${name}".`
@@ -64,11 +57,11 @@ const pool = mysql.createPool({
   waitForConnections: true,
 });
 
-/** Run SQL against geserverhub (energy tables, feedback, tickets, etc.). */
-export async function queryGeserverhub(sql: string, values?: unknown[]): Promise<unknown[]> {
+/** Run SQL against goeunserverhub (energy tables, feedback, tickets, etc.). */
+export async function queryGeserverhub(sql: string, values?: unknown[]): Promise<RowDataPacket[]> {
   const conn = await pool.getConnection();
   try {
-    const [rows] = await conn.query(sql, values);
+    const [rows] = await conn.query<RowDataPacket[]>(sql, values);
     return Array.isArray(rows) ? rows : [rows];
   } finally {
     conn.release();

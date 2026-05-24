@@ -6,8 +6,16 @@ const __dirname = dirname(__filename);
 
 const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
+/** LAN / WSL host IPs when dev runs with -H 0.0.0.0 (comma-separated in .env.local). */
+const extraDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Allow browsers hitting dev via WSL/LAN IP (e.g. http://172.20.24.10:3005)
+  allowedDevOrigins: ["localhost", "127.0.0.1", "172.20.24.10", ...extraDevOrigins],
   // Force this folder as app root (parent C:\web\package-lock.json must not win)
   outputFileTracingRoot: __dirname,
   turbopack: {
@@ -38,12 +46,28 @@ const nextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source:
+          "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
         source: "/backend-api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
+      // Legacy K-Energy API path → ge-energy
+      { source: "/api/kenergy/:path*", destination: "/api/ge-energy/:path*" },
       // Energy dashboard short-path aliases
       { source: "/dashboard", destination: "/energy-dashboard/dashboard" },
       { source: "/current-monitor", destination: "/energy-dashboard/current-monitor" },

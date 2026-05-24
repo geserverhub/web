@@ -35,7 +35,7 @@ export async function GET() {
     return NextResponse.json({ products: parsed });
   } catch (err) {
     const message = formatDbConnectError(err);
-    const status = message.includes('geserverhub') ? 503 : 500;
+    const status = message.includes('goeunserverhub') ? 503 : 500;
     return NextResponse.json({ error: message }, { status });
   }
 }

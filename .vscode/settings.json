@@ -16,8 +16,8 @@
                 "password": "2350400018644"
             },
             "driver": "MySQL",
-            "name": "geserverhub",
-            "database": "geserverhub",
+            "name": "goeunserverhub",
+            "database": "goeunserverhub",
             "username": "geserverhub",
             "password": "2350400018644",
             "connectionTimeout": 0

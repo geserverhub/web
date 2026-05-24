@@ -95,7 +95,7 @@ export default function SupportTicketsContent() {
     setApiUnavailable(false);
     try {
       const res = await fetch(
-        `/api/kenergy/support-tickets?site=${encodeURIComponent(selectedSite)}`,
+        `/api/ge-energy/support-tickets?site=${encodeURIComponent(selectedSite)}`,
         { cache: 'no-store' }
       );
       if (res.ok) {
@@ -150,7 +150,7 @@ export default function SupportTicketsContent() {
     };
 
     try {
-      const res = await fetch('/api/kenergy/support-tickets', {
+      const res = await fetch('/api/ge-energy/support-tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ticket),

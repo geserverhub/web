@@ -108,7 +108,10 @@ export default function LoginPage() {
         </form>
 
         <hr className="my-4" />
-        <div className="text-center">
+        <div className="text-center d-flex flex-column gap-2">
+          <a href="/auth/select" className="text-muted small" style={{ textDecoration: "none" }}>
+            ← เลือกประเภทผู้ใช้อื่น
+          </a>
           <a href="/admin/login" className="text-muted small" style={{ textDecoration: "none" }}>
             ⚙️ เข้าสู่ระบบสำหรับผู้ดูแลระบบ
           </a>

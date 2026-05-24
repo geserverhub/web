@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, User, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { parseJsonResponse } from '@/lib/parse-json-response';
+import { GE_ADMIN_TOKEN_KEY, GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 import './customer-dashboard-login.css';
 
 const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
@@ -92,8 +93,8 @@ export default function CustomerDashboardLoginPage() {
         return;
       }
 
-      localStorage.setItem('k_system_admin_token', data.token || '');
-      localStorage.setItem('k_system_admin_user', JSON.stringify({
+      localStorage.setItem(GE_ADMIN_TOKEN_KEY, data.token || '');
+      localStorage.setItem(GE_ADMIN_USER_KEY, JSON.stringify({
         userId: data.userId,
         username: data.username,
         name: data.name,
@@ -237,7 +238,7 @@ export default function CustomerDashboardLoginPage() {
         </form>
 
         <footer className="cdl-footer">
-          <a href="/energy-dashboard/dashboard" className="cdl-back">
+          <a href="/auth/select" className="cdl-back">
             {t.back}
           </a>
         </footer>

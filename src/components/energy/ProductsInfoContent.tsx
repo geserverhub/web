@@ -66,7 +66,7 @@ export default function ProductsInfoContent() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/kenergy/products?limit=200&sortBy=name');
+        const res = await fetch('/api/ge-energy/products?limit=200&sortBy=name');
         const json = await res.json();
         if (cancelled) return;
         if (Array.isArray(json?.products)) {

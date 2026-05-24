@@ -363,6 +363,29 @@ model PartnerProduct {
   @@index([clientId])
 }
 
+model MFactoryInquiry {
+  id          String    @id @default(cuid())
+  type        String    @default("factory")
+  lang        String    @default("th")
+  source      String?
+  company     String?
+  name        String
+  phone       String?
+  email       String?
+  taxId       String?
+  bookingDate DateTime? @db.Date
+  address     String?   @db.Text
+  warehouse   String?   @db.Text
+  rentalType  String?
+  paymentRef  String?
+  message     String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([createdAt])
+  @@index([type])
+}
+
 model CargoOrder {
   id            String   @id @default(cuid())
   number        String   @unique

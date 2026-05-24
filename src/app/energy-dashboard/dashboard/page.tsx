@@ -11,6 +11,7 @@ import {
   Edit2, MapPin,
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import AiCarbonInsightsPanel from '@/components/energy/AiCarbonInsightsPanel'
 
 interface DashboardStats {
   totalDevices: number
@@ -158,7 +159,7 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/kenergy/dashboard-stats?site=${selectedSite}`)
+      const res = await fetch(`/api/ge-energy/dashboard-stats?site=${selectedSite}`)
       const json = await res.json()
       if (json.success) { setData(json.data); setError(null) }
       else setError(json.error || 'Failed to load dashboard data')
@@ -935,6 +936,8 @@ export default function DashboardPage() {
 
       </div>
 
+      <AiCarbonInsightsPanel periodDays={30} />
+
       {/* ── System Health + Quick Actions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -1686,7 +1689,7 @@ function CurrentTrendChart({
     const fetchHistory = async () => {
       try {
         const scopeParam = recordScope ? `&scope=${encodeURIComponent(String(recordScope))}` : ''
-        const res = await fetch(`/api/kenergy/current-history?deviceId=${encodeURIComponent(String(deviceId))}&hours=0.5${scopeParam}`)
+        const res = await fetch(`/api/ge-energy/current-history?deviceId=${encodeURIComponent(String(deviceId))}&hours=0.5${scopeParam}`)
         if (!res.ok) return
         const json = await res.json()
         if (cancelled) return
