@@ -4,6 +4,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+PM2_APP="GEserverhub"
 cd "$ROOT"
 
 echo "==> GEserverhub update @ $ROOT"
@@ -20,7 +21,8 @@ git log -1 --oneline
 
 echo "==> [2/4] stop app (free port 3005 before install)"
 if command -v pm2 >/dev/null 2>&1; then
-  pm2 stop ge-web 2>/dev/null || true
+  pm2 stop "$PM2_APP" 2>/dev/null || true
+  pm2 delete ge-web 2>/dev/null || true
   pm2 delete geserverhub 2>/dev/null || true
 fi
 if [[ -f scripts/kill-port.mjs ]]; then
@@ -42,12 +44,12 @@ bash scripts/db-restore.sh database/geserverhub.sql
 rm -rf .next
 npm run build
 
-echo "==> [4/4] run (pm2 ge-web on port 3005)"
+echo "==> [4/4] run (pm2 $PM2_APP on port 3005)"
 if command -v pm2 >/dev/null 2>&1; then
-  if pm2 describe ge-web >/dev/null 2>&1; then
-    pm2 restart ge-web --update-env
+  if pm2 describe "$PM2_APP" >/dev/null 2>&1; then
+    pm2 restart "$PM2_APP" --update-env
   else
-    pm2 start npm --name ge-web --cwd "$ROOT" -- start
+    pm2 start npm --name "$PM2_APP" --cwd "$ROOT" -- start
   fi
   pm2 save
   pm2 status
