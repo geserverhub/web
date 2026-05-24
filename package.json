@@ -14,6 +14,7 @@
     "postinstall": "npx prisma generate",
     "db:pull": "git pull geserverhub main",
     "db:restore": "bash scripts/db-restore.sh",
+    "server:recover": "bash scripts/server-recover.sh",
     "db:setup": "bash scripts/db-restore.sh && node scripts/set-energy-login.mjs",
     "db:check": "node scripts/db-check.mjs",
     "db:seed-partner": "node scripts/seed-partner-products.mjs",
