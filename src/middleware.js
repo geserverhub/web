@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 
 export function middleware(req) {
-  // Override forwarded protocol to http so NextAuth uses non-secure cookies.
-  // This is needed when behind a reverse proxy (e.g. ngrok) that sets x-forwarded-proto: https.
   const response = NextResponse.next({
     request: {
       headers: (() => {
@@ -13,9 +11,22 @@ export function middleware(req) {
       })(),
     },
   });
+
+  const accept = req.headers.get("accept") || "";
+  if (accept.includes("text/html")) {
+    response.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    response.headers.set("Pragma", "no-cache");
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: "/api/auth/:path*",
+  matcher: [
+    "/api/auth/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+  ],
 };

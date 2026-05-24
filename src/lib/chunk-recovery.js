@@ -53,3 +53,14 @@ export const CHUNK_RECOVERY_INLINE_SCRIPT = `(function(){
     if(isChunkErr(msg)){e.preventDefault();reloadOnce();}
   });
 })();`;
+
+/** Redirect to login before React if ge_admin_token is missing (works when JS chunks fail). */
+export const CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT = `(function(){
+  try{
+    var key='ge_admin_token';
+    var token=localStorage.getItem(key);
+    if(token&&String(token).trim())return;
+    if(location.pathname.indexOf('customer-dashboard-login')!==-1)return;
+    location.replace('/customer-dashboard-login');
+  }catch(_){}
+})();`;

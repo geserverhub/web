@@ -23,8 +23,17 @@ git pull origin main
 echo "==> npm ci"
 npm ci
 
+echo "==> clean .next"
+rm -rf .next
+
 echo "==> npm run build"
 npm run build
+
+echo "==> verify customer-dashboard chunks"
+if ! ls .next/static/chunks/app/customer-dashboard/page-*.js >/dev/null 2>&1; then
+  echo "ERROR: customer-dashboard page chunk missing after build"
+  exit 1
+fi
 
 echo "==> restart app"
 if command -v pm2 >/dev/null 2>&1; then
