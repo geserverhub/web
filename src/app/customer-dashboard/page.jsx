@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
 import { useSite } from '@/lib/SiteContext';
 import { formatCurrencyBySite } from '@/lib/currency';
+import { formatEnergyDisplayUser } from '@/lib/energy/display-user';
+import { GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -11,8 +13,7 @@ import {
 import {
   Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
-  Thermometer, ChevronDown, BarChart2, Users, Star, MapPin, Calendar,
-  Shield,
+  Thermometer, ChevronDown, BarChart2, Users, Sprout,
 } from 'lucide-react';
 
 function L(locale, th, ko, en) {
@@ -59,6 +60,7 @@ export default function CustomersPage() {
   ];
   const [sendingContact, setSendingContact] = useState(false);
   const [contactError, setContactError] = useState(null);
+  const [welcomeName, setWelcomeName] = useState('');
 
   const totalBefore = monthlyData.reduce((s, d) => s + d.before, 0);
   const totalAfter = monthlyData.reduce((s, d) => s + d.after, 0);
@@ -100,6 +102,18 @@ export default function CustomersPage() {
       co2Saved: toNumber(metrics.co2Saved),
     };
   };
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(GE_ADMIN_USER_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const { displayName } = formatEnergyDisplayUser(parsed);
+      if (displayName) setWelcomeName(displayName);
+    } catch {
+      setWelcomeName('');
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`/api/ge-energy/dashboard-stats?site=${selectedSite}`)
@@ -284,105 +298,111 @@ export default function CustomersPage() {
     }
   }
 
+  const tabs = [
+    { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),  icon: BarChart2 },
+    { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),     icon: DollarSign },
+    { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),         icon: Activity },
+    { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
+    { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),            icon: Users },
+  ];
+
+  const kpiItems = [
+    { icon: Zap, val: `${fmt(totalSavedKwh)} kWh`, label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'), tone: 'energy' },
+    { icon: DollarSign, val: formatCost(totalSavedBaht), label: L(locale,'ค่าไฟที่ประหยัด (₩)','절약 비용 (원)','Cost Saved (KRW)'), tone: 'cost' },
+    { icon: TrendingDown, val: `${savingPct}%`, label: L(locale,'% ที่ประหยัด','절약률','Saving Rate'), tone: 'rate' },
+    { icon: Leaf, val: `${fmt(Number(co2Saved))} kg`, label: L(locale,'CO₂ ที่ลดได้','CO₂ 절감량','CO₂ Reduced'), tone: 'co2' },
+  ];
+
   return (
     <div className="cd-page-content">
 
-      {/* Hero Header */}
-      <div className="cd-hero relative overflow-hidden shadow-2xl px-4 py-6 md:px-10 md:py-10">
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-400/25 rounded-full blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl" />
-        <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize:'28px 28px'}} />
-        <div className="relative flex items-center gap-3">
-          <div className="w-11 h-11 md:w-14 md:h-14 bg-white/25 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl ring-1 ring-white/20 flex-shrink-0">
-            <Zap className="w-5 h-5 md:w-7 md:h-7 text-emerald-200 drop-shadow" />
+      <div className="cd-hero">
+        <div className="cd-hero-blob cd-hero-blob--a" aria-hidden />
+        <div className="cd-hero-blob cd-hero-blob--b" aria-hidden />
+        <div className="cd-hero-pattern" aria-hidden />
+        <div className="cd-hero-top">
+          <div className="cd-hero-icon">
+            <Sprout className="w-5 h-5" strokeWidth={2.25} />
           </div>
           <div>
-            <h1 className="text-lg md:text-2xl font-bold text-white leading-tight">{L(locale,'รายงานเปรียบเทียบพลังงาน','에너지 비교 보고서','Energy Comparison Report')}</h1>
-            <p className="text-emerald-100 text-xs md:text-sm mt-0.5">{L(locale,'เปรียบเทียบการใช้ไฟฟ้าและค่าใช้จ่ายก่อน-หลัง','설치 전후 전력 사용량 및 비용 비교','Electricity usage & cost comparison before/after installation')}</p>
+            {welcomeName ? (
+              <p className="cd-hero-welcome">
+                {locale === 'ko' ? (
+                  <><strong>{welcomeName}</strong>님, 환영합니다</>
+                ) : locale === 'en' ? (
+                  <>Welcome, <strong>{welcomeName}</strong></>
+                ) : (
+                  <>ยินดีต้อนรับ, <strong>{welcomeName}</strong></>
+                )}
+              </p>
+            ) : null}
+            <h1 className="cd-hero-title">{L(locale,'รายงานเปรียบเทียบพลังงาน','에너지 비교 보고서','Energy Comparison Report')}</h1>
+            <p className="cd-hero-sub">{L(locale,'เปรียบเทียบการใช้ไฟฟ้าและค่าใช้จ่ายก่อน-หลัง','설치 전후 전력 사용량 및 비용 비교','Electricity usage & cost comparison before/after installation')}</p>
+            <span className="cd-hero-badge">
+              <span className="cd-hero-badge-dot" />
+              {L(locale,'พลังงานสะอาด · รักโลก','친환경 · 그린 에너지','Clean energy · Eco friendly')}
+            </span>
           </div>
         </div>
-
-        {/* KPI chips */}
-        <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-5 md:mt-8">
-          {[
-            { icon: Zap,          val: `${fmt(totalSavedKwh)} kWh`, label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'),    color: 'from-yellow-400 to-amber-400', ring: 'ring-yellow-300/30' },
-            { icon: DollarSign,   val: formatCost(totalSavedBaht),  label: L(locale,'ค่าไฟที่ประหยัด (₩)','절약 비용 (원)','Cost Saved (KRW)'),         color: 'from-emerald-400 to-green-400', ring: 'ring-emerald-300/30' },
-            { icon: TrendingDown, val: `${savingPct}%`,             label: L(locale,'% ที่ประหยัด','절약률','Saving Rate'),              color: 'from-sky-400 to-blue-400', ring: 'ring-sky-300/30' },
-            { icon: Leaf,         val: `${fmt(Number(co2Saved))} kg`,label: L(locale,'CO₂ ที่ลดได้','CO₂ 절감량','CO₂ Reduced'),        color: 'from-teal-400 to-cyan-400', ring: 'ring-teal-300/30' },
-          ].map(({ icon: Icon, val, label, color, ring }) => (
-            <div key={label} className="group bg-white/15 backdrop-blur-md rounded-xl md:rounded-2xl p-3 md:p-4 flex items-center gap-2 md:gap-3 border border-white/25 hover:bg-white/25 hover:scale-[1.03] transition-all duration-200 cursor-default shadow-sm">
-              <div className={`w-9 h-9 md:w-11 md:h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg ring-2 ${ring} flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                <Icon className="w-4 h-4 md:w-5 md:h-5 text-white drop-shadow" />
+        <div className="cd-kpi-grid">
+          {kpiItems.map(({ icon: Icon, val, label, tone }) => (
+            <div key={label} className="cd-kpi-card">
+              <div className={`cd-kpi-icon cd-kpi-icon--${tone}`}>
+                <Icon className="w-4 h-4" strokeWidth={2.25} />
               </div>
-              <div className="min-w-0">
-                <p className="text-white font-bold text-sm md:text-xl leading-tight truncate tabular-nums">{val}</p>
-                <p className="text-emerald-100/80 text-xs truncate">{label}</p>
-              </div>
+              <p className="cd-kpi-val">{val}</p>
+              <p className="cd-kpi-label">{label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-6">
-
-        {/* Tab switcher */}
-        <div className="cd-tab-wrap">
-          <div className="cd-tab-grid">
-            {[
-              { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),  icon: BarChart2 },
-              { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),     icon: DollarSign },
-              { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),         icon: Activity },
-              { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
-              { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),            icon: Users },
-            ].map(tab => (
-              <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`cd-tab-btn flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                  activeTab === tab.key
-                    ? 'bg-gradient-to-r from-emerald-600 to-green-700 text-white shadow-md shadow-emerald-200'
-                    : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
-                }`}>
-                <tab.icon className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">{tab.label}</span>
+      <div className="cd-main">
+        <nav className="cd-tab-sticky" aria-label={L(locale,'เมนูหลัก','메인 메뉴','Main menu')}>
+          <div className="cd-tab-scroll">
+            {tabs.map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`cd-tab-btn${activeTab === tab.key ? ' cd-tab-btn--active' : ''}`}
+              >
+                <tab.icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.25} />
+                {tab.label}
               </button>
             ))}
           </div>
-        </div>
+        </nav>
 
         {/* ── Energy / Cost Charts ── */}
         {(activeTab === 'energy' || activeTab === 'cost') && (
-          <>
-            {/* Chart type toggle — energy tab only; cost uses line chart */}
+          <div className="cd-stack">
             {activeTab === 'energy' && (
-              <div className="flex gap-2 justify-end">
-                <button onClick={() => setChartType('bar')}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
-                    chartType === 'bar' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
-                  }`}>
+              <div className="cd-segment">
+                <button type="button" onClick={() => setChartType('bar')}
+                  className={`cd-segment-btn${chartType === 'bar' ? ' cd-segment-btn--active' : ''}`}>
                   <BarChart2 className="w-3.5 h-3.5" />{L(locale,'แผนภูมิแท่ง','막대 차트','Bar')}
                 </button>
-                <button onClick={() => setChartType('line')}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold border-2 transition ${
-                    chartType === 'line' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
-                  }`}>
+                <button type="button" onClick={() => setChartType('line')}
+                  className={`cd-segment-btn${chartType === 'line' ? ' cd-segment-btn--active' : ''}`}>
                   <Activity className="w-3.5 h-3.5" />{L(locale,'กราฟเส้น','선 차트','Line')}
                 </button>
               </div>
             )}
 
-            {/* Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-              <div className={`h-1.5 w-full ${ activeTab === 'energy' ? 'bg-gradient-to-r from-red-400 via-orange-400 to-green-400' : 'bg-gradient-to-r from-orange-400 via-amber-400 to-blue-400' }`} />
-              <div className="p-3 md:p-6">
-                <h2 className="font-bold text-gray-800 text-base md:text-lg mb-1">
+            <div className="cd-card">
+              <div className={`cd-card-accent ${activeTab === 'energy' ? 'cd-card-accent--energy' : 'cd-card-accent--cost'}`} />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">
                   {activeTab === 'energy'
                     ? L(locale,'การใช้ไฟฟ้ารายเดือน (kWh)','월별 전력 사용량 (kWh)','Monthly Energy Usage (kWh)')
                     : labelMonthlyCost}
                 </h2>
-                <p className="text-gray-500 text-xs md:text-sm mb-4 md:mb-6">
+                <p className="cd-card-desc">
                   {L(locale,'เปรียบเทียบก่อนและหลังติดตั้ง','설치 전후 비교','Before vs after installation')}
                 </p>
                 {monthlyLoading ? (
-                  <div className="cd-chart-box flex items-center justify-center text-gray-400">
+                  <div className="cd-chart-loading">
                     <RefreshCw className="w-6 h-6 animate-spin" />
                   </div>
                 ) : (
@@ -400,11 +420,11 @@ export default function CustomersPage() {
                     } />
                     <Legend />
                     {activeTab === 'energy' ? <>
-                      <Line type="monotone" dataKey={keyBefore} stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey={keyAfter}  stroke="#22c55e" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey={keyBefore} stroke="#b45309" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                      <Line type="monotone" dataKey={keyAfter}  stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                     </> : <>
-                      <Line type="monotone" dataKey={keyCostB} stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey={keyCostA} stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey={keyCostB} stroke="#d97706" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                      <Line type="monotone" dataKey={keyCostA} stroke="#0d9488" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                     </>}
                   </LineChart>
                 ) : (
@@ -419,30 +439,71 @@ export default function CustomersPage() {
                     } />
                     <Legend />
                     {activeTab === 'energy' ? <>
-                      <Bar dataKey={keyBefore} fill="#ef4444" radius={[4,4,0,0]} />
-                      <Bar dataKey={keyAfter}  fill="#22c55e" radius={[4,4,0,0]} />
+                      <Bar dataKey={keyBefore} fill="#b45309" radius={[4,4,0,0]} />
+                      <Bar dataKey={keyAfter}  fill="#059669" radius={[4,4,0,0]} />
                     </> : <>
-                      <Bar dataKey={keyCostB} fill="#f97316" radius={[4,4,0,0]} />
-                      <Bar dataKey={keyCostA} fill="#3b82f6" radius={[4,4,0,0]} />
+                      <Bar dataKey={keyCostB} fill="#d97706" radius={[4,4,0,0]} />
+                      <Bar dataKey={keyCostA} fill="#0d9488" radius={[4,4,0,0]} />
                     </>}
                   </BarChart>
                 )}
                   </ResponsiveContainer>
                   </div>
                 )}
-                {monthlyError && <p className="text-xs text-red-500 mt-3">{monthlyError}</p>}
+                {monthlyError && <p className="cd-error">{monthlyError}</p>}
               </div>
             </div>
 
-            {/* Comparison Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
-              <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100">
-                <h2 className="font-bold text-gray-800 text-sm md:text-base">{L(locale,'ตารางเปรียบเทียบรายเดือน','월별 비교 표','Monthly Comparison Table')}</h2>
-              </div>
-              <div className="cd-table-scroll overflow-x-auto">
-                <table className="w-full text-sm cd-table">
-                  <thead className="bg-gradient-to-r from-gray-50 to-slate-50">
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--contact" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">{L(locale,'ตารางเปรียบเทียบรายเดือน','월별 비교 표','Monthly Comparison Table')}</h2>
+                <p className="cd-card-desc">{L(locale,'ดูเป็นการ์ดบนมือถือ · ตารางเต็มบนจอใหญ่','모바일 카드 · 데스크톱 표','Cards on mobile · full table on desktop')}</p>
+
+                <div className="cd-month-cards">
+                  {monthlyData.map((d, i) => {
+                    const savedKwh = d.before - d.after;
+                    const savedBaht = d.costBefore - d.costAfter;
+                    const pct = d.before > 0 ? ((savedKwh / d.before) * 100).toFixed(1) : '0.0';
+                    return (
+                      <article key={i} className="cd-month-card">
+                        <div className="cd-month-card-head">
+                          <span className="cd-month-card-month">{monthLabel(d)} {d.year}</span>
+                          <span className="cd-month-card-pct">{pct}%</span>
+                        </div>
+                        <div className="cd-month-card-grid">
+                          <div className="cd-month-stat">
+                            <span className="cd-month-stat-label">{L(locale,'ก่อน (kWh)','이전 (kWh)','Before')}</span>
+                            <span className="cd-month-stat-val cd-month-stat-val--before">{fmt(d.before)}</span>
+                          </div>
+                          <div className="cd-month-stat">
+                            <span className="cd-month-stat-label">{L(locale,'หลัง (kWh)','이후 (kWh)','After')}</span>
+                            <span className="cd-month-stat-val cd-month-stat-val--after">{fmt(d.after)}</span>
+                          </div>
+                          <div className="cd-month-stat">
+                            <span className="cd-month-stat-label">{L(locale,'ประหยัด kWh','절약 kWh','Saved kWh')}</span>
+                            <span className="cd-month-stat-val cd-month-stat-val--saved">{fmt(savedKwh)}</span>
+                          </div>
+                          <div className="cd-month-stat">
+                            <span className="cd-month-stat-label">{labelCostSaved}</span>
+                            <span className="cd-month-stat-val cd-month-stat-val--saved">{formatCost(savedBaht)}</span>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {!monthlyLoading && monthlyData.length === 0 && (
+                    <div className="cd-empty">
+                      <Leaf className="w-8 h-8 opacity-50" />
+                      <p>{L(locale,'ยังไม่มีข้อมูลรายเดือนในฐานข้อมูล','월별 데이터가 없습니다','No monthly data in database')}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="cd-table-wrap">
+              <div className="cd-table-scroll">
+                <table className="cd-table">
+                  <thead>
                     <tr>
                       {[
                         L(locale,'เดือน','월','Month'),
@@ -494,67 +555,60 @@ export default function CustomersPage() {
                     </tr>
                   </tfoot>
                 </table>
-                {!monthlyLoading && monthlyData.length === 0 && (
-                  <div className="p-6 text-center text-sm text-gray-400">
-                    {L(locale,'ยังไม่มีข้อมูลรายเดือนในฐานข้อมูล','월별 데이터가 없습니다','No monthly data in database')}
-                  </div>
-                )}
+              </div>
+                </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* ── Real-time current monitor ── */}
         {activeTab === 'monitor' && (
-          <div className="space-y-5">
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
-              <div className="relative w-full sm:w-auto">
-                <select value={selectedDeviceId} onChange={e => setSelectedDeviceId(e.target.value)}
-                  className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer sm:min-w-[220px]">
+          <div className="cd-stack">
+            <div className="cd-toolbar">
+              <div className="cd-select-wrap">
+                <select value={selectedDeviceId} onChange={e => setSelectedDeviceId(e.target.value)} className="cd-select">
                   {devices.map(d => (
                     <option key={d.deviceID} value={String(d.deviceID)}>{d.deviceName || d.geID || d.deviceID}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="cd-select-chevron" />
               </div>
-              <select value={monitorMinutes} onChange={e => setMonitorMinutes(Number(e.target.value))}
-                className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700">
+              <select value={monitorMinutes} onChange={e => setMonitorMinutes(Number(e.target.value))} className="cd-select">
                 <option value={15}>{L(locale,'15 นาที','15분','15 min')}</option>
                 <option value={30}>{L(locale,'30 นาที','30분','30 min')}</option>
                 <option value={60}>{L(locale,'60 นาที','60분','60 min')}</option>
               </select>
-              <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              <div className="cd-metric-scroll">
                 {monitorMetricOptions.map((m) => (
                   <button
                     key={m.key}
                     type="button"
                     onClick={() => setMonitorMetric(m.key)}
-                    className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition ${
-                      monitorMetric === m.key
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-white text-gray-600 border-gray-200'
-                    }`}
+                    className={`cd-metric-pill${monitorMetric === m.key ? ' cd-metric-pill--active' : ''}`}
                   >
                     {m.label}
                   </button>
                 ))}
               </div>
+              <div className="cd-toolbar-row">
               <button type="button" onClick={fetchCustomerMonitor} disabled={monitorLoading}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60">
+                className="cd-btn cd-btn--primary">
                 <RefreshCw className={`w-4 h-4 ${monitorLoading ? 'animate-spin' : ''}`} />
                 {L(locale,'รีเฟรช','새로고침','Refresh')}
               </button>
-              <div className="flex items-center gap-2 text-xs text-gray-500 sm:ml-auto">
-                <span className={`inline-flex h-2.5 w-2.5 rounded-full ${isLivePulse ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300'}`} />
+              <div className="cd-live-hint">
+                <span className={`cd-live-dot${isLivePulse ? ' cd-live-dot--on' : ''}`} />
                 {L(locale,'อัปเดตทุก 10 วินาที','10초마다 업데이트','Updates every 10s')}
                 {lastMonitorAt && (
-                  <span className="text-gray-400">· {new Date(lastMonitorAt).toLocaleTimeString()}</span>
+                  <span>· {new Date(lastMonitorAt).toLocaleTimeString()}</span>
                 )}
+              </div>
               </div>
             </div>
 
             {monitorSnapshot && (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+              <div className="cd-stat-grid cd-stat-grid--8">
                 {[
                   { label: L(locale,'สถานะ','상태','Status'), val: monitorSnapshot.isOnline ? L(locale,'ออนไลน์','온라인','Online') : L(locale,'ออฟไลน์','오프라인','Offline'), color: monitorSnapshot.isOnline ? 'text-emerald-600' : 'text-red-500' },
                   { label: L(locale,'กำลังไฟ OUT (kW)','출력 전력','Power OUT'), val: monitorSnapshot.totalPowerKw?.toFixed(2) ?? '—', color: 'text-amber-600' },
@@ -565,18 +619,18 @@ export default function CustomersPage() {
                   { label: L(locale,'OUTPUT L1 (A)','OUTPUT L1','OUT L1'), val: monitorSnapshot.currentOutput?.L1?.toFixed(2) ?? '—', color: 'text-emerald-600' },
                   { label: L(locale,'INPUT L1 (A)','INPUT L1','IN L1'), val: monitorSnapshot.currentInput?.L1?.toFixed(2) ?? '—', color: 'text-red-600' },
                 ].map((item) => (
-                  <div key={item.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
-                    <p className={`text-lg font-bold tabular-nums ${item.color}`}>{item.val}</p>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">{item.label}</p>
+                  <div key={item.label} className="cd-stat-card">
+                    <p className={`cd-stat-val ${item.color}`}>{item.val}</p>
+                    <p className="cd-stat-label">{item.label}</p>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-red-400 via-amber-400 to-emerald-400" />
-              <div className="p-3 md:p-6">
-                <h2 className="font-bold text-gray-800 text-base md:text-lg">
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--monitor" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">
                   {monitorMetric === 'current' && L(locale,'กราฟกระแสไฟเรียลไทม์','실시간 전류','Real-time Current')}
                   {monitorMetric === 'power' && L(locale,'กราฟกำลังไฟเรียลไทม์','실시간 전력','Real-time Power')}
                   {monitorMetric === 'voltage' && L(locale,'กราฟแรงดันเรียลไทม์','실시간 전압','Real-time Voltage')}
@@ -584,17 +638,17 @@ export default function CustomersPage() {
                   {monitorMetric === 'stability' && L(locale,'กราฟความเสถียร (Power Factor)','안정성 (역률)','Stability (Power Factor)')}
                   {monitorMetric === 'reactive' && L(locale,'กราฟการกักเก็บกระแสไฟ (kVAr)','무효전력','Reactive Power (kVAr)')}
                 </h2>
-                <p className="text-gray-400 text-xs mt-1 mb-4">
+                <p className="cd-card-desc">
                   {monitorSeries.length} {L(locale,'จุดข้อมูล','데이터 포인트','points')}
                 </p>
                 {monitorLoading && monitorSeries.length === 0 ? (
-                  <div className="flex items-center justify-center h-64">
+                  <div className="cd-chart-loading">
                     <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
                   </div>
                 ) : monitorSeries.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                  <div className="cd-empty">
                     <WifiOff className="w-10 h-10 mb-2" />
-                    <p className="text-sm">{L(locale,'ยังไม่มีข้อมูลในช่วงเวลาที่เลือก','선택 구간 데이터 없음','No data in selected window')}</p>
+                    <p>{L(locale,'ยังไม่มีข้อมูลในช่วงเวลาที่เลือก','선택 구간 데이터 없음','No data in selected window')}</p>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={320}>
@@ -643,7 +697,7 @@ export default function CustomersPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 )}
-                {monitorError && <p className="text-xs text-red-500 mt-3">{monitorError}</p>}
+                {monitorError && <p className="cd-error">{monitorError}</p>}
               </div>
             </div>
           </div>
@@ -651,31 +705,25 @@ export default function CustomersPage() {
 
         {/* ── Live Devices ── */}
         {activeTab === 'live' && (
-          <div className="space-y-5">
-
-            {/* Device Selector + Refresh */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
-              <div className="relative w-full sm:w-auto">
-                <select value={selectedDeviceId} onChange={e => { setSelectedDeviceId(e.target.value); }}
-                  className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none cursor-pointer sm:min-w-[220px]">
+          <div className="cd-stack">
+            <div className="cd-toolbar">
+              <div className="cd-select-wrap">
+                <select value={selectedDeviceId} onChange={e => { setSelectedDeviceId(e.target.value); }} className="cd-select">
                   {devices.map(d => (
                     <option key={d.deviceID} value={String(d.deviceID)}>{d.deviceName || d.deviceID}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="cd-select-chevron" />
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="cd-metric-scroll">
                 {monitorMetricOptions.map((m) => (
-                  <button key={m.key} onClick={() => setLiveMetric(m.key)}
-                    className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition ${
-                      liveMetric === m.key ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200'
-                    }`}>
+                  <button key={m.key} type="button" onClick={() => setLiveMetric(m.key)}
+                    className={`cd-metric-pill${liveMetric === m.key ? ' cd-metric-pill--active' : ''}`}>
                     {m.label}
                   </button>
                 ))}
               </div>
-              <button onClick={fetchLive} disabled={liveLoading}
-                className="w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 shadow-sm transition">
+              <button type="button" onClick={fetchLive} disabled={liveLoading} className="cd-btn cd-btn--ghost">
                 <RefreshCw className={`w-4 h-4 ${liveLoading ? 'animate-spin text-emerald-600' : ''}`} />
                 {L(locale,'รีเฟรช','새로고침','Refresh')}
               </button>
@@ -686,20 +734,20 @@ export default function CustomersPage() {
               const d = snapshot;
               const isOnline = d.status === 'online';
               return (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div className="cd-stat-grid">
                   {[
                     { icon: isOnline ? Wifi : WifiOff, label: L(locale,'สถานะ','상태','Status'), val: isOnline ? L(locale,'ออนไลน์','온라인','Online') : 'Offline', color: isOnline ? 'text-emerald-600' : 'text-red-500', bg: isOnline ? 'bg-emerald-50' : 'bg-red-50' },
-                    { icon: Zap,         label: L(locale,'กำลังไฟ (kW)','전력 (kW)','Power (kW)'),    val: (d.totalPower ?? 0).toFixed(2),   color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { icon: Activity,    label: L(locale,'L1 (A)','L1 (A)','L1 (A)'),                  val: (d.currentL1   ?? 0).toFixed(2),   color: 'text-emerald-600',  bg: 'bg-emerald-50' },
-                    { icon: Activity,    label: L(locale,'L2 (A)','L2 (A)','L2 (A)'),                  val: (d.currentL2   ?? 0).toFixed(2),   color: 'text-violet-600',bg: 'bg-violet-50' },
-                    { icon: Activity,    label: L(locale,'L3 (A)','L3 (A)','L3 (A)'),                  val: (d.currentL3   ?? 0).toFixed(2),   color: 'text-pink-600',  bg: 'bg-pink-50' },
-                    { icon: Thermometer, label: L(locale,'Power Factor','역률','Power Factor'),          val: (d.powerFactor ?? 0).toFixed(3),   color: 'text-teal-600',  bg: 'bg-teal-50' },
+                    { icon: Zap, label: L(locale,'กำลังไฟ (kW)','전력 (kW)','Power (kW)'), val: (d.totalPower ?? 0).toFixed(2), color: 'text-amber-600', bg: 'bg-amber-50' },
+                    { icon: Activity, label: L(locale,'L1 (A)','L1 (A)','L1 (A)'), val: (d.currentL1 ?? 0).toFixed(2), color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { icon: Activity, label: L(locale,'L2 (A)','L2 (A)','L2 (A)'), val: (d.currentL2 ?? 0).toFixed(2), color: 'text-emerald-700', bg: 'bg-emerald-50' },
+                    { icon: Activity, label: L(locale,'L3 (A)','L3 (A)','L3 (A)'), val: (d.currentL3 ?? 0).toFixed(2), color: 'text-teal-600', bg: 'bg-teal-50' },
+                    { icon: Thermometer, label: L(locale,'Power Factor','역률','Power Factor'), val: (d.powerFactor ?? 0).toFixed(3), color: 'text-teal-600', bg: 'bg-teal-50' },
                   ].map(({ icon: Icon, label, val, color, bg }) => (
-                    <div key={label} className={`${bg} rounded-2xl p-4 flex items-center gap-3 hover:shadow-md hover:scale-[1.03] transition-all cursor-default border border-white/60`}>
+                    <div key={label} className={`cd-stat-card cd-stat-card--tint ${bg}`}>
                       <Icon className={`w-5 h-5 ${color} flex-shrink-0`} />
-                      <div className="min-w-0">
-                        <p className={`font-bold text-lg leading-tight ${color}`}>{val}</p>
-                        <p className="text-xs text-gray-500 truncate">{label}</p>
+                      <div>
+                        <p className={`cd-stat-val ${color}`}>{val}</p>
+                        <p className="cd-stat-label">{label}</p>
                       </div>
                     </div>
                   ))}
@@ -707,24 +755,23 @@ export default function CustomersPage() {
               );
             })()}
 
-            {/* Line Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400" />
-              <div className="p-3 md:p-6">
-                <h2 className="font-bold text-gray-800 text-base md:text-lg mb-1">
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--live" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">
                   {L(locale,'กราฟกระแสไฟรายชั่วโมง (วันนี้)','오늘 시간별 전류 그래프','Hourly Chart — Today')}
                 </h2>
-                <p className="text-gray-400 text-xs mb-3 md:mb-5">
+                <p className="cd-card-desc">
                   {L(locale,'อัปเดตทุก 30 วินาที','30초마다 업데이트','Updates every 30 seconds')} · {selectedDeviceId}
                 </p>
               {liveLoading ? (
-                <div className="flex items-center justify-center h-52">
+                <div className="cd-chart-loading">
                   <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
                 </div>
               ) : liveData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-52 text-gray-400">
+                <div className="cd-empty">
                   <WifiOff className="w-10 h-10 mb-2" />
-                  <p className="text-sm">{L(locale,'ยังไม่มีข้อมูลวันนี้','오늘 데이터 없음','No data for today')}</p>
+                  <p>{L(locale,'ยังไม่มีข้อมูลวันนี้','오늘 데이터 없음','No data for today')}</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={260}>
@@ -857,54 +904,54 @@ export default function CustomersPage() {
 
         {/* ── Contact ── */}
         {activeTab === 'contact' && (
-          <div className="max-w-lg mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden h-fit">
-              <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
-              <div className="p-6">
-                <h2 className="font-bold text-gray-800 text-lg mb-1">{L(locale,'ส่งข้อความหาเรา','메시지 보내기','Send us a message')}</h2>
-                <p className="text-gray-500 text-sm mb-5">{L(locale,'ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง','24시간 내에 연락드리겠습니다','Our team will reply within 24 hours')}</p>
+          <div className="cd-contact-wrap">
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--contact" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">{L(locale,'ส่งข้อความหาเรา','메시지 보내기','Send us a message')}</h2>
+                <p className="cd-card-desc">{L(locale,'ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง','24시간 내에 연락드리겠습니다','Our team will reply within 24 hours')}</p>
               {sent ? (
-                <div className="flex flex-col items-center py-8 gap-3">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <CheckCircle className="w-9 h-9 text-emerald-500" />
+                <div className="cd-success">
+                  <div className="cd-success-icon">
+                    <CheckCircle className="w-9 h-9" />
                   </div>
                   <p className="font-semibold text-gray-800">{L(locale,'ส่งข้อความเรียบร้อยแล้ว!','메시지가 전송되었습니다!','Message sent!')}</p>
                   <p className="text-sm text-gray-500 text-center">{L(locale,'เราจะติดต่อกลับโดยเร็วที่สุด','최대한 빨리 연락드리겠습니다','We will contact you as soon as possible')}</p>
-                  <button onClick={() => setSent(false)} className="mt-2 text-emerald-600 text-sm underline">
+                  <button type="button" onClick={() => setSent(false)} className="mt-2 text-emerald-600 text-sm underline">
                     {L(locale,'ส่งอีกครั้ง','다시 보내기','Send another')}
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSend} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'ชื่อ','이름','Name')} *</label>
+                <form onSubmit={handleSend}>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale,'ชื่อ','이름','Name')} *</label>
                     <input required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                      className="cd-form-input"
                       placeholder={L(locale,'ชื่อของคุณ','성함을 입력하세요','Your name')} />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'เบอร์โทร','전화번호','Phone')} *</label>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale,'เบอร์โทร','전화번호','Phone')} *</label>
                     <input required value={contactForm.phone} onChange={e => setContactForm({...contactForm, phone: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                      className="cd-form-input"
                       placeholder={L(locale,'เบอร์โทรของคุณ','전화번호를 입력하세요','Your phone number')} />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'อีเมล','이메일','Email')}</label>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale,'อีเมล','이메일','Email')}</label>
                     <input type="email" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                      className="cd-form-input"
                       placeholder="email@example.com" />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{L(locale,'ข้อความ','메시지','Message')} *</label>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale,'ข้อความ','메시지','Message')} *</label>
                     <textarea required rows={4} value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none"
+                      className="cd-form-input cd-form-textarea"
                       placeholder={L(locale,'พิมพ์ข้อความของคุณ...','메시지를 입력하세요...','Type your message...')} />
                   </div>
-                  <button type="submit" disabled={sendingContact} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-emerald-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed">
+                  <button type="submit" disabled={sendingContact} className="cd-btn cd-btn--primary cd-form-submit">
                     <Send className="w-4 h-4" />
                     {sendingContact ? L(locale,'กำลังส่ง...','전송 중...','Sending...') : L(locale,'ส่งข้อความ','메시지 보내기','Send Message')}
                   </button>
-                  {contactError && <p className="text-xs text-red-500">{contactError}</p>}
+                  {contactError && <p className="cd-error">{contactError}</p>}
                 </form>
               )}
               </div>
