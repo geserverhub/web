@@ -11,7 +11,7 @@
     "dev:restart": "node scripts/kill-port.mjs 3005 && node scripts/clean-next.mjs && next dev -p 3005 -H 0.0.0.0",
     "build": "prisma generate && next build",
     "start": "next start -p 3005",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "db:pull": "git pull geserverhub main",
     "db:restore": "bash scripts/db-restore.sh",
     "db:setup": "bash scripts/db-restore.sh && node scripts/set-energy-login.mjs",
