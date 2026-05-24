@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 const TEXT = {
@@ -172,12 +171,14 @@ export default function BookingClient() {
           <div>
             <h1 className="text-3xl md:text-4xl font-bold">{t.title}</h1>
             <p className="mt-2 text-lg">{t.subtitle}</p>
-            <Link
-              href="/m-factory/site"
+            <a
+              href="https://m-factoryandresort.com/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-block mt-3 text-sm underline text-white/90 hover:text-white"
             >
               {t.siteLink} →
-            </Link>
+            </a>
           </div>
           <div className="flex gap-3">
             <button
