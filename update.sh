@@ -31,6 +31,12 @@ else
   fuser -k 3005/tcp 2>/dev/null || true
 fi
 
+if [[ ! -f .env.local ]]; then
+  echo "ERROR: .env.local missing — create it first (see .env.local.example)"
+  echo "  DB_USER=geserverhub  DB_NAME=goeunserverhub  DB_PASSWORD=..."
+  exit 1
+fi
+
 echo "==> [3/4] npm ci + database restore + build"
 unset NODE_ENV
 if ! npm ci --ignore-scripts --no-audit --no-fund; then

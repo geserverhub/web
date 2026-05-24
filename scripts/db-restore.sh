@@ -23,7 +23,7 @@ BACKEND_URL="$(load_env BACKEND_URL)"
 
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-3306}"
-DB_USER="${DB_USER:-root}"
+DB_USER="${DB_USER:-geserverhub}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 DB_NAME="${DB_NAME:-goeunserverhub}"
 
