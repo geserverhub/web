@@ -507,22 +507,36 @@ html:has(.m-factory-layout) {
   flex-shrink: 0;
 }
 
+.m-factory-layout.mf-booking .mf-submit-wrap {
+  display: none;
+  text-align: center;
+  padding-top: 0.5rem;
+}
+
 .m-factory-layout.mf-booking .mf-submit-btn {
   width: 100%;
+  display: inline-block;
 }
 
 .m-factory-layout.mf-booking .mf-submit-bar {
+  display: block;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, 0.95);
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-top: 1px solid #e5e7eb;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.m-factory-layout.mf-booking .mf-submit-bar .mf-submit-btn {
+  width: 100%;
+  display: block;
 }
 
 .m-factory-layout.mf-booking .mf-qr-img {
@@ -532,6 +546,14 @@ html:has(.m-factory-layout) {
 }
 
 @media (min-width: 640px) {
+  .m-factory-layout.mf-booking .mf-submit-wrap {
+    display: block;
+  }
+
+  .m-factory-layout.mf-booking .mf-submit-bar {
+    display: none;
+  }
+
   .m-factory-layout.mf-booking .mf-submit-btn {
     width: auto;
   }
