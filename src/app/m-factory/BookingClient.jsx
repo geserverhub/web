@@ -105,14 +105,21 @@ const TEXT = {
 
 const today = () => new Date().toISOString().split("T")[0];
 
+const WAREHOUSE_IDS = ["wh100", "wh120", "wh300"];
+
+function warehouseLabel(t, id) {
+  if (id === "wh100") return t.warehouse2;
+  if (id === "wh120") return t.warehouse3;
+  if (id === "wh300") return t.warehouse4;
+  return "";
+}
+
 function RequiredHint({ text }) {
   return <span className="mf-required block text-sm font-normal text-red-600 mt-0.5">{text}</span>;
 }
 
 const inputClass =
   "mf-input w-full border-2 border-blue-200 focus:border-blue-500 focus:outline-none rounded-xl p-3.5 min-h-[52px] text-base bg-white transition-colors";
-const selectClass =
-  "mf-select w-full border-2 border-blue-200 focus:border-blue-500 focus:outline-none rounded-xl p-3.5 min-h-[52px] text-base bg-white transition-colors";
 const sectionClass = "mf-section bg-white border border-blue-100 rounded-2xl p-5 sm:p-7 shadow-sm";
 const sectionTitleClass = "mf-section-title text-lg sm:text-xl font-bold mb-5 text-blue-800 flex items-center gap-2";
 const labelClass = "mf-label block mb-2 font-semibold text-gray-700 text-sm sm:text-base";
@@ -216,8 +223,8 @@ export default function BookingClient() {
           taxId: form.taxId.trim(),
           bookingDate: form.bookingDate,
           address: form.address.trim(),
-          warehouse: form.warehouse,
-          rentalType: form.rentalType,
+          warehouse: warehouseLabel(t, form.warehouse),
+          rentalType: form.rentalType === "rent" ? t.rent : form.rentalType === "buy" ? t.buy : form.rentalType,
           paymentRef: form.paymentRef || form.paymentFileName,
           termsAccepted: accepted,
           type: "factory",
@@ -256,14 +263,12 @@ export default function BookingClient() {
               </a>
             </div>
             <div className="mf-lang flex gap-2 shrink-0">
-              {["th", "en"].map(lang => (
+              {["th", "en"].map((lang) => (
                 <button
                   key={lang}
                   type="button"
                   onClick={() => setLanguage(lang)}
-                  className={`min-h-[44px] min-w-[52px] px-4 py-2 rounded-xl font-bold shadow text-sm transition ${
-                    language === lang ? "bg-white text-blue-700 shadow-lg" : "bg-blue-500/40 text-white hover:bg-blue-500/60"
-                  }`}
+                  className={`mf-lang-btn ${language === lang ? "mf-lang-btn-active" : ""}`}
                 >
                   {lang.toUpperCase()}
                 </button>
@@ -360,39 +365,57 @@ export default function BookingClient() {
 
           <div className={sectionClass}>
             <h2 className={sectionTitleClass}>🏭 {t.warehouseInfo}</h2>
-            <div className="mf-field-grid grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div>
+            <div className="mf-field-grid grid grid-cols-1 gap-4 sm:gap-6">
+              <div className="mf-field">
                 <label className={labelClass}>
                   {t.warehouse}
                   <RequiredHint text={t.requiredSelect} />
                 </label>
-                <select
-                  required
-                  className={selectClass}
-                  value={form.warehouse}
-                  onChange={(e) => setField("warehouse", e.target.value)}
-                >
-                  <option value="">{t.warehouse1}</option>
-                  <option value={t.warehouse2}>{t.warehouse2}</option>
-                  <option value={t.warehouse3}>{t.warehouse3}</option>
-                  <option value={t.warehouse4}>{t.warehouse4}</option>
-                </select>
+                <div className="mf-warehouse-group" role="radiogroup" aria-label={t.warehouse}>
+                  {WAREHOUSE_IDS.map((id) => (
+                    <label
+                      key={id}
+                      className={`mf-type-option mf-warehouse-option ${form.warehouse === id ? "mf-type-option-active" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="warehouse"
+                        value={id}
+                        checked={form.warehouse === id}
+                        onChange={(e) => setField("warehouse", e.target.value)}
+                        className="mf-type-radio"
+                      />
+                      <span className="mf-type-label mf-warehouse-label">{warehouseLabel(t, id)}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-              <div>
+              <div className="mf-field">
                 <label className={labelClass}>
                   {t.rentalType}
                   <RequiredHint text={t.requiredSelect} />
                 </label>
-                <select
-                  required
-                  className={selectClass}
-                  value={form.rentalType}
-                  onChange={(e) => setField("rentalType", e.target.value)}
-                >
-                  <option value="">{t.selectType}</option>
-                  <option value={t.rent}>{t.rent}</option>
-                  <option value={t.buy}>{t.buy}</option>
-                </select>
+                <div className="mf-type-group" role="radiogroup" aria-label={t.rentalType}>
+                  {[
+                    { id: "rent", label: t.rent },
+                    { id: "buy", label: t.buy },
+                  ].map(({ id, label }) => (
+                    <label
+                      key={id}
+                      className={`mf-type-option ${form.rentalType === id ? "mf-type-option-active" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="rentalType"
+                        value={id}
+                        checked={form.rentalType === id}
+                        onChange={(e) => setField("rentalType", e.target.value)}
+                        className="mf-type-radio"
+                      />
+                      <span className="mf-type-label">{label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
