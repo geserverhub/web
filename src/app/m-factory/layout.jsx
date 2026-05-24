@@ -1,4 +1,5 @@
 import { Kanit } from "next/font/google";
+import "./m-factory.css";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -9,13 +10,6 @@ const kanit = Kanit({
   display: "swap",
 });
 
-const BOOKING_CSS = "/m-factory/booking.css?v=3";
-
 export default function MFactoryLayout({ children }) {
-  return (
-    <>
-      <link rel="stylesheet" href={BOOKING_CSS} />
-      <div className={`m-factory-layout ${kanit.className}`}>{children}</div>
-    </>
-  );
+  return <div className={`m-factory-layout ${kanit.className}`}>{children}</div>;
 }
