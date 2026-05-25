@@ -14,9 +14,9 @@ import {
   Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
   Thermometer, ChevronDown, BarChart2, Users, Sprout, Download,
-  AlertCircle,
+  AlertCircle, BrainCircuit, Lightbulb, ShieldAlert, TrendingUp,
 } from 'lucide-react';
-import { generateMonthlyEnergyExcel } from '@/lib/excel-export';
+import { generateMonthlyEnergyExcel, exportToExcel } from '@/lib/excel-export';
 
 function L(locale, th, ko, en) {
   if (locale === 'th') return th;
@@ -44,6 +44,176 @@ function buildCustomerDashboardQuery(user, deviceId) {
   if (user?.username) params.set('username', String(user.username));
   if (deviceId) params.set('deviceId', String(deviceId));
   return params.toString();
+}
+
+function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
+  const analysis = (() => {
+    const alerts = [];
+    const behaviors = [];
+    const isOnline = snapshot?.status === 'online';
+    const power  = snapshot?.totalPower ?? 0;
+    const c1     = snapshot?.currentL1 ?? 0;
+    const c2     = snapshot?.currentL2 ?? 0;
+    const c3     = snapshot?.currentL3 ?? 0;
+    const pf     = snapshot?.powerFactor ?? 0;
+    const freq   = snapshot?.frequency ?? 0;
+    const thdA   = snapshot?.thdAfter ?? 0;
+    const totalC = c1 + c2 + c3;
+
+    let energyLevel = 'normal', energyScore = 0;
+    if (isOnline) {
+      if      (totalC > 200 || power > 200) { energyLevel = 'critical'; energyScore = 92; }
+      else if (totalC > 100 || power > 100) { energyLevel = 'high';     energyScore = 70; }
+      else if (totalC > 15  || power > 5)   { energyLevel = 'normal';   energyScore = 42; }
+      else                                   { energyLevel = 'low';      energyScore = 12; }
+    }
+
+    if (!isOnline && snapshot) alerts.push({ type: 'err',  text: L(locale, 'อุปกรณ์ออฟไลน์ — ไม่มีข้อมูลเรียลไทม์', '기기 오프라인 — 실시간 데이터 없음', 'Device offline — no live data') });
+    if (isOnline && pf > 0 && pf < 0.85) alerts.push({ type: 'warn', text: L(locale, `Power Factor ต่ำ (${pf.toFixed(3)}) ควรแก้ไข Reactive Power`, `역률 낮음 (${pf.toFixed(3)}) — 무효전력 보상 필요`, `Low PF (${pf.toFixed(3)}) — reactive power compensation needed`) });
+    if (isOnline && totalC > 0) {
+      const avgC = totalC / 3;
+      const imb = (Math.max(Math.abs(c1-avgC), Math.abs(c2-avgC), Math.abs(c3-avgC)) / avgC) * 100;
+      if (imb > 15) alerts.push({ type: 'warn', text: L(locale, `กระแสไม่สมดุล ${imb.toFixed(0)}% — อาจเกิดความร้อนสะสม`, `전류 불균형 ${imb.toFixed(0)}% — 과열 위험`, `Current imbalance ${imb.toFixed(0)}% — overheating risk`) });
+    }
+    if (isOnline && freq > 0 && (freq < 49.5 || freq > 50.5)) alerts.push({ type: 'warn', text: L(locale, `ความถี่ผิดปกติ ${freq.toFixed(2)} Hz (ปกติ 50 Hz)`, `주파수 이상 ${freq.toFixed(2)} Hz`, `Frequency anomaly ${freq.toFixed(2)} Hz`) });
+    if (isOnline && thdA > 5) alerts.push({ type: 'warn', text: L(locale, `THD หลังติดตั้งสูง (${thdA.toFixed(1)}%) — ตรวจฮาร์มอนิก`, `설치 후 THD 높음 (${thdA.toFixed(1)}%)`, `High post-install THD (${thdA.toFixed(1)}%)`) });
+    if (isOnline && energyLevel === 'critical') alerts.push({ type: 'err', text: L(locale, 'โหลดวิกฤต! ตรวจอุปกรณ์ที่ใช้กระแสไฟสูงทันที', '임계 부하! 즉시 고부하 기기 점검', 'Critical load! Check high-draw equipment immediately') });
+    if (alerts.length === 0 && isOnline) alerts.push({ type: 'ok', text: L(locale, 'ระบบทำงานปกติ ไม่พบปัญหา', '시스템 정상 — 이상 없음', 'System operating normally — no issues') });
+
+    let peakPower = 0, peakTime = '';
+    liveData.forEach(d => { const p = d.totalPower ?? 0; if (p > peakPower) { peakPower = p; peakTime = d.time ? String(d.time).slice(11, 16) : ''; } });
+
+    const savingNum = parseFloat(savingPct) || 0;
+    if      (savingNum >= 20) behaviors.push({ type: 'ok',   text: L(locale, `ประสิทธิภาพดีเยี่ยม ประหยัดได้ ${savingNum}%`, `절약 우수 ${savingNum}% — 최적 운전`, `Excellent efficiency — saving ${savingNum}%`) });
+    else if (savingNum >= 10) behaviors.push({ type: 'info', text: L(locale, `ประหยัดได้ ${savingNum}% — ยังมีพื้นที่พัฒนาได้`, `절약 양호 ${savingNum}% — 개선 가능`, `Saving ${savingNum}% — room for improvement`) });
+    else if (savingNum > 0)   behaviors.push({ type: 'warn', text: L(locale, `ประหยัดได้น้อย ${savingNum}% — แนะนำตรวจสอบระบบ`, `절약 낮음 ${savingNum}% — 시스템 점검 권장`, `Low saving ${savingNum}% — review settings`) });
+    if (energyLevel === 'high')     behaviors.push({ type: 'warn', text: L(locale, 'โหลดสูง — แนะนำตรวจอุปกรณ์ที่ใช้กระแสไฟมาก', '부하 높음 — 고소비 기기 점검', 'High load — inspect high-consumption equipment') });
+    if (energyLevel === 'critical') behaviors.push({ type: 'err',  text: L(locale, 'โหลดวิกฤต — ควรปิดอุปกรณ์ที่ไม่จำเป็นทันที', '임계 부하 — 불필요한 기기 즉시 차단', 'Critical — shut off non-essential equipment') });
+    if (energyLevel === 'low')      behaviors.push({ type: 'info', text: L(locale, 'โหลดต่ำ — ระบบพักหรือใช้งานน้อย', '저부하 — 대기/저사용 상태', 'Low load — system idle or lightly used') });
+    if (monthlyData.length >= 2) {
+      const last = monthlyData[monthlyData.length - 1], prev = monthlyData[monthlyData.length - 2];
+      if (prev?.before > 0) {
+        const t = ((last.before - prev.before) / prev.before) * 100;
+        if      (t > 10)  behaviors.push({ type: 'warn', text: L(locale, `การใช้ไฟเพิ่ม ${t.toFixed(0)}% เทียบเดือนก่อน`,  `전월 대비 ${t.toFixed(0)}% 증가`,             `Usage up ${t.toFixed(0)}% vs last month`) });
+        else if (t < -10) behaviors.push({ type: 'ok',   text: L(locale, `การใช้ไฟลด ${Math.abs(t).toFixed(0)}% เทียบเดือนก่อน`, `전월 대비 ${Math.abs(t).toFixed(0)}% 감소`, `Usage down ${Math.abs(t).toFixed(0)}% vs last month`) });
+      }
+    }
+    if (behaviors.length === 0) behaviors.push({ type: 'info', text: L(locale, 'รูปแบบการใช้ไฟปกติ ไม่พบพฤติกรรมผิดปกติ', '정상 사용 패턴', 'Normal usage pattern — no anomalies') });
+
+    let forecast = '';
+    if (monthlyData.length >= 3) {
+      const last3 = monthlyData.slice(-3);
+      const avgB = last3.reduce((s, d) => s + d.before, 0) / 3;
+      const avgA = last3.reduce((s, d) => s + d.after,  0) / 3;
+      const pct  = avgB > 0 ? ((avgB - avgA) / avgB * 100).toFixed(1) : '0.0';
+      const kwh  = (avgB - avgA).toFixed(0);
+      forecast = L(locale, `จากแนวโน้ม 3 เดือนล่าสุด คาดการณ์เดือนหน้าจะประหยัดได้ ~${pct}% (${kwh} kWh)`, `최근 3개월 추세 기준 다음달 약 ${pct}% 절약 예상 (${kwh} kWh)`, `3-month trend → next month forecast ~${pct}% saving (${kwh} kWh)`);
+    }
+    return { isOnline, energyLevel, energyScore, alerts, behaviors, forecast, peakPower, peakTime, pf, freq, power };
+  })();
+
+  const { isOnline, energyLevel, energyScore, alerts, behaviors, forecast, peakPower, peakTime, pf, freq, power } = analysis;
+  const levelLabel = { low: L(locale,'ต่ำ','낮음','Low'), normal: L(locale,'ปกติ','정상','Normal'), high: L(locale,'สูง','높음','High'), critical: L(locale,'วิกฤต','위험','Critical') }[energyLevel];
+  const dotClass   = { ok: '--ok', warn: '--warn', info: '--info', err: '--err' };
+
+  return (
+    <div className="cd-stack">
+      <div className="cd-ai-tab-header">
+        <div className="cd-ai-tab-icon"><BrainCircuit className="w-5 h-5" /></div>
+        <div className="flex-1 min-w-0">
+          <h2 className="cd-ai-tab-title">{L(locale,'AI วิเคราะห์พลังงาน','AI 에너지 분석','AI Energy Analysis')}</h2>
+          <p className="cd-ai-tab-sub">{L(locale,'วิเคราะห์เรียลไทม์ · คาดการณ์ · แจ้งเตือน','실시간 분석 · 예측 · 알림','Real-time analysis · Forecast · Alerts')}</p>
+        </div>
+        {isOnline && <span className="cd-ai-live-chip"><span className="cd-ai-live-chip-dot" />LIVE</span>}
+      </div>
+
+      <div className="cd-ai-level-row">
+        <div className="cd-ai-metric-card">
+          <p className="cd-ai-metric-label">{L(locale,'ระดับการใช้ไฟ','부하 수준','Energy Level')}</p>
+          <p className="cd-ai-metric-val">{power > 0 ? `${power.toFixed(1)} kW` : '—'}</p>
+          <span className={`cd-ai-level-pill cd-ai-level-pill--${energyLevel}`}>{levelLabel}</span>
+          <div className="cd-ai-level-bar-wrap"><div className={`cd-ai-level-bar cd-ai-level-bar--${energyLevel}`} style={{ width: `${energyScore}%` }} /></div>
+        </div>
+        <div className="cd-ai-metric-card">
+          <p className="cd-ai-metric-label">{L(locale,'Peak Load วันนี้','오늘 피크','Today\'s Peak')}</p>
+          <p className="cd-ai-metric-val">{peakPower > 0 ? `${peakPower.toFixed(1)} kW` : '—'}</p>
+          <p className="cd-ai-metric-sub">{peakTime ? `${L(locale,'เวลา','시각','At')} ${peakTime}` : L(locale,'ยังไม่มีข้อมูล','데이터 없음','No data yet')}</p>
+        </div>
+        <div className="cd-ai-metric-card">
+          <p className="cd-ai-metric-label">{L(locale,'Power Factor','역률','Power Factor')}</p>
+          <p className="cd-ai-metric-val">{pf > 0 ? pf.toFixed(3) : '—'}</p>
+          <p className="cd-ai-metric-sub">{pf > 0 ? (pf >= 0.95 ? '✅ Excellent' : pf >= 0.85 ? '✅ Good' : '⚠️ Low') : ''}</p>
+        </div>
+        <div className="cd-ai-metric-card">
+          <p className="cd-ai-metric-label">{L(locale,'ความถี่','주파수','Frequency')}</p>
+          <p className="cd-ai-metric-val">{freq > 0 ? `${freq.toFixed(2)} Hz` : '—'}</p>
+          <p className="cd-ai-metric-sub">{freq > 0 ? (Math.abs(freq - 50) <= 0.3 ? '✅ Stable' : '⚠️ Check') : ''}</p>
+        </div>
+      </div>
+
+      <div className="cd-ai-two-col">
+        <div className="cd-ai-section-card">
+          <div className="cd-ai-section-head"><ShieldAlert className="w-4 h-4 text-amber-500" />{L(locale,'สิ่งที่ควรระวัง','주의 사항','Alerts & Warnings')}</div>
+          {alerts.map((a, i) => (
+            <div key={i} className="cd-ai-alert-item">
+              <span className={`cd-ai-alert-dot cd-ai-alert-dot${dotClass[a.type]}`} />{a.text}
+            </div>
+          ))}
+        </div>
+        <div className="cd-ai-section-card">
+          <div className="cd-ai-section-head"><Lightbulb className="w-4 h-4 text-amber-500" />{L(locale,'ประเมินพฤติกรรมการใช้ไฟ','전력 사용 패턴 분석','Behavior Assessment')}</div>
+          {behaviors.map((b, i) => (
+            <div key={i} className="cd-ai-alert-item">
+              <span className={`cd-ai-alert-dot cd-ai-alert-dot${dotClass[b.type]}`} />{b.text}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {forecast && (
+        <div className="cd-ai-forecast-strip">
+          <div className="cd-ai-forecast-strip-icon"><TrendingUp className="w-4 h-4" /></div>
+          <div>
+            <p className="cd-ai-forecast-strip-label">{L(locale,'การคาดการณ์','예측','Forecast')}</p>
+            <p className="cd-ai-forecast-strip-text">{forecast}</p>
+          </div>
+        </div>
+      )}
+
+      {monthlyData.length > 0 && (
+        <div className="cd-card">
+          <div className="cd-card-accent cd-card-accent--energy" />
+          <div className="cd-card-body">
+            <h3 className="cd-card-title">{L(locale,'แนวโน้มรายเดือน (kWh)','월별 추세 (kWh)','Monthly Trend (kWh)')}</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={monthlyData.map(d => {
+                const th = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+                const en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const ko = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+                const idx = Math.max(0, Math.min(11, d.monthIndex - 1));
+                return { name: locale === 'th' ? th[idx] : locale === 'ko' ? ko[idx] : en[idx], before: d.before, after: d.after };
+              })}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+                <Tooltip formatter={v => Number(v).toLocaleString()} />
+                <Legend />
+                <Line type="monotone" dataKey="before" name={L(locale,'ก่อนติดตั้ง','설치 전','Before')} stroke="#b45309" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="after"  name={L(locale,'หลังติดตั้ง','설치 후','After')}  stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {!snapshot && (
+        <div className="cd-ai-empty">
+          <div className="cd-ai-empty-icon"><BrainCircuit className="w-6 h-6 text-gray-400" /></div>
+          <p className="text-sm">{L(locale,'กำลังโหลดข้อมูลอุปกรณ์...','기기 데이터 로딩 중...','Loading device data...')}</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AiEnergyInsightPanel({ monthlyData, locale, site }) {
@@ -492,11 +662,12 @@ export default function CustomersPage() {
   }
 
   const tabs = [
-    { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),  icon: BarChart2 },
-    { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),     icon: DollarSign },
-    { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),         icon: Activity },
+    { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),   icon: BarChart2 },
+    { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),      icon: DollarSign },
+    { key: 'ai',      label: L(locale,'AI วิเคราะห์','AI 분석','AI Analysis'), icon: BrainCircuit },
+    { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),          icon: Activity },
     { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
-    { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),            icon: Users },
+    { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),             icon: Users },
   ];
 
   const kpiItems = [
@@ -781,6 +952,17 @@ export default function CustomersPage() {
           </div>
         )}
 
+        {/* ── AI Analysis ── */}
+        {activeTab === 'ai' && (
+          <AiAnalysisTab
+            snapshot={snapshot}
+            liveData={liveData}
+            monthlyData={monthlyData}
+            savingPct={savingPct}
+            locale={locale}
+          />
+        )}
+
         {/* ── Real-time current monitor ── */}
         {activeTab === 'monitor' && (
           <div className="cd-stack">
@@ -945,6 +1127,28 @@ export default function CustomersPage() {
               <button type="button" onClick={fetchLive} disabled={liveLoading} className="cd-btn cd-btn--ghost">
                 <RefreshCw className={`w-4 h-4 ${liveLoading ? 'animate-spin text-emerald-600' : ''}`} />
                 {L(locale,'รีเฟรช','새로고침','Refresh')}
+              </button>
+              <button
+                type="button"
+                disabled={liveData.length === 0}
+                onClick={() => {
+                  const dev = devices.find(d => String(d.deviceID) === String(selectedDeviceId));
+                  const rows = liveData.map(d => ({
+                    [L(locale,'เวลา','시간','Time')]: d.time ? String(d.time).slice(11,16) : '',
+                    'L1 (A)': d.currentL1 ?? '', 'L2 (A)': d.currentL2 ?? '', 'L3 (A)': d.currentL3 ?? '',
+                    [L(locale,'กำลังไฟ (kW)','전력 (kW)','Power (kW)')]: d.totalPower ?? '',
+                    [L(locale,'แรงดัน L1 (V)','전압 L1','V L1')]: d.voltageL1 ?? '',
+                    [L(locale,'แรงดัน L2 (V)','전압 L2','V L2')]: d.voltageL2 ?? '',
+                    [L(locale,'แรงดัน L3 (V)','전압 L3','V L3')]: d.voltageL3 ?? '',
+                    [L(locale,'ความถี่ (Hz)','주파수','Hz')]: d.frequency ?? '',
+                    'Power Factor': d.powerFactor ?? '',
+                  }));
+                  exportToExcel(rows, `live_current_${dev?.deviceName || selectedDeviceId}`, L(locale,'กระแสไฟ','전류','Current'));
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                <Download className="w-4 h-4" />
+                {L(locale,'ดาวน์โหลด Excel','Excel 다운로드','Export Excel')}
               </button>
             </div>
 
