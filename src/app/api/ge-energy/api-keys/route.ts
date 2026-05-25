@@ -5,9 +5,29 @@ import crypto from 'crypto'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+async function ensureApiKeysSchema() {
+  await queryGe(`
+    CREATE TABLE IF NOT EXISTS \`api_keys\` (
+      \`id\`           INT(11)      NOT NULL AUTO_INCREMENT,
+      \`user_id\`      INT(11)      DEFAULT NULL,
+      \`key_name\`     VARCHAR(100) NOT NULL,
+      \`api_key\`      VARCHAR(64)  NOT NULL,
+      \`api_secret\`   VARCHAR(128) NOT NULL DEFAULT '',
+      \`is_active\`    TINYINT(1)   NOT NULL DEFAULT 1,
+      \`last_used_at\` DATETIME     DEFAULT NULL,
+      \`expires_at\`   DATETIME     DEFAULT NULL,
+      \`created_at\`   DATETIME     DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (\`id\`),
+      UNIQUE KEY \`uq_api_key\` (\`api_key\`),
+      KEY \`idx_api_keys_user\` (\`user_id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `)
+}
+
 /** GET /api/ge-energy/api-keys?userId= */
 export async function GET(req: NextRequest) {
   try {
+    await ensureApiKeysSchema()
     const userId = new URL(req.url).searchParams.get('userId')
     if (!userId) {
       return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 })

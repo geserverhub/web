@@ -2,7 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import PanelFrame from '@/components/grafana/PanelFrame'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts'
 
 type NumericValue = number | string | null | undefined
 
@@ -320,10 +322,56 @@ export default function CompareMonitoringPage() {
             </div>
           </div>
 
-          {/* ── Grafana Chart ── */}
-          <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-            <PanelFrame uid={process.env.NEXT_PUBLIC_GRAFANA_DASH_UID || 'all-power'} panelId={Number(process.env.NEXT_PUBLIC_GRAFANA_PANEL_ID || 2)} vars={{ ksave: device }} height={140} />
-          </div>
+          {/* ── Power Trend Chart ── */}
+          {(() => {
+            const chartData = items
+              .slice()
+              .sort((a, b) => new Date(a.time || 0).getTime() - new Date(b.time || 0).getTime())
+              .map(item => ({
+                t: item.time
+                  ? new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : '',
+                before: Math.round(Number(item.power_before?.P ?? item.before?.P ?? 0) || 0),
+                after:  Math.round(Number(item.power_metrics?.P ?? item.metrics?.P ?? item.P ?? 0) || 0),
+              }))
+              .filter(p => p.t)
+
+            const hasData = chartData.length >= 2
+
+            return (
+              <div style={{ borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa', padding: '12px 12px 4px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#000', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
+                  ⚡ Power Trend (W) — Before vs After
+                </div>
+                {hasData ? (
+                  <ResponsiveContainer width="100%" height={160}>
+                    <LineChart data={chartData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="t" tick={{ fontSize: 10, fill: '#64748b' }} />
+                      <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="W" />
+                      <Tooltip
+                        contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                        formatter={(val: number) => [`${val} W`]}
+                      />
+                      <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="before" name="Before (W)" stroke="#dc2626" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="after"  name="After (W)"  stroke="#059669" strokeWidth={2.5} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{
+                    height: 160, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 8,
+                    color: '#94a3b8',
+                  }}>
+                    <div style={{ fontSize: 28 }}>📡</div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>รอแสดงข้อมูลเมื่อเชื่อมต่อ</div>
+                    <div style={{ fontSize: 11 }}>Waiting for live data…</div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* ── Comparison Table ── */}
           <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb' }}>

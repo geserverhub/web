@@ -14,7 +14,7 @@ import {
   Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
   Thermometer, ChevronDown, BarChart2, Users, Sprout, Download,
-  AlertCircle, BrainCircuit, Lightbulb, ShieldAlert, TrendingUp,
+  AlertCircle, BrainCircuit, Lightbulb, ShieldAlert, TrendingUp, Table2,
 } from 'lucide-react';
 import { generateMonthlyEnergyExcel, exportToExcel } from '@/lib/excel-export';
 
@@ -201,6 +201,51 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
                 ? `✅ ${L(locale,`ลด ${(thdB - thdA).toFixed(1)}%`,`${(thdB - thdA).toFixed(1)}% 감소`,`Reduced ${(thdB - thdA).toFixed(1)}%`)}`
                 : `⚠️ ${L(locale,'ไม่ลดลง','미감소','Not reduced')}`
               : L(locale,'ไม่มีข้อมูล','데이터 없음','No data')}
+          </p>
+        </div>
+        <div className="cd-ai-metric-card">
+          <p className="cd-ai-metric-label">{L(locale,'กระแส L1 / L2 / L3','전류 L1/L2/L3','Current L1 / L2 / L3')}</p>
+          {[
+            { phase: 'L1', before: snapshot?.voltageL1 ?? 0, after: snapshot?.currentL1 ?? 0 },
+            { phase: 'L2', before: snapshot?.voltageL2 ?? 0, after: snapshot?.currentL2 ?? 0 },
+            { phase: 'L3', before: snapshot?.voltageL3 ?? 0, after: snapshot?.currentL3 ?? 0 },
+          ].map(({ phase, before, after }) => (
+            <div key={phase} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#6366f1', minWidth: '1.25rem' }}>{phase}</span>
+              <div className="cd-ai-thd-row" style={{ flex: 1 }}>
+                <div>
+                  <p className="cd-ai-thd-tag">{L(locale,'ก่อน','전','Before')}</p>
+                  <p className="cd-ai-metric-val" style={{ fontSize: '0.8rem' }}>{before > 0 ? `${before.toFixed(1)} A` : '—'}</p>
+                </div>
+                <div className="cd-ai-thd-arrow">→</div>
+                <div>
+                  <p className="cd-ai-thd-tag">{L(locale,'หลัง','후','After')}</p>
+                  <p className="cd-ai-metric-val" style={{ fontSize: '0.8rem', color: after > 0 && before > 0 ? (after < before ? '#059669' : after > before * 1.05 ? '#d97706' : '#1e293b') : undefined }}>
+                    {after > 0 ? `${after.toFixed(1)} A` : '—'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+          <p className="cd-ai-metric-sub">
+            {(() => {
+              const vals = [
+                { b: snapshot?.voltageL1 ?? 0, a: snapshot?.currentL1 ?? 0 },
+                { b: snapshot?.voltageL2 ?? 0, a: snapshot?.currentL2 ?? 0 },
+                { b: snapshot?.voltageL3 ?? 0, a: snapshot?.currentL3 ?? 0 },
+              ];
+              const all = vals.filter(v => v.b > 0 && v.a > 0);
+              if (!all.length) return L(locale,'ไม่มีข้อมูล','데이터 없음','No data');
+              const totalB = all.reduce((s, v) => s + v.b, 0);
+              const totalA = all.reduce((s, v) => s + v.a, 0);
+              const avgB = totalB / all.length, avgA = totalA / all.length;
+              const imb = avgA > 0
+                ? (Math.max(...vals.map(v => Math.abs((v.a || avgA) - avgA))) / avgA * 100).toFixed(1)
+                : null;
+              return imb !== null
+                ? `${Number(imb) > 10 ? '⚠️' : '✅'} ${L(locale,`ไม่สมดุล ${imb}%`,`불균형 ${imb}%`,`Imbalance ${imb}%`)}`
+                : L(locale,'ไม่มีข้อมูล','데이터 없음','No data');
+            })()}
           </p>
         </div>
       </div>
@@ -725,6 +770,7 @@ export default function CustomersPage() {
     { key: 'ai',      label: L(locale,'AI วิเคราะห์','AI 분석','AI Analysis'), icon: BrainCircuit },
     { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),          icon: Activity },
     { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
+    { key: 'compare', label: L(locale,'เปรียบเทียบ','비교표','Compare'),      icon: Table2 },
     { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),             icon: Users },
   ];
 
@@ -1382,6 +1428,183 @@ export default function CustomersPage() {
             })()}
           </div>
         )}
+
+        {/* ── Comparison Table ── */}
+        {activeTab === 'compare' && (() => {
+          const rate = electricityRate ?? 3.88;
+          const afterPowerKw = snapshot?.totalPower ?? 0;
+          const monthsWithData = monthlyData.filter(d => d.before > 0 && d.after > 0);
+          const avgBKwh = monthsWithData.length ? monthsWithData.reduce((s,d) => s+d.before, 0) / monthsWithData.length : 0;
+          const avgAKwh = monthsWithData.length ? monthsWithData.reduce((s,d) => s+d.after, 0) / monthsWithData.length : 0;
+          const powerRatio = avgAKwh > 0 ? avgBKwh / avgAKwh : 1;
+          const estBeforePowerKw = afterPowerKw * powerRatio;
+          const phases = [
+            { ph: 'L1', before: snapshot?.voltageL1 ?? 0, after: snapshot?.currentL1 ?? 0 },
+            { ph: 'L2', before: snapshot?.voltageL2 ?? 0, after: snapshot?.currentL2 ?? 0 },
+            { ph: 'L3', before: snapshot?.voltageL3 ?? 0, after: snapshot?.currentL3 ?? 0 },
+          ];
+          const totalCurBefore = phases.reduce((s,p) => s + p.before, 0);
+          const totalCurAfter  = phases.reduce((s,p) => s + p.after, 0);
+          const afterCostHr  = afterPowerKw * rate;
+          const beforeCostHr = estBeforePowerKw * rate;
+          const savingHr     = beforeCostHr - afterCostHr;
+          const savingPctRT  = estBeforePowerKw > 0
+            ? (estBeforePowerKw - afterPowerKw) / estBeforePowerKw * 100
+            : parseFloat(savingPct) || 0;
+          const isLive = snapshot?.status === 'online';
+
+          return (
+            <div className="cd-stack">
+              {/* ── Current comparison ── */}
+              <div className="cd-card">
+                <div className="cd-card-accent cd-card-accent--compare" />
+                <div className="cd-card-body">
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'0.5rem', marginBottom:'0.75rem' }}>
+                    <h2 className="cd-card-title" style={{ margin:0 }}>
+                      {L(locale,'กระแสไฟ L1/L2/L3 — เปรียบเทียบก่อน/หลัง (A)','전류 L1/L2/L3 — 설치 전/후 비교 (A)','Current L1/L2/L3 — Before vs After (A)')}
+                    </h2>
+                    {isLive && <span className="cd-ai-live-chip"><span className="cd-ai-live-chip-dot" />LIVE</span>}
+                  </div>
+                  {totalCurBefore === 0 && totalCurAfter === 0 ? (
+                    <p className="cd-card-desc">{L(locale,'ยังไม่มีข้อมูลกระแสไฟ — เปิดแท็บ Live ก่อน','전류 데이터 없음 — Live 탭을 먼저 열어주세요','No current data — open the Live tab first')}</p>
+                  ) : (
+                    <div className="cd-table-scroll">
+                      <table className="cd-table" style={{ display:'table' }}>
+                        <thead>
+                          <tr>
+                            <th>{L(locale,'เฟส','위상','Phase')}</th>
+                            <th>{L(locale,'ก่อน (A)','설치 전 (A)','Before (A)')}</th>
+                            <th>{L(locale,'หลัง (A)','설치 후 (A)','After (A)')}</th>
+                            <th>{L(locale,'ลดลง (A)','절약 (A)','Saved (A)')}</th>
+                            <th>{L(locale,'% ประหยัด','절약률','% Saved')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {phases.map(({ ph, before, after }) => {
+                            const saved = before - after;
+                            const pct   = before > 0 ? saved / before * 100 : 0;
+                            return (
+                              <tr key={ph}>
+                                <td style={{ fontWeight:800, color:'#4f46e5' }}>{ph}</td>
+                                <td>{before > 0 ? before.toFixed(2) : '—'}</td>
+                                <td style={{ color: after > 0 && before > 0 ? (after < before ? '#059669' : '#d97706') : undefined }}>
+                                  {after > 0 ? after.toFixed(2) : '—'}
+                                </td>
+                                <td style={{ color: saved > 0 ? '#059669' : saved < 0 ? '#d97706' : undefined }}>
+                                  {before > 0 && after > 0 ? (saved >= 0 ? `−${saved.toFixed(2)}` : `+${Math.abs(saved).toFixed(2)}`) : '—'}
+                                </td>
+                                <td style={{ fontWeight:700, color: pct > 0 ? '#059669' : pct < 0 ? '#d97706' : undefined }}>
+                                  {before > 0 && after > 0 ? `${pct.toFixed(1)}%` : '—'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td>{L(locale,'รวม','합계','Total')}</td>
+                            <td>{totalCurBefore > 0 ? totalCurBefore.toFixed(2) : '—'}</td>
+                            <td>{totalCurAfter > 0 ? totalCurAfter.toFixed(2) : '—'}</td>
+                            <td>{totalCurBefore > 0 && totalCurAfter > 0 ? `−${(totalCurBefore - totalCurAfter).toFixed(2)}` : '—'}</td>
+                            <td>{totalCurBefore > 0 && totalCurAfter > 0 ? `${((totalCurBefore - totalCurAfter) / totalCurBefore * 100).toFixed(1)}%` : '—'}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Cost comparison ── */}
+              <div className="cd-card">
+                <div className="cd-card-accent cd-card-accent--compare" />
+                <div className="cd-card-body">
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'0.5rem', marginBottom:'0.75rem' }}>
+                    <h2 className="cd-card-title" style={{ margin:0 }}>
+                      {L(locale,`ค่าไฟฟ้า (${currencyCode}) — ประมาณการเรียลไทม์`,`전기요금 (${currencyCode}) — 실시간 추정`,`Electricity Cost (${currencyCode}) — Real-time`)}
+                    </h2>
+                    <span style={{ fontSize:'0.7rem', color:'#64748b' }}>
+                      {afterPowerKw.toFixed(2)} kW · {fmt(rate)} {currencyCode}/kWh
+                    </span>
+                  </div>
+                  {afterPowerKw === 0 ? (
+                    <p className="cd-card-desc">{L(locale,'ยังไม่มีข้อมูลกำลังไฟ — เปิดแท็บ Live ก่อน','전력 데이터 없음 — Live 탭을 먼저 열어주세요','No power data — open the Live tab first')}</p>
+                  ) : (
+                    <div className="cd-table-scroll">
+                      <table className="cd-table" style={{ display:'table' }}>
+                        <thead>
+                          <tr>
+                            <th>{L(locale,'ช่วงเวลา','기간','Period')}</th>
+                            <th>{L(locale,`ก่อน (${currencyCode})`,`설치 전 (${currencyCode})`,`Before (${currencyCode})`)}</th>
+                            <th>{L(locale,`หลัง (${currencyCode})`,`설치 후 (${currencyCode})`,`After (${currencyCode})`)}</th>
+                            <th style={{ color:'#d1fae5' }}>{L(locale,`ประหยัด (${currencyCode})`,`절약 (${currencyCode})`,`Saving (${currencyCode})`)}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { period: L(locale,'ต่อชั่วโมง','시간당','Per Hour'),           mul: 1 },
+                            { period: L(locale,'ต่อวัน','하루당','Per Day'),                mul: 24 },
+                            { period: L(locale,'ต่อเดือน (30 วัน)','월 (30일)','Per Month'), mul: 720 },
+                          ].map(({ period, mul }) => {
+                            const bCost = beforeCostHr * mul;
+                            const aCost = afterCostHr * mul;
+                            const sav   = bCost - aCost;
+                            return (
+                              <tr key={period}>
+                                <td style={{ fontWeight:600 }}>{period}</td>
+                                <td style={{ color:'#dc2626' }}>{formatCost(bCost)}</td>
+                                <td style={{ color:'#059669', fontWeight:700 }}>{formatCost(aCost)}</td>
+                                <td style={{ color:'#059669', fontWeight:800 }}>{sav > 0 ? `−${formatCost(sav)}` : '—'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td>{L(locale,'ต่อปี (365 วัน)','연 (365일)','Per Year')}</td>
+                            <td>{formatCost(beforeCostHr * 8760)}</td>
+                            <td>{formatCost(afterCostHr * 8760)}</td>
+                            <td>{savingHr > 0 ? `−${formatCost(savingHr * 8760)}` : '—'}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Saving summary stats ── */}
+              <div className="cd-card">
+                <div className="cd-card-accent cd-card-accent--compare" />
+                <div className="cd-card-body">
+                  <h2 className="cd-card-title">{L(locale,'สรุปการประหยัด — เรียลไทม์','절약 요약 — 실시간','Saving Summary — Real-time')}</h2>
+                  <div className="cd-stat-grid cd-stat-grid--8">
+                    {[
+                      { label: L(locale,'กำลังไฟก่อน (kW) *','설치 전 전력 (kW) *','Before Power (kW) *'), val: estBeforePowerKw > 0 ? estBeforePowerKw.toFixed(2) : '—', color:'#dc2626' },
+                      { label: L(locale,'กำลังไฟหลัง (kW)','설치 후 전력 (kW)','After Power (kW)'), val: afterPowerKw > 0 ? afterPowerKw.toFixed(2) : '—', color:'#059669' },
+                      { label: L(locale,'ลดได้ (kW)','절약 (kW)','Saved (kW)'), val: estBeforePowerKw > 0 && afterPowerKw > 0 ? (estBeforePowerKw - afterPowerKw).toFixed(2) : '—', color:'#4f46e5' },
+                      { label: L(locale,'% ประหยัดเรียลไทม์','실시간 절약률','Real-time Saving %'), val: savingPctRT > 0 ? `${savingPctRT.toFixed(1)}%` : '—', color:'#059669' },
+                      { label: L(locale,`ค่าไฟ/ชม ก่อน (${currencyCode})`,`시간 요금 전 (${currencyCode})`,`Cost/hr Before (${currencyCode})`), val: beforeCostHr > 0 ? formatCost(beforeCostHr) : '—', color:'#dc2626' },
+                      { label: L(locale,`ค่าไฟ/ชม หลัง (${currencyCode})`,`시간 요금 후 (${currencyCode})`,`Cost/hr After (${currencyCode})`), val: afterCostHr > 0 ? formatCost(afterCostHr) : '—', color:'#059669' },
+                      { label: L(locale,`ประหยัด/เดือน (${currencyCode})`,`월 절약 (${currencyCode})`,`Saving/Month (${currencyCode})`), val: savingHr > 0 ? formatCost(savingHr * 720) : '—', color:'#4f46e5' },
+                      { label: L(locale,'CO₂ ลด (kg/hr)','CO₂ 절감 (kg/hr)','CO₂ Saved (kg/hr)'), val: estBeforePowerKw > 0 && afterPowerKw >= 0 ? ((estBeforePowerKw - afterPowerKw) * 0.5313).toFixed(3) : '—', color:'#059669' },
+                    ].map(({ label, val, color }) => (
+                      <div key={label} className="cd-stat-card">
+                        <p className="cd-stat-val" style={{ color }}>{val}</p>
+                        <p className="cd-stat-label">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {monthsWithData.length > 0 && (
+                    <p style={{ marginTop:'0.75rem', fontSize:'0.6875rem', color:'#94a3b8' }}>
+                      * {L(locale,`กำลังไฟ "ก่อน" ประมาณจากอัตราส่วนเฉลี่ย ${monthsWithData.length} เดือน (×${powerRatio.toFixed(2)})`,`"설치 전" 전력은 ${monthsWithData.length}개월 평균 비율 추정 (×${powerRatio.toFixed(2)})`,`Before power estimated from ${monthsWithData.length}-month avg ratio (×${powerRatio.toFixed(2)})`)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Contact ── */}
         {activeTab === 'contact' && (
