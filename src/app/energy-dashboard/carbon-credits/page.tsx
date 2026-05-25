@@ -278,6 +278,36 @@ export default function CarbonCreditsPage() {
                     <code>{step.formula}</code>
                     <span className="cc-formula-unit">{step.unit}</span>
                   </div>
+                  {/* Example calculation */}
+                  <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                    <span className="font-bold mr-1">
+                      {locale === 'th' ? '📐 ตัวอย่าง:' : locale === 'ko' ? '📐 예시:' : '📐 Example:'}
+                    </span>
+                    {locale === 'th' ? step.exampleTh : locale === 'ko' ? step.exampleKo : step.exampleEn}
+                  </div>
+                  {/* Reference */}
+                  <div className="mt-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-500">
+                    <span className="font-semibold text-gray-600 mr-1">
+                      {locale === 'th' ? '📄 อ้างอิง:' : locale === 'ko' ? '📄 참고:' : '📄 Reference:'}
+                    </span>
+                    {step.reference}
+                  </div>
+                  {/* Certifications */}
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {step.certifications.map((cert, i) => (
+                      <a
+                        key={i}
+                        href={cert.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={cert.body}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs text-emerald-700 font-medium hover:bg-emerald-100 transition"
+                      >
+                        <span>✓</span>
+                        <span>{cert.standard}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
