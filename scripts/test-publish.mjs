@@ -2,11 +2,7 @@
  * Test MQTT publish → power_records pipeline
  * Usage: node scripts/test-publish.mjs
  */
-import { createRequire } from 'module';
-import { fileURLToPath } from 'url';
-
-const require = createRequire(import.meta.url);
-const mqtt = require('mqtt');
+import mqtt from 'mqtt';
 
 const BROKER = 'mqtt://127.0.0.1:1883';
 const TOPIC  = 'ge/GE-TH-001';
@@ -41,15 +37,18 @@ let done = false;
 
 client.on('connect', () => {
   console.log('[test] Connected! Publishing...');
-  client.publish(TOPIC, payload, { qos: 0 }, (err) => {
+  client.publish(TOPIC, payload, { qos: 1 }, (err) => {
     if (err) {
       console.error('[test] Publish error:', err.message);
+      done = true;
+      client.end(false, () => process.exit(1));
     } else {
-      console.log('[test] Published successfully!');
+      console.log('[test] Published successfully (PUBACK received)!');
       console.log('[test] Check power_records table for new row with device_id=4');
+      done = true;
+      // Give broker a moment to route to subscribers before disconnecting
+      setTimeout(() => client.end(false, () => process.exit(0)), 500);
     }
-    done = true;
-    client.end(true, () => process.exit(err ? 1 : 0));
   });
 });
 

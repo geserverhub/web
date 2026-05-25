@@ -75,6 +75,7 @@ const menuSections: NavSection[] = [
       { key: "dashboard", icon: Home, href: "/energy-dashboard/dashboard", exact: true },
       { key: "currentMonitor", icon: Activity, href: "/energy-dashboard/current-monitor", badge: "live" },
       { key: "overview", icon: BarChart2, href: "/energy-dashboard/overview" },
+      { key: "carbonCredits", icon: Leaf, href: "/energy-dashboard/carbon-credits" },
       { key: "monitor", icon: Monitor, href: "/energy-dashboard/monitor", exact: true },
       { key: "compareMonitoring", icon: GitCompare, href: "/energy-dashboard/monitor/Compare-Monitoring" },
       { key: "location", icon: MapPin, href: "/energy-dashboard/location" },
@@ -119,6 +120,7 @@ const sectionFallback: Record<string, Record<string, string>> = {
   momogeMarketplace: { th: "สินค้า IoT / Momoge", en: "Momoge IoT Store", ko: "MOMOGE IoT 상품" },
   energyAnalytics: { th: "วิเคราะห์พลังงาน", en: "Energy analytics", ko: "에너지 분석" },
   compareMonitoring: { th: "เปรียบเทียบ", en: "Compare", ko: "비교 모니터" },
+  carbonCredits: { th: "คาร์บอนเครดิต", en: "Carbon Credits", ko: "탄소 크레딧" },
   deviceConnectivity: {
     th: "เชื่อมต่ออุปกรณ์",
     en: "Device connectivity",
