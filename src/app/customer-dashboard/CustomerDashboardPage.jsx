@@ -474,6 +474,7 @@ export default function CustomersPage() {
   const [monthlyError, setMonthlyError] = useState(null);
   const [customerUser, setCustomerUser] = useState(null);
   const [customerMeters, setCustomerMeters] = useState([]);
+  const [meterStats, setMeterStats] = useState([]);
   const [selectedMeterDeviceId, setSelectedMeterDeviceId] = useState('');
   const [billingSite, setBillingSite] = useState('thailand');
   const [electricityRate, setElectricityRate] = useState(null);
@@ -591,6 +592,7 @@ export default function CustomersPage() {
         if (j.success && Array.isArray(j.data?.monthly)) {
           setMonthlyData(j.data.monthly);
           setCustomerMeters(Array.isArray(j.data.meters) ? j.data.meters : []);
+          setMeterStats(Array.isArray(j.data.meterStats) ? j.data.meterStats : []);
           const site = j.data.primarySite || 'thailand';
           setBillingSite(site);
           setSelectedSite(site);
@@ -814,6 +816,7 @@ export default function CustomersPage() {
   const tabs = [
     { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),   icon: BarChart2 },
     { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),      icon: DollarSign },
+    { key: 'meters',  label: L(locale,`มิเตอร์ (${customerMeters.length})`,`미터 (${customerMeters.length})`,`Meters (${customerMeters.length})`), icon: Cpu },
     { key: 'ai',      label: L(locale,'AI วิเคราะห์','AI 분석','AI Analysis'), icon: BrainCircuit },
     { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),          icon: Activity },
     { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
@@ -1473,6 +1476,166 @@ export default function CustomersPage() {
                 </div>
               );
             })()}
+          </div>
+        )}
+
+        {/* ── Meters Detail ── */}
+        {activeTab === 'meters' && (
+          <div className="cd-stack">
+            {/* Header summary */}
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--energy" />
+              <div className="cd-card-body">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#059669,#10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Cpu className="w-5 h-5" style={{ color: '#fff' }} />
+                  </div>
+                  <div>
+                    <h2 className="cd-card-title" style={{ margin: 0 }}>
+                      {L(locale,'มิเตอร์ที่ผูกกับบัญชีนี้','이 계정의 미터 현황','Meters Linked to This Account')}
+                    </h2>
+                    <p className="cd-card-desc" style={{ margin: 0 }}>
+                      {L(locale,
+                        `พบ ${customerMeters.length} เครื่อง · แสดงข้อมูลที่บันทึกในฐานข้อมูลทุกรายการ`,
+                        `${customerMeters.length}대 미터 연결됨 · DB 기록 전체 표시`,
+                        `${customerMeters.length} meter${customerMeters.length !== 1 ? 's' : ''} found · All DB records shown`
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Meter count badges */}
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {customerMeters.map((m, i) => {
+                    const st = meterStats.find(s => s.deviceId === m.deviceId);
+                    const isActive = st && st.recordCount > 0;
+                    return (
+                      <div key={m.deviceId} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                        background: isActive ? '#ecfdf5' : '#f8fafc',
+                        border: `1px solid ${isActive ? '#6ee7b7' : '#e2e8f0'}`,
+                        borderRadius: '2rem', padding: '4px 12px', fontSize: '0.8rem', fontWeight: 600,
+                        color: isActive ? '#065f46' : '#64748b',
+                      }}>
+                        <span>{isActive ? '🟢' : '⚪'}</span>
+                        {L(locale,'มิเตอร์','미터','Meter')} {i + 1}: {m.meterNo || m.meterId || `ID ${m.deviceId}`}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Per-meter cards */}
+            {customerMeters.length === 0 ? (
+              <div className="cd-empty">
+                <Cpu className="w-10 h-10 mb-2" />
+                <p>{L(locale,'ไม่พบมิเตอร์ที่ผูกกับบัญชีนี้','연결된 미터가 없습니다','No meters linked to this account')}</p>
+              </div>
+            ) : customerMeters.map((meter, idx) => {
+              const st = meterStats.find(s => s.deviceId === meter.deviceId) || null;
+              const hasData = st && st.recordCount > 0;
+              const savePctColor = !hasData ? '#64748b' : st.savingPct >= 20 ? '#059669' : st.savingPct >= 10 ? '#d97706' : '#ef4444';
+              const fmtDate = (d) => d ? new Date(d).toLocaleDateString(locale === 'ko' ? 'ko-KR' : locale === 'th' ? 'th-TH' : 'en-GB') : '—';
+
+              return (
+                <div key={meter.deviceId} className="cd-card" style={{ overflow: 'hidden' }}>
+                  {/* Color stripe */}
+                  <div style={{ height: 4, background: hasData ? 'linear-gradient(90deg,#059669,#10b981,#34d399)' : '#e2e8f0' }} />
+
+                  <div className="cd-card-body">
+                    {/* Meter header */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                          background: hasData ? 'linear-gradient(135deg,#059669,#10b981)' : '#f1f5f9',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem',
+                        }}>
+                          {hasData ? <Zap className="w-5 h-5" style={{ color: '#fff' }} /> : <WifiOff className="w-5 h-5" style={{ color: '#94a3b8' }} />}
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#1e293b' }}>
+                            {L(locale,'มิเตอร์','미터','Meter')} {idx + 1} · {meter.label}
+                          </h3>
+                          <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                            Device ID: {meter.deviceId}
+                            {meter.meterNo ? ` · No. ${meter.meterNo}` : ''}
+                            {meter.meterId ? ` · ${meter.meterId}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{
+                          padding: '3px 10px', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700,
+                          background: hasData ? '#ecfdf5' : '#f1f5f9',
+                          color: hasData ? '#065f46' : '#94a3b8',
+                          border: `1px solid ${hasData ? '#6ee7b7' : '#e2e8f0'}`,
+                        }}>
+                          {hasData ? `${fmt(st.recordCount)} records` : L(locale,'ยังไม่มีข้อมูล','데이터 없음','No records')}
+                        </span>
+                        <span style={{
+                          padding: '3px 10px', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700,
+                          background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
+                        }}>
+                          📍 {meter.site?.toUpperCase() || '—'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Meter info grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.5rem', marginBottom: '1.25rem', background: '#f8fafc', borderRadius: '0.75rem', padding: '0.875rem' }}>
+                      {[
+                        [L(locale,'ชื่อเครื่อง','장치명','Device Name'), meter.deviceName || '—'],
+                        [L(locale,'หมายเลขมิเตอร์','미터 번호','Meter No.'), meter.meterNo || '—'],
+                        [L(locale,'Meter ID','미터 ID','Meter ID'), meter.meterId || '—'],
+                        [L(locale,'สถานที่','위치','Location'), meter.locationName || '—'],
+                        [L(locale,'ไซต์','사이트','Site'), meter.site?.toUpperCase() || '—'],
+                        [L(locale,'บันทึกแรก','첫 기록','First Record'), fmtDate(st?.firstRecord)],
+                        [L(locale,'บันทึกล่าสุด','최근 기록','Latest Record'), fmtDate(st?.lastRecord)],
+                        [L(locale,'จำนวนรายการ','기록 수','Record Count'), st ? fmt(st.recordCount) : '—'],
+                      ].map(([label, val]) => (
+                        <div key={label} style={{ padding: '0.375rem 0' }}>
+                          <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+                          <p style={{ margin: '2px 0 0', fontSize: '0.875rem', fontWeight: 700, color: '#334155' }}>{val}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Energy KPI grid */}
+                    {hasData ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '0.75rem' }}>
+                        {[
+                          { icon: Zap, label: L(locale,'ก่อนติดตั้ง (kWh)','설치 전 (kWh)','Before (kWh)'), val: fmt(Math.round(st.beforeKwh)), color: '#b45309', bg: '#fffbeb' },
+                          { icon: Zap, label: L(locale,'หลังติดตั้ง (kWh)','설치 후 (kWh)','After (kWh)'), val: fmt(Math.round(st.afterKwh)), color: '#059669', bg: '#ecfdf5' },
+                          { icon: TrendingDown, label: L(locale,'ประหยัด (kWh)','절약 (kWh)','Saved (kWh)'), val: fmt(Math.round(st.savedKwh)), color: '#0d9488', bg: '#f0fdfa' },
+                          { icon: TrendingDown, label: L(locale,'% ประหยัด','절약률','Saving %'), val: `${st.savingPct}%`, color: savePctColor, bg: '#f8fafc' },
+                          { icon: DollarSign, label: L(locale,`ค่าไฟก่อน (${currencySymbol})`,`이전 비용 (${currencySymbol})`,`Before Cost (${currencyCode})`), val: formatCost(st.costBefore), color: '#b45309', bg: '#fffbeb' },
+                          { icon: DollarSign, label: L(locale,`ค่าไฟหลัง (${currencySymbol})`,`이후 비용 (${currencySymbol})`,`After Cost (${currencyCode})`), val: formatCost(st.costAfter), color: '#059669', bg: '#ecfdf5' },
+                          { icon: DollarSign, label: L(locale,`ประหยัด (${currencySymbol})`,`절약 비용 (${currencySymbol})`,`Saved (${currencyCode})`), val: formatCost(st.savedCost), color: '#0d9488', bg: '#f0fdfa' },
+                          { icon: Leaf, label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Reduced (kg)'), val: fmt(st.co2SavedKg), color: '#065f46', bg: '#ecfdf5' },
+                        ].map(({ icon: Icon, label, val, color, bg }) => (
+                          <div key={label} style={{ background: bg, borderRadius: '0.75rem', padding: '0.75rem', border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
+                              <Icon className="w-3.5 h-3.5" style={{ color, flexShrink: 0 }} />
+                              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 600, color: '#94a3b8' }}>{label}</p>
+                            </div>
+                            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color }}>{val}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8', fontSize: '0.875rem', background: '#f8fafc', borderRadius: '0.75rem' }}>
+                        <WifiOff className="w-8 h-8 mx-auto mb-2" style={{ color: '#cbd5e1' }} />
+                        {L(locale,'ยังไม่มีข้อมูลพลังงานสำหรับมิเตอร์นี้ในช่วงเวลาที่เลือก',
+                          '선택 기간 내 이 미터의 에너지 데이터가 없습니다',
+                          'No energy records for this meter in the selected period')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
