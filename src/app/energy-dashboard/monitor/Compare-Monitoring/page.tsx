@@ -200,189 +200,187 @@ export default function CompareMonitoringPage() {
     const lastSeenDate = latest?.time ? new Date(latest.time) : null
     const lastSeenStr = lastSeenDate ? lastSeenDate.toLocaleString() : '—'
 
+    const rows = [
+      { label: 'Current (A)', before: before_I, after: metrics_I, savings: savings_I, higherBetter: false },
+      { label: 'P (W)',       before: before_P, after: metrics_P, savings: savings_P, higherBetter: false },
+      { label: 'Q (var)',     before: before_Q, after: metrics_Q, savings: savings_Q, higherBetter: false },
+      { label: 'S (VA)',      before: before_S, after: metrics_S, savings: savings_S, higherBetter: false },
+      { label: 'PF',          before: before_PF, after: metrics_PF, savings: savings_PF, higherBetter: true },
+      { label: 'THD',         before: before_THD, after: metrics_THD, savings: savings_THD, higherBetter: false },
+      { label: 'F (Hz)',      before: before_F, after: metrics_F, savings: savings_F, higherBetter: null },
+    ]
+
     return (
-      <div key={device} className="card machine-card" style={{ minWidth: 600, maxWidth: 800 }}>
-        <div className="machine-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div className="machine-name">{displayName || device}</div>
-            <div className="machine-sub">📍 Site: {location}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>🕐 {lastSeenStr}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>🌐 IP: {ipAddress}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>📊 Before Meter: {beforeMeterNo}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>📈 Metrics Meter: {metricsMeterNo}</div>
-            <div className="machine-sub" style={{ marginTop: 4 }}>📞 Phone: {phone}</div>
-          </div>
-          <div className={"status-pill " + (statusOn ? 'ok' : 'warn')}>
-            {statusOn ? '🟢 ON' : '🔴 OFF'}
-          </div>
-        </div>
+      <div key={device} style={{
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 16,
+        overflow: 'hidden',
+        minWidth: 560,
+        maxWidth: 780,
+        boxShadow: '0 2px 12px rgba(0,0,0,.07)',
+      }}>
 
-        <div className="machine-info-row" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div className="machine-info">
-            <div className="label">GE ID:</div>
-            <div className="value">{ksaveId}</div>
-          </div>
-          <div className="machine-info">
-            <div className="label">Series no:</div>
-            <div className="value">{displaySeriesNo}</div>
-          </div>
-        </div>
-
-        {/* Power Savings Summary */}
+        {/* ── Card Header ── */}
         <div style={{
-          marginTop: 16,
-          padding: 12,
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          borderRadius: 8,
-          color: '#fff'
+          background: 'linear-gradient(135deg,#047857 0%,#059669 50%,#10b981 100%)',
+          padding: '16px 20px',
+          color: '#fff',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 12,
         }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>⚡ Power Savings</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 700 }}>
-                {Number.isFinite(savingsPercent_P) ? savingsPercent_P.toFixed(1) : '0'}%
-              </div>
-              <div style={{ fontSize: 13, opacity: 0.9 }}>Power Reduction</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-.3px', marginBottom: 10 }}>
+              {displayName || device}
             </div>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 700 }}>
-                {Number.isFinite(savings_P) ? savings_P.toFixed(2) : '0'} W
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', fontSize: 12.5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
+                <span>📍</span><span>{location}</span>
               </div>
-              <div style={{ fontSize: 13, opacity: 0.9 }}>Energy Saved</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
+                <span>🌐</span><span>{ipAddress}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
+                <span>🕐</span><span>{lastSeenStr}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
+                <span>📞</span><span>{phone}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
+                <span>📊</span><span>Before Meter: {beforeMeterNo}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
+                <span>📈</span><span>Metrics Meter: {metricsMeterNo}</span>
+              </div>
             </div>
+          </div>
+          <div style={{
+            background: statusOn ? 'rgba(255,255,255,.2)' : 'rgba(239,68,68,.3)',
+            border: '1.5px solid rgba(255,255,255,.4)',
+            borderRadius: 20,
+            padding: '4px 12px',
+            fontSize: 13,
+            fontWeight: 700,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusOn ? '#86efac' : '#fca5a5', display: 'inline-block' }} />
+            {statusOn ? 'ONLINE' : 'OFFLINE'}
           </div>
         </div>
 
-        {/* Grafana Chart */}
-        <div style={{ marginTop: 16, height: 140, marginBottom: 12 }}>
-          <PanelFrame uid={process.env.NEXT_PUBLIC_GRAFANA_DASH_UID || 'all-power'} panelId={Number(process.env.NEXT_PUBLIC_GRAFANA_PANEL_ID || 2)} vars={{ ksave: device }} height={140} />
-        </div>
+        <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* Comparison Table */}
-        <div style={{ marginTop: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', gap: 8, fontSize: 14 }}>
-            {/* Header Row */}
-            <div style={{ fontWeight: 700, color: '#374151' }}>Parameter</div>
-            <div style={{ fontWeight: 700, textAlign: 'right', color: '#dc2626' }}>Before</div>
-            <div style={{ fontWeight: 700, textAlign: 'right', color: '#059669' }}>Current</div>
-            <div style={{ fontWeight: 700, textAlign: 'right', color: '#2563eb' }}>Savings</div>
+          {/* ── Device IDs ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { label: 'GE ID', value: ksaveId, mono: true },
+              { label: 'Series No.', value: displaySeriesNo, mono: true },
+            ].map(({ label, value, mono }) => (
+              <div key={label} style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 10,
+                padding: '8px 12px',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', fontFamily: mono ? 'monospace' : undefined }}>{value}</div>
+              </div>
+            ))}
+          </div>
 
-            {/* Current (A) */}
-            <div style={{ color: '#374151' }}>Current (A)</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_I) ? before_I.toFixed(3) : '-'}
+          {/* ── Power Savings Banner ── */}
+          <div style={{
+            background: 'linear-gradient(135deg,#ecfdf5,#d1fae5)',
+            border: '1.5px solid #a7f3d0',
+            borderRadius: 12,
+            padding: '14px 16px',
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#065f46', textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 10 }}>
+              ⚡ Power Savings
             </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_I) ? metrics_I.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: savings_I > 0 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_I) ? `${savings_I > 0 ? '↓' : '↑'} ${Math.abs(savings_I).toFixed(3)}` : '-'}
-            </div>
-
-            {/* P (W) */}
-            <div style={{ color: '#374151' }}>P (W)</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_P) ? before_P.toFixed(3) : '-'}
-            </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_P) ? metrics_P.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: savings_P > 0 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_P) ? `${savings_P > 0 ? '↓' : '↑'} ${Math.abs(savings_P).toFixed(3)}` : '-'}
-            </div>
-
-            {/* Q (var) */}
-            <div style={{ color: '#374151' }}>Q (var)</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_Q) ? before_Q.toFixed(3) : '-'}
-            </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_Q) ? metrics_Q.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: savings_Q > 0 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_Q) ? `${savings_Q > 0 ? '↓' : '↑'} ${Math.abs(savings_Q).toFixed(3)}` : '-'}
-            </div>
-
-            {/* S (VA) */}
-            <div style={{ color: '#374151' }}>S (VA)</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_S) ? before_S.toFixed(3) : '-'}
-            </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_S) ? metrics_S.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: savings_S > 0 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_S) ? `${savings_S > 0 ? '↓' : '↑'} ${Math.abs(savings_S).toFixed(3)}` : '-'}
-            </div>
-
-            {/* PF */}
-            <div style={{ color: '#374151' }}>PF</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_PF) ? before_PF.toFixed(3) : '-'}
-            </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_PF) ? metrics_PF.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: savings_PF > 0 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_PF) ? `${savings_PF > 0 ? '↑' : '↓'} ${Math.abs(savings_PF).toFixed(3)}` : '-'}
-            </div>
-
-            {/* THD */}
-            <div style={{ color: '#374151' }}>THD</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_THD) ? before_THD.toFixed(3) : '-'}
-            </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_THD) ? metrics_THD.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: savings_THD > 0 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_THD) ? `${savings_THD > 0 ? '↓' : '↑'} ${Math.abs(savings_THD).toFixed(3)}` : '-'}
-            </div>
-
-            {/* F (Hz) */}
-            <div style={{ color: '#374151' }}>F (Hz)</div>
-            <div style={{ textAlign: 'right', color: '#dc2626' }}>
-              {Number.isFinite(before_F) ? before_F.toFixed(3) : '-'}
-            </div>
-            <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-              {Number.isFinite(metrics_F) ? metrics_F.toFixed(3) : '-'}
-            </div>
-            <div style={{
-              textAlign: 'right',
-              color: Math.abs(savings_F) < 1 ? '#2563eb' : '#6b7280',
-              fontWeight: 600
-            }}>
-              {Number.isFinite(savings_F) ? `${savings_F > 0 ? '↑' : '↓'} ${Math.abs(savings_F).toFixed(3)}` : '-'}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#059669', lineHeight: 1 }}>
+                  {Number.isFinite(savingsPercent_P) ? savingsPercent_P.toFixed(1) : '0'}%
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Power Reduction</div>
+              </div>
+              <div style={{ textAlign: 'center', borderLeft: '1px solid #bbf7d0', paddingLeft: 10 }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#047857', lineHeight: 1 }}>
+                  {Number.isFinite(savings_P) ? savings_P.toFixed(0) : '0'}
+                  <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 3 }}>W</span>
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Energy Saved</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button className="k-btn machine-action-btn small" onClick={() => window.location.reload()}>Refresh</button>
+          {/* ── Grafana Chart ── */}
+          <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+            <PanelFrame uid={process.env.NEXT_PUBLIC_GRAFANA_DASH_UID || 'all-power'} panelId={Number(process.env.NEXT_PUBLIC_GRAFANA_PANEL_ID || 2)} vars={{ ksave: device }} height={140} />
+          </div>
+
+          {/* ── Comparison Table ── */}
+          <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
+              <thead>
+                <tr style={{ background: '#f1f5f9' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Parameter</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#dc2626', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Before</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#059669', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Current</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#2563eb', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Savings</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => {
+                  const improved = r.higherBetter === null
+                    ? Math.abs(r.savings) < 0.01
+                    : r.higherBetter ? r.savings > 0 : r.savings > 0
+                  const savingsColor = improved ? '#2563eb' : r.savings === 0 ? '#9ca3af' : '#f59e0b'
+                  const arrow = r.higherBetter === null
+                    ? '→'
+                    : r.higherBetter
+                      ? (r.savings > 0 ? '↑' : '↓')
+                      : (r.savings > 0 ? '↓' : '↑')
+                  return (
+                    <tr key={r.label} style={{ borderTop: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                      <td style={{ padding: '8px 12px', fontWeight: 600, color: '#374151' }}>{r.label}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', color: '#dc2626', fontFamily: 'monospace' }}>
+                        {Number.isFinite(r.before) ? r.before.toFixed(3) : '—'}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#059669', fontFamily: 'monospace' }}>
+                        {Number.isFinite(r.after) ? r.after.toFixed(3) : '—'}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: savingsColor, fontFamily: 'monospace' }}>
+                        {Number.isFinite(r.savings) ? `${arrow} ${Math.abs(r.savings).toFixed(3)}` : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Refresh ── */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '7px 16px', borderRadius: 8, border: '1.5px solid #d1d5db',
+                background: '#fff', color: '#374151', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🔄 Refresh
+            </button>
+          </div>
+
         </div>
       </div>
     )
