@@ -282,9 +282,60 @@ SET @sql3 = IF(@fk3=0,
   'SELECT ''fk_dc_last_record already exists''');
 PREPARE s3 FROM @sql3; EXECUTE s3; DEALLOCATE PREPARE s3;
 
--- FK summary for the 7 core tables:
+-- ─────────────────────────────────────────────────────────────────────────────
+-- momoge_cus — customer profile table (linked to devices, carbon_meters, carbon_locations)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `momoge_cus` (
+  `mmgID`      int(10)      NOT NULL AUTO_INCREMENT,
+  `meterID`    varchar(255) DEFAULT NULL,
+  `LocationID` varchar(255) DEFAULT NULL,
+  `serailID`   varchar(255) DEFAULT NULL,
+  `device_id`  int(11)      DEFAULT NULL,
+  `nameTH`     varchar(255) DEFAULT NULL,
+  `nameEN`     varchar(255) DEFAULT NULL,
+  `phone`      varchar(50)  DEFAULT NULL,
+  `address`    text         DEFAULT NULL,
+  `latitude`   decimal(10,8) DEFAULT NULL,
+  `longitude`  decimal(11,8) DEFAULT NULL,
+  `created_at` datetime     DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`mmgID`),
+  KEY `idx_momoge_cus_device`   (`device_id`),
+  KEY `idx_momoge_cus_meter`    (`meterID`),
+  KEY `idx_momoge_cus_location` (`LocationID`),
+  CONSTRAINT `fk_momoge_cus_device`
+    FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_momoge_cus_meter`
+    FOREIGN KEY (`meterID`) REFERENCES `carbon_meters` (`meterID`)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_momoge_cus_location`
+    FOREIGN KEY (`LocationID`) REFERENCES `carbon_locations` (`locationID`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Upgrade path: add columns if running on existing momoge_cus
+ALTER TABLE `momoge_cus`
+  MODIFY COLUMN `meterID`    varchar(255) DEFAULT NULL,
+  MODIFY COLUMN `LocationID` varchar(255) DEFAULT NULL,
+  MODIFY COLUMN `serailID`   varchar(255) DEFAULT NULL;
+ALTER TABLE `momoge_cus`
+  ADD COLUMN IF NOT EXISTS `device_id`  int(11)       DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `nameTH`     varchar(255)  DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `nameEN`     varchar(255)  DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `phone`      varchar(50)   DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `address`    text          DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `latitude`   decimal(10,8) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `longitude`  decimal(11,8) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `created_at` datetime      DEFAULT CURRENT_TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS `updated_at` datetime      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- FK summary for the 7 core tables + momoge_cus:
 --
 --  ClientService ──→ Client ←── devices ──→ device_connectivity ──→ power_records
 --  ClientService ──→ Service          ↘──→ device_notifications
 --  mqtt_settings ──→ devices          ↘──→ power_records_preinstall
 --                                     device_connectivity.last_record_id → power_records
+--  momoge_cus ──→ devices (device_id)
+--  momoge_cus ──→ carbon_meters (meterID)
+--  momoge_cus ──→ carbon_locations (LocationID)

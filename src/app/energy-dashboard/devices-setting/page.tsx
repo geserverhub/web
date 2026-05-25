@@ -31,6 +31,11 @@ interface Device {
   location?: string;
   site?: string;
   record_scope?: 'pre_install' | 'installed';
+  // momoge_cus fields
+  mmgID?: number | null;
+  meterID?: string | null;
+  LocationID?: string | null;
+  serailID?: string | null;
 }
 
 type DeviceForm = Omit<Partial<Device>, 'latitude' | 'longitude'> & {
@@ -123,6 +128,13 @@ export default function DevicesSettingPage() {
   const [editingRecordScope, setEditingRecordScope] = useState<number | null>(null);
   const [selectedRecordScope, setSelectedRecordScope] = useState<'pre_install' | 'installed' | null>(null);
   const [updatingRecordScope, setUpdatingRecordScope] = useState(false);
+  const [editMmgID, setEditMmgID] = useState<number | null>(null);
+  const [editMeterID, setEditMeterID] = useState('');
+  const [editLocationID, setEditLocationID] = useState('');
+  const [editSerailID, setEditSerailID] = useState('');
+  const [addMeterID, setAddMeterID] = useState('');
+  const [addLocationID, setAddLocationID] = useState('');
+  const [addSerailID, setAddSerailID] = useState('');
 
   useEffect(() => { setClientReady(true); }, []);
 
@@ -279,6 +291,22 @@ export default function DevicesSettingPage() {
       longitude: device.longitude !== null && device.longitude !== undefined ? String(device.longitude) : '',
     });
     setSaveMsg(null);
+    // Load existing momoge_cus record for this device
+    setEditMmgID(null); setEditMeterID(''); setEditLocationID(''); setEditSerailID('');
+    if (device.deviceID) {
+      fetch(`/api/ge-energy/momoge-cus?deviceId=${device.deviceID}`)
+        .then(r => r.json())
+        .then(j => {
+          const rec = j.records?.[0];
+          if (rec) {
+            setEditMmgID(rec.mmgID ?? null);
+            setEditMeterID(rec.meterID ?? '');
+            setEditLocationID(rec.LocationID ?? '');
+            setEditSerailID(rec.serailID ?? '');
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   function openView(device: Device) {
@@ -332,6 +360,32 @@ export default function DevicesSettingPage() {
       });
       const json = await res.json();
       if (json.success) {
+        // Upsert momoge_cus customer record
+        const cusPayload = {
+          device_id: editingDevice.deviceID,
+          nameTH: editForm.customerName || null,
+          nameEN: editForm.customerNameEn || null,
+          phone: editForm.customerPhone || null,
+          address: editForm.customerAddress || null,
+          latitude: parseCoordinate(editForm.latitude) ?? null,
+          longitude: parseCoordinate(editForm.longitude) ?? null,
+          meterID: editMeterID || null,
+          LocationID: editLocationID || null,
+          serailID: editSerailID || editForm.seriesNo || null,
+        };
+        if (editMmgID) {
+          await fetch('/api/ge-energy/momoge-cus', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mmgID: editMmgID, ...cusPayload }),
+          }).catch(() => {});
+        } else {
+          await fetch('/api/ge-energy/momoge-cus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cusPayload),
+          }).catch(() => {});
+        }
         setSaveMsg('saved');
         await fetchDevices();
         setTimeout(() => setEditingDevice(null), 800);
@@ -393,6 +447,7 @@ export default function DevicesSettingPage() {
     setCustomerResults([]);
     setCreateMsg(null);
     setGeocodeError(null);
+    setAddMeterID(''); setAddLocationID(''); setAddSerailID('');
     setShowAddModal(true);
   }
 
@@ -421,6 +476,26 @@ export default function DevicesSettingPage() {
 
       const json = await res.json();
       if (json.success) {
+        // Create momoge_cus customer record linked to the new device
+        const newDeviceId = json.device?.deviceID;
+        if (newDeviceId) {
+          await fetch('/api/ge-energy/momoge-cus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              device_id: newDeviceId,
+              nameTH: addForm.customerName || null,
+              nameEN: addForm.customerNameEn || null,
+              phone: addForm.customerPhone || null,
+              address: addForm.customerAddress || null,
+              latitude: parseCoordinate(addForm.latitude) ?? null,
+              longitude: parseCoordinate(addForm.longitude) ?? null,
+              meterID: addMeterID || null,
+              LocationID: addLocationID || null,
+              serailID: addSerailID || addForm.seriesNo || null,
+            }),
+          }).catch(() => {});
+        }
         setCreateMsg('saved');
         await fetchDevices();
         setTimeout(() => setShowAddModal(false), 600);
@@ -1085,6 +1160,7 @@ export default function DevicesSettingPage() {
                 <div className="bg-green-50/60 rounded-2xl p-4 space-y-3">
                   <p className="text-xs font-bold text-green-700 uppercase tracking-wide flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5" /> {ui.customerInfo}
+                    {viewingDevice.mmgID && <span className="ml-auto text-green-500 font-normal normal-case">mmgID: {viewingDevice.mmgID}</span>}
                   </p>
                   {viewingDevice.customerName && (
                     <div>
@@ -1251,6 +1327,30 @@ export default function DevicesSettingPage() {
                       placeholder={ui.addressPlaceholder} />
                   </div>
                 </div>
+                {/* momoge_cus identifiers */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Meter ID</label>
+                    <input value={editMeterID} onChange={e => setEditMeterID(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="meter-001" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Location ID</label>
+                    <input value={editLocationID} onChange={e => setEditLocationID(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="loc-001" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Serial ID</label>
+                    <input value={editSerailID} onChange={e => setEditSerailID(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="SN-..." />
+                  </div>
+                </div>
+                {editMmgID && (
+                  <p className="text-xs text-gray-400">mmgID: {editMmgID}</p>
+                )}
               </div>
               {/* Device info */}
               <div className="space-y-3">
@@ -1581,6 +1681,27 @@ export default function DevicesSettingPage() {
                   </button>
                   <p className="text-xs text-gray-500 mt-1">{ui.geocodeHint}</p>
                   {geocodeError && <p className="text-xs text-red-500 mt-1">{geocodeError}</p>}
+                </div>
+                {/* momoge_cus identifiers */}
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Meter ID</label>
+                    <input value={addMeterID} onChange={e => setAddMeterID(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="meter-001" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Location ID</label>
+                    <input value={addLocationID} onChange={e => setAddLocationID(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="loc-001" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Serial ID</label>
+                    <input value={addSerailID} onChange={e => setAddSerailID(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="SN-..." />
+                  </div>
                 </div>
               </div>
             </div>
