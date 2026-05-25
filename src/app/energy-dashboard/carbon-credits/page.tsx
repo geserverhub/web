@@ -88,6 +88,26 @@ export default function CarbonCreditsPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedMethodology, setExpandedMethodology] = useState(true);
   const [deviceAiInsights, setDeviceAiInsights] = useState<DeviceAiInsights>({});
+  const [fxData, setFxData] = useState<{
+    krwToThb: number | null;
+    lastUpdated: string | null;
+    loading: boolean;
+  }>({ krwToThb: null, lastUpdated: null, loading: false });
+
+  const fetchExchangeRate = useCallback(async () => {
+    setFxData((prev) => ({ ...prev, loading: true }));
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/KRW');
+      const json = await res.json();
+      if (json.result === 'success' && typeof json.rates?.THB === 'number') {
+        setFxData({ krwToThb: json.rates.THB, lastUpdated: json.time_last_update_utc ?? null, loading: false });
+      } else {
+        setFxData((prev) => ({ ...prev, loading: false }));
+      }
+    } catch {
+      setFxData((prev) => ({ ...prev, loading: false }));
+    }
+  }, []);
 
   const fetchCarbonData = useCallback(async () => {
     setLoading(true);
@@ -152,7 +172,8 @@ export default function CarbonCreditsPage() {
 
   useEffect(() => {
     fetchCarbonData();
-  }, [fetchCarbonData]);
+    fetchExchangeRate();
+  }, [fetchCarbonData, fetchExchangeRate]);
 
   if (loading && !data) {
     return (
@@ -418,13 +439,59 @@ export default function CarbonCreditsPage() {
       <div className="cc-card">
         <h2 className="cc-card-title">{L(locale, 'ข้อมูลตลาดคาร์บอน', 'Carbon Market Info', '탄소 시장 정보')}</h2>
         <div className="cc-market-info">
+          {/* KRW price */}
           <div className="cc-market-row">
-            <span>{L(locale, 'ราคาต่อตัน', 'Price per Tonne', '톤당 가격')}:</span>
-            <strong>{formatCurrency(data.summary.creditPricePerTonne, data.summary.currency)}</strong>
+            <span>{L(locale, 'ราคาต่อตัน', 'Price per Tonne', '톤당 가격')} (KRW):</span>
+            <strong>
+              {data.summary.currency === 'KRW'
+                ? formatCurrency(data.summary.creditPricePerTonne, 'KRW')
+                : fxData.krwToThb
+                  ? formatCurrency(Math.round(data.summary.creditPricePerTonne / fxData.krwToThb), 'KRW')
+                  : '—'}
+            </strong>
+          </div>
+          {/* THB price */}
+          <div className="cc-market-row">
+            <span>{L(locale, 'ราคาต่อตัน', 'Price per Tonne', '톤당 가격')} (THB):</span>
+            <strong>
+              {data.summary.currency === 'THB'
+                ? formatCurrency(data.summary.creditPricePerTonne, 'THB')
+                : fxData.krwToThb
+                  ? formatCurrency(Math.round(data.summary.creditPricePerTonne * fxData.krwToThb), 'THB')
+                  : '—'}
+            </strong>
           </div>
           <div className="cc-market-row">
             <span>{L(locale, 'สกุลเงิน', 'Currency', '통화')}:</span>
             <strong>{data.summary.currency}</strong>
+          </div>
+          {/* Exchange rate */}
+          <div className="cc-market-row">
+            <span>{L(locale, 'อัตราแลกเปลี่ยน (เรียลไทม์)', 'Exchange Rate (real-time)', '환율 (실시간)')}:</span>
+            <span className="flex items-center gap-2">
+              {fxData.loading ? (
+                <span className="text-gray-400 text-sm">{L(locale, 'กำลังโหลด...', 'Loading...', '로딩 중...')}</span>
+              ) : fxData.krwToThb ? (
+                <span className="text-sm font-medium text-gray-700">
+                  1 KRW = {fxData.krwToThb.toFixed(6)} THB
+                  {fxData.lastUpdated && (
+                    <span className="text-gray-400 text-xs ml-2">
+                      ({L(locale, 'อัปเดต', 'Updated', '업데이트')}: {new Date(fxData.lastUpdated).toLocaleDateString()})
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-gray-400 text-sm">—</span>
+              )}
+              <button
+                onClick={fetchExchangeRate}
+                disabled={fxData.loading}
+                className="p-1 hover:bg-gray-100 rounded transition disabled:opacity-50"
+                title={L(locale, 'รีเฟรชอัตราแลกเปลี่ยน', 'Refresh exchange rate', '환율 새로고침')}
+              >
+                <RefreshCw className={`w-3 h-3 text-gray-400 ${fxData.loading ? 'animate-spin' : ''}`} />
+              </button>
+            </span>
           </div>
         </div>
       </div>
