@@ -1,5 +1,6 @@
 import { getPrisma } from '@/lib/prisma';
 import { ensureMFactoryInquirySchema } from '@/lib/mfactory/ensure-inquiry-schema';
+import { isValidMfactoryStatus, normalizeMfactoryStatus } from '@/lib/mfactory/booking-status';
 
 function trim(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -105,7 +106,7 @@ export async function createMFactoryBooking(body) {
       paymentRef: paymentRef || null,
       message: message || null,
       bookingNumber,
-      status: 'PENDING',
+      status: 'SUBMITTED',
       termsAccepted: true,
     },
   });
@@ -162,4 +163,49 @@ export async function listMFactoryBookings(opts = {}) {
       updatedAt: r.updatedAt,
     })),
   };
+}
+
+/** @param {string} id @param {string} status */
+export async function updateMFactoryBookingStatus(id, status) {
+  await ensureMFactoryInquirySchema();
+
+  const trimmedId = typeof id === 'string' ? id.trim() : '';
+  const nextStatus = typeof status === 'string' ? status.trim() : '';
+
+  if (!trimmedId) {
+    return { ok: false, status: 400, error: 'Missing booking id' };
+  }
+  if (!isValidMfactoryStatus(nextStatus)) {
+    return { ok: false, status: 400, error: 'Invalid status' };
+  }
+
+  const prisma = getPrisma();
+  if (!prisma) {
+    return { ok: false, status: 503, error: 'Database unavailable' };
+  }
+
+  try {
+    const updated = await prisma.mFactoryInquiry.update({
+      where: { id: trimmedId },
+      data: { status: nextStatus },
+    });
+
+    return {
+      ok: true,
+      status: 200,
+      booking: {
+        id: updated.id,
+        bookingNumber: updated.bookingNumber,
+        status: updated.status,
+        statusLabel: normalizeMfactoryStatus(updated.status),
+        updatedAt: updated.updatedAt,
+      },
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Update failed';
+    if (message.includes('Record to update not found')) {
+      return { ok: false, status: 404, error: 'Booking not found' };
+    }
+    return { ok: false, status: 500, error: message };
+  }
 }

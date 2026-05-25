@@ -27,7 +27,7 @@ html:has(.m-factory-layout) {
   line-height: inherit;
 }
 
-.m-factory-layout button:not(.mf-lang-btn):not(.mf-type-option):not(.mf-submit-btn) {
+.m-factory-layout button:not(.mf-lang-btn):not(.mf-type-option):not(.mf-submit-btn):not(.mf-success-btn) {
   border: none;
   background: none;
   padding: 0;
@@ -669,6 +669,96 @@ html:has(.m-factory-layout) {
 .m-factory-layout.mf-booking .mf-submit-bar .mf-submit-btn {
   width: 100%;
   display: block;
+}
+
+.m-factory-layout.mf-booking .mf-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.m-factory-layout.mf-booking .mf-success-modal {
+  width: 100%;
+  max-width: 22rem;
+  background: #fff;
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  color: #111827;
+}
+
+.m-factory-layout.mf-booking .mf-success-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.m-factory-layout.mf-booking .mf-success-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  margin: 0 0 1rem;
+  line-height: 1.35;
+}
+
+.m-factory-layout.mf-booking .mf-success-number {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border: 2px solid #bfdbfe;
+  border-radius: 0.75rem;
+}
+
+.m-factory-layout.mf-booking .mf-success-number-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.m-factory-layout.mf-booking .mf-success-number-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.m-factory-layout.mf-booking .mf-success-screenshot {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #b45309;
+  font-weight: 600;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+}
+
+.m-factory-layout.mf-booking .mf-success-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: linear-gradient(to right, #10b981, #16a34a);
+  color: #fff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
 }
 
 .m-factory-layout.mf-booking .mf-qr-img {

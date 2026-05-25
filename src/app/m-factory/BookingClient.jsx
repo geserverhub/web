@@ -36,6 +36,9 @@ const TEXT = {
     term4: "เอกสารที่ใช้ในการจองต้องถูกต้องครบถ้วน",
     siteLink: "ดูเว็บไซต์โครงการ",
     submitting: "กำลังส่ง...",
+    successTitle: "ยืนยันการจองเรียบร้อยแล้ว",
+    successScreenshot: "กรุณาแคปหน้าจอนี้เก็บไว้เป็นหลักฐานการจอง",
+    successClose: "ตกลง",
     success: "ส่งคำขอจองเรียบร้อยแล้ว",
     bookingNumberLabel: "เลขที่จอง",
     errorName: "กรุณากรอกชื่อ - นามสกุล",
@@ -85,6 +88,9 @@ const TEXT = {
     term4: "All booking documents must be complete and valid",
     siteLink: "Project website",
     submitting: "Submitting...",
+    successTitle: "Booking confirmed",
+    successScreenshot: "Please screenshot this screen and keep it as your booking reference",
+    successClose: "OK",
     success: "Booking request submitted",
     bookingNumberLabel: "Booking no.",
     errorName: "Please enter your name",
@@ -128,6 +134,7 @@ export default function BookingClient() {
   const [language, setLanguage] = useState("th");
   const [accepted, setAccepted] = useState(false);
   const [status, setStatus] = useState("idle");
+  const [successModal, setSuccessModal] = useState(null);
   const [paymentUploading, setPaymentUploading] = useState(false);
   const paymentInputRef = useRef(null);
   const [form, setForm] = useState({
@@ -236,8 +243,7 @@ export default function BookingClient() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Submit failed");
       setStatus("success");
-      const ref = data.bookingNumber ? `${t.bookingNumberLabel}: ${data.bookingNumber}\n` : "";
-      alert(`${ref}${t.success}`);
+      setSuccessModal({ bookingNumber: data.bookingNumber || "" });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Submit failed");
       setStatus("idle");
@@ -498,6 +504,29 @@ export default function BookingClient() {
           </div>
         </form>
       </div>
+
+      {successModal && (
+        <div className="mf-success-overlay" role="dialog" aria-modal="true" aria-labelledby="mf-success-title">
+          <div className="mf-success-modal">
+            <div className="mf-success-icon" aria-hidden="true">
+              ✅
+            </div>
+            <h2 id="mf-success-title" className="mf-success-title">
+              {t.successTitle}
+            </h2>
+            {successModal.bookingNumber ? (
+              <p className="mf-success-number">
+                <span className="mf-success-number-label">{t.bookingNumberLabel}</span>
+                <strong className="mf-success-number-value">{successModal.bookingNumber}</strong>
+              </p>
+            ) : null}
+            <p className="mf-success-screenshot">{t.successScreenshot}</p>
+            <button type="button" className="mf-success-btn" onClick={() => setSuccessModal(null)}>
+              {t.successClose}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Fixed bottom bar — mobile */}
       <div className="mf-submit-bar">

@@ -2,6 +2,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import {
+  MFACTORY_STATUS_OPTIONS,
+  normalizeMfactoryStatus,
+  mfactoryStatusColor,
+} from "@/lib/mfactory/booking-status";
 
 const STATUS_OPTS = ["ONLINE", "MAINTENANCE", "COMING_SOON", "OFFLINE"];
 const ROLE_OPTS = ["CLIENT", "ADMIN", "SUPER_ADMIN"];
@@ -138,6 +143,7 @@ export default function ClientsUsersClient({ session }) {
   const [mfactoryLoading, setMfactoryLoading] = useState(false);
   const [mfactorySearch, setMfactorySearch] = useState("");
   const [mfactoryDetailId, setMfactoryDetailId] = useState(null);
+  const [mfactoryStatusUpdatingId, setMfactoryStatusUpdatingId] = useState(null);
   const [filterClientStatus, setFilterClientStatus] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [filterUserRole, setFilterUserRole] = useState("");
@@ -259,6 +265,27 @@ export default function ClientsUsersClient({ session }) {
       setMfactoryBookings([]);
     } finally {
       setMfactoryLoading(false);
+    }
+  }, []);
+
+  const updateMfactoryStatus = useCallback(async (id, status) => {
+    setMfactoryStatusUpdatingId(id);
+    try {
+      const res = await fetch(`/api/admin/mfactory-bookings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const d = await readJsonResponse(res);
+      const next = d.booking?.status || status;
+      setMfactoryBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, status: next, updatedAt: d.booking?.updatedAt || b.updatedAt } : b))
+      );
+      showToast("อัปเดตสถานะแล้ว", true);
+    } catch (e) {
+      showToast(e.message || "อัปเดตสถานะไม่สำเร็จ", false);
+    } finally {
+      setMfactoryStatusUpdatingId(null);
     }
   }, []);
 
@@ -3125,18 +3152,17 @@ export default function ClientsUsersClient({ session }) {
               const detail = rows.find(b => b.id === mfactoryDetailId) || null;
               const fmtDate = (d) => d ? new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "—";
               const rentalLabel = (v) => v === "rent" ? "เช่า" : v === "buy" ? "ซื้อ" : v || "—";
-              const statusLabel = (s) => {
-                if (s === "CONFIRMED") return "ยืนยันแล้ว";
-                if (s === "CANCELLED") return "ยกเลิก";
-                if (s === "REVIEWED") return "ตรวจแล้ว";
-                return "รอตรวจ";
-              };
-              const statusColor = (s) => {
-                if (s === "CONFIRMED") return "#4ade80";
-                if (s === "CANCELLED") return "#f87171";
-                if (s === "REVIEWED") return "#a78bfa";
-                return "#fbbf24";
-              };
+              const statusSelectStyle = (s) => ({
+                background: "#1e2130",
+                color: mfactoryStatusColor(s),
+                border: "1px solid #2a2d3a",
+                borderRadius: 4,
+                padding: "4px 6px",
+                fontSize: 11,
+                fontWeight: 700,
+                maxWidth: 160,
+                cursor: mfactoryStatusUpdatingId ? "wait" : "pointer",
+              });
 
               if (rows.length === 0) {
                 return (
@@ -3165,9 +3191,17 @@ export default function ClientsUsersClient({ session }) {
                             <td style={S.td}><span style={{ fontWeight: 600 }}>{b.name}</span></td>
                             <td style={S.td}>{b.company || <span style={{ color: "#4a5070" }}>—</span>}</td>
                             <td style={S.td}>
-                              <span style={{ background: "#1e2130", color: statusColor(b.status), borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
-                                {statusLabel(b.status)}
-                              </span>
+                              <select
+                                value={normalizeMfactoryStatus(b.status)}
+                                disabled={mfactoryStatusUpdatingId === b.id}
+                                onChange={(e) => updateMfactoryStatus(b.id, e.target.value)}
+                                style={statusSelectStyle(b.status)}
+                                title="อัปเดตสถานะ"
+                              >
+                                {MFACTORY_STATUS_OPTIONS.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </select>
                             </td>
                             <td style={S.td}>{rentalLabel(b.rentalType)}</td>
                             <td style={S.td}>
@@ -3195,7 +3229,6 @@ export default function ClientsUsersClient({ session }) {
                       <div style={{ fontWeight: 700, color: "#fb923c", marginBottom: 12, fontSize: 14 }}>รายละเอียด</div>
                       {[
                         ["เลขที่จอง", detail.bookingNumber],
-                        ["สถานะ", statusLabel(detail.status)],
                         ["ชื่อ", detail.name],
                         ["บริษัท", detail.company],
                         ["เบอร์", detail.phone],
@@ -3213,6 +3246,19 @@ export default function ClientsUsersClient({ session }) {
                           <div style={{ color: "#e2e8f0", fontSize: 12, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{val || "—"}</div>
                         </div>
                       ))}
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ color: "#8b8fa8", fontSize: 10, marginBottom: 4 }}>สถานะ</div>
+                        <select
+                          value={normalizeMfactoryStatus(detail.status)}
+                          disabled={mfactoryStatusUpdatingId === detail.id}
+                          onChange={(e) => updateMfactoryStatus(detail.id, e.target.value)}
+                          style={{ ...statusSelectStyle(detail.status), width: "100%", maxWidth: "100%", fontSize: 12, padding: "6px 8px" }}
+                        >
+                          {MFACTORY_STATUS_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
                       <button
                         style={{ ...S.btn("#1a2a1a", "#5ecb8a"), width: "100%", padding: "8px 0", fontSize: 13, fontWeight: 700, marginTop: 12 }}
                         onClick={() => openMFactoryReceipt(detail)}>
@@ -3498,12 +3544,17 @@ export default function ClientsUsersClient({ session }) {
               const detail = rows.find(b => b.id === mfactoryDetailId) || null;
               const fmtDate = (d) => d ? new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "—";
               const rentalLabel = (v) => (v === "rent" ? "เช่า" : v === "buy" ? "ซื้อ" : v || "—");
-              const statusLabel = (s) => {
-                if (s === "CONFIRMED") return "ยืนยันแล้ว";
-                if (s === "CANCELLED") return "ยกเลิก";
-                if (s === "REVIEWED") return "ตรวจแล้ว";
-                return "รอตรวจ";
-              };
+              const statusSelectStyle = (s) => ({
+                background: "#1e2130",
+                color: mfactoryStatusColor(s),
+                border: "1px solid #2a2d3a",
+                borderRadius: 4,
+                padding: "4px 6px",
+                fontSize: 11,
+                fontWeight: 700,
+                maxWidth: 160,
+                cursor: mfactoryStatusUpdatingId ? "wait" : "pointer",
+              });
               const paymentLink = (ref) => {
                 if (!ref) return null;
                 if (ref.startsWith("http://") || ref.startsWith("https://") || ref.startsWith("/")) {
@@ -3538,7 +3589,19 @@ export default function ClientsUsersClient({ session }) {
                             <td style={S.td}>{fmtDate(b.createdAt)}</td>
                             <td style={S.td}><span style={{ fontWeight: 600 }}>{b.name}</span></td>
                             <td style={S.td}>{b.company || <span style={{ color: "#4a5070" }}>—</span>}</td>
-                            <td style={S.td}>{statusLabel(b.status)}</td>
+                            <td style={S.td}>
+                              <select
+                                value={normalizeMfactoryStatus(b.status)}
+                                disabled={mfactoryStatusUpdatingId === b.id}
+                                onChange={(e) => updateMfactoryStatus(b.id, e.target.value)}
+                                style={statusSelectStyle(b.status)}
+                                title="อัปเดตสถานะ"
+                              >
+                                {MFACTORY_STATUS_OPTIONS.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </select>
+                            </td>
                             <td style={S.td}>{rentalLabel(b.rentalType)}</td>
                             <td style={S.td}>
                               <button
@@ -3559,7 +3622,6 @@ export default function ClientsUsersClient({ session }) {
                       <div style={{ fontWeight: 700, color: "#fb923c", marginBottom: 12, fontSize: 14 }}>รายละเอียด</div>
                       {[
                         ["เลขที่จอง", detail.bookingNumber],
-                        ["สถานะ", statusLabel(detail.status)],
                         ["ชื่อ", detail.name],
                         ["บริษัท", detail.company],
                         ["เบอร์", detail.phone],
@@ -3577,6 +3639,19 @@ export default function ClientsUsersClient({ session }) {
                           <div style={{ color: "#e2e8f0", fontSize: 12, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{val || "—"}</div>
                         </div>
                       ))}
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ color: "#8b8fa8", fontSize: 10, marginBottom: 4 }}>สถานะ</div>
+                        <select
+                          value={normalizeMfactoryStatus(detail.status)}
+                          disabled={mfactoryStatusUpdatingId === detail.id}
+                          onChange={(e) => updateMfactoryStatus(detail.id, e.target.value)}
+                          style={{ ...statusSelectStyle(detail.status), width: "100%", maxWidth: "100%", fontSize: 12, padding: "6px 8px" }}
+                        >
+                          {MFACTORY_STATUS_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
                       {paymentLink(detail.paymentRef) && (
                         <a
                           href={paymentLink(detail.paymentRef)}
