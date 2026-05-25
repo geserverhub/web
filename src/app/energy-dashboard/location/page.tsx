@@ -5,6 +5,7 @@ import { Search, Maximize2, MapPin, Navigation } from 'lucide-react';
 import { useSite } from "@/lib/SiteContext";
 import { useLocale } from "@/lib/LocaleContext";
 import MapWrapper, { Device } from "@/components/MapWrapper";
+import './location-3d.css';
 
 export default function LocationPage() {
   const { selectedSite } = useSite();

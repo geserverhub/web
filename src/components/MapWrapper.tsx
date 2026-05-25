@@ -16,19 +16,27 @@ interface MapWrapperProps {
   devices: Device[];
 }
 
-// Lazy-load the actual map to avoid SSR issues
-const LeafletMap = dynamic(() => import('./LeafletMap'), {
+const GoogleMap3D = dynamic(() => import('./GoogleMap3D'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-3" />
-        <p className="text-sm text-gray-400">Loading map…</p>
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mb-3" />
+        <p className="text-sm text-gray-400">Loading 3D map…</p>
       </div>
     </div>
   ),
 });
 
 export default function MapWrapper({ devices }: MapWrapperProps) {
-  return <LeafletMap devices={devices} />;
+  const formattedDevices = devices.map((device) => ({
+    id: device.id || device.deviceID || '',
+    name: device.name,
+    lat: device.lat,
+    lng: device.lng,
+    location: device.location,
+    isOnline: device.isOnline ?? false,
+  }));
+
+  return <GoogleMap3D devices={formattedDevices} />;
 }

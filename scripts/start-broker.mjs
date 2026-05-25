@@ -1,18 +1,14 @@
 /**
- * Local MQTT broker (aedes) — ใช้แทน Mosquitto เมื่อไม่ได้ติดตั้ง
+ * Local MQTT broker (aedes v1.x) — ใช้แทน Mosquitto เมื่อไม่ได้ติดตั้ง
  * Usage: node scripts/start-broker.mjs
  * Port: 1883 (standard MQTT)
  */
 import { createServer } from 'net';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const aedesModule = require('aedes');
-const Aedes = aedesModule.Aedes || aedesModule.default?.Aedes || aedesModule.default || aedesModule;
+import { Aedes } from 'aedes';
 
 const PORT = Number(process.env.MQTT_BROKER_PORT || 1883);
 
-const broker = new Aedes();
+const broker = await Aedes.createBroker();
 const server = createServer(broker.handle);
 
 broker.on('client', (client) => {
@@ -21,6 +17,14 @@ broker.on('client', (client) => {
 
 broker.on('clientDisconnect', (client) => {
   console.log(`[broker] disconnected clientId=${client.id}`);
+});
+
+broker.on('clientError', (client, err) => {
+  console.error(`[broker] clientError clientId=${client?.id} err=${err.message}`);
+});
+
+broker.on('connectionError', (client, err) => {
+  console.error(`[broker] connectionError err=${err.message}`);
 });
 
 broker.on('publish', (packet, client) => {
@@ -36,7 +40,7 @@ broker.on('subscribe', (subscriptions, client) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[broker] MQTT broker running on port ${PORT}`);
-  console.log(`[broker] Publish test: npx mqtt pub -h 127.0.0.1 -t "ge/GE-TH-001" -m '{"geID":"GE-TH-001","before_P":12.5,"metrics_P":9.8}'`);
+  console.log(`[broker] Publish test: node scripts/test-publish.mjs`);
 });
 
 server.on('error', (err) => {

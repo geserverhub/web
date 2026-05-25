@@ -1,0 +1,403 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { useLocale } from '@/lib/LocaleContext';
+import { useSite } from '@/lib/SiteContext';
+import { ISO14064MethodologySteps, getLocaleLabel } from '@/lib/carbon-calculations';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import {
+  Zap,
+  Leaf,
+  DollarSign,
+  TrendingDown,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
+import './carbon-credits.css';
+
+interface CarbonData {
+  summary: {
+    totalEnergySavedKwh: number;
+    totalCo2Kg: number;
+    carbonCreditsTonnes: number;
+    estimatedValue: number;
+    currency: string;
+    creditPricePerTonne: number;
+  };
+  dailyTrend: Array<{
+    date: string;
+    energySavedKwh: number;
+    co2Kg: number;
+    carbonCreditsTonnes: number;
+  }>;
+  topDevices: Array<{
+    deviceId: number;
+    deviceName: string;
+    geID: string;
+    energySavedKwh: number;
+    co2Kg: number;
+    carbonCreditsTonnes: number;
+  }>;
+  insights: {
+    aiNarrative: string | null;
+    aiAvailable: boolean;
+  };
+}
+
+interface DeviceAiInsights {
+  [deviceId: number]: {
+    aiNarrative: string | null;
+    aiAvailable: boolean;
+    loading: boolean;
+  };
+}
+
+function L(locale: string, th: string, en: string, ko: string): string {
+  if (locale === 'th') return th;
+  if (locale === 'ko') return ko;
+  return en;
+}
+
+function fmt(n: number): string {
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+}
+
+function formatCurrency(value: number, currency: string): string {
+  if (currency === 'THB') return `฿${value.toLocaleString()}`;
+  if (currency === 'KRW') return `₩${value.toLocaleString()}`;
+  return `${value.toLocaleString()}`;
+}
+
+export default function CarbonCreditsPage() {
+  const { locale } = useLocale();
+  const { selectedSite } = useSite();
+  const [period, setPeriod] = useState(30);
+  const [data, setData] = useState<CarbonData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedMethodology, setExpandedMethodology] = useState(true);
+  const [deviceAiInsights, setDeviceAiInsights] = useState<DeviceAiInsights>({});
+
+  const fetchCarbonData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${period}&locale=${locale}`,
+        { cache: 'no-store' }
+      );
+      const json = await res.json();
+      if (json.success && json.data) {
+        setData(json.data);
+        // Fetch per-device AI insights
+        if (json.data.topDevices && json.data.topDevices.length > 0) {
+          await Promise.all(
+            json.data.topDevices.map((device: any) =>
+              fetchDeviceAiInsights(device.deviceId)
+            )
+          );
+        }
+      } else {
+        setError(json.error || 'Failed to load carbon data');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error loading carbon data');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedSite, period, locale]);
+
+  const fetchDeviceAiInsights = useCallback(
+    async (deviceId: number) => {
+      setDeviceAiInsights((prev) => ({
+        ...prev,
+        [deviceId]: { aiNarrative: null, aiAvailable: false, loading: true },
+      }));
+      try {
+        const res = await fetch(
+          `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${period}&locale=${locale}&deviceId=${deviceId}`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        if (json.success && json.data?.insights) {
+          setDeviceAiInsights((prev) => ({
+            ...prev,
+            [deviceId]: {
+              aiNarrative: json.data.insights.aiNarrative,
+              aiAvailable: json.data.insights.aiAvailable,
+              loading: false,
+            },
+          }));
+        }
+      } catch {
+        setDeviceAiInsights((prev) => ({
+          ...prev,
+          [deviceId]: { aiNarrative: null, aiAvailable: false, loading: false },
+        }));
+      }
+    },
+    [selectedSite, period, locale]
+  );
+
+  useEffect(() => {
+    fetchCarbonData();
+  }, [fetchCarbonData]);
+
+  if (loading && !data) {
+    return (
+      <div className="cc-page">
+        <div className="cc-hero">
+          <div className="cc-hero-content">
+            <h1>{L(locale, 'คำนวณคาร์บอนเครดิต', 'Carbon Credit Calculation', '탄소 크레딧 계산')}</h1>
+          </div>
+        </div>
+        <div className="cc-loading">
+          <RefreshCw className="w-6 h-6 animate-spin" />
+          <p>{L(locale, 'กำลังโหลด...', 'Loading...', '로딩 중...')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <div className="cc-page">
+        <div className="cc-hero">
+          <h1>{L(locale, 'คำนวณคาร์บอนเครดิต', 'Carbon Credit Calculation', '탄소 크레딧 계산')}</h1>
+        </div>
+        <div className="cc-error">
+          <AlertCircle className="w-6 h-6" />
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const totalDevices = data.topDevices?.length || 0;
+
+  return (
+    <div className="cc-page">
+      {/* Hero Section */}
+      <div className="cc-hero">
+        <div className="cc-hero-content">
+          <h1>{L(locale, 'คำนวณคาร์บอนเครดิต', 'Carbon Credit Calculation', '탄소 크레딧 계산')}</h1>
+          <p>
+            {L(
+              locale,
+              'ตามมาตรฐาน ISO 14064-2 สำหรับการคำนวณและรายงานก๊าซเรือนกระจก',
+              'Based on ISO 14064-2 for GHG accounting and reporting',
+              'ISO 14064-2 온실가스 회계 및 보고에 기반'
+            )}
+          </p>
+        </div>
+        <div className="cc-period-selector">
+          <label>{L(locale, 'ช่วงเวลา', 'Period', '기간')}:</label>
+          <select value={period} onChange={(e) => setPeriod(Number(e.target.value))}>
+            <option value={30}>30 {L(locale, 'วัน', 'days', '일')}</option>
+            <option value={90}>90 {L(locale, 'วัน', 'days', '일')}</option>
+            <option value={365}>365 {L(locale, 'วัน', 'days', '일')}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="cc-kpi-grid">
+        <div className="cc-kpi-card">
+          <div className="cc-kpi-icon cc-icon-carbon">
+            <Leaf className="w-6 h-6" />
+          </div>
+          <p className="cc-kpi-val">{fmt(data.summary.carbonCreditsTonnes)}</p>
+          <p className="cc-kpi-label">{L(locale, 'คาร์บอนเครดิต', 'Carbon Credits', '탄소 크레딧')}</p>
+          <p className="cc-kpi-unit">{L(locale, 'tCO₂e', 'tCO₂e', 'tCO₂e')}</p>
+        </div>
+        <div className="cc-kpi-card">
+          <div className="cc-kpi-icon cc-icon-co2">
+            <Zap className="w-6 h-6" />
+          </div>
+          <p className="cc-kpi-val">{fmt(data.summary.totalCo2Kg)}</p>
+          <p className="cc-kpi-label">{L(locale, 'CO₂ ลดลง', 'CO₂ Avoided', 'CO₂ 회피')}</p>
+          <p className="cc-kpi-unit">kg CO₂</p>
+        </div>
+        <div className="cc-kpi-card">
+          <div className="cc-kpi-icon cc-icon-value">
+            <DollarSign className="w-6 h-6" />
+          </div>
+          <p className="cc-kpi-val">{formatCurrency(data.summary.estimatedValue, data.summary.currency)}</p>
+          <p className="cc-kpi-label">{L(locale, 'มูลค่า', 'Market Value', '시장 가치')}</p>
+          <p className="cc-kpi-unit">{data.summary.currency}</p>
+        </div>
+        <div className="cc-kpi-card">
+          <div className="cc-kpi-icon cc-icon-energy">
+            <TrendingDown className="w-6 h-6" />
+          </div>
+          <p className="cc-kpi-val">{fmt(data.summary.totalEnergySavedKwh)}</p>
+          <p className="cc-kpi-label">{L(locale, 'ไฟฟ้าประหยัด', 'Energy Saved', '에너지 절감')}</p>
+          <p className="cc-kpi-unit">kWh</p>
+        </div>
+      </div>
+
+      {/* Methodology Section */}
+      <div className="cc-card">
+        <div className="cc-methodology-header">
+          <div onClick={() => setExpandedMethodology(!expandedMethodology)} className="cc-methodology-title">
+            {expandedMethodology ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            <h2>{L(locale, 'ขั้นตอนการคำนวณ ISO 14064-2', 'ISO 14064-2 Calculation Steps', 'ISO 14064-2 계산 단계')}</h2>
+          </div>
+        </div>
+        {expandedMethodology && (
+          <div className="cc-methodology-steps">
+            {ISO14064MethodologySteps.map((step) => (
+              <div key={step.step} className="cc-step">
+                <div className="cc-step-number">{step.step}</div>
+                <div className="cc-step-content">
+                  <h3 className="cc-step-title">
+                    {locale === 'th' ? step.titleTh : locale === 'ko' ? step.titleKo : step.titleEn}
+                  </h3>
+                  <p className="cc-step-description">
+                    {locale === 'th'
+                      ? step.descriptionTh
+                      : locale === 'ko'
+                        ? step.descriptionKo
+                        : step.descriptionEn}
+                  </p>
+                  <div className="cc-step-formula">
+                    <span className="cc-formula-label">Formula:</span>
+                    <code>{step.formula}</code>
+                    <span className="cc-formula-unit">{step.unit}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Daily Trend Chart */}
+      {data.dailyTrend && data.dailyTrend.length > 0 && (
+        <div className="cc-card">
+          <h2 className="cc-card-title">{L(locale, 'แนวโน้มคาร์บอนประจำวัน', 'Daily Carbon Trend', '일일 탄소 추세')}</h2>
+          <div className="cc-chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={data.dailyTrend}>
+                <defs>
+                  <linearGradient id="colorCredit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(date) => new Date(date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' })}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value) => {
+                    if (typeof value === 'number') return fmt(value);
+                    return value;
+                  }}
+                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="carbonCreditsTonnes"
+                  stroke="#10b981"
+                  fillOpacity={1}
+                  fill="url(#colorCredit)"
+                  name={L(locale, 'คาร์บอนเครดิต', 'Carbon Credits', '탄소 크레딧')}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Per-Device Breakdown */}
+      {data.topDevices && data.topDevices.length > 0 && (
+        <div className="cc-card">
+          <h2 className="cc-card-title">
+            {L(locale, 'การวิเคราะห์ต่อตัวมิเตอร์', 'Per-Device Analysis', '장치별 분석')} ({totalDevices})
+          </h2>
+          <div className="cc-devices-grid">
+            {data.topDevices.map((device) => {
+              const total = data.summary.carbonCreditsTonnes || 1;
+              const contribution = total > 0 ? (device.carbonCreditsTonnes / total) * 100 : 0;
+              const ai = deviceAiInsights[device.deviceId];
+
+              return (
+                <div key={device.deviceId} className="cc-device-card">
+                  <div className="cc-device-header">
+                    <h3>{device.deviceName}</h3>
+                    <p className="cc-device-id">{device.geID}</p>
+                  </div>
+                  <div className="cc-device-stats">
+                    <div className="cc-stat">
+                      <span className="cc-stat-label">{L(locale, 'ไฟประหยัด', 'Energy Saved', '에너지 절감')}</span>
+                      <span className="cc-stat-value">{fmt(device.energySavedKwh)} kWh</span>
+                    </div>
+                    <div className="cc-stat">
+                      <span className="cc-stat-label">CO₂</span>
+                      <span className="cc-stat-value">{fmt(device.co2Kg)} kg</span>
+                    </div>
+                    <div className="cc-stat">
+                      <span className="cc-stat-label">{L(locale, 'คาร์บอนเครดิต', 'Carbon Credits', '탄소 크레딧')}</span>
+                      <span className="cc-stat-value">{fmt(device.carbonCreditsTonnes)} tCO₂e</span>
+                    </div>
+                    <div className="cc-stat">
+                      <span className="cc-stat-label">{L(locale, 'สัดส่วน', 'Share', '비율')}</span>
+                      <span className="cc-stat-value">{fmt(contribution)}%</span>
+                    </div>
+                  </div>
+                  {ai && (ai.aiAvailable || ai.aiNarrative) && (
+                    <div className="cc-device-ai">
+                      <p className="cc-ai-label">
+                        {L(locale, 'AI รายงาน', 'AI Report', 'AI 보고서')}
+                      </p>
+                      {ai.loading ? (
+                        <p className="cc-ai-loading">{L(locale, 'วิเคราะห์...', 'Analyzing...', '분석 중...')}</p>
+                      ) : ai.aiNarrative ? (
+                        <p className="cc-ai-text">{ai.aiNarrative}</p>
+                      ) : (
+                        <p className="cc-ai-fallback">{L(locale, 'ไม่มี AI ขณะนี้', 'AI analysis not available', 'AI 분석 사용 불가')}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Market Info */}
+      <div className="cc-card">
+        <h2 className="cc-card-title">{L(locale, 'ข้อมูลตลาดคาร์บอน', 'Carbon Market Info', '탄소 시장 정보')}</h2>
+        <div className="cc-market-info">
+          <div className="cc-market-row">
+            <span>{L(locale, 'ราคาต่อตัน', 'Price per Tonne', '톤당 가격')}:</span>
+            <strong>{formatCurrency(data.summary.creditPricePerTonne, data.summary.currency)}</strong>
+          </div>
+          <div className="cc-market-row">
+            <span>{L(locale, 'สกุลเงิน', 'Currency', '통화')}:</span>
+            <strong>{data.summary.currency}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
