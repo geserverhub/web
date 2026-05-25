@@ -281,6 +281,20 @@ export default function DevicesSettingPage() {
   }, [customerSearchTerm]);
 
   const saveCusInfoDirect = async () => {
+    const missing: string[] = [];
+    if (!addForm.customerName?.trim()) missing.push('ชื่อลูกค้า (ไทย)');
+    if (!addForm.customerNameEn?.trim()) missing.push('ชื่อลูกค้า (EN)');
+    if (!addNameKR?.trim()) missing.push('ชื่อลูกค้า (KR)');
+    if (!addForm.customerPhone?.trim()) missing.push('เบอร์โทร');
+    if (!addForm.customerAddress?.trim()) missing.push('ที่อยู่');
+    const latVal = addForm.latitude !== '' && addForm.latitude != null ? parseFloat(String(addForm.latitude)) : NaN;
+    const lngVal = addForm.longitude !== '' && addForm.longitude != null ? parseFloat(String(addForm.longitude)) : NaN;
+    if (isNaN(latVal)) missing.push('ละติจูด');
+    if (isNaN(lngVal)) missing.push('ลองจิจูด');
+    if (missing.length > 0) {
+      setSaveCusMsgDirect('กรุณากรอก: ' + missing.join(', '));
+      return;
+    }
     setSavingCusDirect(true);
     setSaveCusMsgDirect(null);
     try {
@@ -288,13 +302,13 @@ export default function DevicesSettingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nameTH: addForm.customerName || null,
-          nameEN: addForm.customerNameEn || null,
-          nameKR: addNameKR || null,
-          phone: addForm.customerPhone || null,
-          address: addForm.customerAddress || null,
-          latitude: addForm.latitude ?? null,
-          longitude: addForm.longitude ?? null,
+          nameTH: addForm.customerName.trim(),
+          nameEN: addForm.customerNameEn!.trim(),
+          nameKR: addNameKR.trim() || null,
+          phone: addForm.customerPhone!.trim(),
+          address: addForm.customerAddress!.trim(),
+          latitude: latVal,
+          longitude: lngVal,
           meterID: addMeterID ? Number(addMeterID) : null,
           LocationID: addLocationID ? Number(addLocationID) : null,
           serailID: addSerailID || null,
