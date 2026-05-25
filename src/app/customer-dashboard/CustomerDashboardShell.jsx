@@ -5,14 +5,29 @@ import { useRouter } from 'next/navigation';
 import { LocaleProvider } from '@/lib/LocaleContext';
 import { SiteProvider, useSite } from '@/lib/SiteContext';
 import CustomerDashboardHeader from '@/components/customer/CustomerDashboardHeader';
-import { GE_ADMIN_TOKEN_KEY } from '@/lib/ge-storage-keys';
+import { GE_ADMIN_TOKEN_KEY, GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 import './customer-dashboard.css';
 
 function CustomerSiteInit({ children }) {
   const { setSelectedSite } = useSite();
 
   useEffect(() => {
-    setSelectedSite('korea');
+    try {
+      const raw = localStorage.getItem(GE_ADMIN_USER_KEY);
+      if (!raw) {
+        setSelectedSite('thailand');
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      const site = String(parsed?.site || '').trim().toLowerCase();
+      if (site === 'korea' || site === 'thailand' || site === 'vietnam' || site === 'malaysia') {
+        setSelectedSite(site);
+      } else {
+        setSelectedSite('thailand');
+      }
+    } catch {
+      setSelectedSite('thailand');
+    }
   }, [setSelectedSite]);
 
   return children;

@@ -330,7 +330,8 @@ ALTER TABLE `momoge_cus`
   ADD COLUMN IF NOT EXISTS `latitude`   decimal(10,8) DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS `longitude`  decimal(11,8) DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS `created_at` datetime      DEFAULT CURRENT_TIMESTAMP,
-  ADD COLUMN IF NOT EXISTS `updated_at` datetime      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+  ADD COLUMN IF NOT EXISTS `updated_at` datetime      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS `user_id`    varchar(191)  DEFAULT NULL;
 
 -- FK summary for the 7 core tables + momoge_cus:
 --
