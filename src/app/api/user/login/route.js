@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { getPrisma } from '@/lib/prisma';
+import { queryGeserverhub } from '@/lib/geserverhub-db';
 
 export async function POST(request) {
   const prisma = getPrisma();
@@ -65,6 +66,26 @@ export async function POST(request) {
           ? 'บัญชีนี้ไม่มีสิทธิ์เข้าห้องเรียนออนไลน์'
           : 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า';
       return NextResponse.json({ error }, { status: 403 });
+    }
+
+    // Check portal permissions (skip for SUPER_ADMIN)
+    if (user.role !== 'SUPER_ADMIN') {
+      const portalKey = isEnergyDashboard ? 'energy' : isOnlineClassroom ? 'classroom' : 'customer';
+      try {
+        const permRows = await queryGeserverhub(
+          'SELECT is_allowed FROM user_permissions WHERE user_id = ? AND portal = ? LIMIT 1',
+          [user.id, portalKey]
+        );
+        if (permRows.length > 0 && !permRows[0].is_allowed) {
+          const portalName = isEnergyDashboard ? 'Energy Dashboard' : isOnlineClassroom ? 'Online Classroom' : 'Customer Dashboard';
+          return NextResponse.json(
+            { error: `บัญชีนี้ถูกระงับสิทธิ์การเข้าถึง ${portalName}` },
+            { status: 403 }
+          );
+        }
+      } catch {
+        // If permission check fails, allow login (fail open)
+      }
     }
 
     const token = randomUUID();

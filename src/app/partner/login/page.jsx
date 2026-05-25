@@ -59,6 +59,7 @@ export default function PartnerLoginPage() {
     const res = await signIn("credentials", {
       email: email.trim(),
       password,
+      portal: "partner",
       redirect: false,
     });
 
