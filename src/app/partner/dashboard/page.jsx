@@ -470,6 +470,17 @@ export default function PartnerDashboard() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackFilter, setFeedbackFilter] = useState("all"); // "all" | "General Feedback" | "Suggestion" | "Bug Report"
   const [feedbackSearch, setFeedbackSearch] = useState("");
+  // chat/reply state
+  const [chatOpenId, setChatOpenId] = useState(null);
+  const [chatReplies, setChatReplies] = useState({}); // { [feedbackId]: reply[] }
+  const [chatInput, setChatInput] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+  // broadcast state
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastForm, setBroadcastForm] = useState({ title: "", message: "", category: "announcement", expiresAt: "" });
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastHistory, setBroadcastHistory] = useState([]);
+  const [broadcastHistoryLoading, setBroadcastHistoryLoading] = useState(false);
 
   const [partnerNames, setPartnerNames] = useState(() => {
     try { return JSON.parse(localStorage.getItem("partnerNames") || "{}"); } catch { return {}; }
@@ -518,6 +529,77 @@ export default function PartnerDashboard() {
       .catch(() => {})
       .finally(() => setFeedbackLoading(false));
   }, [tab]);
+
+  async function openChat(feedbackId) {
+    if (chatOpenId === feedbackId) { setChatOpenId(null); return; }
+    setChatOpenId(feedbackId);
+    setChatInput("");
+    if (!chatReplies[feedbackId]) {
+      const d = await fetch(`/api/ge-energy/feedback-replies?feedbackId=${feedbackId}`).then(r => r.json()).catch(() => ({ replies: [] }));
+      setChatReplies(prev => ({ ...prev, [feedbackId]: Array.isArray(d.replies) ? d.replies : [] }));
+    }
+  }
+
+  async function sendChatReply(feedbackId, senderName) {
+    const msg = chatInput.trim();
+    if (!msg) return;
+    setChatSending(true);
+    try {
+      const d = await fetch("/api/ge-energy/feedback-replies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedbackId, message: msg, senderName: senderName || "Partner", senderType: "partner" }),
+      }).then(r => r.json());
+      if (d.success && d.reply) {
+        setChatReplies(prev => ({ ...prev, [feedbackId]: [...(prev[feedbackId] || []), d.reply] }));
+        setChatInput("");
+      }
+    } finally {
+      setChatSending(false);
+    }
+  }
+
+  async function openBroadcastModal() {
+    setBroadcastOpen(true);
+    setBroadcastHistoryLoading(true);
+    const d = await fetch("/api/ge-energy/broadcast?all=1").then(r => r.json()).catch(() => ({ broadcasts: [] }));
+    setBroadcastHistory(Array.isArray(d.broadcasts) ? d.broadcasts : []);
+    setBroadcastHistoryLoading(false);
+  }
+
+  async function sendBroadcast(e) {
+    e.preventDefault();
+    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) return;
+    setBroadcastSending(true);
+    try {
+      const d = await fetch("/api/ge-energy/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...broadcastForm, sentBy: session?.user?.name || "Partner" }),
+      }).then(r => r.json());
+      if (d.success) {
+        setBroadcastHistory(prev => [d.broadcast, ...prev]);
+        setBroadcastForm({ title: "", message: "", category: "announcement", expiresAt: "" });
+      }
+    } finally {
+      setBroadcastSending(false);
+    }
+  }
+
+  async function toggleBroadcastActive(id, current) {
+    await fetch("/api/ge-energy/broadcast", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_active: !current }),
+    });
+    setBroadcastHistory(prev => prev.map(b => b.id === id ? { ...b, is_active: !current ? 1 : 0 } : b));
+  }
+
+  async function deleteBroadcast(id) {
+    if (!confirm(lang === "ko" ? "삭제하시겠습니까?" : "ยืนยันการลบ?")) return;
+    await fetch(`/api/ge-energy/broadcast?id=${id}`, { method: "DELETE" });
+    setBroadcastHistory(prev => prev.filter(b => b.id !== id));
+  }
 
   async function handleAddTask(e) {
     e.preventDefault();
@@ -780,6 +862,7 @@ export default function PartnerDashboard() {
   const maxMonthRevenue = Math.max(...(monthlyRevenue || []).map(m => m.revenue), 1);
 
   return (
+    <>
     <div style={S.page}>
       {/* Header */}
       <div style={S.header}>
@@ -2508,15 +2591,23 @@ export default function PartnerDashboard() {
                     {lang === "ko" ? `총 ${feedbacks.length}건 · Customer Dashboard → ติดต่อ` : `ทั้งหมด ${feedbacks.length} รายการ · ส่งจากหน้า Customer Dashboard`}
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setFeedbackLoading(true);
-                    fetch("/api/ge-energy/user-feedback").then(r => r.json()).then(d => setFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : [])).catch(() => {}).finally(() => setFeedbackLoading(false));
-                  }}
-                  style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}
-                >
-                  🔄 {lang === "ko" ? "새로고침" : "รีเฟรช"}
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={openBroadcastModal}
+                    style={{ background: "#1e3a2a", border: "1px solid #16a34a", color: "#4ade80", borderRadius: 8, padding: "6px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+                  >
+                    📢 {lang === "ko" ? "브로드캐스트" : "บรอดแคสต์"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFeedbackLoading(true);
+                      fetch("/api/ge-energy/user-feedback").then(r => r.json()).then(d => setFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : [])).catch(() => {}).finally(() => setFeedbackLoading(false));
+                    }}
+                    style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}
+                  >
+                    🔄 {lang === "ko" ? "새로고침" : "รีเฟรช"}
+                  </button>
+                </div>
               </div>
 
               {/* Filters */}
@@ -2567,12 +2658,13 @@ export default function PartnerDashboard() {
                       <tr>
                         {[
                           lang === "ko" ? "날짜" : "วันที่",
-                          lang === "ko" ? "หมวด" : "ประเภท",
+                          lang === "ko" ? "카테고리" : "ประเภท",
                           lang === "ko" ? "제목 / 내용" : "หัวข้อ / ข้อความ",
-                          lang === "ko" ? "ผู้ส่ง" : "ผู้ส่ง",
-                          lang === "ko" ? "Branch" : "Branch",
-                          lang === "ko" ? "คะแนน" : "คะแนน",
-                        ].map(h => <th key={h} style={S.th}>{h}</th>)}
+                          lang === "ko" ? "발신자" : "ผู้ส่ง",
+                          lang === "ko" ? "지점" : "Branch",
+                          lang === "ko" ? "평점" : "คะแนน",
+                          "",
+                        ].map((h, i) => <th key={i} style={S.th}>{h}</th>)}
                       </tr>
                     </thead>
                     <tbody>
@@ -2580,8 +2672,25 @@ export default function PartnerDashboard() {
                         const c = CATEGORY_COLORS[f.category] || { bg: "#1e2130", color: "#8b8fa8", label: f.category };
                         const date = f.created_at ? new Date(f.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
                         const time = f.created_at ? new Date(f.created_at).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "";
+                        // Extract sender name: prefer user_name from DB, else parse from subject/message
+                        const parsedName = (() => {
+                          if (f.user_name) return f.user_name;
+                          const subjectMatch = (f.subject || "").match(/Contact\s*-\s*(.+)$/i);
+                          if (subjectMatch?.[1]?.trim()) return subjectMatch[1].trim();
+                          const msgMatch = (f.message || "").match(/^Name:\s*(.+)/im);
+                          if (msgMatch?.[1]?.trim()) return msgMatch[1].trim();
+                          return null;
+                        })();
+                        const parsedEmail = f.user_email || (() => {
+                          const m = (f.message || "").match(/^Email:\s*(.+)/im);
+                          return m?.[1]?.trim() || null;
+                        })();
+                        const isOpen = chatOpenId === f.id;
+                        const replies = chatReplies[f.id] || [];
+                        const replyCount = replies.length;
                         return (
-                          <tr key={f.id} style={{ borderBottom: "1px solid #1a1d26" }}>
+                          <>
+                          <tr key={f.id} style={{ borderBottom: isOpen ? "none" : "1px solid #1a1d26" }}>
                             <td style={{ ...S.td, whiteSpace: "nowrap", fontSize: 12 }}>
                               <div style={{ color: "#e8eaf0" }}>{date}</div>
                               <div style={{ color: "#4a5070", fontSize: 11 }}>{time}</div>
@@ -2596,8 +2705,8 @@ export default function PartnerDashboard() {
                               <div style={{ fontSize: 12, color: "#8b8fa8", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{f.message || "—"}</div>
                             </td>
                             <td style={{ ...S.td, fontSize: 12 }}>
-                              <div style={{ color: "#60a5fa" }}>{f.user_name || "—"}</div>
-                              <div style={{ color: "#4a5070", fontSize: 11 }}>{f.user_email || f.created_by || "—"}</div>
+                              <div style={{ color: "#60a5fa" }}>{parsedName || "—"}</div>
+                              <div style={{ color: "#4a5070", fontSize: 11 }}>{parsedEmail || f.created_by || "—"}</div>
                             </td>
                             <td style={{ ...S.td, fontSize: 12 }}>
                               {f.branch ? (
@@ -2609,7 +2718,76 @@ export default function PartnerDashboard() {
                             <td style={{ ...S.td, fontSize: 13, textAlign: "center" }}>
                               {f.rating > 0 ? "⭐".repeat(Math.min(5, f.rating)) : <span style={{ color: "#4a5070" }}>—</span>}
                             </td>
+                            <td style={{ ...S.td, textAlign: "center" }}>
+                              <button
+                                onClick={() => openChat(f.id)}
+                                style={{ background: isOpen ? "#1e3a2a" : "#16181f", border: `1px solid ${isOpen ? "#16a34a" : "#2a2d3a"}`, color: isOpen ? "#4ade80" : "#8b8fa8", borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}
+                              >
+                                💬 {lang === "ko" ? "답장" : "ตอบ"}{replyCount > 0 ? ` (${replyCount})` : ""}
+                              </button>
+                            </td>
                           </tr>
+                          {isOpen && (
+                            <tr key={`chat-${f.id}`} style={{ borderBottom: "1px solid #1a1d26" }}>
+                              <td colSpan={7} style={{ padding: "0 0 16px 0", background: "#0e1018" }}>
+                                <div style={{ margin: "0 8px", background: "#12141c", borderRadius: 10, border: "1px solid #1e3a2a", padding: 16 }}>
+                                  {/* Thread header */}
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid #1a1d26" }}>
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: "#4ade80" }}>💬 {lang === "ko" ? "대화 스레드" : "เธรดการสนทนา"}</span>
+                                    <span style={{ fontSize: 11, color: "#4a5070" }}>—</span>
+                                    <span style={{ fontSize: 11, color: "#8b8fa8" }}>{parsedName || f.user_name || (lang === "ko" ? "고객" : "ลูกค้า")}</span>
+                                  </div>
+                                  {/* Original message bubble */}
+                                  <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 10 }}>
+                                    <div style={{ maxWidth: "75%", background: "#1e2130", borderRadius: "12px 12px 12px 4px", padding: "10px 14px" }}>
+                                      <div style={{ fontSize: 11, color: "#60a5fa", fontWeight: 700, marginBottom: 4 }}>
+                                        👤 {parsedName || (lang === "ko" ? "고객" : "ลูกค้า")}
+                                      </div>
+                                      <div style={{ fontSize: 12, color: "#c8cad8", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{f.message || f.subject || "—"}</div>
+                                      <div style={{ fontSize: 10, color: "#4a5070", marginTop: 4, textAlign: "right" }}>{date} {time}</div>
+                                    </div>
+                                  </div>
+                                  {/* Reply bubbles */}
+                                  {replies.map(r => (
+                                    <div key={r.id} style={{ display: "flex", justifyContent: r.sender_type === "partner" ? "flex-end" : "flex-start", marginBottom: 10 }}>
+                                      <div style={{ maxWidth: "75%", background: r.sender_type === "partner" ? "#1e3a2a" : "#1e2130", borderRadius: r.sender_type === "partner" ? "12px 12px 4px 12px" : "12px 12px 12px 4px", padding: "10px 14px" }}>
+                                        <div style={{ fontSize: 11, color: r.sender_type === "partner" ? "#4ade80" : "#60a5fa", fontWeight: 700, marginBottom: 4 }}>
+                                          {r.sender_type === "partner" ? `🏢 ${r.sender_name || "Partner"}` : `👤 ${r.sender_name || (lang === "ko" ? "고객" : "ลูกค้า")}`}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: "#c8cad8", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{r.message}</div>
+                                        <div style={{ fontSize: 10, color: "#4a5070", marginTop: 4, textAlign: "right" }}>
+                                          {r.created_at ? new Date(r.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {replies.length === 0 && (
+                                    <div style={{ textAlign: "center", color: "#4a5070", fontSize: 12, padding: "8px 0 14px" }}>
+                                      {lang === "ko" ? "아직 답장이 없습니다" : "ยังไม่มีการตอบกลับ"}
+                                    </div>
+                                  )}
+                                  {/* Input area */}
+                                  <div style={{ display: "flex", gap: 8, marginTop: 12, paddingTop: 12, borderTop: "1px solid #1a1d26" }}>
+                                    <input
+                                      value={chatInput}
+                                      onChange={e => setChatInput(e.target.value)}
+                                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChatReply(f.id, session?.user?.name); } }}
+                                      placeholder={lang === "ko" ? "답장 입력... (Enter로 전송)" : "พิมพ์ข้อความตอบกลับ... (Enter ส่ง)"}
+                                      style={{ flex: 1, background: "#1a1d26", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none", resize: "none" }}
+                                    />
+                                    <button
+                                      onClick={() => sendChatReply(f.id, session?.user?.name)}
+                                      disabled={chatSending || !chatInput.trim()}
+                                      style={{ background: chatSending || !chatInput.trim() ? "#1e3a2a" : "#16a34a", color: chatSending || !chatInput.trim() ? "#4a5070" : "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: chatSending || !chatInput.trim() ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}
+                                    >
+                                      {chatSending ? "⏳" : (lang === "ko" ? "전송" : "ส่ง")} ➤
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          </>
                         );
                       })}
                     </tbody>
@@ -2622,5 +2800,135 @@ export default function PartnerDashboard() {
 
       </div>
     </div>
+
+    {/* ── Broadcast Modal ── */}
+
+    {broadcastOpen && (
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+        onClick={e => { if (e.target === e.currentTarget) setBroadcastOpen(false); }}>
+        <div style={{ background: "#12141c", borderRadius: 16, border: "1px solid #2a2d3a", width: "100%", maxWidth: 680, maxHeight: "90vh", overflow: "auto", padding: 28 }}>
+          {/* Modal header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#e8eaf0" }}>
+                📢 {lang === "ko" ? "브로드캐스트 메시지" : "ส่งข้อความประกาศ"}
+              </h2>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8b8fa8" }}>
+                {lang === "ko" ? "모든 고객에게 동시에 공지를 보냅니다" : "ส่งประกาศไปหาลูกค้าทุกคนพร้อมกันทีเดียว"}
+              </p>
+            </div>
+            <button onClick={() => setBroadcastOpen(false)} style={{ background: "transparent", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>✕</button>
+          </div>
+
+          {/* Compose form */}
+          <form onSubmit={sendBroadcast} style={{ marginBottom: 28 }}>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, color: "#8b8fa8", display: "block", marginBottom: 6 }}>
+                {lang === "ko" ? "카테고리" : "ประเภทประกาศ"}
+              </label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { key: "announcement", icon: "📣", th: "ประกาศทั่วไป", ko: "공지사항" },
+                  { key: "maintenance",  icon: "🔧", th: "แจ้งซ่อมบำรุง", ko: "점검공지" },
+                  { key: "promotion",    icon: "🎁", th: "โปรโมชั่น",    ko: "프로모션"  },
+                  { key: "alert",        icon: "⚠️", th: "แจ้งเตือนด่วน",ko: "긴급알림"  },
+                ].map(c => (
+                  <button type="button" key={c.key}
+                    onClick={() => setBroadcastForm(f => ({ ...f, category: c.key }))}
+                    style={{ background: broadcastForm.category === c.key ? "#1e3a2a" : "transparent", border: `1px solid ${broadcastForm.category === c.key ? "#16a34a" : "#2a2d3a"}`, color: broadcastForm.category === c.key ? "#4ade80" : "#8b8fa8", borderRadius: 20, padding: "5px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                    {c.icon} {lang === "ko" ? c.ko : c.th}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, color: "#8b8fa8", display: "block", marginBottom: 6 }}>
+                {lang === "ko" ? "제목 *" : "หัวข้อ *"}
+              </label>
+              <input
+                required value={broadcastForm.title}
+                onChange={e => setBroadcastForm(f => ({ ...f, title: e.target.value }))}
+                placeholder={lang === "ko" ? "공지 제목을 입력하세요" : "ระบุหัวข้อประกาศ"}
+                style={{ width: "100%", boxSizing: "border-box", background: "#1a1d26", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none" }}
+              />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, color: "#8b8fa8", display: "block", marginBottom: 6 }}>
+                {lang === "ko" ? "내용 *" : "ข้อความ *"}
+              </label>
+              <textarea
+                required rows={4} value={broadcastForm.message}
+                onChange={e => setBroadcastForm(f => ({ ...f, message: e.target.value }))}
+                placeholder={lang === "ko" ? "공지 내용을 입력하세요" : "เนื้อหาประกาศที่ต้องการส่งหาลูกค้า"}
+                style={{ width: "100%", boxSizing: "border-box", background: "#1a1d26", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "9px 12px", fontSize: 13, outline: "none", resize: "vertical" }}
+              />
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 12, color: "#8b8fa8", display: "block", marginBottom: 6 }}>
+                {lang === "ko" ? "만료일 (선택)" : "วันหมดอายุ (ไม่บังคับ)"}
+              </label>
+              <input
+                type="datetime-local" value={broadcastForm.expiresAt}
+                onChange={e => setBroadcastForm(f => ({ ...f, expiresAt: e.target.value }))}
+                style={{ background: "#1a1d26", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "7px 12px", fontSize: 13, outline: "none" }}
+              />
+            </div>
+            <button type="submit" disabled={broadcastSending || !broadcastForm.title.trim() || !broadcastForm.message.trim()}
+              style={{ width: "100%", background: broadcastSending ? "#1e3a2a" : "#16a34a", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 800, cursor: broadcastSending ? "not-allowed" : "pointer" }}>
+              {broadcastSending ? "⏳ กำลังส่ง..." : `📢 ${lang === "ko" ? "전체 고객에게 전송" : "ส่งประกาศถึงลูกค้าทั้งหมด"}`}
+            </button>
+          </form>
+
+          {/* History */}
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#8b8fa8", marginBottom: 12 }}>
+              {lang === "ko" ? "전송 기록" : "ประวัติการส่ง"}
+            </h3>
+            {broadcastHistoryLoading ? (
+              <div style={{ textAlign: "center", color: "#4ade80", padding: 20 }}>⏳</div>
+            ) : broadcastHistory.length === 0 ? (
+              <div style={{ textAlign: "center", color: "#4a5070", fontSize: 13, padding: 20 }}>{lang === "ko" ? "전송 기록 없음" : "ยังไม่มีประวัติ"}</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {broadcastHistory.map(b => {
+                  const BCAT = { announcement: { icon: "📣", color: "#60a5fa" }, maintenance: { icon: "🔧", color: "#fbbf24" }, promotion: { icon: "🎁", color: "#4ade80" }, alert: { icon: "⚠️", color: "#f87171" } };
+                  const bc = BCAT[b.category] || { icon: "📢", color: "#8b8fa8" };
+                  const active = Number(b.is_active) === 1;
+                  return (
+                    <div key={b.id} style={{ background: "#1a1d26", borderRadius: 10, padding: "12px 14px", border: `1px solid ${active ? "#1e3a2a" : "#2a2d3a"}`, display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ fontSize: 18, lineHeight: 1, marginTop: 2 }}>{bc.icon}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#e8eaf0" }}>{b.title}</span>
+                          <span style={{ fontSize: 10, background: active ? "#1e3a2a" : "#2a2d3a", color: active ? "#4ade80" : "#4a5070", borderRadius: 20, padding: "1px 8px", fontWeight: 700 }}>
+                            {active ? (lang === "ko" ? "활성" : "เผยแพร่") : (lang === "ko" ? "비활성" : "ปิด")}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#8b8fa8", marginBottom: 6, whiteSpace: "pre-wrap" }}>{b.message}</div>
+                        <div style={{ fontSize: 11, color: "#4a5070" }}>
+                          {b.created_at ? new Date(b.created_at).toLocaleString("th-TH") : ""}
+                          {b.expires_at ? ` · หมดอายุ: ${new Date(b.expires_at).toLocaleString("th-TH")}` : ""}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <button onClick={() => toggleBroadcastActive(b.id, active)}
+                          style={{ background: active ? "#3b0000" : "#1e3a2a", border: "none", color: active ? "#f87171" : "#4ade80", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>
+                          {active ? (lang === "ko" ? "비활성화" : "ปิด") : (lang === "ko" ? "활성화" : "เปิด")}
+                        </button>
+                        <button onClick={() => deleteBroadcast(b.id)}
+                          style={{ background: "#3b0000", border: "none", color: "#f87171", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>
+                          {lang === "ko" ? "삭제" : "ลบ"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
