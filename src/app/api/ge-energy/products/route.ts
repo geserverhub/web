@@ -5,8 +5,36 @@ export const runtime = 'nodejs'
 export const maxDuration = 10
 export const dynamic = 'force-dynamic'
 
+async function ensureProductListSchema() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS \`product_list\` (
+      \`productID\`         INT(11)        NOT NULL AUTO_INCREMENT,
+      \`sku\`               VARCHAR(100)   DEFAULT NULL,
+      \`name\`              VARCHAR(255)   NOT NULL,
+      \`description\`       TEXT           DEFAULT NULL,
+      \`Capacity (kVA)\`    VARCHAR(100)   DEFAULT NULL,
+      \`MCB\`               VARCHAR(100)   DEFAULT NULL,
+      \`Size (WxLxH) cm.\`  VARCHAR(150)   DEFAULT NULL,
+      \`Weight\`            VARCHAR(100)   DEFAULT NULL,
+      \`price\`             DECIMAL(12,2)  DEFAULT 0.00,
+      \`Pin_VAT\`           DECIMAL(12,2)  DEFAULT 0.00,
+      \`unit\`              VARCHAR(50)    DEFAULT 'unit',
+      \`category\`          VARCHAR(100)   DEFAULT 'General',
+      \`Pro_Image\`         VARCHAR(500)   DEFAULT NULL,
+      \`stock_qty\`         INT(11)        DEFAULT 0,
+      \`is_active\`         TINYINT(1)     NOT NULL DEFAULT 1,
+      \`created_at\`        DATETIME       DEFAULT CURRENT_TIMESTAMP,
+      \`updated_at\`        DATETIME       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (\`productID\`),
+      KEY \`idx_product_list_active\` (\`is_active\`),
+      KEY \`idx_product_list_category\` (\`category\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `)
+}
+
 export async function GET(req: NextRequest) {
   try {
+    await ensureProductListSchema()
     const { searchParams } = new URL(req.url)
     const sortBy = searchParams.get('sortBy') || 'default'
     const limit = parseInt(searchParams.get('limit') || '50')
