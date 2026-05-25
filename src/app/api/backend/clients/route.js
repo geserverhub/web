@@ -9,7 +9,8 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail_style: "photo",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    system_url: "/energy-dashboard-login",
+    system_url:
+      "https://strong-dory-enabled.ngrok-free.app/customer-dashboard-login",
   },
   "green-retail-energy": {
     contact_email: "goeunserverhub@gmail.com",

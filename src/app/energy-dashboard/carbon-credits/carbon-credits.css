@@ -140,7 +140,7 @@
   margin: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280;
+  color: #000;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -148,7 +148,7 @@
 .cc-kpi-unit {
   margin: 0;
   font-size: 0.6875rem;
-  color: #9ca3af;
+  color: #000;
 }
 
 /* Card Component */
@@ -239,7 +239,7 @@
 .cc-step-description {
   margin: 0 0 0.75rem 0;
   font-size: 0.875rem;
-  color: #475569;
+  color: #000;
   line-height: 1.5;
 }
 
@@ -256,7 +256,7 @@
 
 .cc-formula-label {
   font-weight: 600;
-  color: #475569;
+  color: #000;
 }
 
 .cc-step-formula code {
@@ -272,7 +272,7 @@
 
 .cc-formula-unit {
   font-weight: 600;
-  color: #6b7280;
+  color: #000;
 }
 
 /* Chart Container */
@@ -315,7 +315,7 @@
 .cc-device-id {
   margin: 0;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #000;
   font-family: monospace;
 }
 
@@ -335,7 +335,7 @@
 .cc-stat-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280;
+  color: #000;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -357,7 +357,7 @@
   margin: 0 0 0.625rem 0;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #475569;
+  color: #000;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -372,14 +372,14 @@
 .cc-ai-loading {
   margin: 0;
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: #000;
   font-style: italic;
 }
 
 .cc-ai-fallback {
   margin: 0;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: #000;
 }
 
 /* Market Info */
@@ -402,7 +402,7 @@
 
 .cc-market-row span {
   font-weight: 600;
-  color: #6b7280;
+  color: #000;
 }
 
 .cc-market-row strong {
@@ -419,7 +419,7 @@
   justify-content: center;
   gap: 1rem;
   padding: 4rem 2rem;
-  color: #6b7280;
+  color: #000;
 }
 
 /* Error State */

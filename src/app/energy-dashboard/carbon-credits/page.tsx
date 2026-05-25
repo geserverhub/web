@@ -301,8 +301,8 @@ body{font-family:'Noto Sans','Sarabun','Malgun Gothic',Arial,sans-serif;font-siz
 .kpi{border:1.5px solid #a7f3d0;border-radius:8px;padding:10px 8px;text-align:center;background:linear-gradient(135deg,#f0fdf4,#ecfdf5)}
 .kpi-val{font-size:15pt;font-weight:800;color:#059669;line-height:1.2}
 .kpi-sub{font-size:8pt;color:#065f46;font-weight:600;margin-top:1px}
-.kpi-lbl{font-size:7.5pt;color:#6b7280;margin-top:3px}
-.kpi-unit{font-size:7pt;color:#9ca3af}
+.kpi-lbl{font-size:7.5pt;color:#000;margin-top:3px}
+.kpi-unit{font-size:7pt;color:#000}
 table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:10px}
 th{background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:7px 8px;text-align:left;font-size:8pt;font-weight:700}
 td{padding:5px 8px;border-bottom:1px solid #e5e7eb;vertical-align:top}
@@ -314,28 +314,28 @@ tr:nth-child(even) td{background:#f9fafb}
 .step-ttl{font-weight:700;color:#047857;font-size:9.5pt}
 .step-fml{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:4px;padding:2px 7px;font-family:monospace;font-size:8pt;margin:3px 0;display:inline-block;color:#065f46}
 .step-ex{font-size:8pt;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:3px 7px;margin:3px 0}
-.step-ref{font-size:7.5pt;color:#6b7280;margin-top:2px;font-style:italic}
+.step-ref{font-size:7.5pt;color:#000;margin-top:2px;font-style:italic}
 .info-box{border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:10px;background:#eff6ff;break-inside:avoid}
 .info-box h4{color:#1d4ed8;font-size:9pt;font-weight:700;margin-bottom:6px}
-.info-box p,.info-box li{font-size:8.5pt;color:#374151;line-height:1.6}
+.info-box p,.info-box li{font-size:8.5pt;color:#000;line-height:1.6}
 .info-box ul{padding-left:14px}
 .checklist{border:1.5px solid #d1fae5;border-radius:8px;padding:10px 14px;margin-bottom:10px;background:#f0fdf4;break-inside:avoid}
 .checklist h4{color:#047857;font-size:9pt;font-weight:700;margin-bottom:6px}
-.check-item{display:flex;align-items:flex-start;gap:7px;font-size:8.5pt;color:#374151;margin-bottom:4px}
+.check-item{display:flex;align-items:flex-start;gap:7px;font-size:8.5pt;color:#000;margin-bottom:4px}
 .check-box{min-width:14px;height:14px;border:1.5px solid #10b981;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:9pt;color:#10b981;font-weight:900;flex-shrink:0;margin-top:1px}
 .warn-box{border:1.5px solid #fde68a;border-radius:8px;padding:8px 14px;background:#fffbeb;margin-bottom:10px;font-size:8.5pt;color:#92400e}
 .cert-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .cert{border:1.5px solid #d1fae5;border-radius:6px;padding:8px;font-size:8pt;break-inside:avoid;background:#fff}
 .cert-ok{color:#10b981;font-weight:700;font-size:7.5pt;margin-bottom:2px}
 .cert-org{font-weight:700;color:#047857;font-size:9pt}
-.cert-std{color:#374151;margin:2px 0;font-size:8pt}
-.cert-url{font-size:7pt;color:#9ca3af;word-break:break-all}
+.cert-std{color:#000;margin:2px 0;font-size:8pt}
+.cert-url{font-size:7pt;color:#000;word-break:break-all}
 .decl{background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:8px;padding:12px 14px;font-size:8.5pt;line-height:1.8;margin-bottom:16px}
 .sig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}
 .sig{border-top:1.5px solid #374151;padding-top:6px}
-.sig-lbl{font-size:8.5pt;font-weight:700;color:#374151;margin-bottom:4px}
-.sig-line{font-size:8.5pt;color:#374151;margin-top:5px;border-bottom:1px dashed #9ca3af;padding-bottom:2px}
-.footer{border-top:1px solid #d1fae5;padding-top:7px;font-size:7.5pt;color:#9ca3af;display:flex;justify-content:space-between;margin-top:18px;flex-wrap:wrap;gap:4px}
+.sig-lbl{font-size:8.5pt;font-weight:700;color:#000;margin-bottom:4px}
+.sig-line{font-size:8.5pt;color:#000;margin-top:5px;border-bottom:1px dashed #9ca3af;padding-bottom:2px}
+.footer{border-top:1px solid #d1fae5;padding-top:7px;font-size:7.5pt;color:#000;display:flex;justify-content:space-between;margin-top:18px;flex-wrap:wrap;gap:4px}
 .pb{page-break-before:always}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 </style>
@@ -430,7 +430,7 @@ ${ISO14064MethodologySteps.map(s => `
   <div class="step-num">${s.step}</div>
   <div class="step-body">
     <div class="step-ttl">${stepTitle(s)}</div>
-    <div style="font-size:8.5pt;color:#374151;margin:2px 0">${stepDesc(s)}</div>
+    <div style="font-size:8.5pt;color:#000;margin:2px 0">${stepDesc(s)}</div>
     <div><span class="step-fml">Formula: ${s.formula} → ${s.unit}</span></div>
     <div class="step-ex">📐 ${stepEx(s)}</div>
     <div class="step-ref">📄 ${s.reference}</div>
@@ -479,9 +479,9 @@ ${meterTable.meters.length > 0 ? `
     ${meterTable.meters.map(m => {
       const tv = fxData.krwToThb ? Math.round(m.estimatedValueKRW * fxData.krwToThb) : m.estimatedValueTHB;
       return `<tr>
-        <td style="color:#9ca3af;font-family:monospace">${m.rank}</td>
+        <td style="color:#000;font-family:monospace">${m.rank}</td>
         <td style="font-weight:600">${m.deviceName}</td>
-        <td style="font-family:monospace;font-size:8pt;color:#6b7280">${m.geID}</td>
+        <td style="font-family:monospace;font-size:8pt;color:#000">${m.geID}</td>
         <td style="text-align:right;color:#1d4ed8">${fmt(m.energySavedKwh)}</td>
         <td style="text-align:right;color:#ea580c">${fmt(m.co2Kg)}</td>
         <td style="text-align:right;font-weight:700;color:#059669">${fmt(m.carbonCreditsTonnes)}</td>
@@ -499,7 +499,7 @@ ${meterTable.meters.length > 0 ? `
     <td style="text-align:right;color:#b45309">฿${(fxData.krwToThb ? Math.round(meterTable.totals.estimatedValueKRW * fxData.krwToThb) : meterTable.totals.estimatedValueTHB).toLocaleString()}</td>
   </tr></tfoot>` : ''}
 </table>
-${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#9ca3af;text-align:right;margin-top:-6px">* THB ${t('คำนวณจากอัตราแลกเปลี่ยนสด','calculated from live rate','실시간 환율 적용')}: 1 KRW = ${fxData.krwToThb.toFixed(6)} THB (open.er-api.com)</p>` : ''}
+${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margin-top:-6px">* THB ${t('คำนวณจากอัตราแลกเปลี่ยนสด','calculated from live rate','실시간 환율 적용')}: 1 KRW = ${fxData.krwToThb.toFixed(6)} THB (open.er-api.com)</p>` : ''}
 ` : `<div class="warn-box">⚠️ ${t('ไม่มีข้อมูลมิเตอร์ — กด "คำนวณ" ในหน้าหลักก่อนพิมพ์','No meter data — press "Calculate" on the main page before printing','미터 데이터 없음 — 인쇄 전 메인 페이지에서 "계산" 버튼을 누르세요')}</div>`}
 
 <!-- LEAKAGE -->
@@ -524,8 +524,8 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#9ca3af;text-align:right;ma
     <div class="check-item"><div class="check-box">✓</div><div>${t('รายงานการตรวจวัด (Monitoring Report)','Monitoring Report with meter data','미터 데이터가 포함된 모니터링 보고서')}</div></div>
     <div class="check-item"><div class="check-box">✓</div><div>${t('ค่าแฟกเตอร์ TGO/DEDE ปี 2566','TGO/DEDE 2023 emission factor reference','TGO/DEDE 2023 배출 계수 참조')}</div></div>
     <div class="check-item"><div class="check-box">✓</div><div>${t('รายงาน ISO 14064-2 ฉบับนี้','This ISO 14064-2 report','이 ISO 14064-2 보고서')}</div></div>
-    <div class="check-item"><div class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</div><div style="color:#6b7280">${t('การตรวจสอบโดยผู้ตรวจสอบอิสระ (DOE/VVB)','3rd party verification by accredited DOE/VVB','인정된 DOE/VVB의 제3자 검증')}</div></div>
-    <div class="check-item"><div class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</div><div style="color:#6b7280">${t('ยื่นผ่าน TGO Carbon Market Portal','Submit via TGO Carbon Market Portal','TGO Carbon Market Portal 제출')}</div></div>
+    <div class="check-item"><div class="check-box" style="border-color:#000;color:#000">□</div><div style="color:#000">${t('การตรวจสอบโดยผู้ตรวจสอบอิสระ (DOE/VVB)','3rd party verification by accredited DOE/VVB','인정된 DOE/VVB의 제3자 검증')}</div></div>
+    <div class="check-item"><div class="check-box" style="border-color:#000;color:#000">□</div><div style="color:#000">${t('ยื่นผ่าน TGO Carbon Market Portal','Submit via TGO Carbon Market Portal','TGO Carbon Market Portal 제출')}</div></div>
   </div>
   <!-- K-ETS Checklist -->
   <div class="checklist">
@@ -535,9 +535,9 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#9ca3af;text-align:right;ma
     <div class="check-item"><div class="check-box">✓</div><div>${t('ผลการตรวจวัด Baseline & Actual','Baseline and actual measurement results','기준선 및 실제 측정 결과')}</div></div>
     <div class="check-item"><div class="check-box">✓</div><div>${t('ค่าแฟกเตอร์ KEEI Korea 2023','KEEI Korea emission factor 2023','KEEI 한국 배출 계수 2023')}</div></div>
     <div class="check-item"><div class="check-box">✓</div><div>${t('รายงาน ISO 14064-2 ฉบับนี้','This ISO 14064-2 report','이 ISO 14064-2 보고서')}</div></div>
-    <div class="check-item"><div class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</div><div style="color:#6b7280">${t('ยื่นผ่านระบบ GIR (Greenhouse Gas Inventory & Research)','Submit via Korea GIR system','한국 GIR 시스템 제출')}</div></div>
-    <div class="check-item"><div class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</div><div style="color:#6b7280">${t('การตรวจสอบโดยบุคคลที่สาม (KAU/KOC verifier)','3rd party KAU/KOC verification','KAU/KOC 제3자 검증')}</div></div>
-    <div class="check-item"><div class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</div><div style="color:#6b7280">${t('ลงทะเบียนซื้อขายใน KRX ETS','Register for trading on KRX ETS','KRX ETS 거래 등록')}</div></div>
+    <div class="check-item"><div class="check-box" style="border-color:#000;color:#000">□</div><div style="color:#000">${t('ยื่นผ่านระบบ GIR (Greenhouse Gas Inventory & Research)','Submit via Korea GIR system','한국 GIR 시스템 제출')}</div></div>
+    <div class="check-item"><div class="check-box" style="border-color:#000;color:#000">□</div><div style="color:#000">${t('การตรวจสอบโดยบุคคลที่สาม (KAU/KOC verifier)','3rd party KAU/KOC verification','KAU/KOC 제3자 검증')}</div></div>
+    <div class="check-item"><div class="check-box" style="border-color:#000;color:#000">□</div><div style="color:#000">${t('ลงทะเบียนซื้อขายใน KRX ETS','Register for trading on KRX ETS','KRX ETS 거래 등록')}</div></div>
   </div>
 </div>
 

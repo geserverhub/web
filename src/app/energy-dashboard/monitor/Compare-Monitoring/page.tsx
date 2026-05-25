@@ -287,7 +287,7 @@ export default function CompareMonitoringPage() {
                 borderRadius: 10,
                 padding: '8px 12px',
               }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#000', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 3 }}>{label}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', fontFamily: mono ? 'monospace' : undefined }}>{value}</div>
               </div>
             ))}
@@ -308,14 +308,14 @@ export default function CompareMonitoringPage() {
                 <div style={{ fontSize: 28, fontWeight: 900, color: '#059669', lineHeight: 1 }}>
                   {Number.isFinite(savingsPercent_P) ? savingsPercent_P.toFixed(1) : '0'}%
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Power Reduction</div>
+                <div style={{ fontSize: 12, color: '#000', marginTop: 4 }}>Power Reduction</div>
               </div>
               <div style={{ textAlign: 'center', borderLeft: '1px solid #bbf7d0', paddingLeft: 10 }}>
                 <div style={{ fontSize: 28, fontWeight: 900, color: '#047857', lineHeight: 1 }}>
                   {Number.isFinite(savings_P) ? savings_P.toFixed(0) : '0'}
                   <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 3 }}>W</span>
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Energy Saved</div>
+                <div style={{ fontSize: 12, color: '#000', marginTop: 4 }}>Energy Saved</div>
               </div>
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function CompareMonitoringPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ background: '#f1f5f9' }}>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Parameter</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: '#000', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Parameter</th>
                   <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#dc2626', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Before</th>
                   <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#059669', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Current</th>
                   <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#2563eb', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Savings</th>
@@ -341,7 +341,7 @@ export default function CompareMonitoringPage() {
                   const improved = r.higherBetter === null
                     ? Math.abs(r.savings) < 0.01
                     : r.higherBetter ? r.savings > 0 : r.savings > 0
-                  const savingsColor = improved ? '#2563eb' : r.savings === 0 ? '#9ca3af' : '#f59e0b'
+                  const savingsColor = improved ? '#2563eb' : r.savings === 0 ? '#000' : '#f59e0b'
                   const arrow = r.higherBetter === null
                     ? '→'
                     : r.higherBetter
@@ -349,7 +349,7 @@ export default function CompareMonitoringPage() {
                       : (r.savings > 0 ? '↓' : '↑')
                   return (
                     <tr key={r.label} style={{ borderTop: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                      <td style={{ padding: '8px 12px', fontWeight: 600, color: '#374151' }}>{r.label}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600, color: '#000' }}>{r.label}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', color: '#dc2626', fontFamily: 'monospace' }}>
                         {Number.isFinite(r.before) ? r.before.toFixed(3) : '—'}
                       </td>
@@ -373,7 +373,7 @@ export default function CompareMonitoringPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '7px 16px', borderRadius: 8, border: '1.5px solid #d1d5db',
-                background: '#fff', color: '#374151', fontSize: 13, fontWeight: 600,
+                background: '#fff', color: '#000', fontSize: 13, fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
@@ -405,7 +405,7 @@ export default function CompareMonitoringPage() {
       <section style={{ marginTop: 18, marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <label style={{ fontSize: 15, fontWeight: 600, color: '#374151' }}>Site:</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: '#000' }}>Site:</label>
             <select
               value={siteFilter}
               onChange={(e) => setSiteFilter(e.target.value)}
@@ -426,7 +426,7 @@ export default function CompareMonitoringPage() {
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <label style={{ fontSize: 15, fontWeight: 600, color: '#374151' }}>Series No:</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: '#000' }}>Series No:</label>
             <select
               value={seriesNoFilter}
               onChange={(e) => setSeriesNoFilter(e.target.value)}
@@ -448,7 +448,7 @@ export default function CompareMonitoringPage() {
 
           <div style={{
             fontSize: 14,
-            color: '#6b7280',
+            color: '#000',
             marginLeft: 'auto'
           }}>
             Showing {filteredGroups.length} of {groups.length} devices
@@ -466,7 +466,7 @@ export default function CompareMonitoringPage() {
             {rows.length === 0 ? (
               <div style={{ padding: 12, textAlign: 'center' }}>No recent readings</div>
             ) : filteredGroups.length === 0 ? (
-              <div style={{ padding: 12, textAlign: 'center', color: '#6b7280' }}>
+              <div style={{ padding: 12, textAlign: 'center', color: '#000' }}>
                 No devices match the selected filters
               </div>
             ) : (

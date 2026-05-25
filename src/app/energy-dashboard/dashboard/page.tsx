@@ -1769,13 +1769,13 @@ function CurrentTrendChart({
               <XAxis
                 dataKey="time"
                 tick={{ fontSize: 9 }}
-                stroke="#9ca3af"
+                stroke="#000"
                 interval="preserveEnd"
                 tickMargin={5}
               />
               <YAxis
                 tick={{ fontSize: 9 }}
-                stroke="#9ca3af"
+                stroke="#000"
                 domain={['auto', 'auto']}
                 tickMargin={5}
               />

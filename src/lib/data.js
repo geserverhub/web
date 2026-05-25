@@ -86,7 +86,8 @@ export const fallbackClients = [
     thumbnail: "/momoge/momoge-space.jpg",
     thumbnail_fit: "contain",
     thumbnail_style: "photo",
-    system_url: "/energy-dashboard-login",
+    system_url:
+      "https://strong-dory-enabled.ngrok-free.app/customer-dashboard-login",
   },
   {
     id: 3,
@@ -192,7 +193,8 @@ export const filterOptions = [
 const fallbackBySlug = Object.fromEntries(fallbackClients.map((c) => [c.slug, c]));
 
 const PORTAL_URL_OVERRIDES = {
-  "green-retail-group": "/energy-dashboard-login",
+  "green-retail-group":
+    "https://strong-dory-enabled.ngrok-free.app/customer-dashboard-login",
   "green-retail-energy": "/energy-dashboard-login",
   "m-group": "/m-group",
   "m-factory": "https://m-factoryandresort.com/",
