@@ -27,6 +27,7 @@ const copy = {
     subjectCode: 'รหัสวิชา',
     teacherName: 'ชื่ออาจารย์ผู้สอน',
     authorName: 'ชื่อผู้จัดทำ',
+    studentId: 'รหัสนักศึกษา',
     upload: 'อัปโหลดไฟล์คำถาม',
     uploadHint: 'รองรับ .txt .pdf .doc .docx .ppt .pptx (สูงสุด 10MB)',
     paste: 'หรือวางข้อความคำถาม (ถ้าอ่านไฟล์ไม่ได้)',
@@ -50,6 +51,7 @@ const copy = {
     subjectCode: 'Subject code',
     teacherName: 'Instructor name',
     authorName: 'Prepared by',
+    studentId: 'Student ID',
     upload: 'Upload question file',
     uploadHint: '.txt .pdf .doc .docx .ppt .pptx (max 10MB)',
     paste: 'Or paste question text',
@@ -73,6 +75,7 @@ const copy = {
     subjectCode: '과목 코드',
     teacherName: '담당 교수',
     authorName: '작성자',
+    studentId: '학번',
     upload: '문제 파일 업로드',
     uploadHint: '.txt .pdf .doc .docx .ppt .pptx (최대 10MB)',
     paste: '또는 문제 텍스트 붙여넣기',
@@ -97,6 +100,7 @@ export default function HomeworkAdvisorPage() {
   const [subjectCode, setSubjectCode] = useState('');
   const [teacherName, setTeacherName] = useState('');
   const [authorName, setAuthorName] = useState('');
+  const [studentId, setStudentId] = useState('');
   const [questionText, setQuestionText] = useState('');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -143,6 +147,7 @@ export default function HomeworkAdvisorPage() {
       fd.set('subjectCode', subjectCode.trim());
       fd.set('teacherName', teacherName.trim());
       fd.set('authorName', authorName.trim());
+      fd.set('studentId', studentId.trim());
       fd.set('questionText', questionText.trim());
       fd.set('locale', lang);
       if (file) fd.set('file', file);
@@ -181,7 +186,7 @@ export default function HomeworkAdvisorPage() {
 
   return (
     <>
-      <OnlineClassroomHeader lang={lang} />
+      <OnlineClassroomHeader lang={lang} onLangChange={setLang} />
       <main className="oc-main hwa-page">
         <h2 className="hwa-title">{t.title}</h2>
         <p className="hwa-desc">{t.desc}</p>
@@ -213,7 +218,7 @@ export default function HomeworkAdvisorPage() {
                 required
               />
             </div>
-            <div className="hwa-field hwa-field--full">
+            <div className="hwa-field">
               <label className="hwa-label" htmlFor="hwa-author">
                 {t.authorName}
               </label>
@@ -223,6 +228,18 @@ export default function HomeworkAdvisorPage() {
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 required
+              />
+            </div>
+            <div className="hwa-field">
+              <label className="hwa-label" htmlFor="hwa-student-id">
+                {t.studentId}
+              </label>
+              <input
+                id="hwa-student-id"
+                className="hwa-input"
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+                placeholder="เช่น 65010001"
               />
             </div>
             <div className="hwa-field hwa-field--full">

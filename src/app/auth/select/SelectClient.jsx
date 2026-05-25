@@ -33,6 +33,7 @@ const LANGS = {
     customer: { label: "고객 대시보드", desc: "에너지 고객 포털 — 미터 및 리포트" },
     admin: { label: "관리자 시스템", desc: "고객, 사용자 및 설정 관리" },
     partner: { label: "파트너 포털", desc: "판매 보고서 및 회사 계정" },
+    classroom: { label: "온라인 강의실", desc: "E-러닝 — 동영상, 자료 및 수업 일정" },
     back: "← 홈으로 돌아가기",
   },
 };

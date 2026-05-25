@@ -1,4 +1,4 @@
-import { resolveAiCredentials } from '@/lib/energy/ai-settings';
+import { callAiText } from '@/lib/energy/ai-settings';
 
 interface MonthlyData {
   monthIndex: number;
@@ -111,10 +111,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const creds = await resolveAiCredentials();
     const lang = getLanguage(locale);
 
-    // Prepare payload for AI
     const analysisPayload = {
       periodMonths: monthly.length,
       months: monthly.map((m: MonthlyData) => ({
@@ -124,10 +122,7 @@ export async function POST(req: Request) {
         after: m.after,
         costBefore: m.costBefore,
         costAfter: m.costAfter,
-        savingsPct:
-          m.before > 0
-            ? (((m.before - m.after) / m.before) * 100).toFixed(1)
-            : '0',
+        savingsPct: m.before > 0 ? (((m.before - m.after) / m.before) * 100).toFixed(1) : '0',
       })),
       summary: {
         totalBefore: monthly.reduce((s: number, m: MonthlyData) => s + m.before, 0),
@@ -138,80 +133,34 @@ export async function POST(req: Request) {
       note: 'Before = energy usage before installation, After = energy usage after installation',
     };
 
-    const systemPrompt = `You are an energy analyst for GE Energy Tech. Analyze this electricity consumption data (before/after energy-saving installation comparison).
-Be concise in ${lang}. Structure your response as ONLY valid JSON (no markdown, no extra text) with these exact fields:
-{
-  "trend": "2-3 sentence summary of usage trend (improving vs worsening)",
-  "problems": ["issue1", "issue2", "issue3"],
-  "heavyLoad": { "months": ["Month1", "Month2"], "reason": "why these months have high load" },
-  "lightLoad": { "months": ["Month1", "Month2"], "reason": "why these months have low load" },
-  "recommendations": ["action1", "action2", "action3", "action4"],
-  "forecast": "prediction for next 2 months (1-2 sentences)"
-}`;
+    const systemPrompt = `You are an energy analyst for GE Energy Tech. Analyze electricity consumption data (before/after energy-saving installation).
+Respond in ${lang}. Reply ONLY with valid JSON, no markdown, no extra text:
+{"trend":"2-3 sentence trend summary","problems":["issue1","issue2"],"heavyLoad":{"months":["Month Year"],"reason":"..."},"lightLoad":{"months":["Month Year"],"reason":"..."},"recommendations":["action1","action2","action3"],"forecast":"next-month prediction 1-2 sentences"}`;
 
-    // If no AI key available, use rule-based fallback
-    if (creds.source === 'none') {
-      const ruleBased = computeRuleBasedAnalysis(monthly, locale);
-      return Response.json({
-        success: true,
-        data: {
-          insights: ruleBased,
-          aiAvailable: false,
-          ruleBasedFallback: true,
-        },
-      });
-    }
-
-    // Call OpenAI
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${creds.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: creds.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: JSON.stringify(analysisPayload) },
-        ],
-        max_tokens: 600,
-        temperature: 0.3,
-      }),
+    const result = await callAiText(systemPrompt, JSON.stringify(analysisPayload), {
+      maxTokens: 700,
+      temperature: 0.3,
     });
 
-    if (!aiResponse.ok) {
+    if (!result.text) {
       const ruleBased = computeRuleBasedAnalysis(monthly, locale);
       return Response.json({
         success: true,
-        data: {
-          insights: ruleBased,
-          aiAvailable: false,
-          ruleBasedFallback: true,
-          fallbackReason: 'OpenAI API error',
-        },
+        data: { insights: ruleBased, aiAvailable: false, ruleBasedFallback: true },
       });
     }
-
-    const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content || '';
 
     let insights: AiInsights;
     try {
-      insights = JSON.parse(content);
+      const clean = result.text.replace(/^```[a-z]*\n?/, '').replace(/```$/, '').trim();
+      insights = JSON.parse(clean);
     } catch {
-      // Fallback if parsing fails
       insights = computeRuleBasedAnalysis(monthly, locale);
     }
 
     return Response.json({
       success: true,
-      data: {
-        insights,
-        aiAvailable: true,
-        ruleBasedFallback: false,
-        site,
-      },
+      data: { insights, aiAvailable: true, ruleBasedFallback: false, site, provider: result.provider },
     });
   } catch (error) {
     console.error('AI energy analysis error:', error);
