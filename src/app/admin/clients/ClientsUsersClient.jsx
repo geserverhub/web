@@ -116,6 +116,14 @@ export default function ClientsUsersClient({ session }) {
   const [savingUser, setSavingUser] = useState(false);
   const [showUserPassword, setShowUserPassword] = useState(false);
 
+  // permissions modal
+  const [permModal, setPermModal] = useState(false);
+  const [permUserId, setPermUserId] = useState(null);
+  const [permUserName, setPermUserName] = useState("");
+  const [permPortals, setPermPortals] = useState({});
+  const [savingPerm, setSavingPerm] = useState(false);
+  const [loadingPerm, setLoadingPerm] = useState(false);
+
   // invoice modal
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [editInvoiceId, setEditInvoiceId] = useState(null);
@@ -568,6 +576,50 @@ export default function ClientsUsersClient({ session }) {
       loadUsers();
     } catch (err) {
       showToast(err.message, false);
+    }
+  };
+
+  // ── Permissions ──
+  const PORTAL_DEFS = [
+    { key: "energy",    label: "Energy Dashboard",   icon: "⚡", desc: "/energy-dashboard-login" },
+    { key: "customer",  label: "Customer Dashboard",  icon: "📊", desc: "/customer-dashboard-login" },
+    { key: "classroom", label: "Online Classroom",    icon: "🎓", desc: "/online-classroom-login" },
+    { key: "partner",   label: "Partner Portal",      icon: "🤝", desc: "/partner/login" },
+    { key: "client",    label: "Client Portal (MCT)", icon: "🛒", desc: "/login" },
+    { key: "admin",     label: "Admin System",        icon: "⚙️", desc: "/admin/login" },
+  ];
+
+  const openPermissions = async (u) => {
+    setPermUserId(u.id);
+    setPermUserName(u.name || u.email);
+    setPermPortals({});
+    setPermModal(true);
+    setLoadingPerm(true);
+    try {
+      const res = await fetch(`/api/admin/users/permissions?userId=${u.id}`);
+      const j = await res.json();
+      setPermPortals(j.portals || {});
+    } catch {
+      showToast("โหลดสิทธิ์ไม่ได้", false);
+    } finally {
+      setLoadingPerm(false);
+    }
+  };
+
+  const savePermissions = async () => {
+    setSavingPerm(true);
+    try {
+      await fetch("/api/admin/users/permissions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: permUserId, portals: permPortals }),
+      });
+      showToast("บันทึกสิทธิ์สำเร็จ");
+      setPermModal(false);
+    } catch {
+      showToast("บันทึกสิทธิ์ไม่สำเร็จ", false);
+    } finally {
+      setSavingPerm(false);
     }
   };
 
@@ -2441,6 +2493,7 @@ export default function ClientsUsersClient({ session }) {
                         <td style={S.td}>
                           <div style={{ display: "flex", gap: 6 }}>
                             <button style={S.btn("#1e2d3d", "#60a5fa")} onClick={() => openEditUser(u)}>✏️</button>
+                            <button style={S.btn("#1a2a1a", "#4ade80")} onClick={() => openPermissions(u)} title="ตั้งค่าสิทธิ์การเข้าถึง">🔐</button>
                             <button style={S.btn("#2a1f1f", "#f87171")} onClick={() => deleteUser(u.id, u.email)}
                               disabled={u.id === session.user.id}>🗑️</button>
                           </div>
@@ -4772,6 +4825,58 @@ export default function ClientsUsersClient({ session }) {
               <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setClientModal(false)}>ยกเลิก</button>
               <button style={S.btn("#1e3a5f", "#7eb8f7")} onClick={saveClient} disabled={savingClient || uploadingClientLogo}>
                 {savingClient ? "กำลังบันทึก..." : uploadingClientLogo ? "กำลังอัปโหลดโลโก้..." : "บันทึก"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PERMISSIONS MODAL ── */}
+      {permModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#16181f", borderRadius: 14, padding: 28, width: "100%", maxWidth: 500, border: "1px solid #2a2d3a" }}>
+            <h5 style={{ margin: "0 0 4px", color: "#4ade80", fontSize: 16 }}>🔐 สิทธิ์การเข้าถึงพอร์ทัล</h5>
+            <p style={{ margin: "0 0 20px", color: "#8b8fa8", fontSize: 12 }}>{permUserName}</p>
+            {loadingPerm ? (
+              <p style={{ color: "#8b8fa8", textAlign: "center", padding: "24px 0" }}>กำลังโหลด...</p>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {PORTAL_DEFS.map(p => {
+                  const allowed = permPortals[p.key] !== false;
+                  return (
+                    <label key={p.key} style={{
+                      display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+                      borderRadius: 10, border: `1.5px solid ${allowed ? "#166534" : "#3f1313"}`,
+                      background: allowed ? "#0f2418" : "#1c0e0e", cursor: "pointer",
+                      transition: "all .15s",
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={allowed}
+                        onChange={e => setPermPortals(prev => ({ ...prev, [p.key]: e.target.checked }))}
+                        style={{ width: 18, height: 18, accentColor: "#4ade80", cursor: "pointer", flexShrink: 0 }}
+                      />
+                      <span style={{ fontSize: 20, lineHeight: 1 }}>{p.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, color: allowed ? "#4ade80" : "#f87171", fontSize: 14 }}>{p.label}</div>
+                        <div style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>{p.desc}</div>
+                      </div>
+                      <span style={{
+                        fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 20,
+                        background: allowed ? "#166534" : "#3f1313",
+                        color: allowed ? "#4ade80" : "#f87171",
+                      }}>
+                        {allowed ? "อนุญาต" : "บล็อก"}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
+              <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setPermModal(false)}>ยกเลิก</button>
+              <button style={S.btn("#0f2418", "#4ade80")} onClick={savePermissions} disabled={savingPerm || loadingPerm}>
+                {savingPerm ? "กำลังบันทึก..." : "💾 บันทึกสิทธิ์"}
               </button>
             </div>
           </div>
