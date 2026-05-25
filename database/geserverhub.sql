@@ -869,12 +869,16 @@ CREATE TABLE `device_connectivity` (
   `mqtt_topic` varchar(255) DEFAULT NULL,
   `publish_interval_sec` int(11) NOT NULL DEFAULT 30,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `last_seen_at` datetime DEFAULT NULL,
+  `last_record_id` int(11) DEFAULT NULL,
+  `online_status` tinyint(1) NOT NULL DEFAULT 0,
   `notes` text DEFAULT NULL,
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_device_connectivity_device` (`device_id`),
   KEY `idx_device_connectivity_enabled` (`enabled`),
-  CONSTRAINT `device_connectivity_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `device_connectivity_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_dc_last_record` FOREIGN KEY (`last_record_id`) REFERENCES `power_records` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -936,6 +940,7 @@ DROP TABLE IF EXISTS `devices`;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `devices` (
   `deviceID` int(11) NOT NULL AUTO_INCREMENT,
+  `client_id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `deviceName` varchar(255) NOT NULL,
   `geID` varchar(255) DEFAULT NULL,
   `series_no` varchar(50) DEFAULT NULL,
@@ -959,7 +964,9 @@ CREATE TABLE `devices` (
   `customerAddress` text DEFAULT NULL,
   PRIMARY KEY (`deviceID`),
   UNIQUE KEY `unique_geID` (`geID`),
-  KEY `idx_devices_site` (`site`)
+  KEY `idx_devices_site` (`site`),
+  KEY `idx_devices_client_id` (`client_id`),
+  CONSTRAINT `fk_devices_client` FOREIGN KEY (`client_id`) REFERENCES `Client` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -986,6 +993,7 @@ DROP TABLE IF EXISTS `mqtt_settings`;
 CREATE TABLE `mqtt_settings` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
+  `device_id` int(11) DEFAULT NULL,
   `site` varchar(20) NOT NULL DEFAULT 'thailand',
   `host` varchar(255) NOT NULL,
   `port` int(11) NOT NULL DEFAULT 1883,
@@ -1002,7 +1010,9 @@ CREATE TABLE `mqtt_settings` (
   `stop_bits` tinyint(4) NOT NULL DEFAULT 1,
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mqtt_user_site` (`user_id`,`site`)
+  UNIQUE KEY `uk_mqtt_user_site` (`user_id`,`site`),
+  KEY `idx_mqtt_settings_device` (`device_id`),
+  CONSTRAINT `fk_mqtt_settings_device` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
