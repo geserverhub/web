@@ -270,6 +270,96 @@ export default function CarbonCreditsPage() {
         </div>
       </div>
 
+      {/* Step Flow Map */}
+      <div className="cc-card">
+        <h2 className="cc-card-title">
+          {L(locale, 'แผนผังขั้นตอนการคำนวณ ISO 14064-2', 'ISO 14064-2 Calculation Flow', 'ISO 14064-2 계산 흐름도')}
+        </h2>
+        <div className="overflow-x-auto pb-2">
+          <div className="flex items-stretch gap-0 min-w-max py-2">
+            {(() => {
+              const krw7 = data.summary.currency === 'KRW'
+                ? formatCurrency(data.summary.estimatedValue, 'KRW')
+                : fxData.krwToThb
+                  ? formatCurrency(Math.round(data.summary.estimatedValue / fxData.krwToThb), 'KRW')
+                  : '—';
+              const thb7 = data.summary.currency === 'THB'
+                ? formatCurrency(data.summary.estimatedValue, 'THB')
+                : fxData.krwToThb
+                  ? formatCurrency(Math.round(data.summary.estimatedValue * fxData.krwToThb), 'THB')
+                  : '—';
+              const steps = [
+                {
+                  step: 1, icon: '📊', color: 'blue',
+                  th: 'ค่าฐาน', en: 'Baseline', ko: '기준선',
+                  formula: 'Σ monthly before', value: L(locale, 'ก่อนติดตั้ง', 'Pre-install', '설치 전'), unit: 'kWh',
+                },
+                {
+                  step: 2, icon: '⚡', color: 'indigo',
+                  th: 'การใช้จริง', en: 'Actual', ko: '실제 소비',
+                  formula: 'Σ monthly after', value: L(locale, 'หลังติดตั้ง', 'Post-install', '설치 후'), unit: 'kWh',
+                },
+                {
+                  step: 3, icon: '💡', color: 'green',
+                  th: 'ไฟประหยัด', en: 'Energy Saved', ko: '절감 에너지',
+                  formula: 'baseline − actual', value: fmt(data.summary.totalEnergySavedKwh), unit: 'kWh',
+                },
+                {
+                  step: 4, icon: '🏭', color: 'purple',
+                  th: 'ค่าแฟกเตอร์', en: 'Emission Factor', ko: '배출 계수',
+                  formula: '× 0.5135 kg/kWh', value: '0.5135', unit: 'kgCO₂/kWh',
+                },
+                {
+                  step: 5, icon: '🌿', color: 'orange',
+                  th: 'CO₂ ลดลง', en: 'CO₂ Avoided', ko: 'CO₂ 회피',
+                  formula: 'energy × factor', value: fmt(data.summary.totalCo2Kg), unit: 'kg CO₂',
+                },
+                {
+                  step: 6, icon: '🎯', color: 'teal',
+                  th: 'คาร์บอนเครดิต', en: 'Carbon Credits', ko: '탄소 크레딧',
+                  formula: 'CO₂ kg ÷ 1000', value: fmt(data.summary.carbonCreditsTonnes), unit: 'tCO₂e',
+                },
+                {
+                  step: 7, icon: '💰', color: 'yellow',
+                  th: 'มูลค่าตลาด', en: 'Market Value', ko: '시장 가치',
+                  formula: 'credits × price', value: `${krw7}`, unit: `THB: ${thb7}`,
+                },
+              ];
+              const colors: Record<string, { bg: string; border: string; text: string; num: string }> = {
+                blue:   { bg: 'bg-blue-50',   border: 'border-blue-300',   text: 'text-blue-700',   num: 'bg-blue-500' },
+                indigo: { bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-700', num: 'bg-indigo-500' },
+                green:  { bg: 'bg-green-50',  border: 'border-green-300',  text: 'text-green-700',  num: 'bg-green-500' },
+                purple: { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700', num: 'bg-purple-500' },
+                orange: { bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-700', num: 'bg-orange-500' },
+                teal:   { bg: 'bg-teal-50',   border: 'border-teal-300',   text: 'text-teal-700',   num: 'bg-teal-500' },
+                yellow: { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-700', num: 'bg-yellow-500' },
+              };
+              return steps.map((s, i) => {
+                const c = colors[s.color];
+                const title = locale === 'ko' ? s.ko : locale === 'th' ? s.th : s.en;
+                return (
+                  <div key={s.step} className="flex items-center">
+                    <div className={`w-36 rounded-xl border-2 ${c.border} ${c.bg} p-3 flex flex-col items-center text-center shadow-sm`}>
+                      <div className={`${c.num} text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center mb-1`}>
+                        {s.step}
+                      </div>
+                      <div className="text-2xl mb-1">{s.icon}</div>
+                      <p className={`text-xs font-semibold ${c.text} leading-tight mb-1.5`}>{title}</p>
+                      <code className="text-xs text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 mb-2 leading-tight w-full truncate">{s.formula}</code>
+                      <p className={`text-sm font-bold ${c.text} leading-tight`}>{s.value}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 leading-tight">{s.unit}</p>
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div className="px-1 text-gray-300 text-xl font-light select-none">→</div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </div>
+
       {/* Methodology Section */}
       <div className="cc-card">
         <div className="cc-methodology-header">
