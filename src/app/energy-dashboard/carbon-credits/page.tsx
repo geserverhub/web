@@ -331,6 +331,15 @@ export default function CarbonCreditsPage() {
             <DollarSign className="w-6 h-6" />
           </div>
           <p className="cc-kpi-val">{formatCurrency(data.summary.estimatedValue, data.summary.currency)}</p>
+          {fxData.krwToThb ? (
+            <p className="text-sm font-semibold text-amber-600 mt-0.5">
+              {data.summary.currency === 'KRW'
+                ? `≈ ฿${Math.round(data.summary.estimatedValue * fxData.krwToThb).toLocaleString()}`
+                : `≈ ₩${Math.round(data.summary.estimatedValue / fxData.krwToThb).toLocaleString()}`}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-300 mt-0.5">...</p>
+          )}
           <p className="cc-kpi-label">{L(locale, 'มูลค่า', 'Market Value', '시장 가치')}</p>
           <p className="cc-kpi-unit">{data.summary.currency}</p>
         </div>
