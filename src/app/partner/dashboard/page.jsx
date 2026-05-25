@@ -8,7 +8,7 @@ const LANGS = {
   th: {
     loading: "⏳ กำลังโหลด...",
     signOut: "ออกจากระบบ",
-    tabs: { overview: "📊 ภาพรวม", transactions: "📋 รายการ", add: "➕ เพิ่มรายการ", products: "📦 สินค้า", tasks: "📝 งานดำเนินการ", vat: "🧾 ภาษีมูลค่าเพิ่ม", income: "💼 ภาษีรายได้สิ้นปี", kpi: "🎯 KPI", print: "🖨️ พิมพ์รายงาน" },
+    tabs: { overview: "📊 ภาพรวม", transactions: "📋 รายการ", add: "➕ เพิ่มรายการ", products: "📦 สินค้า", tasks: "📝 งานดำเนินการ", vat: "🧾 ภาษีมูลค่าเพิ่ม", income: "💼 ภาษีรายได้สิ้นปี", kpi: "🎯 KPI", print: "🖨️ พิมพ์รายงาน", feedback: "💬 ข้อความลูกค้า" },
     yearLabel: (y) => `ปี ${y}`,
     stats: {
       totalRevenue: "รายรับรวม",
@@ -192,7 +192,7 @@ const LANGS = {
   ko: {
     loading: "⏳ 로딩 중...",
     signOut: "로그아웃",
-    tabs: { overview: "📊 개요", transactions: "📋 거래내역", add: "➕ 거래추가", products: "📦 상품목록", tasks: "📝 업무관리", vat: "🧾 부가세", income: "💼 종합소득세", kpi: "🎯 KPI", print: "🖨️ 보고서 인쇄" },
+    tabs: { overview: "📊 개요", transactions: "📋 거래내역", add: "➕ 거래추가", products: "📦 상품목록", tasks: "📝 업무관리", vat: "🧾 부가세", income: "💼 종합소득세", kpi: "🎯 KPI", print: "🖨️ 보고서 인쇄", feedback: "💬 고객 메시지" },
     yearLabel: (y) => `${y}년`,
     stats: {
       totalRevenue: "총 매출",
@@ -465,6 +465,12 @@ export default function PartnerDashboard() {
   const [printDateFrom, setPrintDateFrom] = useState(`${new Date().getFullYear()}-01-01`);
   const [printDateTo, setPrintDateTo] = useState(`${new Date().getFullYear()}-12-31`);
 
+  // feedback tab
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackFilter, setFeedbackFilter] = useState("all"); // "all" | "General Feedback" | "Suggestion" | "Bug Report"
+  const [feedbackSearch, setFeedbackSearch] = useState("");
+
   const [partnerNames, setPartnerNames] = useState(() => {
     try { return JSON.parse(localStorage.getItem("partnerNames") || "{}"); } catch { return {}; }
   });
@@ -502,6 +508,16 @@ export default function PartnerDashboard() {
   useEffect(fetchData, [year, status]);
   useEffect(fetchTasks, [status]);
   useEffect(fetchProducts, [status]);
+
+  useEffect(() => {
+    if (tab !== "feedback") return;
+    setFeedbackLoading(true);
+    fetch("/api/ge-energy/user-feedback")
+      .then(r => r.json())
+      .then(d => setFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : []))
+      .catch(() => {})
+      .finally(() => setFeedbackLoading(false));
+  }, [tab]);
 
   async function handleAddTask(e) {
     e.preventDefault();
@@ -798,7 +814,7 @@ export default function PartnerDashboard() {
         {/* Tabs + Year */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
-            {["overview", "transactions", "add", "products", "tasks", "vat", "income", "kpi", "print"].map(tabKey => (
+            {["overview", "transactions", "add", "products", "tasks", "vat", "income", "kpi", "print", "feedback"].map(tabKey => (
               <button key={tabKey} style={S.tabBtn(tab === tabKey)} onClick={() => setTab(tabKey)}>
                 {t.tabs[tabKey]}
               </button>
@@ -2465,6 +2481,145 @@ export default function PartnerDashboard() {
             </div>
           );
         })()}
+        {/* ── FEEDBACK TAB ── */}
+        {tab === "feedback" && (() => {
+          const CATEGORY_COLORS = {
+            "General Feedback": { bg: "#1e2d3d", color: "#60a5fa", label: "💬 General" },
+            "Suggestion":       { bg: "#1a2a1a", color: "#4ade80", label: "💡 Suggestion" },
+            "Bug Report":       { bg: "#3b0000", color: "#f87171", label: "🐛 Bug Report" },
+            "Feature Request":  { bg: "#1e1b4b", color: "#a78bfa", label: "✨ Feature" },
+          };
+          const filtered = feedbacks.filter(f => {
+            const matchCat = feedbackFilter === "all" || f.category === feedbackFilter;
+            const q = feedbackSearch.toLowerCase();
+            const matchQ = !q || (f.subject || "").toLowerCase().includes(q) || (f.message || "").toLowerCase().includes(q) || (f.user_name || "").toLowerCase().includes(q) || (f.user_email || "").toLowerCase().includes(q);
+            return matchCat && matchQ;
+          });
+
+          return (
+            <div>
+              {/* Header */}
+              <div style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#e8eaf0" }}>
+                    💬 {lang === "ko" ? "고객 메시지" : "ข้อความจากลูกค้า"}
+                  </h2>
+                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8b8fa8" }}>
+                    {lang === "ko" ? `총 ${feedbacks.length}건 · Customer Dashboard → ติดต่อ` : `ทั้งหมด ${feedbacks.length} รายการ · ส่งจากหน้า Customer Dashboard`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setFeedbackLoading(true);
+                    fetch("/api/ge-energy/user-feedback").then(r => r.json()).then(d => setFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : [])).catch(() => {}).finally(() => setFeedbackLoading(false));
+                  }}
+                  style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}
+                >
+                  🔄 {lang === "ko" ? "새로고침" : "รีเฟรช"}
+                </button>
+              </div>
+
+              {/* Filters */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                {["all", "General Feedback", "Suggestion", "Bug Report", "Feature Request"].map(cat => (
+                  <button key={cat} onClick={() => setFeedbackFilter(cat)}
+                    style={{ padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "1px solid", transition: "all .15s",
+                      background: feedbackFilter === cat ? "#16a34a" : "transparent",
+                      color: feedbackFilter === cat ? "#fff" : "#8b8fa8",
+                      borderColor: feedbackFilter === cat ? "#16a34a" : "#2a2d3a",
+                    }}>
+                    {cat === "all" ? (lang === "ko" ? "전체" : "ทั้งหมด") : (CATEGORY_COLORS[cat]?.label || cat)}
+                  </button>
+                ))}
+                <input
+                  placeholder={lang === "ko" ? "검색..." : "ค้นหา..."}
+                  value={feedbackSearch}
+                  onChange={e => setFeedbackSearch(e.target.value)}
+                  style={{ background: "#16181f", border: "1px solid #2a2d3a", color: "#e8eaf0", borderRadius: 8, padding: "5px 12px", fontSize: 12, outline: "none", minWidth: 160 }}
+                />
+              </div>
+
+              {/* Summary badges */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                {Object.entries(
+                  feedbacks.reduce((acc, f) => { acc[f.category] = (acc[f.category] || 0) + 1; return acc; }, {})
+                ).map(([cat, count]) => {
+                  const c = CATEGORY_COLORS[cat] || { bg: "#1e2130", color: "#8b8fa8", label: cat };
+                  return (
+                    <span key={cat} style={{ background: c.bg, color: c.color, borderRadius: 20, padding: "3px 12px", fontSize: 11, fontWeight: 700 }}>
+                      {c.label} · {count}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Table */}
+              {feedbackLoading ? (
+                <div style={{ textAlign: "center", color: "#4ade80", padding: 40 }}>⏳ {lang === "ko" ? "로딩 중..." : "กำลังโหลด..."}</div>
+              ) : filtered.length === 0 ? (
+                <div style={{ textAlign: "center", color: "#4a5070", padding: 48, fontSize: 14 }}>
+                  {lang === "ko" ? "메시지가 없습니다" : "ยังไม่มีข้อความ"}
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={S.table}>
+                    <thead>
+                      <tr>
+                        {[
+                          lang === "ko" ? "날짜" : "วันที่",
+                          lang === "ko" ? "หมวด" : "ประเภท",
+                          lang === "ko" ? "제목 / 내용" : "หัวข้อ / ข้อความ",
+                          lang === "ko" ? "ผู้ส่ง" : "ผู้ส่ง",
+                          lang === "ko" ? "Branch" : "Branch",
+                          lang === "ko" ? "คะแนน" : "คะแนน",
+                        ].map(h => <th key={h} style={S.th}>{h}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map(f => {
+                        const c = CATEGORY_COLORS[f.category] || { bg: "#1e2130", color: "#8b8fa8", label: f.category };
+                        const date = f.created_at ? new Date(f.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+                        const time = f.created_at ? new Date(f.created_at).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "";
+                        return (
+                          <tr key={f.id} style={{ borderBottom: "1px solid #1a1d26" }}>
+                            <td style={{ ...S.td, whiteSpace: "nowrap", fontSize: 12 }}>
+                              <div style={{ color: "#e8eaf0" }}>{date}</div>
+                              <div style={{ color: "#4a5070", fontSize: 11 }}>{time}</div>
+                            </td>
+                            <td style={S.td}>
+                              <span style={{ background: c.bg, color: c.color, borderRadius: 12, padding: "2px 10px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                                {c.label}
+                              </span>
+                            </td>
+                            <td style={{ ...S.td, maxWidth: 360 }}>
+                              <div style={{ fontWeight: 700, fontSize: 13, color: "#e8eaf0", marginBottom: 4 }}>{f.subject || "—"}</div>
+                              <div style={{ fontSize: 12, color: "#8b8fa8", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{f.message || "—"}</div>
+                            </td>
+                            <td style={{ ...S.td, fontSize: 12 }}>
+                              <div style={{ color: "#60a5fa" }}>{f.user_name || "—"}</div>
+                              <div style={{ color: "#4a5070", fontSize: 11 }}>{f.user_email || f.created_by || "—"}</div>
+                            </td>
+                            <td style={{ ...S.td, fontSize: 12 }}>
+                              {f.branch ? (
+                                <span style={{ background: "#1e2130", color: "#a78bfa", borderRadius: 8, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
+                                  {f.branch}
+                                </span>
+                              ) : <span style={{ color: "#4a5070" }}>—</span>}
+                            </td>
+                            <td style={{ ...S.td, fontSize: 13, textAlign: "center" }}>
+                              {f.rating > 0 ? "⭐".repeat(Math.min(5, f.rating)) : <span style={{ color: "#4a5070" }}>—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       </div>
     </div>
   );
