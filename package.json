@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "clean": "node scripts/clean-next.mjs",
-    "dev": "node scripts/kill-port.mjs 3005 && node scripts/run-dev.mjs",
+    "dev": "node scripts/kill-port.mjs 3005 && node scripts/ensure-next-dev.mjs && node scripts/run-dev.mjs",
     "dev:fast": "node scripts/kill-port.mjs 3005 && next dev -p 3005 -H 0.0.0.0 --turbopack",
     "dev:localhost": "node scripts/kill-port.mjs 3005 && node scripts/clean-next.mjs && next dev -p 3005 -H 127.0.0.1",
     "dev:wsl": "wsl -e bash -lc \"cd ~/web && npm run dev\"",

@@ -44,6 +44,21 @@
       "source": "/cargo/:path*",
       "destination": "https://strong-dory-enabled.ngrok-free.app/cargo/:path*",
       "permanent": false
+    },
+    {
+      "source": "/online-classroom-login",
+      "destination": "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
+      "permanent": false
+    },
+    {
+      "source": "/online-classroom",
+      "destination": "https://strong-dory-enabled.ngrok-free.app/online-classroom",
+      "permanent": false
+    },
+    {
+      "source": "/online-classroom/:path*",
+      "destination": "https://strong-dory-enabled.ngrok-free.app/online-classroom/:path*",
+      "permanent": false
     }
   ]
 }

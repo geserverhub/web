@@ -11,6 +11,7 @@ const LANGS = {
     customer: { label: "แดชบอร์ดลูกค้า", desc: "พอร์ทัลลูกค้าพลังงาน — ดูข้อมูลมิเตอร์และรายงาน" },
     admin: { label: "ระบบผู้ดูแล", desc: "จัดการลูกค้า, Users และการตั้งค่าระบบ" },
     partner: { label: "พอร์ทัลพาร์ทเนอร์", desc: "ดูรายงานยอดขายและบัญชีของบริษัท" },
+    classroom: { label: "ห้องเรียนออนไลน์", desc: "เรียนออนไลน์ — วิดีโอ เอกสาร และตารางเรียน" },
     back: "← กลับหน้าหลัก",
   },
   en: {
@@ -21,6 +22,7 @@ const LANGS = {
     customer: { label: "Customer Dashboard", desc: "Energy customer portal — meters and reports" },
     admin: { label: "Admin System", desc: "Manage clients, users and settings" },
     partner: { label: "Partner Portal", desc: "Sales reports and company accounts" },
+    classroom: { label: "Online Classroom", desc: "E-learning — videos, materials and schedule" },
     back: "← Back to Home",
   },
   ko: {
@@ -41,6 +43,16 @@ const PORTALS = [
   { key: "customer", href: "/customer-dashboard-login", border: "#3d4a1a", titleColor: "#a3e635", badgeBg: "#365314", badgeColor: "#a3e635", badge: "CUSTOMER", icon: "📊" },
   { key: "admin", href: "/admin/login", border: "#4a2a7f", titleColor: "#a78bfa", badgeBg: "#2d1b69", badgeColor: "#a78bfa", badge: "ADMIN", icon: "⚙️" },
   { key: "partner", href: "/partner/login", border: "#1a4a2a", titleColor: "#4ade80", badgeBg: "#14532d", badgeColor: "#4ade80", badge: "PARTNER", icon: "🤝" },
+  {
+    key: "classroom",
+    href: "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
+    border: "#3730a3",
+    titleColor: "#a5b4fc",
+    badgeBg: "#312e81",
+    badgeColor: "#c7d2fe",
+    badge: "E-LEARNING",
+    icon: "🎓",
+  },
 ];
 
 const S = {

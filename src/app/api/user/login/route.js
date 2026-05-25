@@ -31,9 +31,16 @@ export async function POST(request) {
       page.startsWith('/energy-dashboard/') ||
       page === '/energy-dashboard-login';
 
+    const isOnlineClassroom =
+      page === '/online-classroom' ||
+      page.startsWith('/online-classroom/') ||
+      page === '/online-classroom-login';
+
     const allowedRoles = isEnergyDashboard
       ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
-      : ['CLIENT', 'ADMIN', 'SUPER_ADMIN'];
+      : isOnlineClassroom
+        ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
+        : ['CLIENT', 'ADMIN', 'SUPER_ADMIN'];
 
     // Look up by username or email
     const identifier = String(username).trim();
@@ -54,7 +61,9 @@ export async function POST(request) {
     if (!allowedRoles.includes(user.role)) {
       const error = isEnergyDashboard
         ? 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบ Energy Dashboard'
-        : 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า';
+        : isOnlineClassroom
+          ? 'บัญชีนี้ไม่มีสิทธิ์เข้าห้องเรียนออนไลน์'
+          : 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า';
       return NextResponse.json({ error }, { status: 403 });
     }
 
