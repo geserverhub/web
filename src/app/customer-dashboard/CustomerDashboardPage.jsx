@@ -576,6 +576,15 @@ export default function CustomersPage() {
     setCustomerUser(parsed);
     const { displayName } = formatEnergyDisplayUser(parsed || {});
     setWelcomeName(displayName || '');
+    // Auto-fill contact form from login data
+    if (parsed) {
+      setContactForm(f => ({
+        ...f,
+        name:  f.name  || displayName || parsed.name  || parsed.username || '',
+        phone: f.phone || parsed.phone || '',
+        email: f.email || parsed.email || '',
+      }));
+    }
   }, []);
 
   useEffect(() => {
@@ -715,6 +724,40 @@ export default function CustomersPage() {
     };
   }, [activeTab, selectedDeviceId, selectedSite, monitorMinutes]);
 
+  useEffect(() => {
+    fetch('/api/ge-energy/broadcast')
+      .then(r => r.json())
+      .then(d => setBroadcasts(Array.isArray(d.broadcasts) ? d.broadcasts : []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'contact') return;
+    const user = customerUser || readStoredCustomerUser();
+    if (!user?.userId) return;
+    setMyFeedbacksLoading(true);
+    fetch(`/api/ge-energy/user-feedback?userId=${user.userId}`)
+      .then(r => r.json())
+      .then(d => setMyFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : []))
+      .catch(() => {})
+      .finally(() => setMyFeedbacksLoading(false));
+  }, [activeTab, customerUser]);
+
+  async function openInboxThread(feedbackId) {
+    if (inboxOpenId === feedbackId) { setInboxOpenId(null); return; }
+    setInboxOpenId(feedbackId);
+    if (!inboxReplies[feedbackId]) {
+      const d = await fetch(`/api/ge-energy/feedback-replies?feedbackId=${feedbackId}`).then(r => r.json()).catch(() => ({ replies: [] }));
+      setInboxReplies(prev => ({ ...prev, [feedbackId]: Array.isArray(d.replies) ? d.replies : [] }));
+    }
+  }
+
+  function dismissBroadcast(id) {
+    const next = [...dismissedBroadcasts, id];
+    setDismissedBroadcasts(next);
+    try { sessionStorage.setItem('dismissedBroadcasts', JSON.stringify(next)); } catch {}
+  }
+
   async function fetchLive() {
     setLiveLoading(true);
     try {
@@ -757,6 +800,15 @@ export default function CustomersPage() {
   const [chartType, setChartType] = useState('bar');
   const [contactForm, setContactForm] = useState({ name: '', phone: '', email: '', message: '' });
   const [sent, setSent] = useState(false);
+  const [broadcasts, setBroadcasts] = useState([]);
+  const [dismissedBroadcasts, setDismissedBroadcasts] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('dismissedBroadcasts') || '[]'); } catch { return []; }
+  });
+  // reply inbox
+  const [myFeedbacks, setMyFeedbacks] = useState([]);
+  const [myFeedbacksLoading, setMyFeedbacksLoading] = useState(false);
+  const [inboxReplies, setInboxReplies] = useState({}); // { [feedbackId]: reply[] }
+  const [inboxOpenId, setInboxOpenId] = useState(null);
 
   const monthLabel = (d) => {
     const th = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -785,13 +837,23 @@ export default function CustomersPage() {
     setSendingContact(true);
     setContactError(null);
 
+    const user = customerUser || readStoredCustomerUser();
+    const { displayName, displayRole } = formatEnergyDisplayUser(user || {});
+    // Always prefer the session login name over what was typed in the name field
+    const loginName = displayName || welcomeName || '';
+    const loginRole = displayRole || '';
+    const accountLabel = loginName
+      ? `${loginName}${loginRole ? ` [${loginRole}]` : ''}`
+      : contactForm.name;
+
     try {
       const response = await fetch('/api/ge-energy/user-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: user?.userId || null,
           category: 'General Feedback',
-          subject: `Customer Dashboard Contact - ${contactForm.name}`,
+          subject: `Customer Dashboard Contact - ${accountLabel}`,
           message: `Name: ${contactForm.name}\nPhone: ${contactForm.phone}\nEmail: ${contactForm.email || '-'}\n\n${contactForm.message}`,
           rating: 5,
           branch: selectedSite
@@ -804,7 +866,12 @@ export default function CustomersPage() {
       }
 
       setSent(true);
-      setContactForm({ name: '', phone: '', email: '', message: '' });
+      const u2 = customerUser || readStoredCustomerUser();
+      const { displayName: dn2 } = formatEnergyDisplayUser(u2 || {});
+      setContactForm({ name: dn2 || u2?.name || '', phone: u2?.phone || '', email: u2?.email || '', message: '' });
+      // refresh inbox
+      const u = customerUser || readStoredCustomerUser();
+      if (u?.userId) fetch(`/api/ge-energy/user-feedback?userId=${u.userId}`).then(r => r.json()).then(d => setMyFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : [])).catch(() => {});
     } catch (error) {
       setContactError(error instanceof Error ? error.message : 'Failed to send message');
       setSent(false);
@@ -833,6 +900,27 @@ export default function CustomersPage() {
 
   return (
     <div className="cd-page-content">
+
+      {/* ── Broadcast banners ── */}
+      {broadcasts.filter(b => !dismissedBroadcasts.includes(b.id)).map(b => {
+        const BSTYLE = {
+          announcement: { bg: '#1e2d3d', border: '#2563eb', icon: '📣', color: '#93c5fd' },
+          maintenance:  { bg: '#2a1f00', border: '#d97706', icon: '🔧', color: '#fde68a' },
+          promotion:    { bg: '#0a2a1a', border: '#16a34a', icon: '🎁', color: '#86efac' },
+          alert:        { bg: '#2a0a0a', border: '#dc2626', icon: '⚠️', color: '#fca5a5' },
+        };
+        const s = BSTYLE[b.category] || BSTYLE.announcement;
+        return (
+          <div key={b.id} style={{ margin: '0 0 12px', background: s.bg, border: `1px solid ${s.border}`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>{s.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: s.color, marginBottom: 2 }}>{b.title}</div>
+              <div style={{ fontSize: 12, color: '#c8cad8', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{b.message}</div>
+            </div>
+            <button onClick={() => dismissBroadcast(b.id)} style={{ background: 'transparent', border: 'none', color: '#8b8fa8', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 0 0 8px', flexShrink: 0 }}>✕</button>
+          </div>
+        );
+      })}
 
       <div className="cd-hero">
         <div className="cd-hero-blob cd-hero-blob--a" aria-hidden />
@@ -1865,6 +1953,31 @@ export default function CustomersPage() {
         {/* ── Contact ── */}
         {activeTab === 'contact' && (
           <div className="cd-contact-wrap">
+
+            {/* Broadcast announcements in contact tab */}
+            {broadcasts.filter(b => !dismissedBroadcasts.includes(b.id)).length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#8b8fa8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  📢 {L(locale,'ประกาศจากทีมงาน','팀 공지사항','Announcements')}
+                </div>
+                {broadcasts.filter(b => !dismissedBroadcasts.includes(b.id)).map(b => {
+                  const BSTYLE = { announcement: { bg:'#1e2d3d',border:'#2563eb',icon:'📣',color:'#93c5fd' }, maintenance:{bg:'#2a1f00',border:'#d97706',icon:'🔧',color:'#fde68a'}, promotion:{bg:'#0a2a1a',border:'#16a34a',icon:'🎁',color:'#86efac'}, alert:{bg:'#2a0a0a',border:'#dc2626',icon:'⚠️',color:'#fca5a5'} };
+                  const s = BSTYLE[b.category] || BSTYLE.announcement;
+                  return (
+                    <div key={b.id} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontSize: 16 }}>{s.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: s.color }}>{b.title}</div>
+                        <div style={{ fontSize: 12, color: '#c8cad8', marginTop: 2, whiteSpace: 'pre-wrap' }}>{b.message}</div>
+                      </div>
+                      <button onClick={() => dismissBroadcast(b.id)} style={{ background: 'transparent', border: 'none', color: '#8b8fa8', cursor: 'pointer', fontSize: 14 }}>✕</button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Send message form */}
             <div className="cd-card">
               <div className="cd-card-accent cd-card-accent--contact" />
               <div className="cd-card-body">
@@ -1884,10 +1997,16 @@ export default function CustomersPage() {
               ) : (
                 <form onSubmit={handleSend}>
                   <div className="cd-form-field">
-                    <label className="cd-form-label">{L(locale,'ชื่อ','이름','Name')} *</label>
+                    <label className="cd-form-label">{L(locale,'ชื่อ','이름','Name')} *
+                      {welcomeName && (
+                        <span style={{ marginLeft: 8, fontSize: 11, color: '#4ade80', fontWeight: 600 }}>
+                          ({L(locale,'บัญชี','계정','Account')}: {welcomeName})
+                        </span>
+                      )}
+                    </label>
                     <input required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})}
                       className="cd-form-input"
-                      placeholder={L(locale,'ชื่อของคุณ','성함을 입력하세요','Your name')} />
+                      placeholder={welcomeName || L(locale,'ชื่อของคุณ','성함을 입력하세요','Your name')} />
                   </div>
                   <div className="cd-form-field">
                     <label className="cd-form-label">{L(locale,'เบอร์โทร','전화번호','Phone')} *</label>
@@ -1916,6 +2035,90 @@ export default function CustomersPage() {
               )}
               </div>
             </div>
+
+            {/* Reply inbox */}
+            {(() => {
+              const u = customerUser || readStoredCustomerUser();
+              const isLoggedIn = Boolean(u?.userId);
+              if (!isLoggedIn && myFeedbacks.length === 0) return null;
+              return (
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#e8eaf0', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>💬 {L(locale,'กล่องรับข้อความตอบกลับ','내 메시지함','My Messages')}</span>
+                  {myFeedbacksLoading && <span style={{ fontSize: 11, color: '#4ade80' }}>⏳</span>}
+                </div>
+                {myFeedbacksLoading && myFeedbacks.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#4a5070', fontSize: 12, padding: 20 }}>⏳ {L(locale,'กำลังโหลด...','로딩 중...','Loading...')}</div>
+                ) : myFeedbacks.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#4a5070', fontSize: 13, padding: '24px 0' }}>
+                    {L(locale,'ยังไม่มีข้อความ ส่งข้อความหาทีมงานด้านบน','아직 메시지가 없습니다 — 위에서 보내주세요','No messages yet — send one above')}
+                  </div>
+                ) : myFeedbacks.map(f => {
+                  const isOpen = inboxOpenId === f.id;
+                  const replies = inboxReplies[f.id] || [];
+                  const partnerReplies = replies.filter(r => r.sender_type === 'partner');
+                  const date = f.created_at ? new Date(f.created_at).toLocaleDateString(locale === 'th' ? 'th-TH' : locale === 'ko' ? 'ko-KR' : 'en-US', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+                  return (
+                    <div key={f.id} style={{ background: '#12141c', borderRadius: 12, border: `1px solid ${isOpen ? '#1e3a2a' : '#2a2d3a'}`, marginBottom: 10, overflow: 'hidden' }}>
+                      {/* Thread summary row */}
+                      <button onClick={() => openInboxThread(f.id)} style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+                        <span style={{ fontSize: 16 }}>💬</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#e8eaf0', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.subject || '—'}</div>
+                          <div style={{ fontSize: 11, color: '#8b8fa8' }}>{date}</div>
+                        </div>
+                        {partnerReplies.length > 0 ? (
+                          <span style={{ background: '#1e3a2a', color: '#4ade80', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            {L(locale,`ตอบกลับ ${partnerReplies.length} ข้อความ`,`답장 ${partnerReplies.length}개`,`${partnerReplies.length} repl${partnerReplies.length > 1 ? 'ies' : 'y'}`)}
+                          </span>
+                        ) : (
+                          <span style={{ background: '#1a1d26', color: '#4a5070', borderRadius: 20, padding: '2px 10px', fontSize: 11, whiteSpace: 'nowrap' }}>
+                            {L(locale,'รอการตอบกลับ','답장 대기','Awaiting reply')}
+                          </span>
+                        )}
+                        <span style={{ color: '#8b8fa8', fontSize: 12 }}>{isOpen ? '▲' : '▼'}</span>
+                      </button>
+                      {/* Expanded thread */}
+                      {isOpen && (
+                        <div style={{ borderTop: '1px solid #1a1d26', padding: '12px 16px', background: '#0e1018' }}>
+                          {/* Original message bubble */}
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                            <div style={{ maxWidth: '80%', background: '#1e3a2a', borderRadius: '12px 12px 4px 12px', padding: '10px 14px' }}>
+                              <div style={{ fontSize: 11, color: '#4ade80', fontWeight: 700, marginBottom: 4 }}>
+                                {L(locale,'คุณ','나','You')}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#c8cad8', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{f.message}</div>
+                              <div style={{ fontSize: 10, color: '#4a5070', marginTop: 4, textAlign: 'right' }}>{date}</div>
+                            </div>
+                          </div>
+                          {/* Partner replies */}
+                          {replies.map(r => (
+                            <div key={r.id} style={{ display: 'flex', justifyContent: r.sender_type === 'partner' ? 'flex-start' : 'flex-end', marginBottom: 10 }}>
+                              <div style={{ maxWidth: '80%', background: r.sender_type === 'partner' ? '#1e2d3d' : '#1e3a2a', borderRadius: r.sender_type === 'partner' ? '12px 12px 12px 4px' : '12px 12px 4px 12px', padding: '10px 14px' }}>
+                                <div style={{ fontSize: 11, color: r.sender_type === 'partner' ? '#93c5fd' : '#4ade80', fontWeight: 700, marginBottom: 4 }}>
+                                  {r.sender_type === 'partner' ? `🏢 ${r.sender_name || L(locale,'ทีมงาน','팀','Team')}` : `👤 ${L(locale,'คุณ','나','You')}`}
+                                </div>
+                                <div style={{ fontSize: 12, color: '#c8cad8', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{r.message}</div>
+                                <div style={{ fontSize: 10, color: '#4a5070', marginTop: 4, textAlign: 'right' }}>
+                                  {r.created_at ? new Date(r.created_at).toLocaleString(locale === 'th' ? 'th-TH' : locale === 'ko' ? 'ko-KR' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {replies.length === 0 && (
+                            <div style={{ textAlign: 'center', color: '#4a5070', fontSize: 12, padding: '8px 0' }}>
+                              {L(locale,'ยังไม่มีการตอบกลับจากทีมงาน','아직 답장이 없습니다','No replies yet')}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              );
+            })()}
+
           </div>
         )}
 

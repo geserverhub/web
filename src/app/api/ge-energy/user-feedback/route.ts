@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const category = searchParams.get('category')
     const branch = (searchParams.get('branch') || '').toLowerCase()
+    const userId = searchParams.get('userId')
 
     let sql = `
       SELECT
@@ -113,6 +114,11 @@ export async function GET(req: NextRequest) {
       WHERE 1=1
     `
     const params: unknown[] = []
+
+    if (userId) {
+      sql += ' AND f.user_id = ?'
+      params.push(userId)
+    }
 
     if (status) {
       sql += ' AND f.status = ?'
