@@ -27,6 +27,7 @@ import {
   Store,
   LineChart,
   Building2,
+  Database,
 } from "lucide-react";
 import "./energy-sidebar.css";
 
@@ -88,7 +89,10 @@ const menuSections: NavSection[] = [
   },
   {
     sectionKey: "menuTools",
-    items: [{ key: "developer", icon: Code, href: "/energy-dashboard/developer" }],
+    items: [
+      { key: "developer", icon: Code, href: "/energy-dashboard/developer" },
+      { key: "databaseBackup", icon: Database, href: "/energy-dashboard/backup" },
+    ],
   },
   {
     sectionKey: "userSupports",
@@ -115,6 +119,8 @@ const sectionFallback: Record<string, Record<string, string>> = {
   momogeMarketplace: { th: "สินค้า IoT / Momoge", en: "Momoge IoT Store", ko: "MOMOGE IoT 상품" },
   energyAnalytics: { th: "วิเคราะห์พลังงาน", en: "Energy analytics", ko: "에너지 분석" },
   compareMonitoring: { th: "เปรียบเทียบ", en: "Compare", ko: "비교 모니터" },
+  developer: { th: "ผู้พัฒนา", en: "Developer", ko: "개발자" },
+  databaseBackup: { th: "백업ฐานข้อมูล", en: "Database Backup", ko: "데이터베이스 백업" },
   live: { th: "สด", en: "Live", ko: "실시간" },
 };
 
