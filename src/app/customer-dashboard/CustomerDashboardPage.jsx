@@ -493,7 +493,7 @@ export default function CustomersPage() {
   const [monitorLoading, setMonitorLoading] = useState(false);
   const [monitorError, setMonitorError] = useState(null);
   const [lastMonitorAt, setLastMonitorAt] = useState(null);
-  const [monitorMinutes, setMonitorMinutes] = useState(1.5);
+  const [monitorMinutes, setMonitorMinutes] = useState(30);
   const [monitorMetric, setMonitorMetric] = useState('current');
   const [isLivePulse, setIsLivePulse] = useState(false);
 
@@ -1079,10 +1079,10 @@ export default function CustomersPage() {
                 </select>
                 <ChevronDown className="cd-select-chevron" />
               </div>
-              <select value={monitorMinutes} onChange={e => setMonitorMinutes(parseFloat(e.target.value))} className="cd-select">
-                <option value={0.5}>{L(locale,'30 วิ','30초','30 sec')}</option>
-                <option value={1}>{L(locale,'1 นาที','1분','1 min')}</option>
-                <option value={1.5}>{L(locale,'1.30 นาที','1분 30초','1.5 min')}</option>
+              <select value={monitorMinutes} onChange={e => setMonitorMinutes(Number(e.target.value))} className="cd-select">
+                <option value={15}>{L(locale,'15 นาที','15분','15 min')}</option>
+                <option value={30}>{L(locale,'30 นาที','30분','30 min')}</option>
+                <option value={60}>{L(locale,'60 นาที','60분','60 min')}</option>
               </select>
               <div className="cd-metric-scroll">
                 {monitorMetricOptions.map((m) => (

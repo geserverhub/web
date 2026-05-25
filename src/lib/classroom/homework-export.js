@@ -48,7 +48,6 @@ export function buildReportHtml(meta, items, lang = 'th') {
     <div><strong>${lang === 'en' ? 'Subject code' : lang === 'ko' ? '과목 코드' : 'รหัสวิชา'}:</strong> ${escapeHtml(meta.subjectCode)}</div>
     <div><strong>${lang === 'en' ? 'Instructor' : lang === 'ko' ? '담당 교수' : 'อาจารย์ผู้สอน'}:</strong> ${escapeHtml(meta.teacherName)}</div>
     <div><strong>${lang === 'en' ? 'Prepared by' : lang === 'ko' ? '작성자' : 'ผู้จัดทำ'}:</strong> ${escapeHtml(meta.authorName)}</div>
-    ${meta.studentId ? `<div><strong>${lang === 'en' ? 'Student ID' : lang === 'ko' ? '학번' : 'รหัสนักศึกษา'}:</strong> ${escapeHtml(meta.studentId)}</div>` : ''}
   </div>
   ${rows}
 </body>
