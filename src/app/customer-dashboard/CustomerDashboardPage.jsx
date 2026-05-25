@@ -746,9 +746,34 @@ export default function CustomersPage() {
   async function openInboxThread(feedbackId) {
     if (inboxOpenId === feedbackId) { setInboxOpenId(null); return; }
     setInboxOpenId(feedbackId);
+    // mark as read
+    setReadFeedbackIds(prev => {
+      const next = new Set(prev); next.add(feedbackId);
+      try { sessionStorage.setItem('readFeedbackIds', JSON.stringify([...next])); } catch {}
+      return next;
+    });
     if (!inboxReplies[feedbackId]) {
       const d = await fetch(`/api/ge-energy/feedback-replies?feedbackId=${feedbackId}`).then(r => r.json()).catch(() => ({ replies: [] }));
       setInboxReplies(prev => ({ ...prev, [feedbackId]: Array.isArray(d.replies) ? d.replies : [] }));
+    }
+  }
+
+  async function sendInboxReply(feedbackId, senderName) {
+    const msg = (inboxInput[feedbackId] || '').trim();
+    if (!msg) return;
+    setInboxSending(true);
+    try {
+      const d = await fetch('/api/ge-energy/feedback-replies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedbackId, message: msg, senderName: senderName || 'Customer', senderType: 'customer' }),
+      }).then(r => r.json());
+      if (d.success && d.reply) {
+        setInboxReplies(prev => ({ ...prev, [feedbackId]: [...(prev[feedbackId] || []), d.reply] }));
+        setInboxInput(prev => ({ ...prev, [feedbackId]: '' }));
+      }
+    } finally {
+      setInboxSending(false);
     }
   }
 
@@ -809,6 +834,12 @@ export default function CustomersPage() {
   const [myFeedbacksLoading, setMyFeedbacksLoading] = useState(false);
   const [inboxReplies, setInboxReplies] = useState({}); // { [feedbackId]: reply[] }
   const [inboxOpenId, setInboxOpenId] = useState(null);
+  const [inboxInput, setInboxInput] = useState({}); // { [feedbackId]: string }
+  const [inboxSending, setInboxSending] = useState(false);
+  // track which feedback threads the customer has opened (to compute unread badge)
+  const [readFeedbackIds, setReadFeedbackIds] = useState(() => {
+    try { return new Set(JSON.parse(sessionStorage.getItem('readFeedbackIds') || '[]')); } catch { return new Set(); }
+  });
 
   const monthLabel = (d) => {
     const th = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -891,6 +922,14 @@ export default function CustomersPage() {
     { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),             icon: Users },
   ];
 
+  // Notification badge counts
+  const unreadBroadcasts = broadcasts.filter(b => !dismissedBroadcasts.includes(b.id)).length;
+  const unreadReplies = myFeedbacks.filter(f =>
+    !readFeedbackIds.has(f.id) &&
+    (inboxReplies[f.id] || []).some(r => r.sender_type === 'partner')
+  ).length;
+  const contactBadge = unreadBroadcasts + unreadReplies;
+
   const kpiItems = [
     { icon: Zap, val: `${fmt(totalSavedKwh)} kWh`, label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'), tone: 'energy' },
     { icon: DollarSign, val: formatCost(totalSavedCost), label: L(locale,`ค่าไฟที่ประหยัด (${currencySymbol})`,`절약 비용 (${currencySymbol})`,`Cost Saved (${currencyCode})`), tone: 'cost' },
@@ -946,7 +985,7 @@ export default function CustomersPage() {
             <p className="cd-hero-sub">{L(locale,'เปรียบเทียบการใช้ไฟฟ้าและค่าใช้จ่ายก่อน-หลัง','설치 전후 전력 사용량 및 비용 비교','Electricity usage & cost comparison before/after installation')}</p>
             <span className="cd-hero-badge">
               <span className="cd-hero-badge-dot" />
-              {L(locale,'พลังงานสะอาด · รักโลก','친환경 · 그린 에너지','Clean energy · Eco friendly')}
+              {L(locale,'พลังงานสะอาด · รักษ์โลก','친환경 · 그린 에너지','Clean energy · Eco friendly')}
             </span>
           </div>
         </div>
@@ -966,17 +1005,26 @@ export default function CustomersPage() {
       <div className="cd-main">
         <nav className="cd-tab-sticky" aria-label={L(locale,'เมนูหลัก','메인 메뉴','Main menu')}>
           <div className="cd-tab-scroll">
-            {tabs.map(tab => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`cd-tab-btn${activeTab === tab.key ? ' cd-tab-btn--active' : ''}`}
-              >
-                <tab.icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.25} />
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map(t => {
+              const badge = t.key === 'contact' && contactBadge > 0 ? contactBadge : 0;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setActiveTab(t.key)}
+                  className={`cd-tab-btn${activeTab === t.key ? ' cd-tab-btn--active' : ''}`}
+                  style={{ position: 'relative' }}
+                >
+                  <t.icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.25} />
+                  {t.label}
+                  {badge > 0 && (
+                    <span style={{ position: 'absolute', top: -6, right: -6, background: '#dc2626', color: '#fff', borderRadius: '999px', minWidth: 18, height: 18, fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', lineHeight: 1, boxShadow: '0 0 0 2px #0e1018', animation: 'pulse 1.5s infinite' }}>
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </nav>
 
@@ -2106,10 +2154,27 @@ export default function CustomersPage() {
                             </div>
                           ))}
                           {replies.length === 0 && (
-                            <div style={{ textAlign: 'center', color: '#4a5070', fontSize: 12, padding: '8px 0' }}>
+                            <div style={{ textAlign: 'center', color: '#4a5070', fontSize: 12, padding: '8px 0 12px' }}>
                               {L(locale,'ยังไม่มีการตอบกลับจากทีมงาน','아직 답장이 없습니다','No replies yet')}
                             </div>
                           )}
+                          {/* Customer reply input */}
+                          <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #1a1d26' }}>
+                            <input
+                              value={inboxInput[f.id] || ''}
+                              onChange={e => setInboxInput(prev => ({ ...prev, [f.id]: e.target.value }))}
+                              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendInboxReply(f.id, welcomeName); } }}
+                              placeholder={L(locale,'พิมพ์ข้อความ... (Enter ส่ง)','메시지 입력... (Enter 전송)','Type a message... (Enter to send)')}
+                              style={{ flex: 1, background: '#1a1d26', border: '1px solid #2a2d3a', color: '#e8eaf0', borderRadius: 8, padding: '8px 12px', fontSize: 13, outline: 'none' }}
+                            />
+                            <button
+                              onClick={() => sendInboxReply(f.id, welcomeName)}
+                              disabled={inboxSending || !(inboxInput[f.id] || '').trim()}
+                              style={{ background: inboxSending || !(inboxInput[f.id] || '').trim() ? '#1a2a1a' : '#16a34a', color: inboxSending || !(inboxInput[f.id] || '').trim() ? '#4a5070' : '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: inboxSending || !(inboxInput[f.id] || '').trim() ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}
+                            >
+                              {inboxSending ? '⏳' : L(locale,'ส่ง','전송','Send')} ➤
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
