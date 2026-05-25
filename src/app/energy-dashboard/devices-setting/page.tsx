@@ -282,17 +282,17 @@ export default function DevicesSettingPage() {
 
   const saveCusInfoDirect = async () => {
     const missing: string[] = [];
-    if (!addForm.customerName?.trim()) missing.push('ชื่อลูกค้า (ไทย)');
-    if (!addForm.customerNameEn?.trim()) missing.push('ชื่อลูกค้า (EN)');
-    if (!addNameKR?.trim()) missing.push('ชื่อลูกค้า (KR)');
-    if (!addForm.customerPhone?.trim()) missing.push('เบอร์โทร');
-    if (!addForm.customerAddress?.trim()) missing.push('ที่อยู่');
+    if (!addForm.customerName?.trim()) missing.push(ui.customerNameLabel);
+    if (!addForm.customerNameEn?.trim()) missing.push(ui.customerNameEnLabel);
+    if (!addNameKR?.trim()) missing.push(ui.customerNameKrLabel);
+    if (!addForm.customerPhone?.trim()) missing.push(ui.phoneLabel);
+    if (!addForm.customerAddress?.trim()) missing.push(ui.addressLabel);
     const latVal = addForm.latitude !== '' && addForm.latitude != null ? parseFloat(String(addForm.latitude)) : NaN;
     const lngVal = addForm.longitude !== '' && addForm.longitude != null ? parseFloat(String(addForm.longitude)) : NaN;
-    if (isNaN(latVal)) missing.push('ละติจูด');
-    if (isNaN(lngVal)) missing.push('ลองจิจูด');
+    if (isNaN(latVal)) missing.push(ui.latitudeLabel);
+    if (isNaN(lngVal)) missing.push(ui.longitudeLabel);
     if (missing.length > 0) {
-      setSaveCusMsgDirect('กรุณากรอก: ' + missing.join(', '));
+      setSaveCusMsgDirect((ui.pleaseFill || 'กรุณากรอก') + ': ' + missing.join(', '));
       return;
     }
     setSavingCusDirect(true);
@@ -659,6 +659,7 @@ export default function DevicesSettingPage() {
           customerNameKrLabel: 'ชื่อลูกค้า (ภาษาเกาหลี)',
           customerNameKrPlaceholder: '고객 이름 (한국어)',
           saveCusInfo: 'บันทึกข้อมูลลูกค้า',
+          pleaseFill: 'กรุณากรอก',
           phoneLabel: 'เบอร์โทร / Phone',
           phonePlaceholder: 'เช่น 02-123-4567 หรือ +66 81-234-5678',
           addressLabel: 'ที่อยู่ / Address',
@@ -739,6 +740,7 @@ export default function DevicesSettingPage() {
           customerNameKrLabel: '고객명 (한국어)',
           customerNameKrPlaceholder: '고객 이름 입력 (한국어)',
           saveCusInfo: '고객 정보 저장',
+          pleaseFill: '입력해주세요',
           phoneLabel: '전화번호 / Phone',
           phonePlaceholder: '예: 02-123-4567 또는 +82 10-1234-5678',
           addressLabel: '주소 / Address',
@@ -819,6 +821,7 @@ export default function DevicesSettingPage() {
           customerNameKrLabel: 'Customer Name (Korean)',
           customerNameKrPlaceholder: '고객 이름 (한국어)',
           saveCusInfo: 'Save Customer Info',
+          pleaseFill: 'Please fill in',
           phoneLabel: 'Phone',
           phonePlaceholder: 'e.g. +66 81-234-5678',
           addressLabel: 'Address',
