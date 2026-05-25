@@ -7,7 +7,7 @@ import { ArrowLeft, Code2, ExternalLink, Server, Zap } from 'lucide-react';
 const copy = {
   th: {
     title: 'นักพัฒนา / API',
-    subtitle: 'เอกสาร API สำหรับระบบ GE Energy Tech (K-Energy)',
+    subtitle: 'เอกสาร API สำหรับระบบ GE Energy Tech',
     back: 'กลับแดชบอร์ด',
     proxy: 'Next.js proxy',
     proxyDesc: 'คำขอ /api/ge-energy/* อ่านจากฐานข้อมูล goeunserverhub เท่านั้น',
@@ -16,7 +16,7 @@ const copy = {
   },
   en: {
     title: 'Developer / API',
-    subtitle: 'API reference for GE Energy Tech (K-Energy)',
+    subtitle: 'API reference for GE Energy Tech',
     back: 'Back to dashboard',
     proxy: 'Next.js proxy',
     proxyDesc: 'Requests to /api/ge-energy/* read from goeunserverhub only',
@@ -25,7 +25,7 @@ const copy = {
   },
   ko: {
     title: '개발자 / API',
-    subtitle: 'GE Energy Tech (K-Energy) API 문서',
+    subtitle: 'GE Energy Tech API 문서',
     back: '대시보드로',
     proxy: 'Next.js 프록시',
     proxyDesc: '/api/ge-energy/* 요청은 goeunserverhub DB만 사용합니다',

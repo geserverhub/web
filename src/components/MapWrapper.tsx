@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { MapPin } from 'lucide-react';
 
 export interface Device {
   id?: string;
@@ -31,14 +30,5 @@ const LeafletMap = dynamic(() => import('./LeafletMap'), {
 });
 
 export default function MapWrapper({ devices }: MapWrapperProps) {
-  if (devices.length === 0) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gray-50 text-gray-400">
-        <MapPin className="w-10 h-10 text-gray-300" />
-        <p className="text-sm">No device locations available</p>
-      </div>
-    );
-  }
-
   return <LeafletMap devices={devices} />;
 }

@@ -133,12 +133,14 @@ export async function savePowerRecord(body: PowerRecordPayload): Promise<SavePow
     return { ok: false, status: 400, error: 'device_id is required' };
   }
 
-  const deviceCheck = await queryGeserverhub('SELECT deviceID FROM devices WHERE deviceID = ? LIMIT 1', [
-    body.device_id,
-  ]);
+  const deviceCheck = await queryGeserverhub(
+    'SELECT deviceID, series_no FROM devices WHERE deviceID = ? LIMIT 1',
+    [body.device_id]
+  );
   if (!deviceCheck.length) {
     return { ok: false, status: 404, error: `Device ID ${body.device_id} not found` };
   }
+  const deviceSeriesNo = (deviceCheck[0] as { series_no?: string | null }).series_no ?? null;
 
   const recordScope = await resolveRecordScope(body.device_id, body.record_scope);
   const targetTable = SCOPE_TO_TABLE[recordScope];
@@ -151,14 +153,17 @@ export async function savePowerRecord(body: PowerRecordPayload): Promise<SavePow
     };
   }
 
-  const maxIdResult = await queryGeserverhub(
-    `SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM ${targetTable}`
-  );
-  const nextId = Number((maxIdResult[0] as { nextId?: number })?.nextId || 1);
   const recordTime = body.record_time || new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-  const columns: string[] = ['id', 'device_id', 'record_time'];
-  const values: unknown[] = [nextId, body.device_id, recordTime];
+  // Let AUTO_INCREMENT assign id — avoids race conditions
+  const columns: string[] = ['device_id', 'record_time'];
+  const values: unknown[] = [body.device_id, recordTime];
+
+  // Fill series_no from device if not in payload and table supports it
+  if (targetTable === 'power_records') {
+    columns.push('series_no');
+    values.push(deviceSeriesNo);
+  }
 
   OPTIONAL_FIELDS.forEach((field) => {
     if (body[field] !== undefined && body[field] !== null) {
@@ -167,11 +172,13 @@ export async function savePowerRecord(body: PowerRecordPayload): Promise<SavePow
     }
   });
 
+  let insertId: number;
   try {
-    await queryGeserverhub(
+    const result = await queryGeserverhub(
       `INSERT INTO ${targetTable} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
       values
-    );
+    ) as unknown as { insertId: number };
+    insertId = result.insertId;
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;
     if (code === 'ER_DUP_ENTRY') {
@@ -181,9 +188,20 @@ export async function savePowerRecord(body: PowerRecordPayload): Promise<SavePow
     return { ok: false, status: 500, error: message };
   }
 
+  // Update device_connectivity heartbeat
+  await queryGeserverhub(
+    `INSERT INTO device_connectivity (device_id, last_seen_at, last_record_id, online_status)
+     VALUES (?, NOW(), ?, 1)
+     ON DUPLICATE KEY UPDATE
+       last_seen_at   = NOW(),
+       last_record_id = VALUES(last_record_id),
+       online_status  = 1`,
+    [body.device_id, insertId]
+  ).catch(() => { /* non-critical */ });
+
   return {
     ok: true,
-    record_id: nextId,
+    record_id: insertId,
     device_id: body.device_id,
     record_scope: recordScope,
     target_table: targetTable,

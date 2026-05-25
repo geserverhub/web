@@ -78,7 +78,7 @@ export default function OverviewPage() {
         <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-              <Server className="w-3.5 h-3.5" /> K Energy Save
+              <Server className="w-3.5 h-3.5" /> GE Energy
             </div>
             <h1 className="text-3xl font-black text-white mb-1">{t('devicesOverview') || 'Devices Overview'}</h1>
             <p className="text-emerald-100 text-sm">All registered devices across your sites</p>
