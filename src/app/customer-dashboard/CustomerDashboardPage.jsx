@@ -56,7 +56,12 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
     const c2     = snapshot?.currentL2 ?? 0;
     const c3     = snapshot?.currentL3 ?? 0;
     const pf     = snapshot?.powerFactor ?? 0;
+    const pfB    = snapshot?.powerFactorBefore ?? 0;
+    const pfA    = snapshot?.powerFactorAfter  ?? pf;
     const freq   = snapshot?.frequency ?? 0;
+    const freqB  = snapshot?.frequencyBefore ?? 0;
+    const freqA  = snapshot?.frequencyAfter  ?? freq;
+    const thdB   = snapshot?.thdBefore ?? 0;
     const thdA   = snapshot?.thdAfter ?? 0;
     const totalC = c1 + c2 + c3;
 
@@ -76,7 +81,9 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
       if (imb > 15) alerts.push({ type: 'warn', text: L(locale, `กระแสไม่สมดุล ${imb.toFixed(0)}% — อาจเกิดความร้อนสะสม`, `전류 불균형 ${imb.toFixed(0)}% — 과열 위험`, `Current imbalance ${imb.toFixed(0)}% — overheating risk`) });
     }
     if (isOnline && freq > 0 && (freq < 49.5 || freq > 50.5)) alerts.push({ type: 'warn', text: L(locale, `ความถี่ผิดปกติ ${freq.toFixed(2)} Hz (ปกติ 50 Hz)`, `주파수 이상 ${freq.toFixed(2)} Hz`, `Frequency anomaly ${freq.toFixed(2)} Hz`) });
-    if (isOnline && thdA > 5) alerts.push({ type: 'warn', text: L(locale, `THD หลังติดตั้งสูง (${thdA.toFixed(1)}%) — ตรวจฮาร์มอนิก`, `설치 후 THD 높음 (${thdA.toFixed(1)}%)`, `High post-install THD (${thdA.toFixed(1)}%)`) });
+    if (isOnline && thdA > 8)       alerts.push({ type: 'err',  text: L(locale, `THD หลังติดตั้งสูงมาก (${thdA.toFixed(1)}%) — ต้องแก้ไขด่วน`, `설치 후 THD 매우 높음 (${thdA.toFixed(1)}%) — 즉시 조치 필요`, `Critical post-install THD (${thdA.toFixed(1)}%) — urgent action needed`) });
+    else if (isOnline && thdA > 5)  alerts.push({ type: 'warn', text: L(locale, `THD หลังติดตั้งสูง (${thdA.toFixed(1)}%) — ตรวจสอบฮาร์มอนิก`, `설치 후 THD 높음 (${thdA.toFixed(1)}%) — 고조파 점검`, `High post-install THD (${thdA.toFixed(1)}%) — check harmonics`) });
+    if (isOnline && thdB > 0 && thdA > 0 && thdA >= thdB) alerts.push({ type: 'warn', text: L(locale, `THD ไม่ลดลงหลังติดตั้ง (ก่อน ${thdB.toFixed(1)}% / หลัง ${thdA.toFixed(1)}%)`, `설치 후 THD 미감소 (전 ${thdB.toFixed(1)}% / 후 ${thdA.toFixed(1)}%)`, `THD not reduced after install (before ${thdB.toFixed(1)}% / after ${thdA.toFixed(1)}%)`) });
     if (isOnline && energyLevel === 'critical') alerts.push({ type: 'err', text: L(locale, 'โหลดวิกฤต! ตรวจอุปกรณ์ที่ใช้กระแสไฟสูงทันที', '임계 부하! 즉시 고부하 기기 점검', 'Critical load! Check high-draw equipment immediately') });
     if (alerts.length === 0 && isOnline) alerts.push({ type: 'ok', text: L(locale, 'ระบบทำงานปกติ ไม่พบปัญหา', '시스템 정상 — 이상 없음', 'System operating normally — no issues') });
 
@@ -109,10 +116,10 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
       const kwh  = (avgB - avgA).toFixed(0);
       forecast = L(locale, `จากแนวโน้ม 3 เดือนล่าสุด คาดการณ์เดือนหน้าจะประหยัดได้ ~${pct}% (${kwh} kWh)`, `최근 3개월 추세 기준 다음달 약 ${pct}% 절약 예상 (${kwh} kWh)`, `3-month trend → next month forecast ~${pct}% saving (${kwh} kWh)`);
     }
-    return { isOnline, energyLevel, energyScore, alerts, behaviors, forecast, peakPower, peakTime, pf, freq, power };
+    return { isOnline, energyLevel, energyScore, alerts, behaviors, forecast, peakPower, peakTime, pf, pfB, pfA, freq, freqB, freqA, power, thdB, thdA };
   })();
 
-  const { isOnline, energyLevel, energyScore, alerts, behaviors, forecast, peakPower, peakTime, pf, freq, power } = analysis;
+  const { isOnline, energyLevel, energyScore, alerts, behaviors, forecast, peakPower, peakTime, pf, pfB, pfA, freq, freqB, freqA, power, thdB, thdA } = analysis;
   const levelLabel = { low: L(locale,'ต่ำ','낮음','Low'), normal: L(locale,'ปกติ','정상','Normal'), high: L(locale,'สูง','높음','High'), critical: L(locale,'วิกฤต','위험','Critical') }[energyLevel];
   const dotClass   = { ok: '--ok', warn: '--warn', info: '--info', err: '--err' };
 
@@ -141,13 +148,60 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
         </div>
         <div className="cd-ai-metric-card">
           <p className="cd-ai-metric-label">{L(locale,'Power Factor','역률','Power Factor')}</p>
-          <p className="cd-ai-metric-val">{pf > 0 ? pf.toFixed(3) : '—'}</p>
-          <p className="cd-ai-metric-sub">{pf > 0 ? (pf >= 0.95 ? '✅ Excellent' : pf >= 0.85 ? '✅ Good' : '⚠️ Low') : ''}</p>
+          <div className="cd-ai-thd-row">
+            <div>
+              <p className="cd-ai-thd-tag">{L(locale,'ก่อน','전','Before')}</p>
+              <p className="cd-ai-metric-val" style={{ fontSize: '0.875rem' }}>{pfB > 0 ? pfB.toFixed(3) : '—'}</p>
+            </div>
+            <div className="cd-ai-thd-arrow">→</div>
+            <div>
+              <p className="cd-ai-thd-tag">{L(locale,'หลัง','후','After')}</p>
+              <p className="cd-ai-metric-val" style={{ fontSize: '0.875rem', color: pfA >= 0.95 ? '#059669' : pfA >= 0.85 ? '#065f46' : pfA > 0 ? '#d97706' : undefined }}>
+                {pfA > 0 ? pfA.toFixed(3) : '—'}
+              </p>
+            </div>
+          </div>
+          <p className="cd-ai-metric-sub">{pfA > 0 ? (pfA >= 0.95 ? '✅ Excellent' : pfA >= 0.85 ? '✅ Good' : '⚠️ Low') : ''}</p>
         </div>
         <div className="cd-ai-metric-card">
           <p className="cd-ai-metric-label">{L(locale,'ความถี่','주파수','Frequency')}</p>
-          <p className="cd-ai-metric-val">{freq > 0 ? `${freq.toFixed(2)} Hz` : '—'}</p>
-          <p className="cd-ai-metric-sub">{freq > 0 ? (Math.abs(freq - 50) <= 0.3 ? '✅ Stable' : '⚠️ Check') : ''}</p>
+          <div className="cd-ai-thd-row">
+            <div>
+              <p className="cd-ai-thd-tag">{L(locale,'ก่อน','전','Before')}</p>
+              <p className="cd-ai-metric-val" style={{ fontSize: '0.875rem' }}>{freqB > 0 ? `${freqB.toFixed(2)}` : '—'}</p>
+            </div>
+            <div className="cd-ai-thd-arrow">→</div>
+            <div>
+              <p className="cd-ai-thd-tag">{L(locale,'หลัง','후','After')}</p>
+              <p className="cd-ai-metric-val" style={{ fontSize: '0.875rem', color: freqA > 0 && Math.abs(freqA - 50) <= 0.3 ? '#059669' : freqA > 0 ? '#d97706' : undefined }}>
+                {freqA > 0 ? `${freqA.toFixed(2)} Hz` : '—'}
+              </p>
+            </div>
+          </div>
+          <p className="cd-ai-metric-sub">{freqA > 0 ? (Math.abs(freqA - 50) <= 0.3 ? '✅ Stable' : '⚠️ Check') : ''}</p>
+        </div>
+        <div className="cd-ai-metric-card">
+          <p className="cd-ai-metric-label">{L(locale,'THD วิเคราะห์','THD 분석','THD Analysis')}</p>
+          <div className="cd-ai-thd-row">
+            <div>
+              <p className="cd-ai-thd-tag">{L(locale,'ก่อน','전','Before')}</p>
+              <p className="cd-ai-metric-val" style={{ fontSize: '0.875rem' }}>{thdB > 0 ? `${thdB.toFixed(1)}%` : '—'}</p>
+            </div>
+            <div className="cd-ai-thd-arrow">→</div>
+            <div>
+              <p className="cd-ai-thd-tag">{L(locale,'หลัง','후','After')}</p>
+              <p className="cd-ai-metric-val" style={{ fontSize: '0.875rem', color: thdA > 5 ? '#dc2626' : thdA > 0 ? '#059669' : '#065f46' }}>
+                {thdA > 0 ? `${thdA.toFixed(1)}%` : '—'}
+              </p>
+            </div>
+          </div>
+          <p className="cd-ai-metric-sub">
+            {thdB > 0 && thdA > 0
+              ? thdA < thdB
+                ? `✅ ${L(locale,`ลด ${(thdB - thdA).toFixed(1)}%`,`${(thdB - thdA).toFixed(1)}% 감소`,`Reduced ${(thdB - thdA).toFixed(1)}%`)}`
+                : `⚠️ ${L(locale,'ไม่ลดลง','미감소','Not reduced')}`
+              : L(locale,'ไม่มีข้อมูล','데이터 없음','No data')}
+          </p>
         </div>
       </div>
 
@@ -448,10 +502,14 @@ export default function CustomersPage() {
       currentL2: toNumber(Array.isArray(metrics.current) ? metrics.current[1] : metrics.currentL2),
       currentL3: toNumber(Array.isArray(metrics.current) ? metrics.current[2] : metrics.currentL3),
       powerFactor: toNumber(metrics.powerFactor),
+      powerFactorBefore: toNumber(metrics.powerFactorBefore ?? metrics.pfBefore ?? 0),
+      powerFactorAfter:  toNumber(metrics.powerFactorAfter  ?? metrics.pfAfter  ?? metrics.powerFactor ?? 0),
       voltageL1: toNumber(Array.isArray(metrics.voltageLL) ? metrics.voltageLL[0] : metrics.voltageL1),
       voltageL2: toNumber(Array.isArray(metrics.voltageLL) ? metrics.voltageLL[1] : metrics.voltageL2),
       voltageL3: toNumber(Array.isArray(metrics.voltageLL) ? metrics.voltageLL[2] : metrics.voltageL3),
       frequency: toNumber(metrics.frequency),
+      frequencyBefore: toNumber(metrics.frequencyBefore ?? metrics.freqBefore ?? 0),
+      frequencyAfter:  toNumber(metrics.frequencyAfter  ?? metrics.freqAfter  ?? metrics.frequency ?? 0),
       reactivePower: toNumber(metrics.reactivePower),
       thdBefore: toNumber(metrics.thdBefore),
       thdAfter: toNumber(metrics.thdAfter),
