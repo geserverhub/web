@@ -7,9 +7,7 @@ function isPartnerOrAdmin(session) {
   return role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
-function clientFilter(session) {
-  const { role, clientId } = session.user;
-  if (role === "PARTNER") return { clientId: clientId ?? "__none__" };
+function clientFilter(_session) {
   return {};
 }
 
@@ -147,8 +145,6 @@ export async function POST(req) {
     const dd = String(now.getDate()).padStart(2, "0");
     const number = `${prefix}${yyyy}${mm}${dd}-${String(count + 1).padStart(4, "0")}`;
 
-    const clientId = session.user.clientId ?? null;
-
     const tx = await prisma.partnerTransaction.create({
       data: {
         number,
@@ -162,7 +158,6 @@ export async function POST(req) {
         category: category || null,
         notes: notes || null,
         date: date ? new Date(date) : new Date(),
-        clientId,
       },
     });
 
