@@ -14,6 +14,7 @@ import {
   Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
   Thermometer, ChevronDown, BarChart2, Users, Sprout, Download,
+  AlertCircle,
 } from 'lucide-react';
 import { generateMonthlyEnergyExcel } from '@/lib/excel-export';
 
@@ -23,6 +24,156 @@ function L(locale, th, ko, en) {
   return en;
 }
 function fmt(n) { return n.toLocaleString(); }
+
+function AiEnergyInsightPanel({ monthlyData, locale, site }) {
+  const [aiInsights, setAiInsights] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+
+  useEffect(() => {
+    if (!monthlyData || monthlyData.length === 0) {
+      setAiInsights(null);
+      return;
+    }
+
+    const fetchAiInsights = async () => {
+      setAiLoading(true);
+      setAiError(null);
+      try {
+        const response = await fetch('/api/ge-energy/ai-energy-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ monthly: monthlyData, locale, site }),
+        });
+
+        const json = await response.json();
+        if (json.success && json.data?.insights) {
+          setAiInsights(json.data);
+        } else {
+          setAiError(json.error || 'Failed to load AI insights');
+        }
+      } catch (err) {
+        setAiError(err instanceof Error ? err.message : 'Error loading insights');
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    fetchAiInsights();
+  }, [monthlyData, locale, site]);
+
+  if (aiLoading) {
+    return (
+      <div className="cd-card cd-ai-panel">
+        <div className="cd-card-accent cd-card-accent--energy" />
+        <div className="cd-card-body">
+          <h2 className="cd-card-title">{L(locale, 'AI วิเคราะห์แนวโน้มไฟ', 'AI 전력 분석', 'AI Energy Analysis')}</h2>
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
+            <p>{L(locale, 'กำลังวิเคราะห์...', '분석 중...', 'Analyzing...')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!aiInsights) return null;
+
+  const { insights, aiAvailable, ruleBasedFallback } = aiInsights;
+  const fallbackLabel = ruleBasedFallback ? ` (${L(locale, 'วิเคราะห์อัตโนมัติ', '자동 분석', 'Auto Analysis')})` : '';
+
+  return (
+    <div className="cd-card cd-ai-panel">
+      <div className="cd-card-accent cd-card-accent--energy" />
+      <div className="cd-card-body">
+        <h2 className="cd-card-title">
+          {L(locale, 'AI วิเคราะห์แนวโน้มไฟ', 'AI 전력 분석', 'AI Energy Analysis')}
+          {fallbackLabel}
+        </h2>
+
+        {/* Trend Summary */}
+        <div className="cd-ai-section">
+          <div className="cd-ai-badge-trend">
+            <TrendingDown className="w-4 h-4" />
+            <span>{insights.trend}</span>
+          </div>
+        </div>
+
+        {/* Problems */}
+        {insights.problems && insights.problems.length > 0 && (
+          <div className="cd-ai-section">
+            <h3 className="cd-ai-subtitle">{L(locale, 'ปัญหาที่พบ', '발견된 문제', 'Issues Detected')}</h3>
+            <div className="space-y-2">
+              {insights.problems.map((prob, i) => (
+                <div key={i} className="cd-ai-problem-card">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <p>{prob}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Load Patterns */}
+        <div className="cd-ai-load-patterns">
+          <div className="cd-ai-load-card cd-ai-load-heavy">
+            <Activity className="w-5 h-5" />
+            <div>
+              <p className="cd-ai-load-label">{L(locale, 'โหลดหนัก', '무거운 부하', 'Heavy Load')}</p>
+              <p className="cd-ai-load-months">
+                {insights.heavyLoad?.months?.length > 0
+                  ? insights.heavyLoad.months.join(', ')
+                  : L(locale, 'ไม่มี', '없음', 'None')}
+              </p>
+              <p className="cd-ai-load-reason">{insights.heavyLoad?.reason}</p>
+            </div>
+          </div>
+
+          <div className="cd-ai-load-card cd-ai-load-light">
+            <Sprout className="w-5 h-5" />
+            <div>
+              <p className="cd-ai-load-label">{L(locale, 'โหลดเบา', '가벼운 부하', 'Light Load')}</p>
+              <p className="cd-ai-load-months">
+                {insights.lightLoad?.months?.length > 0
+                  ? insights.lightLoad.months.join(', ')
+                  : L(locale, 'ไม่มี', '없음', 'None')}
+              </p>
+              <p className="cd-ai-load-reason">{insights.lightLoad?.reason}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Recommendations */}
+        {insights.recommendations && insights.recommendations.length > 0 && (
+          <div className="cd-ai-section">
+            <h3 className="cd-ai-subtitle">{L(locale, 'ข้อเสนอแนะ', '권장 사항', 'Recommendations')}</h3>
+            <ul className="space-y-2">
+              {insights.recommendations.map((rec, i) => (
+                <li key={i} className="cd-ai-rec-item">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Forecast */}
+        {insights.forecast && (
+          <div className="cd-ai-forecast">
+            <Zap className="w-4 h-4" />
+            <div>
+              <p className="cd-ai-forecast-label">{L(locale, 'การพยากรณ์', '예측', 'Forecast')}</p>
+              <p>{insights.forecast}</p>
+            </div>
+          </div>
+        )}
+
+        {aiError && <p className="cd-error">{aiError}</p>}
+      </div>
+    </div>
+  );
+}
 
 export default function CustomersPage() {
   const { locale } = useLocale();
@@ -472,111 +623,71 @@ export default function CustomersPage() {
               </div>
             </div>
 
+            {/* KPI Comparison Grid */}
             <div className="cd-card">
-              <div className="cd-card-accent cd-card-accent--contact" />
+              <div className="cd-card-accent cd-card-accent--energy" />
               <div className="cd-card-body">
-                <h2 className="cd-card-title">{L(locale,'ตารางเปรียบเทียบรายเดือน','월별 비교 표','Monthly Comparison Table')}</h2>
-                <p className="cd-card-desc">{L(locale,'ดูเป็นการ์ดบนมือถือ · ตารางเต็มบนจอใหญ่','모바일 카드 · 데스크톱 표','Cards on mobile · full table on desktop')}</p>
-
-                <div className="cd-month-cards">
-                  {monthlyData.map((d, i) => {
-                    const savedKwh = d.before - d.after;
-                    const savedBaht = d.costBefore - d.costAfter;
-                    const pct = d.before > 0 ? ((savedKwh / d.before) * 100).toFixed(1) : '0.0';
-                    return (
-                      <article key={i} className="cd-month-card">
-                        <div className="cd-month-card-head">
-                          <span className="cd-month-card-month">{monthLabel(d)} {d.year}</span>
-                          <span className="cd-month-card-pct">{pct}%</span>
-                        </div>
-                        <div className="cd-month-card-grid">
-                          <div className="cd-month-stat">
-                            <span className="cd-month-stat-label">{L(locale,'ก่อน (kWh)','이전 (kWh)','Before')}</span>
-                            <span className="cd-month-stat-val cd-month-stat-val--before">{fmt(d.before)}</span>
-                          </div>
-                          <div className="cd-month-stat">
-                            <span className="cd-month-stat-label">{L(locale,'หลัง (kWh)','이후 (kWh)','After')}</span>
-                            <span className="cd-month-stat-val cd-month-stat-val--after">{fmt(d.after)}</span>
-                          </div>
-                          <div className="cd-month-stat">
-                            <span className="cd-month-stat-label">{L(locale,'ประหยัด kWh','절약 kWh','Saved kWh')}</span>
-                            <span className="cd-month-stat-val cd-month-stat-val--saved">{fmt(savedKwh)}</span>
-                          </div>
-                          <div className="cd-month-stat">
-                            <span className="cd-month-stat-label">{labelCostSaved}</span>
-                            <span className="cd-month-stat-val cd-month-stat-val--saved">{formatCost(savedBaht)}</span>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                  {!monthlyLoading && monthlyData.length === 0 && (
-                    <div className="cd-empty">
-                      <Leaf className="w-8 h-8 opacity-50" />
-                      <p>{L(locale,'ยังไม่มีข้อมูลรายเดือนในฐานข้อมูล','월별 데이터가 없습니다','No monthly data in database')}</p>
+                <h2 className="cd-card-title">{L(locale,'สรุป KPI ประหยัดพลังงาน','에너지 절약 KPI 요약','Energy Savings KPI Summary')}</h2>
+                <div className="cd-kpi-grid">
+                  <div className="cd-kpi-card">
+                    <div className="cd-kpi-icon cd-kpi-icon--energy">
+                      <Zap className="w-5 h-5" />
                     </div>
-                  )}
+                    <p className="cd-kpi-val">{fmt(totalSavedKwh)}</p>
+                    <p className="cd-kpi-label">{L(locale,'ประหยัด kWh','절약 kWh','Saved kWh')}</p>
+                  </div>
+                  <div className="cd-kpi-card">
+                    <div className="cd-kpi-icon cd-kpi-icon--cost">
+                      <DollarSign className="w-5 h-5" />
+                    </div>
+                    <p className="cd-kpi-val">{formatCost(totalSavedBaht).replace(/₩/g, '')}</p>
+                    <p className="cd-kpi-label">{L(locale,'ประหยัด (₩)','절약 (원)','Saved (KRW)')}</p>
+                  </div>
+                  <div className="cd-kpi-card">
+                    <div className="cd-kpi-icon cd-kpi-icon--rate">
+                      <TrendingDown className="w-5 h-5" />
+                    </div>
+                    <p className="cd-kpi-val">{savingPct}%</p>
+                    <p className="cd-kpi-label">{L(locale,'อัตราประหยัด','절약률','Save %')}</p>
+                  </div>
+                  <div className="cd-kpi-card">
+                    <div className="cd-kpi-icon cd-kpi-icon--co2">
+                      <Leaf className="w-5 h-5" />
+                    </div>
+                    <p className="cd-kpi-val">{fmt(co2Saved)}</p>
+                    <p className="cd-kpi-label">{L(locale,'CO₂ ลด (kg)','CO₂ 감소 (kg)','CO₂ Reduced (kg)')}</p>
+                  </div>
                 </div>
 
-                <div className="cd-table-wrap">
-              <div className="cd-table-scroll">
-                <table className="cd-table">
-                  <thead>
-                    <tr>
-                      {[
-                        L(locale,'เดือน','월','Month'),
-                        L(locale,'ก่อน (kWh)','이전 (kWh)','Before (kWh)'),
-                        L(locale,'หลัง (kWh)','이후 (kWh)','After (kWh)'),
-                        L(locale,'ไฟฟ้าที่ประหยัด','전력 절약','Saved kWh'),
-                        labelCostBefore,
-                        labelCostAfter,
-                        labelCostSaved,
-                        L(locale,'% ประหยัด','절약률','Save %'),
-                      ].map(h => (
-                        <th key={h} className="px-2 md:px-4 py-2.5 md:py-3.5 text-left text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {monthlyData.map((d, i) => {
-                      const savedKwh = d.before - d.after;
-                      const savedBaht = d.costBefore - d.costAfter;
-                      const pct = d.before > 0 ? ((savedKwh / d.before) * 100).toFixed(1) : '0.0';
-                      return (
-                        <tr key={i} className={`hover:bg-emerald-50/60 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-semibold text-gray-800 whitespace-nowrap">{monthLabel(d)} {d.year}</td>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-red-600 tabular-nums">{fmt(d.before)}</td>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-green-600 tabular-nums">{fmt(d.after)}</td>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-semibold text-emerald-700 tabular-nums">{fmt(savedKwh)}</td>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-red-500 tabular-nums whitespace-nowrap">{formatCost(d.costBefore)}</td>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 text-green-600 tabular-nums whitespace-nowrap">{formatCost(d.costAfter)}</td>
-                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-semibold text-emerald-700 tabular-nums whitespace-nowrap">{formatCost(savedBaht)}</td>
-                          <td className="px-4 py-3">
-                            <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">{pct}%</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot className="bg-gradient-to-r from-emerald-600 to-green-700 text-white font-bold">
-                    <tr>
-                      <td className="px-4 py-3.5">{L(locale,'รวม','합계','Total')}</td>
-                      <td className="px-4 py-3.5 text-red-200">{fmt(totalBefore)}</td>
-                      <td className="px-4 py-3.5 text-green-200">{fmt(totalAfter)}</td>
-                      <td className="px-4 py-3.5 text-white">{fmt(totalSavedKwh)}</td>
-                      <td className="px-4 py-3.5 text-red-200">{formatCost(totalCostBefore)}</td>
-                      <td className="px-4 py-3.5 text-green-200">{formatCost(totalCostAfter)}</td>
-                      <td className="px-4 py-3.5 text-white">{formatCost(totalSavedBaht)}</td>
-                      <td className="px-4 py-3.5">
-                        <span className="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full ring-1 ring-white/30">{savingPct}%</span>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-                </div>
+                {monthlyData.length > 0 && (
+                  <div className="cd-kpi-monthly-chart">
+                    <h3 className="cd-chart-subtitle">{L(locale,'เปรียบเทียบรายเดือน (kWh)','월별 비교 (kWh)','Monthly Comparison (kWh)')}</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={monthlyData.map(d => ({
+                        name: monthLabel(d),
+                        before: d.before,
+                        after: d.after,
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip formatter={v => Number(v).toLocaleString()} />
+                        <Legend />
+                        <Bar dataKey={L(locale,'ก่อน','이전','Before')} fill="#b45309" radius={[4,4,0,0]} />
+                        <Bar dataKey={L(locale,'หลัง','이후','After')} fill="#059669" radius={[4,4,0,0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* AI Energy Analysis Panel */}
+            <AiEnergyInsightPanel
+              monthlyData={monthlyData}
+              locale={locale}
+              site={selectedSite}
+            />
           </div>
         )}
 

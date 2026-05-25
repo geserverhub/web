@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 
 interface ExcelRow {
   [key: string]: string | number | null;
