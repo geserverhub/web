@@ -16,6 +16,12 @@ import {
   Calendar,
   Zap,
   Clock,
+  X,
+  Search,
+  Table2,
+  Server,
+  FileCode2,
+  Info,
 } from 'lucide-react';
 
 function L(locale: string, th: string, en: string, ko: string) {
@@ -93,6 +99,22 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
 
   // ── Export state ─────────────────────────────────────────
   const [exporting, setExporting] = useState(false);
+
+  // ── SQL Viewer state ──────────────────────────────────────
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{
+    filename: string;
+    sizeMB: string;
+    lineCount: number;
+    truncated: boolean;
+    truncatedAt: string | null;
+    created: string;
+    meta: { tables: string[]; host: string | null; database: string | null; serverVersion: string | null; dumpDate: string | null };
+    content: string;
+  } | null>(null);
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerSearch, setViewerSearch] = useState('');
+  const [viewerActiveTab, setViewerActiveTab] = useState<'content' | 'tables' | 'info'>('info');
 
   // ── Fetch devices for filter ─────────────────────────────
   useEffect(() => {
@@ -190,6 +212,31 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
       setExporting(false);
     }
   };
+
+  // ── Open SQL viewer ────────────────────────────────────────
+  const openViewer = async (filename: string) => {
+    setViewerOpen(true);
+    setViewerLoading(true);
+    setViewerFile(null);
+    setViewerSearch('');
+    setViewerActiveTab('info');
+    try {
+      const res = await fetch(`/api/backup/view?filename=${encodeURIComponent(filename)}`);
+      const json = await res.json();
+      if (json.success) {
+        setViewerFile(json);
+      }
+    } catch { /* silent */ } finally {
+      setViewerLoading(false);
+    }
+  };
+
+  // ── Highlighted SQL lines ──────────────────────────────────
+  const filteredLines = viewerFile
+    ? (viewerSearch.trim()
+        ? viewerFile.content.split('\n').filter((l) => l.toLowerCase().includes(viewerSearch.toLowerCase()))
+        : viewerFile.content.split('\n'))
+    : [];
 
   return (
     <div className={embedded ? 'energy-page' : 'min-h-screen bg-gradient-to-br from-emerald-50 via-white to-slate-50'}>
@@ -572,20 +619,31 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
             ) : (
               <div className="divide-y divide-gray-50">
                 {backupFiles.map((f) => (
-                  <div key={f.filename} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition">
+                  <button
+                    key={f.filename}
+                    onClick={() => openViewer(f.filename)}
+                    className="w-full flex items-center justify-between px-5 py-3 hover:bg-emerald-50 transition text-left group"
+                  >
                     <div className="flex items-center gap-3 min-w-0">
-                      <HardDrive className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <FileCode2 className="w-4 h-4 text-emerald-500 flex-shrink-0 group-hover:text-emerald-700" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate font-mono">{f.filename}</p>
+                        <p className="text-sm font-semibold text-emerald-700 group-hover:text-emerald-900 truncate font-mono underline-offset-2 group-hover:underline">
+                          {f.filename}
+                        </p>
                         <p className="text-xs text-gray-400">
                           {new Date(f.created).toLocaleString('th-TH')}
                         </p>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full ml-4 flex-shrink-0">
-                      {f.size}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                      <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {f.size}
+                      </span>
+                      <span className="text-xs text-emerald-600 font-semibold opacity-0 group-hover:opacity-100 transition">
+                        {L(locale, 'ดูไฟล์ →', 'View →', '보기 →')}
+                      </span>
+                    </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -593,6 +651,183 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
         </section>
 
       </div>
+
+      {/* ══════════════════════════════════════════════
+          SQL VIEWER MODAL
+      ══════════════════════════════════════════════ */}
+      {viewerOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-stretch justify-end"
+          style={{ background: 'rgba(0,0,0,.45)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setViewerOpen(false); }}
+        >
+          <div className="w-full max-w-4xl bg-white flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-slate-800 to-slate-700 border-b border-slate-600">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <FileCode2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                <span className="text-sm font-bold text-white truncate font-mono">
+                  {viewerFile?.filename ?? L(locale, 'กำลังโหลด...', 'Loading...', '로딩 중...')}
+                </span>
+              </div>
+              <button
+                onClick={() => setViewerOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition flex-shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {viewerLoading ? (
+              <div className="flex-1 flex items-center justify-center gap-3 text-gray-400">
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                <span>{L(locale, 'กำลังโหลดไฟล์...', 'Loading file...', '파일 로딩 중...')}</span>
+              </div>
+            ) : viewerFile ? (
+              <>
+                {/* Tab bar */}
+                <div className="flex border-b border-gray-200 bg-gray-50 px-4 pt-2 gap-1">
+                  {([
+                    { key: 'info', icon: Info, label: L(locale, 'ข้อมูลไฟล์', 'File Info', '파일 정보') },
+                    { key: 'tables', icon: Table2, label: L(locale, `ตาราง (${viewerFile.meta.tables.length})`, `Tables (${viewerFile.meta.tables.length})`, `테이블 (${viewerFile.meta.tables.length})`) },
+                    { key: 'content', icon: FileCode2, label: L(locale, 'เนื้อหา SQL', 'SQL Content', 'SQL 내용') },
+                  ] as const).map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setViewerActiveTab(tab.key)}
+                      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-t-lg border-b-2 transition ${
+                        viewerActiveTab === tab.key
+                          ? 'border-emerald-500 text-emerald-700 bg-white'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                      }`}
+                    >
+                      <tab.icon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab content */}
+                <div className="flex-1 overflow-hidden flex flex-col">
+
+                  {/* INFO TAB */}
+                  {viewerActiveTab === 'info' && (
+                    <div className="p-5 overflow-y-auto space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { icon: HardDrive, label: L(locale, 'ขนาดไฟล์', 'File Size', '파일 크기'), value: `${viewerFile.sizeMB} MB` },
+                          { icon: FileCode2, label: L(locale, 'จำนวนบรรทัด', 'Line Count', '라인 수'), value: viewerFile.lineCount.toLocaleString() + (viewerFile.truncated ? ` (${L(locale,'แสดงแค่','showing first','처음')} ${viewerFile.truncatedAt})` : '') },
+                          { icon: Server, label: L(locale, 'เซิร์ฟเวอร์', 'Server Host', '서버 호스트'), value: viewerFile.meta.host ?? '—' },
+                          { icon: Database, label: L(locale, 'ฐานข้อมูล', 'Database', '데이터베이스'), value: viewerFile.meta.database ?? '—' },
+                          { icon: Info, label: L(locale, 'MySQL Version', 'MySQL Version', 'MySQL 버전'), value: viewerFile.meta.serverVersion ?? '—' },
+                          { icon: Clock, label: L(locale, 'วันที่ Dump', 'Dump Date', 'Dump 날짜'), value: viewerFile.meta.dumpDate ?? new Date(viewerFile.created).toLocaleString('th-TH') },
+                        ].map(({ icon: Icon, label, value }) => (
+                          <div key={label} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <Icon className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs text-gray-400 font-medium">{label}</p>
+                              <p className="text-sm font-semibold text-gray-800 font-mono break-all">{value}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {viewerFile.truncated && (
+                        <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                          {L(locale,
+                            `ไฟล์ขนาดใหญ่ — แสดงเฉพาะ ${viewerFile.truncatedAt} แรก`,
+                            `Large file — showing first ${viewerFile.truncatedAt} only`,
+                            `대용량 파일 — 처음 ${viewerFile.truncatedAt}만 표시`
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TABLES TAB */}
+                  {viewerActiveTab === 'tables' && (
+                    <div className="p-5 overflow-y-auto">
+                      <p className="text-xs text-gray-400 mb-3">
+                        {L(locale, `พบ ${viewerFile.meta.tables.length} ตาราง`, `Found ${viewerFile.meta.tables.length} tables`, `${viewerFile.meta.tables.length}개 테이블 발견`)}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {viewerFile.meta.tables.map((tbl) => (
+                          <div
+                            key={tbl}
+                            className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg"
+                          >
+                            <Table2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                            <span className="text-sm font-mono font-semibold text-slate-700">{tbl}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CONTENT TAB */}
+                  {viewerActiveTab === 'content' && (
+                    <>
+                      {/* Search bar */}
+                      <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <input
+                          type="text"
+                          placeholder={L(locale, 'ค้นหาในไฟล์...', 'Search in file...', '파일에서 검색...')}
+                          value={viewerSearch}
+                          onChange={(e) => setViewerSearch(e.target.value)}
+                          className="flex-1 bg-transparent text-sm outline-none placeholder-gray-400"
+                        />
+                        {viewerSearch && (
+                          <span className="text-xs text-gray-400">
+                            {filteredLines.length} {L(locale, 'บรรทัด', 'lines', '줄')}
+                          </span>
+                        )}
+                        {viewerSearch && (
+                          <button onClick={() => setViewerSearch('')} className="text-gray-400 hover:text-gray-600">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      {/* SQL content */}
+                      <div className="flex-1 overflow-auto bg-slate-900 p-4">
+                        <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed">
+                          {filteredLines.map((line, i) => {
+                            // Simple SQL keyword highlighting via spans
+                            const hl = line
+                              .replace(/^(--.*)/g, '<span style="color:#6a9955">$1</span>')
+                              .replace(/\b(CREATE TABLE|INSERT INTO|DROP TABLE|ALTER TABLE|LOCK TABLES|UNLOCK TABLES|SET|ENGINE|AUTO_INCREMENT|DEFAULT|PRIMARY KEY|KEY|CONSTRAINT|REFERENCES|NULL|NOT NULL)\b/g,
+                                '<span style="color:#569cd6">$1</span>')
+                              .replace(/\b(int|varchar|decimal|datetime|text|bigint|tinyint|char|float|double)\b/gi,
+                                '<span style="color:#4ec9b0">$1</span>');
+                            return (
+                              <span key={i}>
+                                <span style={{ color: '#4d4d4d', userSelect: 'none', marginRight: 12 }}>{String(i + 1).padStart(4)}</span>
+                                <span
+                                  style={{
+                                    background: viewerSearch && line.toLowerCase().includes(viewerSearch.toLowerCase())
+                                      ? 'rgba(255,215,0,.15)' : undefined,
+                                  }}
+                                  dangerouslySetInnerHTML={{ __html: hl }}
+                                />
+                                {'\n'}
+                              </span>
+                            );
+                          })}
+                        </pre>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-400">
+                <AlertCircle className="w-5 h-5 mr-2" />
+                {L(locale, 'โหลดไฟล์ไม่สำเร็จ', 'Failed to load file', '파일 로드 실패')}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
