@@ -92,7 +92,7 @@ export default function OnlineClassroomPage() {
 
   return (
     <>
-      <OnlineClassroomHeader lang={lang} />
+      <OnlineClassroomHeader lang={lang} onLangChange={setLang} />
       <main className="oc-main">
         <p className="oc-welcome">
           {t.welcome}

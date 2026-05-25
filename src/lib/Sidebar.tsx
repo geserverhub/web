@@ -15,6 +15,7 @@ import {
   Activity,
   GitCompare,
   Code,
+  BrainCircuit,
   FileText,
   MessageSquare,
   HelpCircle,
@@ -92,6 +93,7 @@ const menuSections: NavSection[] = [
     items: [
       { key: "developer", icon: Code, href: "/energy-dashboard/developer" },
       { key: "databaseBackup", icon: Database, href: "/energy-dashboard/backup" },
+      { key: "aiSettings", icon: BrainCircuit, href: "/energy-dashboard/ai-settings" },
     ],
   },
   {
@@ -121,6 +123,7 @@ const sectionFallback: Record<string, Record<string, string>> = {
   compareMonitoring: { th: "เปรียบเทียบ", en: "Compare", ko: "비교 모니터" },
   developer: { th: "ผู้พัฒนา", en: "Developer", ko: "개발자" },
   databaseBackup: { th: "백업ฐานข้อมูล", en: "Database Backup", ko: "데이터베이스 백업" },
+  aiSettings: { th: "ตั้งค่า AI", en: "AI Settings", ko: "AI 설정" },
   live: { th: "สด", en: "Live", ko: "실시간" },
 };
 

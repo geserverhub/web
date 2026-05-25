@@ -60,14 +60,10 @@ function ruleBasedQa(text, locale) {
   }));
 }
 
-async function analyzeWithOpenAI(text, meta, locale) {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) return null;
+async function analyzeWithAi(text, meta, locale) {
+  const lang = locale === 'ko' ? 'Korean' : locale === 'en' ? 'English' : 'Thai';
 
-  const lang =
-    locale === 'ko' ? 'Korean' : locale === 'en' ? 'English' : 'Thai';
-
-  const system = `You are an academic homework advisor. Extract every question from the user's document and provide a clear, well-structured model answer suitable for a homework report. Respond ONLY with valid JSON: {"items":[{"id":1,"question":"...","answer":"..."}]}. Write answers in ${lang}.`;
+  const system = `You are an academic homework advisor. Extract every question from the document and provide a clear, well-structured model answer suitable for a homework report. Respond ONLY with valid JSON (no markdown): {"items":[{"id":1,"question":"...","answer":"..."}]}. Write answers in ${lang}.`;
 
   const user = `Subject: ${meta.subjectCode}
 Instructor: ${meta.teacherName}
@@ -76,37 +72,58 @@ Author: ${meta.authorName}
 Document text:
 ${text.slice(0, 12000)}`;
 
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-      temperature: 0.4,
-      max_tokens: 4000,
-      response_format: { type: 'json_object' },
-    }),
-  });
+  // Try Anthropic first, then OpenAI
+  const anthropicKey = process.env.ANTHROPIC_API_KEY?.trim();
+  const openaiKey = process.env.OPENAI_API_KEY?.trim();
 
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  const raw = data.choices?.[0]?.message?.content || '';
+  let raw = null;
+
+  if (anthropicKey) {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: process.env.ANTHROPIC_MODEL?.trim() || 'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
+        system,
+        messages: [{ role: 'user', content: user }],
+      }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      raw = data.content?.[0]?.text || null;
+    }
+  } else if (openaiKey) {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini',
+        messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+        temperature: 0.4,
+        max_tokens: 4000,
+        response_format: { type: 'json_object' },
+      }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      raw = data.choices?.[0]?.message?.content || null;
+    }
+  }
+
+  if (!raw) return null;
+
   try {
-    const parsed = JSON.parse(raw);
+    const clean = raw.replace(/^```[a-z]*\n?/, '').replace(/```$/, '').trim();
+    const parsed = JSON.parse(clean);
     const items = Array.isArray(parsed.items) ? parsed.items : Array.isArray(parsed) ? parsed : [];
     return items
       .filter((it) => it?.question)
-      .map((it, i) => ({
-        id: Number(it.id) || i + 1,
-        question: String(it.question),
-        answer: String(it.answer || ''),
-      }));
+      .map((it, i) => ({ id: Number(it.id) || i + 1, question: String(it.question), answer: String(it.answer || '') }));
   } catch {
     return null;
   }
@@ -119,6 +136,7 @@ export async function POST(req) {
     const subjectCode = String(formData.get('subjectCode') || '').trim();
     const teacherName = String(formData.get('teacherName') || '').trim();
     const authorName = String(formData.get('authorName') || '').trim();
+    const studentId = String(formData.get('studentId') || '').trim();
     const questionText = String(formData.get('questionText') || '').trim();
     const locale = String(formData.get('locale') || 'th').slice(0, 2);
     const file = formData.get('file');
@@ -176,8 +194,8 @@ export async function POST(req) {
       );
     }
 
-    const meta = { subjectCode, teacherName, authorName };
-    let items = await analyzeWithOpenAI(combinedText, meta, locale);
+    const meta = { subjectCode, teacherName, authorName, studentId };
+    let items = await analyzeWithAi(combinedText, meta, locale);
     const aiUsed = Boolean(items?.length);
 
     if (!items?.length) {

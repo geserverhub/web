@@ -5,7 +5,7 @@ import {
   computeCarbonSummary,
   getSiteCreditPricing,
 } from '@/lib/energy/carbon-credits';
-import { resolveAiCredentials } from '@/lib/energy/ai-settings';
+import { callAiText, resolveAiCredentials } from '@/lib/energy/ai-settings';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,10 +18,6 @@ async function generateAiNarrative(
   locale: string,
   userId?: string | null
 ): Promise<{ text: string | null; source: string }> {
-  const creds = await resolveAiCredentials(userId);
-  if (!creds.apiKey) return { text: null, source: creds.source };
-  const apiKey = creds.apiKey;
-
   const lang =
     locale === 'th' || locale.startsWith('th')
       ? 'Thai'
@@ -29,7 +25,7 @@ async function generateAiNarrative(
         ? 'Korean'
         : 'English';
 
-  const system = `You are an energy & carbon analyst for GE Energy Tech. Analyze IoT/MQTT meter data already stored in MySQL power_records. Be concise (max 6 short bullets). Mention carbon credits (tCO2e), CO2 kg, kWh saved, and 1 actionable recommendation. Respond in ${lang} only. Do not invent data beyond the JSON provided.`;
+  const system = `You are an energy & carbon analyst for GE Energy Tech. Analyze IoT/MQTT meter data from power_records. Be concise (max 6 short bullets). Mention carbon credits (tCO2e), CO2 kg, kWh saved, and 1 actionable recommendation. Respond in ${lang} only. Do not invent data beyond the JSON provided.`;
 
   const user = JSON.stringify({
     summary,
@@ -37,34 +33,8 @@ async function generateAiNarrative(
     note: 'Carbon credits estimated as tonnes CO2e avoided (1 t ≈ 1 voluntary credit).',
   });
 
-  try {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: creds.model,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        max_tokens: 450,
-        temperature: 0.3,
-      }),
-    });
-
-    if (!resp.ok) return { text: null, source: creds.source };
-    const data = await resp.json();
-    return {
-      text: data.choices?.[0]?.message?.content?.trim() || null,
-      source: creds.source,
-    };
-  } catch (err) {
-    console.error('AI carbon narrative error:', err);
-    return { text: null, source: creds.source };
-  }
+  const result = await callAiText(system, user, { maxTokens: 450, temperature: 0.3, userId: userId ?? undefined });
+  return { text: result.text, source: result.source };
 }
 
 /**
