@@ -3,6 +3,12 @@ export const backendBaseUrl =
 
 export const languageStorageKey = "goeun-agency-language";
 
+/** Public hub (ngrok) — homepage login and external portal links */
+export const publicHubBaseUrl =
+  process.env.NEXT_PUBLIC_PUBLIC_HUB_URL ||
+  "https://strong-dory-enabled.ngrok-free.app";
+export const authSelectUrl = `${publicHubBaseUrl}/auth/select`;
+
 /** Homepage + agency pages: Thai, English, Korean only */
 export const supportedLanguages = ["th", "en", "ko"];
 
