@@ -35,6 +35,7 @@ const authConfig: NextAuthConfig = {
       if (pathname === "/customer-dashboard-login") return true;
       if (pathname === "/customer-momoge-login") return true;
       if (pathname === "/energy-dashboard-login") return true;
+      if (pathname === "/online-classroom-login") return true;
 
       // ระบบผู้ดูแล — ADMIN / SUPER_ADMIN เท่านั้น
       if (pathname.startsWith("/admin")) {
