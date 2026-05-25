@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { mctProductUrl, publicHubBaseUrl } from "@/lib/data";
 import "./client-login.css";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -39,9 +38,9 @@ export default function LoginPage() {
     setLoading(false);
 
     if (role === "SUPER_ADMIN" || role === "ADMIN") {
-      router.push("/admin/clients");
+      window.location.href = `${publicHubBaseUrl}/admin/clients`;
     } else {
-      router.push("/mct-product");
+      window.location.href = mctProductUrl;
     }
   }
 
