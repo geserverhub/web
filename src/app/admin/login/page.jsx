@@ -20,6 +20,7 @@ export default function AdminLoginPage() {
     const res = await signIn("credentials", {
       email: email.trim(),
       password,
+      portal: "admin",
       redirect: false,
     });
 

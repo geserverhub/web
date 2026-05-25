@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import { queryGeserverhub } from "@/lib/geserverhub-db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -34,6 +35,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        portal: { label: "Portal", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
@@ -55,6 +57,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const valid = await bcrypt.compare(credentials.password, user.password);
           console.log("[auth] password valid:", valid);
           if (!valid) return null;
+
+          // Check portal permission (skip for SUPER_ADMIN)
+          const portal = credentials.portal?.trim();
+          if (portal && user.role !== 'SUPER_ADMIN') {
+            try {
+              const permRows = await queryGeserverhub(
+                'SELECT is_allowed FROM user_permissions WHERE user_id = ? AND portal = ? LIMIT 1',
+                [user.id, portal]
+              );
+              if (permRows.length > 0 && !permRows[0].is_allowed) {
+                console.log("[auth] portal blocked:", portal, "for user:", user.id);
+                return null;
+              }
+            } catch (permErr) {
+              console.error("[auth] permission check error:", permErr.message);
+              // Fail open — allow login if permission check fails
+            }
+          }
 
           return {
             id: user.id,
