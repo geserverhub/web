@@ -474,6 +474,10 @@
   background: linear-gradient(90deg, #059669, #10b981);
 }
 
+.cd-card-accent--compare {
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #a855f7);
+}
+
 .cd-card-body {
   padding: 1rem;
 }

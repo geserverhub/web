@@ -4,12 +4,39 @@ import { queryGe } from '@/lib/mysql-ge'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+async function ensureNotificationsSchema() {
+  await queryGe(`
+    CREATE TABLE IF NOT EXISTS \`notifications\` (
+      \`id\`         INT(11)      NOT NULL AUTO_INCREMENT,
+      \`type\`       ENUM('alert','warning','info','success') NOT NULL DEFAULT 'info',
+      \`category\`   VARCHAR(100) NOT NULL DEFAULT 'System',
+      \`title\`      VARCHAR(255) NOT NULL,
+      \`message\`    TEXT         NOT NULL,
+      \`device_id\`  INT(11)      DEFAULT NULL,
+      \`site\`       VARCHAR(50)  DEFAULT NULL,
+      \`metadata\`   TEXT         DEFAULT NULL,
+      \`is_read\`    TINYINT(1)   NOT NULL DEFAULT 0,
+      \`created_at\` DATETIME     DEFAULT CURRENT_TIMESTAMP,
+      \`read_at\`    DATETIME     DEFAULT NULL,
+      PRIMARY KEY (\`id\`),
+      KEY \`idx_notifications_device\` (\`device_id\`),
+      KEY \`idx_notifications_site\` (\`site\`),
+      KEY \`idx_notifications_is_read\` (\`is_read\`),
+      KEY \`idx_notifications_created\` (\`created_at\`),
+      CONSTRAINT \`fk_notifications_device\`
+        FOREIGN KEY (\`device_id\`) REFERENCES \`devices\` (\`deviceID\`)
+        ON DELETE SET NULL ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `)
+}
+
 /**
  * Background service to automatically generate notifications
  * This should be called periodically (e.g., every 5 minutes via cron)
  */
 export async function POST(request: NextRequest) {
   try {
+    await ensureNotificationsSchema()
     const generatedNotifications: string[] = []
 
     // 1. Check for offline devices
