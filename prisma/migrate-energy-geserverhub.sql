@@ -194,6 +194,24 @@ CREATE TABLE IF NOT EXISTS `device_notifications` (
   `severity` varchar(50) DEFAULT 'info',
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
+  `alarm_enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `high_active_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `low_active_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `message_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `email_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `output_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_device_notifications_device` (`device_id`),
   KEY `idx_notifications_site` (`site`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add settings columns if upgrading from older schema (safe to run multiple times)
+ALTER TABLE `device_notifications`
+  ADD COLUMN IF NOT EXISTS `alarm_enabled` tinyint(1) NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS `high_active_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS `low_active_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS `message_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS `email_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS `output_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

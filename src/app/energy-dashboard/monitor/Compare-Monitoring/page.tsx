@@ -219,7 +219,7 @@ export default function CompareMonitoringPage() {
 
         <div className="machine-info-row" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="machine-info">
-            <div className="label">K-Save ID:</div>
+            <div className="label">GE ID:</div>
             <div className="value">{ksaveId}</div>
           </div>
           <div className="machine-info">
@@ -474,8 +474,7 @@ export default function CompareMonitoringPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
                 {filteredGroups.map(([device, items], idx) => {
-                  // display names: KSave01, KSave02, ...
-                  const displayName = `KSave${String(idx + 1).padStart(2, '0')}`
+                  const displayName = device
                   return <ComparisonCard key={device} device={device} displayName={displayName} items={items} />
                 })}
               </div>

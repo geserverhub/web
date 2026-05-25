@@ -21,7 +21,9 @@
     "db:migrate": "node scripts/migrate-client-columns.mjs && node scripts/migrate-partner-product.mjs",
     "db:setup-energy": "node scripts/setup-ge-energy.mjs",
     "db:export": "node scripts/export-geserverhub-db.mjs",
-    "mqtt:bridge": "node scripts/mqtt-bridge.mjs"
+    "mqtt:bridge": "node scripts/mqtt-bridge.mjs",
+    "mqtt:broker": "node scripts/start-broker.mjs",
+    "mqtt:start": "node scripts/start-broker.mjs & sleep 2 && node scripts/mqtt-bridge.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -51,7 +53,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "dotenv": "^16.6.1"
+    "aedes": "^1.0.2",
+    "dotenv": "^16.6.1",
+    "net": "^1.0.2"
   },
   "overrides": {
     "postcss": "^8.5.10"

@@ -247,7 +247,7 @@ export default function DashboardPage() {
       balanceGood: 'สมดุลดี',
       balanceWarn: 'ควรติดตาม',
       balanceRisk: 'ต่างกันสูง',
-      beforeCurrentLabel: 'Before K-Save (ก่อนติดตั้ง 7-14 วัน)',
+      beforeCurrentLabel: 'ก่อนติดตั้ง (7-14 วัน)',
       beforeAvgCurrent: 'ค่าเฉลี่ยก่อนติดตั้ง',
       waitingMeter: 'รอรับข้อมูลจากมิเตอร์',
       modelLabel: 'รุ่น',
@@ -278,7 +278,7 @@ export default function DashboardPage() {
       balanceGood: 'Balanced',
       balanceWarn: 'Monitor',
       balanceRisk: 'High Gap',
-      beforeCurrentLabel: 'Before K-Save (7-14 days pre-install)',
+      beforeCurrentLabel: 'Before Installation (7-14 days)',
       beforeAvgCurrent: 'Avg Before Install',
       waitingMeter: 'Waiting for meter data',
       modelLabel: 'Model',
@@ -309,7 +309,7 @@ export default function DashboardPage() {
       balanceGood: '양호',
       balanceWarn: '확인 필요',
       balanceRisk: '편차 큼',
-      beforeCurrentLabel: 'K-Save 설치 전 (7-14일)',
+      beforeCurrentLabel: '설치 전 (7-14일)',
       beforeAvgCurrent: '설치 전 평균 전류',
       waitingMeter: '미터 데이터 대기 중',
       modelLabel: '모델',
@@ -340,7 +340,7 @@ export default function DashboardPage() {
       balanceGood: '平衡良好',
       balanceWarn: '建议关注',
       balanceRisk: '差异较高',
-      beforeCurrentLabel: 'Before K-Save（安装前7-14天）',
+      beforeCurrentLabel: '安装前（7-14天）',
       beforeAvgCurrent: '安装前平均电流',
       waitingMeter: '等待表计数据',
       modelLabel: '型号',
@@ -371,7 +371,7 @@ export default function DashboardPage() {
       balanceGood: 'Can bang tot',
       balanceWarn: 'Nen theo doi',
       balanceRisk: 'Lech cao',
-      beforeCurrentLabel: 'Before K-Save (7-14 ngày trước lắp)',
+      beforeCurrentLabel: 'Truoc lap dat (7-14 ngay)',
       beforeAvgCurrent: 'TB trước lắp đặt',
       waitingMeter: 'Cho du lieu dong ho',
       modelLabel: 'Model',
@@ -402,7 +402,7 @@ export default function DashboardPage() {
       balanceGood: 'Seimbang',
       balanceWarn: 'Perlu Dipantau',
       balanceRisk: 'Ketidakseimbangan Tinggi',
-      beforeCurrentLabel: 'Before K-Save (7-14 hari sebelum pasang)',
+      beforeCurrentLabel: 'Sebelum Pemasangan (7-14 hari)',
       beforeAvgCurrent: 'Purata Sebelum Pasang',
       waitingMeter: 'Menunggu data meter',
       modelLabel: 'Model',
@@ -433,7 +433,7 @@ export default function DashboardPage() {
     balanceGood: 'Balanced',
     balanceWarn: 'Monitor',
     balanceRisk: 'High Gap',
-    beforeCurrentLabel: 'Before K-Save (7-14 days pre-install)',
+    beforeCurrentLabel: 'Before Installation (7-14 days)',
     beforeAvgCurrent: 'Avg Before Install',
     waitingMeter: 'Waiting for meter data',
     modelLabel: 'Model',
@@ -453,7 +453,7 @@ export default function DashboardPage() {
       energySavedLabel: 'พลังงานที่ประหยัด',
       failedToLoadDashboard: 'โหลดแดชบอร์ดไม่สำเร็จ',
       retry: 'ลองใหม่',
-      systemBadge: 'K Energy Save System',
+      systemBadge: 'GE Energy System',
       kpiDevices: 'อุปกรณ์',
       kpiOnline: 'ออนไลน์',
       kpiKwhSaved: 'kWh ที่ประหยัด',
@@ -483,8 +483,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'แนวโน้มกระแส (30 นาทีล่าสุด)',
       reduction: 'ลดลง',
-      beforeKsave: 'ก่อน K-Save',
-      afterKsave: 'หลัง K-Save'
+      beforeKsave: 'ก่อนติดตั้ง',
+      afterKsave: 'หลังติดตั้ง'
     },
     ko: {
       dashboardTitle: '대시보드',
@@ -495,7 +495,7 @@ export default function DashboardPage() {
       energySavedLabel: '절약 전력량',
       failedToLoadDashboard: '대시보드를 불러오지 못했습니다',
       retry: '다시 시도',
-      systemBadge: 'K Energy Save 시스템',
+      systemBadge: 'GE Energy 시스템',
       kpiDevices: '장치',
       kpiOnline: '온라인',
       kpiKwhSaved: '절약 kWh',
@@ -525,8 +525,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: '전류 추세 (최근 30분)',
       reduction: '감소',
-      beforeKsave: 'K-Save 이전',
-      afterKsave: 'K-Save 이후'
+      beforeKsave: '설치 전',
+      afterKsave: '설치 후'
     },
     en: {
       dashboardTitle: 'Dashboard',
@@ -537,7 +537,7 @@ export default function DashboardPage() {
       energySavedLabel: 'Energy Saved',
       failedToLoadDashboard: 'Failed to load dashboard',
       retry: 'Retry',
-      systemBadge: 'K Energy Save System',
+      systemBadge: 'GE Energy System',
       kpiDevices: 'Devices',
       kpiOnline: 'Online',
       kpiKwhSaved: 'kWh Saved',
@@ -567,8 +567,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'Current Trend (Last 30 min)',
       reduction: 'Reduction',
-      beforeKsave: 'Before K-Save',
-      afterKsave: 'After K-Save'
+      beforeKsave: 'Before Installation',
+      afterKsave: 'After Installation'
     },
     cn: {
       dashboardTitle: '仪表板',
@@ -579,7 +579,7 @@ export default function DashboardPage() {
       energySavedLabel: '节省电量',
       failedToLoadDashboard: '无法加载仪表板',
       retry: '重试',
-      systemBadge: 'K Energy Save 系统',
+      systemBadge: 'GE Energy 系统',
       kpiDevices: '设备',
       kpiOnline: '在线',
       kpiKwhSaved: '已节省 kWh',
@@ -609,8 +609,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: '电流趋势（最近 30 分钟）',
       reduction: '降幅',
-      beforeKsave: 'K-Save 前',
-      afterKsave: 'K-Save 后'
+      beforeKsave: '安装前',
+      afterKsave: '安装后'
     },
     vn: {
       dashboardTitle: 'Bang Dieu Khien',
@@ -621,7 +621,7 @@ export default function DashboardPage() {
       energySavedLabel: 'Nang luong tiet kiem',
       failedToLoadDashboard: 'Khong the tai bang dieu khien',
       retry: 'Thu lai',
-      systemBadge: 'K Energy Save System',
+      systemBadge: 'GE Energy System',
       kpiDevices: 'Thiet bi',
       kpiOnline: 'Truc tuyen',
       kpiKwhSaved: 'kWh tiet kiem',
@@ -651,8 +651,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'Xu huong dong dien (30 phut gan nhat)',
       reduction: 'Giam',
-      beforeKsave: 'Truoc K-Save',
-      afterKsave: 'Sau K-Save'
+      beforeKsave: 'Truoc lap dat',
+      afterKsave: 'Sau lap dat'
     },
     ms: {
       dashboardTitle: 'Papan Pemuka',
@@ -663,7 +663,7 @@ export default function DashboardPage() {
       energySavedLabel: 'Tenaga Dijimatkan',
       failedToLoadDashboard: 'Gagal memuatkan papan pemuka',
       retry: 'Cuba Lagi',
-      systemBadge: 'K Energy Save System',
+      systemBadge: 'GE Energy System',
       kpiDevices: 'Peranti',
       kpiOnline: 'Dalam Talian',
       kpiKwhSaved: 'kWh Dijimatkan',
@@ -693,8 +693,8 @@ export default function DashboardPage() {
       thd: 'THD',
       trendTitle: 'Trend Arus (30 minit terakhir)',
       reduction: 'Pengurangan',
-      beforeKsave: 'Sebelum K-Save',
-      afterKsave: 'Selepas K-Save'
+      beforeKsave: 'Sebelum Pemasangan',
+      afterKsave: 'Selepas Pemasangan'
     }
   }[locale] ?? {
     dashboardTitle: 'Dashboard',
@@ -705,7 +705,7 @@ export default function DashboardPage() {
     energySavedLabel: 'Energy Saved',
     failedToLoadDashboard: 'Failed to load dashboard',
     retry: 'Retry',
-    systemBadge: 'K Energy Save System',
+    systemBadge: 'GE Energy System',
     kpiDevices: 'Devices',
     kpiOnline: 'Online',
     kpiKwhSaved: 'kWh Saved',
@@ -735,8 +735,8 @@ export default function DashboardPage() {
     thd: 'THD',
     trendTitle: 'Current Trend (Last 30 min)',
     reduction: 'Reduction',
-    beforeKsave: 'Before K-Save',
-    afterKsave: 'After K-Save'
+    beforeKsave: 'Before Installation',
+    afterKsave: 'After Installation'
   }
 
   const uniqueLocations = Array.from(
@@ -1196,7 +1196,7 @@ export default function DashboardPage() {
                               <span className="text-[10px] font-bold text-gray-700 text-right break-all">{device.seriesNo || '–'}</span>
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
-                              <span className="text-[10px] text-gray-400 font-medium">K-Save ID</span>
+                              <span className="text-[10px] text-gray-400 font-medium">GE ID</span>
                               <span className="text-[10px] font-bold text-emerald-600">{device.ksaveID || '–'}</span>
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
@@ -1306,7 +1306,7 @@ export default function DashboardPage() {
                                 </span>
                               </div>
                               <div className="flex justify-between items-center px-2.5 py-1.5">
-                                <span className="text-[10px] text-gray-400 font-medium">K-Save ID</span>
+                                <span className="text-[10px] text-gray-400 font-medium">GE ID</span>
                                 <span className="text-[10px] font-bold text-emerald-600">{device.ksaveID || '–'}</span>
                               </div>
                               <div className="flex justify-between items-start px-2.5 py-1.5 gap-2">

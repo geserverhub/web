@@ -89,7 +89,7 @@ export default function MeterSetingPage() {
       refresh: 'รีเฟรช',
       listTitle: 'รายการมิเตอร์',
       search: 'ค้นหา',
-      searchPlaceholder: 'ค้นหาจากชื่ออุปกรณ์, KSAVE ID, อีเมล, สถานที่, IP',
+      searchPlaceholder: 'ค้นหาจากชื่ออุปกรณ์, GE ID, อีเมล, สถานที่, IP',
       statusFilter: 'ตัวกรองสถานะ',
       allStatus: 'ทุกสถานะ',
       enabled: 'พร้อมใช้งาน',
@@ -125,7 +125,7 @@ export default function MeterSetingPage() {
       refresh: '새로 고침',
       listTitle: '미터 목록',
       search: '검색',
-      searchPlaceholder: '장치명, KSAVE ID, 이메일, 위치, IP로 검색',
+      searchPlaceholder: '장치명, GE ID, 이메일, 위치, IP로 검색',
       statusFilter: '상태 필터',
       allStatus: '전체 상태',
       enabled: '사용 가능',
@@ -161,7 +161,7 @@ export default function MeterSetingPage() {
       refresh: 'Refresh',
       listTitle: 'Meter List',
       search: 'Search',
-      searchPlaceholder: 'Search by device name, KSAVE ID, email, location, IP',
+      searchPlaceholder: 'Search by device name, GE ID, email, location, IP',
       statusFilter: 'Status Filter',
       allStatus: 'All Statuses',
       enabled: 'Enabled',
@@ -197,7 +197,7 @@ export default function MeterSetingPage() {
     refresh: 'Refresh',
     listTitle: 'Meter List',
     search: 'Search',
-    searchPlaceholder: 'Search by device name, KSAVE ID, email, location, IP',
+    searchPlaceholder: 'Search by device name, GE ID, email, location, IP',
     statusFilter: 'Status Filter',
     allStatus: 'All Statuses',
     enabled: 'Enabled',
@@ -403,7 +403,7 @@ export default function MeterSetingPage() {
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.no}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.deviceId}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.deviceName}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">KSAVE ID</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">GE ID</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.ownerEmail}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.location}</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{copy.phone}</th>

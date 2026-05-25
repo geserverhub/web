@@ -255,23 +255,28 @@ async function resolveRecordScope(pool, deviceId, payloadScope) {
 
 async function savePowerRecord(pool, body) {
   const deviceId = body.device_id;
-  const [check] = await pool.query('SELECT deviceID FROM devices WHERE deviceID = ? LIMIT 1', [
-    deviceId,
-  ]);
+  const [check] = await pool.query(
+    'SELECT deviceID, series_no FROM devices WHERE deviceID = ? LIMIT 1',
+    [deviceId]
+  );
   if (!check.length) return { ok: false, error: `Device ${deviceId} not found` };
 
+  const deviceSeriesNo = check[0].series_no || null;
   const scope = await resolveRecordScope(pool, deviceId, body.record_scope);
   const targetTable = SCOPE_TO_TABLE[scope];
-
-  const [[{ nextId }]] = await pool.query(
-    `SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM ${targetTable}`
-  );
-
   const recordTime =
     body.record_time || new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-  const columns = ['id', 'device_id', 'record_time'];
-  const values = [nextId, deviceId, recordTime];
+  // Use AUTO_INCREMENT — do NOT specify id manually (avoids race condition)
+  const columns = ['device_id', 'record_time'];
+  const values = [deviceId, recordTime];
+
+  // Populate series_no from devices table if not in payload
+  const seriesNo = body.series_no || deviceSeriesNo;
+  if (seriesNo && targetTable === 'power_records') {
+    columns.push('series_no');
+    values.push(seriesNo);
+  }
 
   for (const field of OPTIONAL_FIELDS) {
     if (body[field] !== undefined && body[field] !== null) {
@@ -280,12 +285,24 @@ async function savePowerRecord(pool, body) {
     }
   }
 
-  await pool.query(
+  const [result] = await pool.query(
     `INSERT INTO ${targetTable} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
     values
   );
+  const recordId = result.insertId;
 
-  return { ok: true, record_id: nextId, scope, targetTable, recordTime };
+  // Update device_connectivity: last_seen_at + online_status
+  await pool.query(
+    `INSERT INTO device_connectivity (device_id, last_seen_at, last_record_id, online_status)
+     VALUES (?, NOW(), ?, 1)
+     ON DUPLICATE KEY UPDATE
+       last_seen_at   = NOW(),
+       last_record_id = VALUES(last_record_id),
+       online_status  = 1`,
+    [deviceId, recordId]
+  );
+
+  return { ok: true, record_id: recordId, scope, targetTable, recordTime };
 }
 
 function payloadToBody(raw, deviceId) {

@@ -28,6 +28,7 @@ import {
   LineChart,
   Building2,
   Cable,
+  Wind,
 } from "lucide-react";
 import "./energy-sidebar.css";
 
@@ -77,6 +78,7 @@ const menuSections: NavSection[] = [
       { key: "monitor", icon: Monitor, href: "/energy-dashboard/monitor", exact: true },
       { key: "compareMonitoring", icon: GitCompare, href: "/energy-dashboard/monitor/Compare-Monitoring" },
       { key: "location", icon: MapPin, href: "/energy-dashboard/location" },
+      { key: "carbonTracker", icon: Wind, href: "/energy-dashboard/carbon" },
     ],
   },
   {
@@ -123,6 +125,7 @@ const sectionFallback: Record<string, Record<string, string>> = {
     ko: "장치 연결",
   },
   live: { th: "สด", en: "Live", ko: "실시간" },
+  carbonTracker: { th: "คาร์บอน & พลังงาน", en: "Carbon & Energy", ko: "탄소 & 에너지" },
 };
 
 function isActive(pathname: string, item: NavItem): boolean {

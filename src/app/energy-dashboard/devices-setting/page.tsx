@@ -145,7 +145,7 @@ export default function DevicesSettingPage() {
 
   const nextKsaveId = (site: string | undefined) => {
     const code = siteCode(site);
-    const regex = new RegExp(`^KSAVE-${code}-(\\d{6})$`);
+    const regex = new RegExp(`^GE-${code}-(\\d{6})$`);
     const current = devices
       .filter(d => (d.site || '').toLowerCase() === (site || '').toLowerCase())
       .map(d => {
@@ -154,7 +154,7 @@ export default function DevicesSettingPage() {
       })
       .reduce((max, n) => Math.max(max, n), 0);
     const next = String(current + 1).padStart(6, '0');
-    return `KSAVE-${code}-${next}`;
+    return `GE-${code}-${next}`;
   };
 
   const nextSerialNo = (site: string | undefined) => {
@@ -590,7 +590,7 @@ export default function DevicesSettingPage() {
           ipAddress: 'IP 주소',
           lastUpdate: '최근 업데이트',
           registerDate: '등록일',
-          tableHeaders: ['#', '수정', '장치명', 'KSAVE ID', '고객명', '전화번호', '주소', '소유자 이메일', '설치 유형', '상태', 'IP 주소', '최근 업데이트', '등록일'],
+          tableHeaders: ['#', '수정', '장치명', 'GE ID', '고객명', '전화번호', '주소', '소유자 이메일', '설치 유형', '상태', 'IP 주소', '최근 업데이트', '등록일'],
           settingsBadge: '장치 설정',
           edit: '수정',
           delete: '삭제',
