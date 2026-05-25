@@ -26,6 +26,7 @@ interface Device {
   created_at?: string;
   customerName?: string;
   customerNameEn?: string;
+  customerNameKr?: string;
   customerPhone?: string;
   customerAddress?: string;
   location?: string;
@@ -132,9 +133,11 @@ export default function DevicesSettingPage() {
   const [editMeterID, setEditMeterID] = useState('');
   const [editLocationID, setEditLocationID] = useState('');
   const [editSerailID, setEditSerailID] = useState('');
+  const [editNameKR, setEditNameKR] = useState('');
   const [addMeterID, setAddMeterID] = useState('');
   const [addLocationID, setAddLocationID] = useState('');
   const [addSerailID, setAddSerailID] = useState('');
+  const [addNameKR, setAddNameKR] = useState('');
 
   useEffect(() => { setClientReady(true); }, []);
 
@@ -292,7 +295,7 @@ export default function DevicesSettingPage() {
     });
     setSaveMsg(null);
     // Load existing momoge_cus record for this device
-    setEditMmgID(null); setEditMeterID(''); setEditLocationID(''); setEditSerailID('');
+    setEditMmgID(null); setEditMeterID(''); setEditLocationID(''); setEditSerailID(''); setEditNameKR('');
     if (device.deviceID) {
       fetch(`/api/ge-energy/momoge-cus?deviceId=${device.deviceID}`)
         .then(r => r.json())
@@ -303,6 +306,7 @@ export default function DevicesSettingPage() {
             setEditMeterID(rec.meterID ?? '');
             setEditLocationID(rec.LocationID ?? '');
             setEditSerailID(rec.serailID ?? '');
+            setEditNameKR(rec.nameKR ?? '');
           }
         })
         .catch(() => {});
@@ -365,6 +369,7 @@ export default function DevicesSettingPage() {
           device_id: editingDevice.deviceID,
           nameTH: editForm.customerName || null,
           nameEN: editForm.customerNameEn || null,
+          nameKR: editNameKR || null,
           phone: editForm.customerPhone || null,
           address: editForm.customerAddress || null,
           latitude: parseCoordinate(editForm.latitude) ?? null,
@@ -447,7 +452,7 @@ export default function DevicesSettingPage() {
     setCustomerResults([]);
     setCreateMsg(null);
     setGeocodeError(null);
-    setAddMeterID(''); setAddLocationID(''); setAddSerailID('');
+    setAddMeterID(''); setAddLocationID(''); setAddSerailID(''); setAddNameKR('');
     setShowAddModal(true);
   }
 
@@ -486,6 +491,7 @@ export default function DevicesSettingPage() {
               device_id: newDeviceId,
               nameTH: addForm.customerName || null,
               nameEN: addForm.customerNameEn || null,
+              nameKR: addNameKR || null,
               phone: addForm.customerPhone || null,
               address: addForm.customerAddress || null,
               latitude: parseCoordinate(addForm.latitude) ?? null,
@@ -600,6 +606,8 @@ export default function DevicesSettingPage() {
           customerNamePlaceholder: 'ชื่อ-นามสกุลลูกค้า (ภาษาไทย)',
           customerNameEnLabel: 'ชื่อลูกค้า (ภาษาอังกฤษ)',
           customerNameEnPlaceholder: 'Customer Name (English)',
+          customerNameKrLabel: 'ชื่อลูกค้า (ภาษาเกาหลี)',
+          customerNameKrPlaceholder: '고객 이름 (한국어)',
           phoneLabel: 'เบอร์โทร / Phone',
           phonePlaceholder: 'เช่น 02-123-4567 หรือ +66 81-234-5678',
           addressLabel: 'ที่อยู่ / Address',
@@ -677,6 +685,8 @@ export default function DevicesSettingPage() {
           customerNamePlaceholder: '고객 이름 입력 (태국어)',
           customerNameEnLabel: '고객명 (영어)',
           customerNameEnPlaceholder: 'Customer Name (English)',
+          customerNameKrLabel: '고객명 (한국어)',
+          customerNameKrPlaceholder: '고객 이름 입력 (한국어)',
           phoneLabel: '전화번호 / Phone',
           phonePlaceholder: '예: 02-123-4567 또는 +82 10-1234-5678',
           addressLabel: '주소 / Address',
@@ -754,6 +764,8 @@ export default function DevicesSettingPage() {
           customerNamePlaceholder: 'Customer name in Thai',
           customerNameEnLabel: 'Customer Name (English)',
           customerNameEnPlaceholder: 'Customer full name in English',
+          customerNameKrLabel: 'Customer Name (Korean)',
+          customerNameKrPlaceholder: '고객 이름 (한국어)',
           phoneLabel: 'Phone',
           phonePlaceholder: 'e.g. +66 81-234-5678',
           addressLabel: 'Address',
@@ -847,13 +859,6 @@ export default function DevicesSettingPage() {
                 <span className="text-slate-300 text-xs mt-0.5">{kpi.label}</span>
               </div>
             ))}
-            <button
-              onClick={openAddModal}
-              className="hidden md:inline-flex items-center justify-center gap-2 px-4 py-3 bg-white text-slate-800 font-semibold text-sm rounded-xl hover:bg-slate-50 transition shadow-md border border-white/30"
-            >
-              <Plus className="w-4 h-4" />
-              {ui.addDevice || 'เพิ่มเครื่อง'}
-            </button>
           </div>
         </div>
       </div>
@@ -875,11 +880,6 @@ export default function DevicesSettingPage() {
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 shadow-sm transition whitespace-nowrap">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-500' : ''}`} />
             {ui.refresh}
-          </button>
-          <button onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-xl text-sm font-semibold hover:from-emerald-700 hover:to-green-800 shadow-sm transition whitespace-nowrap">
-            <Plus className="w-4 h-4" />
-            {ui.addDevice || 'เพิ่มเครื่อง'}
           </button>
         </div>
       </div>
@@ -1170,6 +1170,22 @@ export default function DevicesSettingPage() {
                       </div>
                     </div>
                   )}
+                  {viewingDevice.customerNameEn && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{ui.customerNameEnLabel}</label>
+                      <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800">
+                        {viewingDevice.customerNameEn}
+                      </div>
+                    </div>
+                  )}
+                  {viewingDevice.customerNameKr && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{ui.customerNameKrLabel}</label>
+                      <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800">
+                        {viewingDevice.customerNameKr}
+                      </div>
+                    </div>
+                  )}
                   {viewingDevice.customerPhone && (
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">{ui.phoneLabel}</label>
@@ -1308,6 +1324,12 @@ export default function DevicesSettingPage() {
                   <input value={editForm.customerNameEn ?? ''} onChange={e => setEditForm(f => ({...f, customerNameEn: e.target.value}))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder={ui.customerNameEnPlaceholder} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{ui.customerNameKrLabel}</label>
+                  <input value={editNameKR} onChange={e => setEditNameKR(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder={ui.customerNameKrPlaceholder} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{ui.phoneLabel}</label>
@@ -1652,6 +1674,15 @@ export default function DevicesSettingPage() {
                     onChange={e => setAddForm(f => ({ ...f, customerNameEn: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder={ui.customerNameEnPlaceholder}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{ui.customerNameKrLabel}</label>
+                  <input
+                    value={addNameKR}
+                    onChange={e => setAddNameKR(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder={ui.customerNameKrPlaceholder}
                   />
                 </div>
                 <div>

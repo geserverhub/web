@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
         mc.device_id,
         mc.nameTH,
         mc.nameEN,
+        mc.nameKR,
         mc.phone,
         mc.address,
         mc.latitude,
@@ -84,16 +85,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       meterID, LocationID, serailID, device_id,
-      nameTH, nameEN, phone, address, latitude, longitude,
+      nameTH, nameEN, nameKR, phone, address, latitude, longitude,
     } = body
 
     const result = await query(`
       INSERT INTO momoge_cus
-        (meterID, LocationID, serailID, device_id, nameTH, nameEN, phone, address, latitude, longitude)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (meterID, LocationID, serailID, device_id, nameTH, nameEN, nameKR, phone, address, latitude, longitude)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       meterID || null, LocationID || null, serailID || null, device_id || null,
-      nameTH || null, nameEN || null, phone || null, address || null,
+      nameTH || null, nameEN || null, nameKR || null, phone || null, address || null,
       latitude ?? null, longitude ?? null,
     ]) as unknown as { insertId: number }
 
@@ -113,7 +114,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json()
     const {
       mmgID, meterID, LocationID, serailID, device_id,
-      nameTH, nameEN, phone, address, latitude, longitude,
+      nameTH, nameEN, nameKR, phone, address, latitude, longitude,
     } = body
 
     if (!mmgID) {
@@ -123,12 +124,12 @@ export async function PUT(req: NextRequest) {
     await query(`
       UPDATE momoge_cus
       SET meterID=?, LocationID=?, serailID=?, device_id=?,
-          nameTH=?, nameEN=?, phone=?, address=?,
+          nameTH=?, nameEN=?, nameKR=?, phone=?, address=?,
           latitude=?, longitude=?, updated_at=NOW()
       WHERE mmgID=?
     `, [
       meterID || null, LocationID || null, serailID || null, device_id || null,
-      nameTH || null, nameEN || null, phone || null, address || null,
+      nameTH || null, nameEN || null, nameKR || null, phone || null, address || null,
       latitude ?? null, longitude ?? null, mmgID,
     ])
 
