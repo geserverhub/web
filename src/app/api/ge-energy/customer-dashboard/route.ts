@@ -110,6 +110,19 @@ export async function GET(request: NextRequest) {
     const safeRate = resolveRate(primarySite, searchParams.get('rate'))
     const { sql: deviceSql, params: deviceParams } = deviceFilterSql(deviceIds)
 
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo   = searchParams.get('dateTo')
+
+    let dateCondition: string
+    let dateConditionParams: string[]
+    if (dateFrom && dateTo) {
+      dateCondition = `AND pr.record_time >= ? AND pr.record_time < DATE_ADD(?, INTERVAL 1 DAY)`
+      dateConditionParams = [dateFrom, dateTo]
+    } else {
+      dateCondition = `AND pr.record_time >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 23 MONTH)`
+      dateConditionParams = []
+    }
+
     const monthlyRows = await queryGe(
       `SELECT
         DATE_FORMAT(pr.record_time, '%Y-%m') AS month_key,
@@ -120,11 +133,12 @@ export async function GET(request: NextRequest) {
         SUM(COALESCE(pr.energy_reduction, 0)) AS saved_kwh
        FROM power_records pr
        INNER JOIN devices d ON d.deviceID = pr.device_id
-       WHERE pr.record_time >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 11 MONTH)
+       WHERE 1=1
+       ${dateCondition}
        ${deviceSql}
        GROUP BY DATE_FORMAT(pr.record_time, '%Y-%m'), YEAR(pr.record_time), MONTH(pr.record_time)
        ORDER BY YEAR(pr.record_time) ASC, MONTH(pr.record_time) ASC`,
-      deviceParams,
+      [...dateConditionParams, ...deviceParams],
     )
 
     const monthly = (monthlyRows as MonthlyRow[]).map((row) => {
