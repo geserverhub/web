@@ -23,6 +23,9 @@ import {
   ChevronUp,
   RefreshCw,
   AlertCircle,
+  Search,
+  Calculator,
+  X,
 } from 'lucide-react';
 import './carbon-credits.css';
 
@@ -86,6 +89,13 @@ interface MeterTotals {
   records: number;
 }
 
+interface DeviceOption {
+  deviceId: number;
+  deviceName: string;
+  geID: string;
+  site: string;
+}
+
 function L(locale: string, th: string, en: string, ko: string): string {
   if (locale === 'th') return th;
   if (locale === 'ko') return ko;
@@ -117,6 +127,10 @@ export default function CarbonCreditsPage() {
     meters: MeterRow[];
     totals: MeterTotals | null;
   }>({ loading: false, meters: [], totals: null });
+  const [allDevices, setAllDevices] = useState<DeviceOption[]>([]);
+  const [meterSearch, setMeterSearch] = useState('');
+  const [pickedIds, setPickedIds] = useState<Set<number>>(new Set());
+  const [showPicker, setShowPicker] = useState(false);
   const [fxData, setFxData] = useState<{
     krwToThb: number | null;
     lastUpdated: string | null;
@@ -138,10 +152,24 @@ export default function CarbonCreditsPage() {
     }
   }, []);
 
-  const fetchMeterTable = useCallback(async () => {
+  const fetchAllDevices = useCallback(async () => {
+    try {
+      const res = await fetch('/api/ge-energy/carbon-meters?list=true', { cache: 'no-store' });
+      const json = await res.json();
+      if (json.success) setAllDevices(json.devices);
+    } catch { /* silent */ }
+  }, []);
+
+  const fetchMeterTable = useCallback(async (deviceIds?: number[]) => {
     setMeterTable((prev) => ({ ...prev, loading: true }));
     try {
-      const res = await fetch(`/api/ge-energy/carbon-meters?site=${selectedSite}&period=${period}`, { cache: 'no-store' });
+      let url = `/api/ge-energy/carbon-meters?period=${period}`;
+      if (deviceIds && deviceIds.length > 0) {
+        url += `&deviceIds=${deviceIds.join(',')}`;
+      } else {
+        url += `&all=true`;
+      }
+      const res = await fetch(url, { cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
         setMeterTable({ loading: false, meters: json.meters, totals: json.totals });
@@ -151,7 +179,7 @@ export default function CarbonCreditsPage() {
     } catch {
       setMeterTable((prev) => ({ ...prev, loading: false }));
     }
-  }, [selectedSite, period]);
+  }, [period]);
 
   const fetchCarbonData = useCallback(async () => {
     setLoading(true);
@@ -219,7 +247,8 @@ export default function CarbonCreditsPage() {
     fetchCarbonData();
     fetchMeterTable();
     fetchExchangeRate();
-  }, [fetchCarbonData, fetchMeterTable, fetchExchangeRate]);
+    fetchAllDevices();
+  }, [fetchCarbonData, fetchMeterTable, fetchExchangeRate, fetchAllDevices]);
 
   if (loading && !data) {
     return (
@@ -445,33 +474,128 @@ export default function CarbonCreditsPage() {
 
       {/* Per-Meter Carbon Credits Table */}
       <div className="cc-card">
-        <div className="flex items-center justify-between mb-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 className="cc-card-title" style={{ margin: 0 }}>
             {L(locale, 'ตารางคาร์บอนเครดิตรายมิเตอร์', 'Carbon Credits per Meter', '미터별 탄소 크레딧')}
-            {selectedDeviceId && (
-              <span className="ml-2 text-sm font-normal text-emerald-600">
-                — {meterTable.meters.find((m) => m.deviceId === selectedDeviceId)?.geID}
-              </span>
+            {pickedIds.size > 0 && (
+              <span className="ml-2 text-sm font-normal text-emerald-600">({pickedIds.size} {L(locale, 'มิเตอร์', 'meters', '미터')})</span>
             )}
           </h2>
-          <button
-            onClick={fetchMeterTable}
-            disabled={meterTable.loading}
-            className="p-2 hover:bg-gray-100 rounded-lg transition disabled:opacity-50"
-            title={L(locale, 'รีเฟรช', 'Refresh', '새로고침')}
-          >
-            <RefreshCw className={`w-4 h-4 text-gray-400 ${meterTable.loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowPicker((v) => !v)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-100 transition"
+            >
+              <Search className="w-4 h-4" />
+              {L(locale, 'เลือกมิเตอร์', 'Select Meters', '미터 선택')}
+            </button>
+            <button
+              onClick={() => fetchMeterTable(pickedIds.size > 0 ? Array.from(pickedIds) : undefined)}
+              disabled={meterTable.loading}
+              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition"
+            >
+              <Calculator className="w-4 h-4" />
+              {meterTable.loading
+                ? L(locale, 'กำลังคำนวณ...', 'Calculating...', '계산 중...')
+                : L(locale, 'คำนวณ', 'Calculate', '계산')}
+            </button>
+          </div>
         </div>
+
+        {/* Meter Picker Panel */}
+        {showPicker && (
+          <div className="mb-4 border border-emerald-200 rounded-xl overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border-b border-emerald-100">
+              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder={L(locale, 'ค้นหามิเตอร์ (ชื่อ / ID)...', 'Search meters (name / ID)...', '미터 검색 (이름 / ID)...')}
+                value={meterSearch}
+                onChange={(e) => setMeterSearch(e.target.value)}
+                className="flex-1 bg-transparent text-sm outline-none placeholder-gray-400"
+              />
+              {meterSearch && (
+                <button onClick={() => setMeterSearch('')}><X className="w-3.5 h-3.5 text-gray-400" /></button>
+              )}
+            </div>
+            <div className="flex items-center gap-3 px-3 py-2 bg-white border-b border-gray-100 text-xs">
+              <button
+                onClick={() => setPickedIds(new Set(allDevices.map((d) => d.deviceId)))}
+                className="text-emerald-600 font-semibold hover:underline"
+              >
+                {L(locale, '✓ เลือกทั้งหมด', '✓ Select All', '✓ 전체 선택')}
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setPickedIds(new Set())}
+                className="text-gray-400 font-semibold hover:underline"
+              >
+                {L(locale, 'ล้างทั้งหมด', 'Clear All', '전체 해제')}
+              </button>
+              <span className="ml-auto text-gray-400">
+                {pickedIds.size > 0
+                  ? `${pickedIds.size} ${L(locale, 'เลือกแล้ว', 'selected', '선택됨')}`
+                  : L(locale, 'ยังไม่ได้เลือก (คำนวณทั้งหมด)', 'None selected (calculate all)', '선택 없음 (전체 계산)')}
+              </span>
+            </div>
+            <div className="max-h-52 overflow-y-auto divide-y divide-gray-50">
+              {allDevices
+                .filter((d) => {
+                  const q = meterSearch.toLowerCase();
+                  return !q || d.deviceName.toLowerCase().includes(q) || d.geID.toLowerCase().includes(q) || d.site.toLowerCase().includes(q);
+                })
+                .map((d) => {
+                  const checked = pickedIds.has(d.deviceId);
+                  return (
+                    <label
+                      key={d.deviceId}
+                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-emerald-50 transition ${checked ? 'bg-emerald-50' : 'bg-white'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setPickedIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(d.deviceId)) next.delete(d.deviceId);
+                            else next.add(d.deviceId);
+                            return next;
+                          });
+                        }}
+                        className="accent-emerald-600 w-4 h-4 flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className={`text-sm font-semibold leading-tight ${checked ? 'text-emerald-700' : 'text-gray-700'}`}>
+                          {d.deviceName}
+                        </p>
+                        <p className="text-xs text-gray-400 font-mono">{d.geID} {d.site ? `· ${d.site}` : ''}</p>
+                      </div>
+                    </label>
+                  );
+                })}
+              {allDevices.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-6">{L(locale, 'ไม่พบอุปกรณ์', 'No devices found', '장치 없음')}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {meterTable.loading ? (
           <div className="flex items-center justify-center gap-2 py-8 text-gray-400">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span className="text-sm">{L(locale, 'กำลังโหลด...', 'Loading...', '로딩 중...')}</span>
+            <span className="text-sm">{L(locale, 'กำลังคำนวณ...', 'Calculating...', '계산 중...')}</span>
           </div>
         ) : meterTable.meters.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm py-8">
-            {L(locale, 'ไม่มีข้อมูลมิเตอร์', 'No meter data', '미터 데이터 없음')}
-          </p>
+          <div className="text-center py-10">
+            <Calculator className="w-10 h-10 text-emerald-200 mx-auto mb-3" />
+            <p className="text-gray-500 font-semibold text-sm">
+              {L(locale, 'กดปุ่ม "คำนวณ" เพื่อดึงข้อมูลมิเตอร์', 'Press "Calculate" to load meter data', '"계산" 버튼을 눌러 미터 데이터 로드')}
+            </p>
+            <p className="text-gray-400 text-xs mt-1">
+              {L(locale, 'หรือเลือกมิเตอร์ที่ต้องการก่อน แล้วกดคำนวณ', 'Or select specific meters first, then calculate', '먼저 미터를 선택하거나 전체 계산')}
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
