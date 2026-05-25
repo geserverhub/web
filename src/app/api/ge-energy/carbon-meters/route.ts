@@ -17,6 +17,40 @@ export async function GET(request: NextRequest) {
     const site = (searchParams.get('site') || 'thailand').toLowerCase();
     const validSites = ['thailand', 'korea', 'vietnam', 'malaysia'];
     const safeSite = validSites.includes(site) ? site : 'thailand';
+    const deviceIdsParam = searchParams.get('deviceIds'); // comma-separated e.g. "4,7,12"
+    const allDevices = searchParams.get('all') === 'true';
+
+    // --- All-devices list (no power_records join) for the picker ---
+    if (searchParams.get('list') === 'true') {
+      const listRows = (await queryGeserverhub(
+        `SELECT deviceID, deviceName, geID, site, location, ipAddress
+         FROM devices ORDER BY deviceName ASC`
+      )) as Row[];
+      return NextResponse.json({
+        success: true,
+        devices: listRows.map((r) => ({
+          deviceId: Number(r.deviceID),
+          deviceName: String(r.deviceName || ''),
+          geID: String(r.geID || ''),
+          site: String(r.site || r.location || ''),
+        })),
+      });
+    }
+
+    // --- Carbon calculation query ---
+    const params: unknown[] = [period];
+    let whereExtra = '';
+
+    if (deviceIdsParam) {
+      const ids = deviceIdsParam.split(',').map(Number).filter((n) => Number.isFinite(n) && n > 0);
+      if (ids.length > 0) {
+        whereExtra = `AND d.deviceID IN (${ids.map(() => '?').join(',')})`;
+        params.push(...ids);
+      }
+    } else if (!allDevices) {
+      whereExtra = `AND LOWER(COALESCE(d.site, d.location, '')) LIKE ?`;
+      params.push(`%${safeSite}%`);
+    }
 
     const rows = (await queryGeserverhub(
       `SELECT
@@ -34,10 +68,10 @@ export async function GET(request: NextRequest) {
        FROM power_records pr
        JOIN devices d ON pr.device_id = d.deviceID
        WHERE pr.record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
-         AND LOWER(COALESCE(d.site, d.location, '')) LIKE ?
+         ${whereExtra}
        GROUP BY d.deviceID, d.deviceName, d.geID, d.site, d.location, d.ipAddress
        ORDER BY co2_kg DESC`,
-      [period, `%${safeSite}%`]
+      params
     )) as Row[];
 
     const meters = rows.map((r, idx) => {
