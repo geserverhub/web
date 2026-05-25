@@ -146,3 +146,83 @@
 .energy-notif-panel .bg-gray-50 {
   background: rgba(236, 253, 245, 0.8) !important;
 }
+
+/* Gray / slate text → black (energy dashboard readability) */
+.energy-app :is(
+  .text-gray-300,
+  .text-gray-400,
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-800,
+  .text-slate-300,
+  .text-slate-400,
+  .text-slate-500,
+  .text-slate-600,
+  .text-slate-700,
+  .text-slate-800,
+  .text-zinc-400,
+  .text-zinc-500,
+  .text-zinc-600,
+  .text-neutral-400,
+  .text-neutral-500,
+  .text-neutral-600
+) {
+  color: #000 !important;
+}
+
+.energy-app :is(
+  .hover\:text-gray-500:hover,
+  .hover\:text-gray-600:hover,
+  .hover\:text-gray-700:hover,
+  .group-hover\:text-gray-500,
+  .group-hover\:text-gray-600
+) {
+  color: #000 !important;
+}
+
+.energy-main ::placeholder,
+.energy-app ::placeholder {
+  color: #000 !important;
+  opacity: 1;
+}
+
+/* Keep light text on dark / green hero surfaces */
+.energy-app :is(.energy-hero, .cm-hero, .cc-hero) :is(
+  .text-gray-300,
+  .text-gray-400,
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-800,
+  .text-slate-300,
+  .text-slate-400,
+  .text-slate-500,
+  .text-slate-600,
+  .text-slate-700,
+  .text-slate-800
+),
+.energy-app .esb-link-active :is(
+  .text-gray-300,
+  .text-gray-400,
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-800,
+  .text-slate-300,
+  .text-slate-400,
+  .text-slate-500,
+  .text-slate-600,
+  .text-slate-700,
+  .text-slate-800
+) {
+  color: inherit !important;
+}
+
+/* Chart axis / legend labels (Recharts inline fill) */
+.energy-main .recharts-cartesian-axis-tick-value,
+.energy-main .recharts-label tspan,
+.energy-main .recharts-legend-item-text {
+  fill: #000 !important;
+  color: #000 !important;
+}

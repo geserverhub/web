@@ -132,7 +132,7 @@
 .cm-title-block p {
   margin: 0;
   font-size: 0.85rem;
-  color: #64748b;
+  color: #000;
 }
 
 .cm-toolbar {
@@ -201,7 +201,7 @@
 
 .cm-badge-off {
   background: #f1f5f9;
-  color: #64748b;
+  color: #000;
   border-color: #e2e8f0;
 }
 
@@ -234,7 +234,7 @@
   border-radius: 0.625rem;
   font-size: 0.875rem;
   background: var(--cm-green-50);
-  color: #334155;
+  color: #000;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -281,7 +281,7 @@
   border-radius: 1rem;
   padding: 3rem 1.5rem;
   text-align: center;
-  color: #64748b;
+  color: #000;
   background: rgba(255, 255, 255, 0.6);
 }
 

@@ -35,7 +35,7 @@
 }
 
 .gm-control-active button svg {
-  fill: #374151 !important;
+  fill: #000 !important;
 }
 
 /* Map type control */
@@ -48,7 +48,7 @@
 
 .gm-style-mtc label {
   font-size: 12px !important;
-  color: #6b7280 !important;
+  color: #000 !important;
   font-weight: 500;
   padding: 4px 8px !important;
 }
@@ -114,13 +114,13 @@
 .info-window-title {
   font-size: 14px;
   font-weight: 700;
-  color: #1f2937;
+  color: #000;
   margin: 0 0 8px 0;
 }
 
 .info-window-location {
   font-size: 12px;
-  color: #6b7280;
+  color: #000;
   margin: 0 0 6px 0;
 }
 

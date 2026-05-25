@@ -555,13 +555,13 @@ export default function MonitorPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                     <XAxis
                       dataKey="time"
-                      tick={{ fontSize: 10, fill: '#9ca3af' }}
+                      tick={{ fontSize: 10, fill: '#000' }}
                       axisLine={false} tickLine={false}
                       interval="preserveStartEnd"
                       tickFormatter={formatXTick}
                     />
                     <YAxis
-                      tick={{ fontSize: 10, fill: '#9ca3af' }}
+                      tick={{ fontSize: 10, fill: '#000' }}
                       axisLine={false} tickLine={false}
                       width={52}
                       tickFormatter={(v) => Number(v).toFixed(1)}
@@ -570,7 +570,7 @@ export default function MonitorPage() {
                       contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,.08)' }}
                       formatter={(v: number | string) => [`${Number(v).toFixed(2)} ${activeMetric[2]}`, activeMetric[1]]}
                       labelFormatter={(val) => `🕐 ${val}`}
-                      labelStyle={{ color: '#6b7280', fontSize: 11 }}
+                      labelStyle={{ color: '#000', fontSize: 11 }}
                     />
                     <Legend
                       wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
@@ -637,10 +637,10 @@ export default function MonitorPage() {
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={energyHistory} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                          <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false}
+                          <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false}
                             tickFormatter={formatXTick} interval="preserveStartEnd" />
-                          <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36}
-                            label={{ value: 'Energy Usage', angle: -90, position: 'insideLeft', fontSize: 9, fill: '#9ca3af', dx: -2 }} />
+                          <YAxis tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false} width={36}
+                            label={{ value: 'Energy Usage', angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
                           <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
                             formatter={(v: number | string, n: string) => [`${Number(v).toFixed(2)} kWh`, n]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -683,10 +683,10 @@ export default function MonitorPage() {
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={energyHistory} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                          <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false}
+                          <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false}
                             tickFormatter={formatXTick} interval="preserveStartEnd" />
-                          <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40}
-                            label={{ value: `Energy Cost (${currencyCode})`, angle: -90, position: 'insideLeft', fontSize: 9, fill: '#9ca3af', dx: -2 }} />
+                          <YAxis tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false} width={40}
+                            label={{ value: `Energy Cost (${currencyCode})`, angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
                           <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
                             formatter={(v: number | string, n: string) => [
                               formatCurrencyBySite(Number(v), selectedSite, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -759,10 +759,10 @@ export default function MonitorPage() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                      <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false}
+                      <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false}
                         tickFormatter={formatXTick} interval="preserveStartEnd" />
-                      <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36}
-                        label={{ value: 'Energy (KwH)', angle: -90, position: 'insideLeft', fontSize: 9, fill: '#9ca3af', dx: -2 }} />
+                      <YAxis tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false} width={36}
+                        label={{ value: 'Energy (KwH)', angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
                       <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
                         formatter={(v: number | string) => [`${Number(v).toFixed(2)} kWh`, 'Energy']}
                         labelFormatter={(val) => `🕐 ${val}`} />
