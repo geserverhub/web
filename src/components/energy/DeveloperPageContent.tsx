@@ -47,6 +47,12 @@ interface PowerRecord {
   metrics_PF: number | null;
   before_THD: number | null;
   metrics_THD: number | null;
+  before_L1: number | null;
+  before_L2: number | null;
+  before_L3: number | null;
+  metrics_L1: number | null;
+  metrics_L2: number | null;
+  metrics_L3: number | null;
 }
 
 interface BackupFile {
@@ -403,30 +409,54 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
+                  {/* Group row */}
+                  <tr className="bg-gray-100 border-b border-gray-200 text-xs font-bold uppercase tracking-wide">
+                    <th colSpan={4} className="px-3 py-1.5 text-left text-gray-500" />
+                    <th colSpan={3} className="px-3 py-1.5 text-center text-blue-600 border-l border-gray-200">
+                      {L(locale, 'พลังงาน / CO₂', 'Energy / CO₂', '에너지 / CO₂')}
+                    </th>
+                    <th colSpan={6} className="px-3 py-1.5 text-center text-red-500 border-l border-gray-200">
+                      Before
+                    </th>
+                    <th colSpan={6} className="px-3 py-1.5 text-center text-emerald-600 border-l border-gray-200">
+                      Current (Metrics)
+                    </th>
+                  </tr>
+                  {/* Column headers */}
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    {/* Info columns */}
                     {[
-                      { key: 'id', label: 'ID' },
-                      { key: 'device', label: L(locale, 'อุปกรณ์', 'Device', '장치') },
-                      { key: 'site', label: 'Site' },
-                      { key: 'time', label: L(locale, 'เวลาบันทึก', 'Record Time', '기록 시간') },
-                      { key: 'before_kwh', label: 'Before kWh' },
-                      { key: 'metrics_kwh', label: 'Metrics kWh' },
-                      { key: 'saved', label: L(locale, 'ประหยัด (kWh)', 'Saved (kWh)', '절감 (kWh)') },
-                      { key: 'co2', label: 'CO₂ (kg)' },
-                      { key: 'before_p', label: 'Before P (W)' },
-                      { key: 'metrics_p', label: 'Current P (W)' },
-                      { key: 'before_pf', label: 'Before PF' },
-                      { key: 'metrics_pf', label: 'Current PF' },
-                      { key: 'before_thd', label: 'Before THD' },
-                      { key: 'metrics_thd', label: 'Current THD' },
+                      { key: 'id', label: 'ID', cls: '' },
+                      { key: 'device', label: L(locale, 'อุปกรณ์', 'Device', '장치'), cls: '' },
+                      { key: 'site', label: 'Site', cls: '' },
+                      { key: 'time', label: L(locale, 'เวลาบันทึก', 'Record Time', '기록 시간'), cls: '' },
                     ].map((col) => (
-                      <th
-                        key={col.key}
-                        className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap"
-                      >
+                      <th key={col.key} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                         {col.label}
+                      </th>
+                    ))}
+                    {/* Energy/CO2 */}
+                    {[
+                      { key: 'saved', label: L(locale, 'ประหยัด kWh', 'Saved kWh', '절감 kWh'), border: true },
+                      { key: 'co2', label: 'CO₂ (kg)', border: false },
+                      { key: 'kwh_diff', label: 'Δ kWh', border: false },
+                    ].map((col) => (
+                      <th key={col.key} className={`px-3 py-2 text-right text-xs font-semibold text-blue-600 uppercase tracking-wide whitespace-nowrap ${col.border ? 'border-l border-gray-200' : ''}`}>
+                        {col.label}
+                      </th>
+                    ))}
+                    {/* Before columns */}
+                    {['kWh', 'P (W)', 'PF', 'THD', 'L1', 'L2', 'L3'].map((lbl, i) => (
+                      <th key={`b_${lbl}`} className={`px-3 py-2 text-right text-xs font-semibold text-red-500 uppercase tracking-wide whitespace-nowrap ${i === 0 ? 'border-l border-gray-200' : ''}`}>
+                        {lbl}
+                      </th>
+                    ))}
+                    {/* Metrics columns */}
+                    {['kWh', 'P (W)', 'PF', 'THD', 'L1', 'L2', 'L3'].map((lbl, i) => (
+                      <th key={`m_${lbl}`} className={`px-3 py-2 text-right text-xs font-semibold text-emerald-600 uppercase tracking-wide whitespace-nowrap ${i === 0 ? 'border-l border-gray-200' : ''}`}>
+                        {lbl}
                       </th>
                     ))}
                   </tr>
@@ -435,8 +465,11 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
                   {records.map((r, i) => {
                     const saved = r.energy_reduction;
                     const goodSave = saved != null && saved > 0;
+                    const kwhDiff = (r.before_kWh != null && r.metrics_kWh != null)
+                      ? r.before_kWh - r.metrics_kWh : null;
                     return (
-                      <tr key={r.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'}>
+                      <tr key={r.id} className={i % 2 === 0 ? 'bg-white hover:bg-blue-50/20' : 'bg-gray-50/40 hover:bg-blue-50/20'} style={{ transition: 'background .1s' }}>
+                        {/* Info */}
                         <td className="px-3 py-2.5 font-mono text-xs text-gray-400">{r.id}</td>
                         <td className="px-3 py-2.5">
                           <div className="font-semibold text-gray-800 text-xs">{r.device_name}</div>
@@ -444,24 +477,32 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
                         </td>
                         <td className="px-3 py-2.5 text-xs text-gray-500">{r.site || '—'}</td>
                         <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">{fmtDate(r.record_time)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-xs text-red-500">{fmt2(r.before_kWh)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600">{fmt2(r.metrics_kWh)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-xs font-bold">
-                          <span className={goodSave ? 'text-blue-700' : 'text-gray-400'}>
-                            {fmt2(saved)}
-                          </span>
+                        {/* Energy/CO2 */}
+                        <td className="px-3 py-2.5 text-right font-mono text-xs font-bold border-l border-gray-100">
+                          <span className={goodSave ? 'text-blue-700' : 'text-gray-400'}>{fmt2(saved)}</span>
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono text-xs">
-                          <span className={r.co2_reduction != null && r.co2_reduction > 0 ? 'text-teal-600' : 'text-gray-400'}>
-                            {fmt2(r.co2_reduction)}
-                          </span>
+                          <span className={r.co2_reduction != null && r.co2_reduction > 0 ? 'text-teal-600 font-semibold' : 'text-gray-400'}>{fmt2(r.co2_reduction)}</span>
                         </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs">
+                          <span className={kwhDiff != null && kwhDiff > 0 ? 'text-blue-500' : 'text-gray-400'}>{fmt2(kwhDiff)}</span>
+                        </td>
+                        {/* Before */}
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-red-400 border-l border-gray-100">{fmt2(r.before_kWh)}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-xs text-red-400">{fmt2(r.before_P)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600">{fmt2(r.metrics_P)}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-xs text-red-400">{fmt2(r.before_PF)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600">{fmt2(r.metrics_PF)}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-xs text-red-400">{fmt2(r.before_THD)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-red-300">{fmt2(r.before_L1)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-red-300">{fmt2(r.before_L2)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-red-300">{fmt2(r.before_L3)}</td>
+                        {/* Metrics */}
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600 border-l border-gray-100">{fmt2(r.metrics_kWh)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600">{fmt2(r.metrics_P)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600">{fmt2(r.metrics_PF)}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-600">{fmt2(r.metrics_THD)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-400">{fmt2(r.metrics_L1)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-400">{fmt2(r.metrics_L2)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-xs text-emerald-400">{fmt2(r.metrics_L3)}</td>
                       </tr>
                     );
                   })}
