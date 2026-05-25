@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
+import "./client-login.css";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,7 +32,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Redirect based on role
     const sessionRes = await fetch("/api/auth/session");
     const session = await sessionRes.json();
     const role = session?.user?.role;
@@ -46,79 +46,86 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="d-flex align-items-center justify-content-center vh-100 bg-dark">
-      <div className="card shadow-lg p-4" style={{ width: "100%", maxWidth: 420 }}>
-        <h4 className="mb-4 text-center fw-bold">เข้าสู่ระบบ</h4>
+    <div className="hub-login-page">
+      <div className="hub-login-card">
+        <header className="hub-login-brand">
+          <img
+            src="/logo-mark.svg"
+            alt=""
+            className="hub-login-logo"
+            width={52}
+            height={52}
+          />
+          <span className="hub-login-kicker">GE SERVER HUB</span>
+          <h1 className="hub-login-title">เข้าสู่ระบบ</h1>
+          <p className="hub-login-sub">
+            ลูกค้าและพาร์ทเนอร์ — ใช้ username หรืออีเมลที่ลงทะเบียนไว้
+          </p>
+        </header>
 
-        {error && (
-          <div className="alert alert-danger py-2" role="alert">
+        {error ? (
+          <div className="hub-login-error" role="alert">
             {error}
           </div>
-        )}
+        ) : null}
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="email">
+          <div className="hub-login-field">
+            <label className="hub-login-label" htmlFor="hub-email">
               Username / Email
             </label>
-            <input
-              id="email"
-              type="text"
-              className="form-control"
-              autoComplete="username"
-              placeholder="กรอก username หรือ email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div className="hub-login-input-wrap">
+              <User size={18} className="hub-login-input-icon" aria-hidden />
+              <input
+                id="hub-email"
+                type="text"
+                className="hub-login-input"
+                autoComplete="username"
+                placeholder="กรอก username หรือ email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label className="form-label" htmlFor="password">
+          <div className="hub-login-field">
+            <label className="hub-login-label" htmlFor="hub-password">
               รหัสผ่าน
             </label>
-            <div className="input-group">
+            <div className="hub-login-input-wrap">
+              <Lock size={18} className="hub-login-input-icon" aria-hidden />
               <input
-                id="password"
+                id="hub-password"
                 type={showPassword ? "text" : "password"}
-                className="form-control"
+                className="hub-login-input"
                 autoComplete="current-password"
+                placeholder="กรอกรหัสผ่าน"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="hub-login-toggle-pw"
                 onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
                 aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
               >
-                {showPassword ? "🙈" : "👁️"}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
           <button
             type="submit"
-            className="btn btn-primary w-100"
+            className="hub-login-submit"
             disabled={loading}
           >
-            {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+            {loading ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
           </button>
         </form>
-
-        <hr className="my-4" />
-        <div className="text-center d-flex flex-column gap-2">
-          <a href="/auth/select" className="text-muted small" style={{ textDecoration: "none" }}>
-            ← เลือกประเภทผู้ใช้อื่น
-          </a>
-          <a href="/admin/login" className="text-muted small" style={{ textDecoration: "none" }}>
-            ⚙️ เข้าสู่ระบบสำหรับผู้ดูแลระบบ
-          </a>
-        </div>
-
       </div>
-    </main>
+    </div>
   );
 }
