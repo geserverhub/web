@@ -63,10 +63,7 @@ export async function GET(request: NextRequest) {
     const params = request.nextUrl.searchParams;
     const site = (params.get('site') || 'thailand').toLowerCase();
     const deviceId = params.get('deviceId');
-    const minutesRaw = parseFloat(params.get('minutes') || '1.5') || 1.5;
-    const minutes = Math.min(Math.max(minutesRaw, 0.25), 180);
-    const seconds = Math.round(minutes * 60);
-    const isSmallWindow = minutes < 5;
+    const minutes = Math.min(Math.max(parseInt(params.get('minutes') || '30', 10) || 30, 5), 180);
 
     const siteSql =
       site === 'all'
@@ -216,52 +213,18 @@ export async function GET(request: NextRequest) {
 
     let series: Array<Record<string, unknown>> = [];
     if (avgParts.length > 0 && powerCols.has('record_time')) {
-      // Small window (<5 min): raw records with INTERVAL in seconds; large window: minute-bucket avg
-      const rawParts = avgParts.map((p) => p.replace(/^AVG\(([^)]+)\)\s+AS\s+/, '$1 AS '));
-      let seriesRows: SeriesRow[] = [];
-
-      if (isSmallWindow) {
-        seriesRows = (await queryGe(
-          `SELECT
-            record_time,
-            ${rawParts.join(',\n            ')}
-           FROM power_records
-           WHERE device_id = ?
-             AND record_time >= NOW() - INTERVAL ? SECOND
-           ORDER BY record_time ASC
-           LIMIT 200`,
-          [deviceId, seconds]
-        )) as SeriesRow[];
-      } else {
-        seriesRows = (await queryGe(
-          `SELECT
-            DATE_FORMAT(record_time, '%Y-%m-%d %H:%i') AS bucket,
-            MIN(record_time) AS record_time,
-            ${avgParts.join(',\n            ')}
-           FROM power_records
-           WHERE device_id = ?
-             AND record_time >= NOW() - INTERVAL ? MINUTE
-           GROUP BY DATE_FORMAT(record_time, '%Y-%m-%d %H:%i')
-           ORDER BY MIN(record_time) ASC`,
-          [deviceId, minutes]
-        )) as SeriesRow[];
-      }
-
-      // Fallback: if no rows in window, show last 50 records regardless of time
-      if (seriesRows.length === 0) {
-        const fallbackParts = isSmallWindow ? rawParts : avgParts.map((p) => p.replace(/^AVG\(([^)]+)\)\s+AS\s+/, '$1 AS '));
-        seriesRows = (await queryGe(
-          `SELECT
-            record_time,
-            ${fallbackParts.join(',\n            ')}
-           FROM power_records
-           WHERE device_id = ?
-           ORDER BY record_time DESC
-           LIMIT 50`,
-          [deviceId]
-        )) as SeriesRow[];
-        seriesRows = seriesRows.reverse();
-      }
+      const seriesRows = (await queryGe(
+        `SELECT
+          DATE_FORMAT(record_time, '%Y-%m-%d %H:%i') AS bucket,
+          MIN(record_time) AS record_time,
+          ${avgParts.join(',\n          ')}
+         FROM power_records
+         WHERE device_id = ?
+           AND record_time >= NOW() - INTERVAL ? MINUTE
+         GROUP BY DATE_FORMAT(record_time, '%Y-%m-%d %H:%i')
+         ORDER BY MIN(record_time) ASC`,
+        [deviceId, minutes]
+      )) as SeriesRow[];
 
       series = seriesRows.map((row) => {
         const t = row.record_time ? new Date(row.record_time) : new Date();

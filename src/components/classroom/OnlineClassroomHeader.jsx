@@ -29,13 +29,7 @@ const navCopy = {
   },
 };
 
-const LANG_OPTIONS = [
-  { code: 'th', label: 'TH' },
-  { code: 'ko', label: 'KO' },
-  { code: 'en', label: 'EN' },
-];
-
-export default function OnlineClassroomHeader({ lang = 'th', onLangChange }) {
+export default function OnlineClassroomHeader({ lang = 'th' }) {
   const pathname = usePathname();
   const router = useRouter();
   const t = navCopy[lang] || navCopy.th;
@@ -56,11 +50,6 @@ export default function OnlineClassroomHeader({ lang = 'th', onLangChange }) {
     router.replace('/online-classroom-login');
   }
 
-  function handleLang(code) {
-    localStorage.setItem('ge_lang', code);
-    if (onLangChange) onLangChange(code);
-  }
-
   return (
     <header className="oc-header">
       <div className="oc-header-brand">
@@ -72,21 +61,6 @@ export default function OnlineClassroomHeader({ lang = 'th', onLangChange }) {
           <p className="oc-header-sub">{t.sub}</p>
         </div>
       </div>
-
-      {/* Language switcher */}
-      <div className="oc-lang-switch" aria-label="Language">
-        {LANG_OPTIONS.map(({ code, label }) => (
-          <button
-            key={code}
-            type="button"
-            onClick={() => handleLang(code)}
-            className={`oc-lang-btn${lang === code ? ' oc-lang-btn--active' : ''}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       <button type="button" className="oc-logout" onClick={handleLogout}>
         <LogOut size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
         {t.logout}

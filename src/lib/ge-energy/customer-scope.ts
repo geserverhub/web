@@ -55,25 +55,13 @@ async function tableExists(tableName: string) {
 /** Resolve devices/meters owned by the logged-in customer. */
 export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<CustomerMeter[]> {
   const userId = scope.userId?.trim() || null
-  let clientId = scope.clientId?.trim() || null
+  const clientId = scope.clientId?.trim() || null
   const email = scope.email?.trim().toLowerCase() || null
   const phone = scope.phone?.trim() || null
   const username = scope.username?.trim() || null
 
   if (!userId && !clientId && !email && !phone && !username) {
     return []
-  }
-
-  // Resolve userId → clientId via User table (avoids querying non-existent mc.user_id column)
-  if (userId && !clientId) {
-    const hasUserTable = await tableExists('User')
-    if (hasUserTable) {
-      const userRows = (await queryGe(
-        'SELECT clientId FROM User WHERE id = ? LIMIT 1',
-        [userId],
-      )) as { clientId: string | null }[]
-      clientId = userRows[0]?.clientId?.trim() || null
-    }
   }
 
   const hasMomoge = await tableExists('momoge_cus')
@@ -93,6 +81,10 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     conditions.push('d.client_id = ?')
     params.push(clientId)
   }
+  if (hasMomoge && userId) {
+    conditions.push('mc.user_id = ?')
+    params.push(userId)
+  }
   if (hasMomoge && phone) {
     conditions.push('(mc.phone = ? OR REPLACE(REPLACE(mc.phone, "-", ""), " ", "") = REPLACE(REPLACE(?, "-", ""), " ", ""))')
     params.push(phone, phone)
@@ -107,6 +99,11 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     )
     params.push(username, username, username)
   }
+  if (userId && !hasMomoge) {
+    conditions.push('(LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) LIKE ?)')
+    params.push(userId, `%${userId}%`)
+  }
+
   if (!conditions.length) return []
 
   const siteExpr = hasCarbonLoc
