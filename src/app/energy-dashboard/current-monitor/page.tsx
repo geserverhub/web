@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSite } from '@/lib/SiteContext';
 import { useLocale } from '@/lib/LocaleContext';
+import { generateCurrentMonitorExcel } from '@/lib/excel-export';
 import MonitorCard from '@/components/MonitorCard';
 import {
   Activity,
@@ -14,6 +15,7 @@ import {
   ChevronDown,
   X,
   ExternalLink,
+  Download,
 } from 'lucide-react';
 import {
   LineChart,
@@ -66,6 +68,7 @@ const labels = {
     offline: 'ออฟไลน์',
     lastUpdate: 'อัปเดตล่าสุด',
     refresh: 'รีเฟรช',
+    download: 'ดาวน์โหลด',
     loading: 'กำลังโหลด…',
     noDevice: 'กรุณาเลือกอุปกรณ์เพื่อดูกระแสไฟ',
     chartTitle: 'กราฟกระแส 30 นาทีล่าสุด',
@@ -93,6 +96,7 @@ const labels = {
     offline: 'Offline',
     lastUpdate: 'Last update',
     refresh: 'Refresh',
+    download: 'Download',
     loading: 'Loading…',
     noDevice: 'Select a device to view live current',
     chartTitle: 'Current trend (last 30 min)',
@@ -120,6 +124,7 @@ const labels = {
     offline: '오프라인',
     lastUpdate: '마지막 업데이트',
     refresh: '새로고침',
+    download: '다운로드',
     loading: '로딩 중…',
     noDevice: '장치를 선택하면 전류를 볼 수 있습니다',
     chartTitle: '최근 30분 전류 추이',
@@ -348,6 +353,23 @@ export default function CurrentMonitorPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             {ui.refresh}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (chartData.length > 0 && selectedDeviceInfo) {
+                generateCurrentMonitorExcel(
+                  chartData,
+                  selectedDeviceInfo.deviceName,
+                  selectedDeviceInfo.customerName
+                );
+              }
+            }}
+            disabled={!selectedDevice || chartData.length === 0}
+            className="cm-btn-outline"
+          >
+            <Download className="w-4 h-4" />
+            {ui.download}
           </button>
           <Link href="/energy-dashboard/monitor" className="cm-btn-outline">
             {ui.fullMonitor}

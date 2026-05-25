@@ -89,6 +89,8 @@ export default function ClientsUsersClient({ session }) {
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
   const [backupStatus, setBackupStatus] = useState("");
+  const [backupHistory, setBackupHistory] = useState([]);
+  const [backupHistoryLoading, setBackupHistoryLoading] = useState(false);
 
   // services (for client form)
   const [services, setServices] = useState([]);
@@ -315,6 +317,21 @@ export default function ClientsUsersClient({ session }) {
     loadMomoData();
   }, [loadMomoData]);
 
+  const loadBackupHistory = useCallback(async () => {
+    setBackupHistoryLoading(true);
+    try {
+      const response = await fetch("/api/backup");
+      const data = await response.json();
+      if (response.ok) {
+        setBackupHistory(data.backups || []);
+      }
+    } catch (error) {
+      console.error('Load backup history error:', error);
+    } finally {
+      setBackupHistoryLoading(false);
+    }
+  }, []);
+
   const handleDatabaseBackup = useCallback(async () => {
     setBackupLoading(true);
     setBackupMessage("");
@@ -327,6 +344,8 @@ export default function ClientsUsersClient({ session }) {
       if (response.ok) {
         setBackupStatus("success");
         setBackupMessage(`✅ Backup สำเร็จ! File: ${data.filename} (${data.size})`);
+        // โหลด history ใหม่
+        await loadBackupHistory();
       } else {
         setBackupStatus("error");
         setBackupMessage(`❌ Backup ล้มเหลว: ${data.message}`);
@@ -337,7 +356,7 @@ export default function ClientsUsersClient({ session }) {
     } finally {
       setBackupLoading(false);
     }
-  }, []);
+  }, [loadBackupHistory]);
 
   const openMFactoryReceipt = useCallback((booking = null) => {
     const mfClient = { id: "cmo6viudt0001qhga9f5j4jzc" };
@@ -3152,6 +3171,13 @@ export default function ClientsUsersClient({ session }) {
                 <div style={{ fontSize: 22, fontWeight: 900, color: "#7eb8f7" }}>🗄️ Database Backup</div>
                 <div style={{ color: "#8b8fa8", fontSize: 12, marginTop: 4 }}>สร้าง backup ฐานข้อมูล goeunserverhub</div>
               </div>
+              <button
+                onClick={loadBackupHistory}
+                disabled={backupHistoryLoading}
+                style={{ ...S.btn("#1e2130", "#8b8fa8"), padding: "8px 16px", fontSize: 12 }}
+              >
+                {backupHistoryLoading ? "⏳ โหลด..." : "🔄 รีเฟรช"}
+              </button>
             </div>
 
             <div style={{ display: "grid", gap: 20 }}>
@@ -3201,6 +3227,42 @@ export default function ClientsUsersClient({ session }) {
                   {backupMessage}
                 </div>
               )}
+
+              {/* Backup History */}
+              <div style={{ border: "1px solid #8b5cf6", borderLeft: "4px solid #8b5cf6", borderRadius: 8, padding: 16, background: "#1f0f3a" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <h3 style={{ margin: 0, color: "#c084fc" }}>📋 Backup History</h3>
+                  <div style={{ fontSize: 11, color: "#8b8fa8" }}>
+                    {backupHistory.length} ไฟล์
+                  </div>
+                </div>
+                {backupHistory.length === 0 ? (
+                  <div style={{ color: "#8b8fa8", fontSize: 13, textAlign: "center", padding: "12px 0" }}>
+                    ยังไม่มีไฟล์ backup
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid #4a5078" }}>
+                          <th style={{ textAlign: "left", padding: "8px 0", color: "#c084fc", fontWeight: 600 }}>ไฟล์</th>
+                          <th style={{ textAlign: "right", padding: "8px 0", color: "#c084fc", fontWeight: 600 }}>ขนาด</th>
+                          <th style={{ textAlign: "right", padding: "8px 0", color: "#c084fc", fontWeight: 600 }}>วันที่</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {backupHistory.map((backup, idx) => (
+                          <tr key={idx} style={{ borderBottom: "1px solid #2a2d3a" }}>
+                            <td style={{ padding: "8px 0", color: "#7eb8f7" }}>{backup.filename}</td>
+                            <td style={{ textAlign: "right", padding: "8px 0", color: "#8b8fa8" }}>{backup.size}</td>
+                            <td style={{ textAlign: "right", padding: "8px 0", color: "#8b8fa8" }}>{backup.createdDate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

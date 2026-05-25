@@ -13,8 +13,9 @@ import {
 import {
   Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
-  Thermometer, ChevronDown, BarChart2, Users, Sprout,
+  Thermometer, ChevronDown, BarChart2, Users, Sprout, Download,
 } from 'lucide-react';
+import { generateMonthlyEnergyExcel } from '@/lib/excel-export';
 
 function L(locale, th, ko, en) {
   if (locale === 'th') return th;
@@ -393,14 +394,31 @@ export default function CustomersPage() {
             <div className="cd-card">
               <div className={`cd-card-accent ${activeTab === 'energy' ? 'cd-card-accent--energy' : 'cd-card-accent--cost'}`} />
               <div className="cd-card-body">
-                <h2 className="cd-card-title">
-                  {activeTab === 'energy'
-                    ? L(locale,'การใช้ไฟฟ้ารายเดือน (kWh)','월별 전력 사용량 (kWh)','Monthly Energy Usage (kWh)')
-                    : labelMonthlyCost}
-                </h2>
-                <p className="cd-card-desc">
-                  {L(locale,'เปรียบเทียบก่อนและหลังติดตั้ง','설치 전후 비교','Before vs after installation')}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="cd-card-title">
+                      {activeTab === 'energy'
+                        ? L(locale,'การใช้ไฟฟ้ารายเดือน (kWh)','월별 전력 사용량 (kWh)','Monthly Energy Usage (kWh)')
+                        : labelMonthlyCost}
+                    </h2>
+                    <p className="cd-card-desc">
+                      {L(locale,'เปรียบเทียบก่อนและหลังติดตั้ง','설치 전후 비교','Before vs after installation')}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (monthlyData.length > 0) {
+                        generateMonthlyEnergyExcel(monthlyData, selectedSite);
+                      }
+                    }}
+                    disabled={monthlyData.length === 0}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  >
+                    <Download className="w-4 h-4" />
+                    {L(locale,'ดาวน์โหลด','다운로드','Download')}
+                  </button>
+                </div>
                 {monthlyLoading ? (
                   <div className="cd-chart-loading">
                     <RefreshCw className="w-6 h-6 animate-spin" />
