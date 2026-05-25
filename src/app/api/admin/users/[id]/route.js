@@ -15,13 +15,25 @@ export async function PUT(req, { params }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, email, password, role, clientId } = body;
+    const { name, email, password, role, clientId, username: usernameRaw } = body;
 
     const data = {};
     if (name !== undefined) data.name = name;
     if (email) data.email = email;
     if (role) data.role = role;
     if (password) data.password = await bcrypt.hash(password, 12);
+
+    // Direct username update (inline edit) — only when clientId not being changed
+    if (usernameRaw !== undefined && clientId === undefined) {
+      const newUsername = usernameRaw ? String(usernameRaw).trim() : null;
+      if (newUsername) {
+        const conflict = await prisma.user.findUnique({ where: { username: newUsername } });
+        if (conflict && conflict.id !== id) {
+          return NextResponse.json({ error: `Username "${newUsername}" ถูกใช้งานแล้ว` }, { status: 409 });
+        }
+      }
+      data.username = newUsername;
+    }
 
     // If clientId changes, update username from new client slug
     if (clientId !== undefined) {
