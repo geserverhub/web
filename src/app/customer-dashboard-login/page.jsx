@@ -99,6 +99,8 @@ export default function CustomerDashboardLoginPage() {
         username: data.username,
         name: data.name,
         email: data.email,
+        clientId: data.clientId ?? null,
+        phone: data.phone ?? null,
         site: data.site,
         typeID: data.typeID,
         departmentID: data.departmentID,

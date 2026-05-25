@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
 import { useSite } from '@/lib/SiteContext';
-import { formatCurrencyBySite } from '@/lib/currency';
+import { formatCurrencyBySite, getCurrencyCodeBySite, getCurrencySymbolBySite } from '@/lib/currency';
 import { formatEnergyDisplayUser } from '@/lib/energy/display-user';
 import { GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 import {
@@ -24,6 +24,27 @@ function L(locale, th, ko, en) {
   return en;
 }
 function fmt(n) { return n.toLocaleString(); }
+
+function readStoredCustomerUser() {
+  try {
+    const raw = localStorage.getItem(GE_ADMIN_USER_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function buildCustomerDashboardQuery(user, deviceId) {
+  const params = new URLSearchParams();
+  if (user?.userId) params.set('userId', String(user.userId));
+  if (user?.clientId) params.set('clientId', String(user.clientId));
+  if (user?.email) params.set('email', String(user.email));
+  if (user?.phone) params.set('phone', String(user.phone));
+  if (user?.username) params.set('username', String(user.username));
+  if (deviceId) params.set('deviceId', String(deviceId));
+  return params.toString();
+}
 
 function AiEnergyInsightPanel({ monthlyData, locale, site }) {
   const [aiInsights, setAiInsights] = useState(null);
@@ -177,11 +198,16 @@ function AiEnergyInsightPanel({ monthlyData, locale, site }) {
 
 export default function CustomersPage() {
   const { locale } = useLocale();
-  const { selectedSite } = useSite();
+  const { selectedSite, setSelectedSite } = useSite();
   const [activeTab, setActiveTab] = useState('energy');
   const [monthlyData, setMonthlyData] = useState([]);
   const [monthlyLoading, setMonthlyLoading] = useState(true);
   const [monthlyError, setMonthlyError] = useState(null);
+  const [customerUser, setCustomerUser] = useState(null);
+  const [customerMeters, setCustomerMeters] = useState([]);
+  const [selectedMeterDeviceId, setSelectedMeterDeviceId] = useState('');
+  const [billingSite, setBillingSite] = useState('thailand');
+  const [electricityRate, setElectricityRate] = useState(null);
 
   // ── Live monitoring state ──
   const [devices, setDevices] = useState([]);
@@ -219,14 +245,23 @@ export default function CustomersPage() {
   const totalSavedKwh = totalBefore - totalAfter;
   const totalCostBefore = monthlyData.reduce((s, d) => s + d.costBefore, 0);
   const totalCostAfter = monthlyData.reduce((s, d) => s + d.costAfter, 0);
-  const totalSavedBaht = totalCostBefore - totalCostAfter;
+  const totalSavedCost = totalCostBefore - totalCostAfter;
   const savingPct = totalBefore > 0 ? ((totalSavedKwh / totalBefore) * 100).toFixed(1) : '0.0';
   const co2Saved = (totalSavedKwh * 0.5313).toFixed(0);
-  const formatCost = (n) => formatCurrencyBySite(n, 'korea', 'ko', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const labelCostBefore = L(locale, 'ก่อน (₩)', '이전 (원)', 'Before (KRW)');
-  const labelCostAfter = L(locale, 'หลัง (₩)', '이후 (원)', 'After (KRW)');
-  const labelCostSaved = L(locale, 'ประหยัด (₩)', '절약 (원)', 'Saved (KRW)');
-  const labelMonthlyCost = L(locale, 'ค่าใช้จ่ายรายเดือน (วอน)', '월별 전기 요금 (원)', 'Monthly Cost (KRW)');
+  const currencySymbol = getCurrencySymbolBySite(billingSite, locale);
+  const currencyCode = getCurrencyCodeBySite(billingSite, locale);
+  const formatCost = (n) =>
+    formatCurrencyBySite(n, billingSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const labelCostBefore = L(locale, `ก่อน (${currencySymbol})`, `이전 (${currencySymbol})`, `Before (${currencyCode})`);
+  const labelCostAfter = L(locale, `หลัง (${currencySymbol})`, `이후 (${currencySymbol})`, `After (${currencyCode})`);
+  const labelCostSaved = L(locale, `ประหยัด (${currencySymbol})`, `절약 (${currencySymbol})`, `Saved (${currencyCode})`);
+  const labelMonthlyCost = L(
+    locale,
+    `ค่าใช้จ่ายรายเดือน (${currencyCode})`,
+    `월별 전기 요금 (${currencyCode})`,
+    `Monthly Cost (${currencyCode})`,
+  );
+  const labelMonthlyEnergy = L(locale, 'การใช้ไฟฟ้ารายเดือน (kWh)', '월별 전력 사용량 (kWh)', 'Monthly Energy (kWh)');
 
   const normalizeSnapshot = (raw, connection) => {
     const payload = raw;
@@ -256,38 +291,44 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(GE_ADMIN_USER_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const { displayName } = formatEnergyDisplayUser(parsed);
-      if (displayName) setWelcomeName(displayName);
-    } catch {
-      setWelcomeName('');
-    }
+    const parsed = readStoredCustomerUser();
+    setCustomerUser(parsed);
+    const { displayName } = formatEnergyDisplayUser(parsed || {});
+    setWelcomeName(displayName || '');
   }, []);
 
   useEffect(() => {
-    fetch(`/api/ge-energy/dashboard-stats?site=${selectedSite}`)
-      .then(r => r.json())
-      .then(j => {
-        if (j.success && j.data?.recentDevices) {
-          setDevices(j.data.recentDevices);
-          if (j.data.recentDevices.length > 0) setSelectedDeviceId(String(j.data.recentDevices[0].deviceID));
-        }
-      }).catch(() => {});
-  }, [selectedSite]);
-
-  useEffect(() => {
     let active = true;
+    setMonthlyLoading(true);
 
-    fetch(`/api/ge-energy/customer-dashboard?site=${selectedSite}`)
+    const user = customerUser || readStoredCustomerUser();
+    const query = buildCustomerDashboardQuery(user, selectedMeterDeviceId || undefined);
+
+    fetch(`/api/ge-energy/customer-dashboard?${query}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(j => {
         if (!active) return;
         if (j.success && Array.isArray(j.data?.monthly)) {
           setMonthlyData(j.data.monthly);
+          setCustomerMeters(Array.isArray(j.data.meters) ? j.data.meters : []);
+          const site = j.data.primarySite || 'thailand';
+          setBillingSite(site);
+          setSelectedSite(site);
+          setElectricityRate(j.data.summary?.electricityRate ?? null);
           setMonthlyError(null);
+
+          const meterDevices = (j.data.meters || []).map((m) => ({
+            deviceID: m.deviceId,
+            deviceName: m.deviceName || m.label,
+            connection: 'ONLINE',
+          }));
+          if (meterDevices.length > 0) {
+            setDevices(meterDevices);
+            const keepId = selectedMeterDeviceId || selectedDeviceId;
+            const allowed = meterDevices.some((d) => String(d.deviceID) === String(keepId));
+            const nextId = allowed ? String(keepId) : String(meterDevices[0].deviceID);
+            if (!selectedDeviceId || !allowed) setSelectedDeviceId(nextId);
+          }
         } else {
           setMonthlyError(j.error || 'Failed to load monthly comparison data');
         }
@@ -302,7 +343,7 @@ export default function CustomersPage() {
     return () => {
       active = false;
     };
-  }, [selectedSite]);
+  }, [customerUser, selectedMeterDeviceId, setSelectedSite]);
 
   useEffect(() => {
     if (!selectedDeviceId) return;
@@ -460,7 +501,7 @@ export default function CustomersPage() {
 
   const kpiItems = [
     { icon: Zap, val: `${fmt(totalSavedKwh)} kWh`, label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'), tone: 'energy' },
-    { icon: DollarSign, val: formatCost(totalSavedBaht), label: L(locale,'ค่าไฟที่ประหยัด (₩)','절약 비용 (원)','Cost Saved (KRW)'), tone: 'cost' },
+    { icon: DollarSign, val: formatCost(totalSavedCost), label: L(locale,`ค่าไฟที่ประหยัด (${currencySymbol})`,`절약 비용 (${currencySymbol})`,`Cost Saved (${currencyCode})`), tone: 'cost' },
     { icon: TrendingDown, val: `${savingPct}%`, label: L(locale,'% ที่ประหยัด','절약률','Saving Rate'), tone: 'rate' },
     { icon: Leaf, val: `${fmt(Number(co2Saved))} kg`, label: L(locale,'CO₂ ที่ลดได้','CO₂ 절감량','CO₂ Reduced'), tone: 'co2' },
   ];
@@ -529,6 +570,49 @@ export default function CustomersPage() {
         {/* ── Energy / Cost Charts ── */}
         {(activeTab === 'energy' || activeTab === 'cost') && (
           <div className="cd-stack">
+            {customerMeters.length > 0 && (
+              <div className="cd-meter-toolbar">
+                <label htmlFor="cd-meter-select" className="cd-meter-toolbar-label">
+                  {L(locale, 'มิเตอร์ของคุณ', '내 미터', 'Your meters')}
+                </label>
+                <div className="cd-meter-toolbar-row">
+                  <select
+                    id="cd-meter-select"
+                    className="cd-meter-select"
+                    value={selectedMeterDeviceId}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSelectedMeterDeviceId(v);
+                      if (v) setSelectedDeviceId(v);
+                    }}
+                  >
+                    <option value="">{L(locale, 'ทุกมิเตอร์', '전체 미터', 'All meters')}</option>
+                    {customerMeters.map((m) => (
+                      <option key={m.deviceId} value={String(m.deviceId)}>
+                        {m.label}{m.locationName ? ` · ${m.locationName}` : ''} ({m.site})
+                      </option>
+                    ))}
+                  </select>
+                  {electricityRate != null && (
+                  <span className="cd-meter-rate">
+                    {L(locale, 'อัตราไฟ', '요금', 'Rate')}: {fmt(electricityRate)} / kWh ({currencyCode})
+                  </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!monthlyLoading && customerUser && customerMeters.length === 0 && (
+              <p className="cd-error">
+                {L(
+                  locale,
+                  'ไม่พบมิเตอร์ที่ผูกกับบัญชีนี้ กรุณาติดต่อผู้ดูแลระบบ',
+                  '이 계정에 연결된 미터가 없습니다. 관리자에게 문의하세요.',
+                  'No meters linked to this account. Please contact support.',
+                )}
+              </p>
+            )}
+
             {activeTab === 'energy' && (
               <div className="cd-segment">
                 <button type="button" onClick={() => setChartType('bar')}
@@ -542,25 +626,29 @@ export default function CustomersPage() {
               </div>
             )}
 
-            <div className="cd-card">
-              <div className={`cd-card-accent ${activeTab === 'energy' ? 'cd-card-accent--energy' : 'cd-card-accent--cost'}`} />
+            {(activeTab === 'cost'
+              ? [
+                  { mode: 'energy', title: labelMonthlyEnergy, accent: 'cd-card-accent--energy' },
+                  { mode: 'cost', title: labelMonthlyCost, accent: 'cd-card-accent--cost' },
+                ]
+              : [{ mode: 'energy', title: labelMonthlyEnergy, accent: 'cd-card-accent--energy' }]
+            ).map(({ mode, title, accent }) => (
+            <div key={mode} className="cd-card">
+              <div className={`cd-card-accent ${accent}`} />
               <div className="cd-card-body">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="cd-card-title">
-                      {activeTab === 'energy'
-                        ? L(locale,'การใช้ไฟฟ้ารายเดือน (kWh)','월별 전력 사용량 (kWh)','Monthly Energy Usage (kWh)')
-                        : labelMonthlyCost}
-                    </h2>
+                    <h2 className="cd-card-title">{title}</h2>
                     <p className="cd-card-desc">
                       {L(locale,'เปรียบเทียบก่อนและหลังติดตั้ง','설치 전후 비교','Before vs after installation')}
                     </p>
                   </div>
+                  {mode === 'energy' && activeTab === 'energy' && (
                   <button
                     type="button"
                     onClick={() => {
                       if (monthlyData.length > 0) {
-                        generateMonthlyEnergyExcel(monthlyData, selectedSite);
+                        generateMonthlyEnergyExcel(monthlyData, billingSite);
                       }
                     }}
                     disabled={monthlyData.length === 0}
@@ -569,6 +657,7 @@ export default function CustomersPage() {
                     <Download className="w-4 h-4" />
                     {L(locale,'ดาวน์โหลด','다운로드','Download')}
                   </button>
+                  )}
                 </div>
                 {monthlyLoading ? (
                   <div className="cd-chart-loading">
@@ -577,18 +666,18 @@ export default function CustomersPage() {
                 ) : (
                   <div className="cd-chart-box">
                   <ResponsiveContainer width="100%" height="100%">
-                {activeTab === 'cost' || chartType === 'line' ? (
+                {mode === 'cost' || chartType === 'line' ? (
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
                     <Tooltip formatter={(v) =>
-                      activeTab === 'energy'
+                      mode === 'energy'
                         ? Number(v).toLocaleString()
                         : formatCost(Number(v))
                     } />
                     <Legend />
-                    {activeTab === 'energy' ? <>
+                    {mode === 'energy' ? <>
                       <Line type="monotone" dataKey={keyBefore} stroke="#b45309" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                       <Line type="monotone" dataKey={keyAfter}  stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                     </> : <>
@@ -602,12 +691,12 @@ export default function CustomersPage() {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
                     <Tooltip formatter={(v) =>
-                      activeTab === 'energy'
+                      mode === 'energy'
                         ? Number(v).toLocaleString()
                         : formatCost(Number(v))
                     } />
                     <Legend />
-                    {activeTab === 'energy' ? <>
+                    {mode === 'energy' ? <>
                       <Bar dataKey={keyBefore} fill="#b45309" radius={[4,4,0,0]} />
                       <Bar dataKey={keyAfter}  fill="#059669" radius={[4,4,0,0]} />
                     </> : <>
@@ -619,9 +708,10 @@ export default function CustomersPage() {
                   </ResponsiveContainer>
                   </div>
                 )}
-                {monthlyError && <p className="cd-error">{monthlyError}</p>}
+                {monthlyError && mode === 'energy' && <p className="cd-error">{monthlyError}</p>}
               </div>
             </div>
+            ))}
 
             {/* KPI Comparison Grid */}
             <div className="cd-card">
@@ -640,8 +730,8 @@ export default function CustomersPage() {
                     <div className="cd-kpi-icon cd-kpi-icon--cost">
                       <DollarSign className="w-5 h-5" />
                     </div>
-                    <p className="cd-kpi-val">{formatCost(totalSavedBaht).replace(/₩/g, '')}</p>
-                    <p className="cd-kpi-label">{L(locale,'ประหยัด (₩)','절약 (원)','Saved (KRW)')}</p>
+                    <p className="cd-kpi-val">{formatCost(totalSavedCost)}</p>
+                    <p className="cd-kpi-label">{labelCostSaved}</p>
                   </div>
                   <div className="cd-kpi-card">
                     <div className="cd-kpi-icon cd-kpi-icon--rate">
@@ -659,7 +749,7 @@ export default function CustomersPage() {
                   </div>
                 </div>
 
-                {monthlyData.length > 0 && (
+                {activeTab === 'energy' && monthlyData.length > 0 && (
                   <div className="cd-kpi-monthly-chart">
                     <h3 className="cd-chart-subtitle">{L(locale,'เปรียบเทียบรายเดือน (kWh)','월별 비교 (kWh)','Monthly Comparison (kWh)')}</h3>
                     <ResponsiveContainer width="100%" height={300}>

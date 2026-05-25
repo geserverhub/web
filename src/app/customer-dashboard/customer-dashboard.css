@@ -1206,3 +1206,42 @@
   letter-spacing: 0.5px;
   margin: 0 0 0.375rem 0;
 }
+
+.cd-meter-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+
+.cd-meter-toolbar-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.cd-meter-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cd-meter-select {
+  flex: 1 1 12rem;
+  min-width: 10rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: #fff;
+}
+
+.cd-meter-rate {
+  font-size: 0.8125rem;
+  color: #64748b;
+  white-space: nowrap;
+}

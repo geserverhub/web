@@ -77,6 +77,7 @@ export async function POST(request) {
       name,
       email: user.email,
       role,
+      clientId: user.clientId ?? null,
       site: null,
       typeID: null,
       departmentID: null,
