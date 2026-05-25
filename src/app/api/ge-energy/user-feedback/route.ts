@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
         u.name as user_name,
         u.email as user_email
       FROM user_feedback f
-      LEFT JOIN User u ON CAST(f.user_id AS CHAR) = u.id
+      LEFT JOIN User u ON f.user_id = u.id
       WHERE 1=1
     `
     const params: unknown[] = []
