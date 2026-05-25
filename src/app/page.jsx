@@ -151,8 +151,6 @@ export default function Page() {
             ui={ui}
             currentLanguage={currentLanguage}
             setCurrentLanguage={setCurrentLanguage}
-            query={query}
-            setQuery={setQuery}
           />
           <Hero
             ui={ui}

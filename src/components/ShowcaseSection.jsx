@@ -1,4 +1,4 @@
-import { statusClassName } from "@/lib/data";
+import { resolveClientPortalUrl, statusClassName } from "@/lib/data";
 
 export default function ShowcaseSection({ ui, filteredClients }) {
   return (
@@ -19,6 +19,7 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                 : null;
               const logoFit = client.thumbnail_fit === "contain";
               const photoFit = client.thumbnail_style === "photo";
+              const portalUrl = resolveClientPortalUrl(client);
               return (
                 <div key={client.slug} className="col-12 col-md-6 col-lg-4">
                   <article
@@ -55,14 +56,20 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                         {client.address && <span>📍 {client.address}</span>}
                       </div>
                       <div className="showcase-actions">
-                        <a
-                          className="btn agency-btn-primary w-100"
-                          href={client.system_url}
-                          target={client.system_url?.startsWith("http") ? "_blank" : "_self"}
-                          rel={client.system_url?.startsWith("http") ? "noopener noreferrer" : undefined}
-                        >
-                          {ui.viewPortal} →
-                        </a>
+                        {portalUrl ? (
+                          <a
+                            className="btn agency-btn-primary w-100"
+                            href={portalUrl}
+                            target={portalUrl.startsWith("http") ? "_blank" : "_self"}
+                            rel={portalUrl.startsWith("http") ? "noopener noreferrer" : undefined}
+                          >
+                            {ui.viewPortal} →
+                          </a>
+                        ) : (
+                          <span className="btn agency-btn-primary w-100 disabled" aria-disabled="true">
+                            {ui.filterComingSoon || "เร็ว ๆ นี้"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </article>
