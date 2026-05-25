@@ -881,6 +881,11 @@ export default function DevicesSettingPage() {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-500' : ''}`} />
             {ui.refresh}
           </button>
+          <button onClick={openAddModal}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-xl text-sm font-semibold hover:from-emerald-700 hover:to-green-800 shadow-sm transition whitespace-nowrap">
+            <Plus className="w-4 h-4" />
+            {ui.addDevice}
+          </button>
         </div>
       </div>
 
