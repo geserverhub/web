@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
-import { mctProductUrl, publicHubBaseUrl } from "@/lib/data";
 import "./client-login.css";
+
+const MCT_PRODUCT_PATH = "/mct-product";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((s) => {
+        if (s?.user) window.location.href = MCT_PRODUCT_PATH;
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -31,17 +41,7 @@ export default function LoginPage() {
       return;
     }
 
-    const sessionRes = await fetch("/api/auth/session");
-    const session = await sessionRes.json();
-    const role = session?.user?.role;
-
-    setLoading(false);
-
-    if (role === "SUPER_ADMIN" || role === "ADMIN") {
-      window.location.href = `${publicHubBaseUrl}/admin/clients`;
-    } else {
-      window.location.href = mctProductUrl;
-    }
+    window.location.href = MCT_PRODUCT_PATH;
   }
 
   return (
