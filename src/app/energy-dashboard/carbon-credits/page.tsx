@@ -63,6 +63,29 @@ interface DeviceAiInsights {
   };
 }
 
+interface MeterRow {
+  rank: number;
+  deviceId: number;
+  deviceName: string;
+  geID: string;
+  site: string;
+  records: number;
+  energySavedKwh: number;
+  co2Kg: number;
+  carbonCreditsTonnes: number;
+  estimatedValueKRW: number;
+  estimatedValueTHB: number;
+}
+
+interface MeterTotals {
+  energySavedKwh: number;
+  co2Kg: number;
+  carbonCreditsTonnes: number;
+  estimatedValueKRW: number;
+  estimatedValueTHB: number;
+  records: number;
+}
+
 function L(locale: string, th: string, en: string, ko: string): string {
   if (locale === 'th') return th;
   if (locale === 'ko') return ko;
@@ -88,6 +111,12 @@ export default function CarbonCreditsPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedMethodology, setExpandedMethodology] = useState(true);
   const [deviceAiInsights, setDeviceAiInsights] = useState<DeviceAiInsights>({});
+  const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
+  const [meterTable, setMeterTable] = useState<{
+    loading: boolean;
+    meters: MeterRow[];
+    totals: MeterTotals | null;
+  }>({ loading: false, meters: [], totals: null });
   const [fxData, setFxData] = useState<{
     krwToThb: number | null;
     lastUpdated: string | null;
@@ -109,12 +138,28 @@ export default function CarbonCreditsPage() {
     }
   }, []);
 
+  const fetchMeterTable = useCallback(async () => {
+    setMeterTable((prev) => ({ ...prev, loading: true }));
+    try {
+      const res = await fetch(`/api/ge-energy/carbon-meters?site=${selectedSite}&period=${period}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (json.success) {
+        setMeterTable({ loading: false, meters: json.meters, totals: json.totals });
+      } else {
+        setMeterTable((prev) => ({ ...prev, loading: false }));
+      }
+    } catch {
+      setMeterTable((prev) => ({ ...prev, loading: false }));
+    }
+  }, [selectedSite, period]);
+
   const fetchCarbonData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const deviceParam = selectedDeviceId ? `&deviceId=${selectedDeviceId}` : '';
       const res = await fetch(
-        `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${period}&locale=${locale}`,
+        `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${period}&locale=${locale}${deviceParam}`,
         { cache: 'no-store' }
       );
       const json = await res.json();
@@ -136,7 +181,7 @@ export default function CarbonCreditsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedSite, period, locale]);
+  }, [selectedSite, period, locale, selectedDeviceId]);
 
   const fetchDeviceAiInsights = useCallback(
     async (deviceId: number) => {
@@ -172,8 +217,9 @@ export default function CarbonCreditsPage() {
 
   useEffect(() => {
     fetchCarbonData();
+    fetchMeterTable();
     fetchExchangeRate();
-  }, [fetchCarbonData, fetchExchangeRate]);
+  }, [fetchCarbonData, fetchMeterTable, fetchExchangeRate]);
 
   if (loading && !data) {
     return (
@@ -224,13 +270,41 @@ export default function CarbonCreditsPage() {
             )}
           </p>
         </div>
-        <div className="cc-period-selector">
-          <label>{L(locale, 'ช่วงเวลา', 'Period', '기간')}:</label>
-          <select value={period} onChange={(e) => setPeriod(Number(e.target.value))}>
-            <option value={30}>30 {L(locale, 'วัน', 'days', '일')}</option>
-            <option value={90}>90 {L(locale, 'วัน', 'days', '일')}</option>
-            <option value={365}>365 {L(locale, 'วัน', 'days', '일')}</option>
-          </select>
+        <div className="flex flex-col gap-3 flex-shrink-0">
+          <div className="cc-period-selector">
+            <label>{L(locale, 'ช่วงเวลา', 'Period', '기간')}:</label>
+            <select value={period} onChange={(e) => { setPeriod(Number(e.target.value)); }}>
+              <option value={30}>30 {L(locale, 'วัน', 'days', '일')}</option>
+              <option value={90}>90 {L(locale, 'วัน', 'days', '일')}</option>
+              <option value={365}>365 {L(locale, 'วัน', 'days', '일')}</option>
+            </select>
+          </div>
+          {/* Meter selector chips */}
+          <div className="flex flex-wrap gap-2 px-1">
+            <button
+              onClick={() => setSelectedDeviceId(null)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition border ${
+                selectedDeviceId === null
+                  ? 'bg-white text-emerald-700 border-white shadow'
+                  : 'bg-transparent text-white border-white/50 hover:bg-white/20'
+              }`}
+            >
+              {L(locale, '📊 ทั้งหมด', '📊 All Meters', '📊 전체')}
+            </button>
+            {meterTable.meters.map((m) => (
+              <button
+                key={m.deviceId}
+                onClick={() => setSelectedDeviceId(m.deviceId === selectedDeviceId ? null : m.deviceId)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition border ${
+                  selectedDeviceId === m.deviceId
+                    ? 'bg-white text-emerald-700 border-white shadow'
+                    : 'bg-transparent text-white border-white/50 hover:bg-white/20'
+                }`}
+              >
+                ⚡ {m.geID || m.deviceName}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -358,6 +432,141 @@ export default function CarbonCreditsPage() {
             })()}
           </div>
         </div>
+      </div>
+
+      {/* Per-Meter Carbon Credits Table */}
+      <div className="cc-card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="cc-card-title" style={{ margin: 0 }}>
+            {L(locale, 'ตารางคาร์บอนเครดิตรายมิเตอร์', 'Carbon Credits per Meter', '미터별 탄소 크레딧')}
+            {selectedDeviceId && (
+              <span className="ml-2 text-sm font-normal text-emerald-600">
+                — {meterTable.meters.find((m) => m.deviceId === selectedDeviceId)?.geID}
+              </span>
+            )}
+          </h2>
+          <button
+            onClick={fetchMeterTable}
+            disabled={meterTable.loading}
+            className="p-2 hover:bg-gray-100 rounded-lg transition disabled:opacity-50"
+            title={L(locale, 'รีเฟรช', 'Refresh', '새로고침')}
+          >
+            <RefreshCw className={`w-4 h-4 text-gray-400 ${meterTable.loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+        {meterTable.loading ? (
+          <div className="flex items-center justify-center gap-2 py-8 text-gray-400">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span className="text-sm">{L(locale, 'กำลังโหลด...', 'Loading...', '로딩 중...')}</span>
+          </div>
+        ) : meterTable.meters.length === 0 ? (
+          <p className="text-center text-gray-400 text-sm py-8">
+            {L(locale, 'ไม่มีข้อมูลมิเตอร์', 'No meter data', '미터 데이터 없음')}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-emerald-100">
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">#</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'มิเตอร์', 'Meter', '미터')}
+                  </th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">Meter ID</th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'ข้อมูล', 'Records', '레코드')}
+                  </th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'ไฟประหยัด', 'kWh Saved', '절감 kWh')}
+                  </th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">CO₂ (kg)</th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'เครดิต', 'Credits', '크레딧')} (tCO₂e)
+                  </th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'มูลค่า', 'Value', '가치')} (KRW)
+                  </th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'มูลค่า', 'Value', '가치')} (THB)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {meterTable.meters
+                  .filter((m) => selectedDeviceId === null || m.deviceId === selectedDeviceId)
+                  .map((m) => {
+                    const isSelected = selectedDeviceId === m.deviceId;
+                    const thbValue = fxData.krwToThb
+                      ? Math.round(m.estimatedValueKRW * fxData.krwToThb)
+                      : m.estimatedValueTHB;
+                    return (
+                      <tr
+                        key={m.deviceId}
+                        onClick={() => setSelectedDeviceId(m.deviceId === selectedDeviceId ? null : m.deviceId)}
+                        className={`border-b border-gray-50 cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-emerald-50 border-emerald-100'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <td className="py-3 px-3 text-gray-400 font-mono">{m.rank}</td>
+                        <td className="py-3 px-3">
+                          <span className={`font-semibold ${isSelected ? 'text-emerald-700' : 'text-gray-800'}`}>
+                            {m.deviceName}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-xs text-gray-500">{m.geID}</td>
+                        <td className="py-3 px-3 text-right text-gray-500">{m.records.toLocaleString()}</td>
+                        <td className="py-3 px-3 text-right font-medium text-blue-700">{fmt(m.energySavedKwh)}</td>
+                        <td className="py-3 px-3 text-right font-medium text-orange-600">{fmt(m.co2Kg)}</td>
+                        <td className="py-3 px-3 text-right font-bold text-emerald-700">{fmt(m.carbonCreditsTonnes)}</td>
+                        <td className="py-3 px-3 text-right font-semibold text-purple-700">₩{m.estimatedValueKRW.toLocaleString()}</td>
+                        <td className="py-3 px-3 text-right font-semibold text-amber-700">฿{thbValue.toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+              {(selectedDeviceId === null && meterTable.totals) && (
+                <tfoot>
+                  <tr className="border-t-2 border-emerald-200 bg-emerald-50">
+                    <td className="py-3 px-3" colSpan={3}>
+                      <span className="font-bold text-emerald-800">
+                        {L(locale, '✓ รวมทั้งหมด', '✓ Grand Total', '✓ 합계')}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-gray-600">
+                      {meterTable.totals.records.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-blue-700">
+                      {fmt(meterTable.totals.energySavedKwh)}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-orange-600">
+                      {fmt(meterTable.totals.co2Kg)}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-emerald-700">
+                      {fmt(meterTable.totals.carbonCreditsTonnes)}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-purple-700">
+                      ₩{meterTable.totals.estimatedValueKRW.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-amber-700">
+                      ฿{(fxData.krwToThb
+                        ? Math.round(meterTable.totals.estimatedValueKRW * fxData.krwToThb)
+                        : meterTable.totals.estimatedValueTHB
+                      ).toLocaleString()}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+            {fxData.krwToThb && (
+              <p className="text-xs text-gray-400 mt-2 text-right">
+                * THB {L(locale, 'คำนวณจากอัตราแลกเปลี่ยนสด', 'calculated from live rate', '실시간 환율 적용')}:
+                1 KRW = {fxData.krwToThb.toFixed(6)} THB
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Methodology Section */}
