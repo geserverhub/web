@@ -216,6 +216,10 @@ export const translations = {
         name: "ระบบบริการดูแล บัญชีและภาษี",
         description: "บริการดูแลและจัดการบัญชี การเงิน และภาษีอย่างครบวงจร โดยทีมผู้เชี่ยวชาญ",
       },
+      "online-classroom": {
+        name: "ห้องเรียนออนไลน์",
+        description: "เรียนออนไลน์ — ห้องเรียนสด วิดีโอบันทึก เอกสาร และตารางเรียน",
+      },
     },
     pleaseEnterOrderNumber: "กรุณากรอกเลขออเดอร์",
     orderStatusCheckFailed: "ตรวจสอบสถานะไม่สำเร็จ",
@@ -484,6 +488,10 @@ export const translations = {
         name: "Accounting & Tax Management System",
         description: "Comprehensive accounting, financial, and tax management services by a team of specialists.",
       },
+      "online-classroom": {
+        name: "Online Classroom",
+        description: "E-learning — live classes, recorded videos, materials and schedule",
+      },
     },
     pleaseEnterOrderNumber: "Please enter order number",
     orderStatusCheckFailed: "Failed to check order status",
@@ -736,6 +744,10 @@ export const translations = {
       "acc-tax": {
         name: "会计与税务管理系统",
         description: "由专业团队提供全面的会计、财务与税务管理服务。",
+      },
+      "online-classroom": {
+        name: "在线课堂",
+        description: "在线学习 — 直播课、录播、资料与课程表",
       },
     },
     pleaseEnterOrderNumber: "请输入订单号",
@@ -993,6 +1005,10 @@ export const translations = {
       "acc-tax": {
         name: "회계 및 세무 관리 시스템",
         description: "전문 팀이 제공하는 종합 회계, 재무 및 세무 관리 서비스.",
+      },
+      "online-classroom": {
+        name: "온라인 강의실",
+        description: "온라인 학습 — 라이브 수업, 녹화 영상, 자료 및 시간표",
       },
     },
     pleaseEnterOrderNumber: "주문번호를 입력해 주세요",
