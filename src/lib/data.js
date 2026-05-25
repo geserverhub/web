@@ -8,6 +8,9 @@ export const publicHubBaseUrl =
   process.env.NEXT_PUBLIC_PUBLIC_HUB_URL ||
   "https://strong-dory-enabled.ngrok-free.app";
 export const authSelectUrl = `${publicHubBaseUrl}/auth/select`;
+export const mctProductUrl =
+  process.env.NEXT_PUBLIC_MCT_PRODUCT_URL ||
+  `${publicHubBaseUrl}/mct-product`;
 
 /** Homepage + agency pages: Thai, English, Korean only */
 export const supportedLanguages = ["th", "en", "ko"];
