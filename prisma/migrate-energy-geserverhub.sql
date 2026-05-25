@@ -5,6 +5,7 @@ USE goeunserverhub;
 
 CREATE TABLE IF NOT EXISTS `devices` (
   `deviceID` int NOT NULL AUTO_INCREMENT,
+  `client_id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `deviceName` varchar(255) NOT NULL,
   `geID` varchar(255) DEFAULT NULL,
   `series_no` varchar(50) DEFAULT NULL,
@@ -28,7 +29,11 @@ CREATE TABLE IF NOT EXISTS `devices` (
   `customerAddress` text DEFAULT NULL,
   PRIMARY KEY (`deviceID`),
   UNIQUE KEY `unique_geID` (`geID`),
-  KEY `idx_devices_site` (`site`)
+  KEY `idx_devices_site` (`site`),
+  KEY `idx_devices_client_id` (`client_id`),
+  CONSTRAINT `fk_devices_client`
+    FOREIGN KEY (`client_id`) REFERENCES `Client` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Legacy: rename old id column to geID when upgrading older installs
@@ -131,6 +136,7 @@ CREATE TABLE IF NOT EXISTS `support_tickets` (
 CREATE TABLE IF NOT EXISTS `mqtt_settings` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
+  `device_id` int(11) DEFAULT NULL,
   `site` varchar(20) NOT NULL DEFAULT 'thailand',
   `host` varchar(255) NOT NULL,
   `port` int NOT NULL DEFAULT 1883,
@@ -147,7 +153,11 @@ CREATE TABLE IF NOT EXISTS `mqtt_settings` (
   `stop_bits` tinyint NOT NULL DEFAULT 1,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mqtt_user_site` (`user_id`, `site`)
+  UNIQUE KEY `uk_mqtt_user_site` (`user_id`, `site`),
+  KEY `idx_mqtt_settings_device` (`device_id`),
+  CONSTRAINT `fk_mqtt_settings_device`
+    FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `device_connectivity` (
@@ -168,11 +178,20 @@ CREATE TABLE IF NOT EXISTS `device_connectivity` (
   `mqtt_topic` varchar(255) DEFAULT NULL,
   `publish_interval_sec` int NOT NULL DEFAULT 30,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `last_seen_at` datetime DEFAULT NULL,
+  `last_record_id` int(11) DEFAULT NULL,
+  `online_status` tinyint(1) NOT NULL DEFAULT 0,
   `notes` text DEFAULT NULL,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_device_connectivity_device` (`device_id`),
-  KEY `idx_device_connectivity_enabled` (`enabled`)
+  KEY `idx_device_connectivity_enabled` (`enabled`),
+  CONSTRAINT `device_connectivity_device_id_fkey`
+    FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_dc_last_record`
+    FOREIGN KEY (`last_record_id`) REFERENCES `power_records` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `ai_settings` (
@@ -215,3 +234,57 @@ ALTER TABLE `device_notifications`
   ADD COLUMN IF NOT EXISTS `email_enabled` tinyint(1) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS `output_enabled` tinyint(1) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- FK relationships — connect all 7 core tables into one graph
+-- Safe to run on upgrades (IF NOT EXISTS guards via INFORMATION_SCHEMA checks)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- 1. devices.client_id → Client.id  (bridges ClientService ↔ device tables)
+ALTER TABLE `devices`
+  ADD COLUMN IF NOT EXISTS `client_id` varchar(191)
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL;
+
+SET @fk1 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='devices' AND CONSTRAINT_NAME='fk_devices_client');
+SET @sql1 = IF(@fk1=0,
+  'ALTER TABLE devices ADD INDEX IF NOT EXISTS idx_devices_client_id (client_id),
+   ADD CONSTRAINT fk_devices_client FOREIGN KEY (client_id) REFERENCES Client(id)
+   ON DELETE SET NULL ON UPDATE CASCADE',
+  'SELECT ''fk_devices_client already exists''');
+PREPARE s1 FROM @sql1; EXECUTE s1; DEALLOCATE PREPARE s1;
+
+-- 2. mqtt_settings.device_id → devices.deviceID  (links MQTT config to its device)
+ALTER TABLE `mqtt_settings`
+  ADD COLUMN IF NOT EXISTS `device_id` int(11) DEFAULT NULL;
+
+SET @fk2 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='mqtt_settings' AND CONSTRAINT_NAME='fk_mqtt_settings_device');
+SET @sql2 = IF(@fk2=0,
+  'ALTER TABLE mqtt_settings ADD INDEX IF NOT EXISTS idx_mqtt_settings_device (device_id),
+   ADD CONSTRAINT fk_mqtt_settings_device FOREIGN KEY (device_id) REFERENCES devices(deviceID)
+   ON DELETE SET NULL ON UPDATE CASCADE',
+  'SELECT ''fk_mqtt_settings_device already exists''');
+PREPARE s2 FROM @sql2; EXECUTE s2; DEALLOCATE PREPARE s2;
+
+-- 3. device_connectivity.last_record_id → power_records.id  (heartbeat pointer)
+ALTER TABLE `device_connectivity`
+  ADD COLUMN IF NOT EXISTS `last_seen_at` datetime DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `last_record_id` int(11) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `online_status` tinyint(1) NOT NULL DEFAULT 0;
+
+SET @fk3 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='device_connectivity' AND CONSTRAINT_NAME='fk_dc_last_record');
+SET @sql3 = IF(@fk3=0,
+  'ALTER TABLE device_connectivity ADD CONSTRAINT fk_dc_last_record
+   FOREIGN KEY (last_record_id) REFERENCES power_records(id)
+   ON DELETE SET NULL ON UPDATE CASCADE',
+  'SELECT ''fk_dc_last_record already exists''');
+PREPARE s3 FROM @sql3; EXECUTE s3; DEALLOCATE PREPARE s3;
+
+-- FK summary for the 7 core tables:
+--
+--  ClientService ──→ Client ←── devices ──→ device_connectivity ──→ power_records
+--  ClientService ──→ Service          ↘──→ device_notifications
+--  mqtt_settings ──→ devices          ↘──→ power_records_preinstall
+--                                     device_connectivity.last_record_id → power_records
