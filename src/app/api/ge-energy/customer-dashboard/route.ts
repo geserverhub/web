@@ -171,6 +171,77 @@ export async function GET(request: NextRequest) {
     const totalSavedKwh = summary.totalBefore - summary.totalAfter
     const totalSavedCost = summary.totalCostBefore - summary.totalCostAfter
 
+    // Per-meter aggregate stats
+    let meterStats: Array<{
+      deviceId: number
+      beforeKwh: number
+      afterKwh: number
+      savedKwh: number
+      recordCount: number
+      firstRecord: string | null
+      lastRecord: string | null
+      costBefore: number
+      costAfter: number
+      savedCost: number
+      savingPct: number
+      co2SavedKg: number
+    }> = []
+
+    if (deviceIds.length > 0) {
+      const { sql: meterDevSql, params: meterDevParams } = deviceFilterSql(deviceIds)
+      const meterRows = (await queryGe(
+        `SELECT
+           pr.device_id,
+           SUM(COALESCE(pr.before_kWh, 0))       AS before_kwh,
+           SUM(COALESCE(pr.metrics_kWh, 0))       AS after_kwh,
+           SUM(COALESCE(pr.energy_reduction, 0))  AS saved_kwh,
+           COUNT(*)                               AS record_count,
+           MIN(pr.record_time)                    AS first_record,
+           MAX(pr.record_time)                    AS last_record
+         FROM power_records pr
+         WHERE 1=1
+         ${dateCondition}
+         ${meterDevSql}
+         GROUP BY pr.device_id
+         ORDER BY pr.device_id ASC`,
+        [...dateConditionParams, ...meterDevParams],
+      )) as Array<{
+        device_id: number
+        before_kwh: number | string | null
+        after_kwh: number | string | null
+        saved_kwh: number | string | null
+        record_count: number | string
+        first_record: string | null
+        last_record: string | null
+      }>
+
+      // Use per-meter rate (match meter site)
+      meterStats = meterRows.map((r) => {
+        const dId = Number(r.device_id)
+        const mMeta = meters.find((m) => m.deviceId === dId)
+        const mRate = mMeta ? resolveRate(mMeta.site, searchParams.get('rate')) : safeRate
+        const bKwh = toNumber(r.before_kwh)
+        const aKwh = toNumber(r.after_kwh)
+        const sKwh = toNumber(r.saved_kwh)
+        const cB = Math.round(bKwh * mRate)
+        const cA = Math.round(aKwh * mRate)
+        return {
+          deviceId: dId,
+          beforeKwh: bKwh,
+          afterKwh: aKwh,
+          savedKwh: sKwh,
+          recordCount: Number(r.record_count),
+          firstRecord: r.first_record ? String(r.first_record) : null,
+          lastRecord: r.last_record ? String(r.last_record) : null,
+          costBefore: cB,
+          costAfter: cA,
+          savedCost: cB - cA,
+          savingPct: bKwh > 0 ? Number(((bKwh - aKwh) / bKwh * 100).toFixed(1)) : 0,
+          co2SavedKg: Math.round((bKwh - aKwh) * 0.5313),
+        }
+      })
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -184,6 +255,7 @@ export async function GET(request: NextRequest) {
           locationName: m.locationName,
           label: m.label,
         })),
+        meterStats,
         primarySite,
         summary: {
           ...summary,
