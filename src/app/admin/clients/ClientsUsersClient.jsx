@@ -85,6 +85,11 @@ export default function ClientsUsersClient({ session }) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
+  // backup
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupMessage, setBackupMessage] = useState("");
+  const [backupStatus, setBackupStatus] = useState("");
+
   // services (for client form)
   const [services, setServices] = useState([]);
 
@@ -309,6 +314,30 @@ export default function ClientsUsersClient({ session }) {
     setTab("momo");
     loadMomoData();
   }, [loadMomoData]);
+
+  const handleDatabaseBackup = useCallback(async () => {
+    setBackupLoading(true);
+    setBackupMessage("");
+    setBackupStatus("");
+
+    try {
+      const response = await fetch("/api/backup", { method: "POST" });
+      const data = await response.json();
+
+      if (response.ok) {
+        setBackupStatus("success");
+        setBackupMessage(`✅ Backup สำเร็จ! File: ${data.filename} (${data.size})`);
+      } else {
+        setBackupStatus("error");
+        setBackupMessage(`❌ Backup ล้มเหลว: ${data.message}`);
+      }
+    } catch (error) {
+      setBackupStatus("error");
+      setBackupMessage(`❌ Error: ${error.message}`);
+    } finally {
+      setBackupLoading(false);
+    }
+  }, []);
 
   const openMFactoryReceipt = useCallback((booking = null) => {
     const mfClient = { id: "cmo6viudt0001qhga9f5j4jzc" };
@@ -2220,6 +2249,10 @@ export default function ClientsUsersClient({ session }) {
             onClick={switchToMomoTab}>
             🏠 MoMo Space Partner
           </button>
+          <button style={{ ...S.btn("#1e3a5f", "#7eb8f7"), border: "1px solid #3b82f6", padding: "9px 20px", fontSize: 14, fontWeight: 700 }}
+            onClick={() => setTab("backup")}>
+            🗄️ Database Backup
+          </button>
           {tab === "expenses" && (
             <button style={{ ...S.btn("#14532d", "#4ade80"), border: "2px solid #4ade80", padding: "9px 20px", fontSize: 14, fontWeight: 700 }}
               onClick={printExpenseReport}>
@@ -3108,6 +3141,67 @@ export default function ClientsUsersClient({ session }) {
                 </>
               );
             })()}
+          </div>
+        )}
+
+        {/* ── DATABASE BACKUP TAB ── */}
+        {tab === "backup" && (
+          <div style={S.card}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#7eb8f7" }}>🗄️ Database Backup</div>
+                <div style={{ color: "#8b8fa8", fontSize: 12, marginTop: 4 }}>สร้าง backup ฐานข้อมูล goeunserverhub</div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 20 }}>
+              {/* Manual Backup */}
+              <div style={{ border: "1px solid #3b82f6", borderLeft: "4px solid #3b82f6", borderRadius: 8, padding: 16, background: "#0f172a" }}>
+                <h3 style={{ margin: "0 0 12px", color: "#7eb8f7" }}>📌 Backup ตอนนี้</h3>
+                <p style={{ color: "#8b8fa8", margin: "0 0 16px", fontSize: 13 }}>สร้าง backup ฐานข้อมูลทันที</p>
+                <button
+                  onClick={handleDatabaseBackup}
+                  disabled={backupLoading}
+                  style={{
+                    ...S.btn(backupLoading ? "#2a2d3a" : "#1e3a5f", backupLoading ? "#4a5078" : "#7eb8f7"),
+                    border: "1px solid #3b82f6",
+                    padding: "12px 24px",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: backupLoading ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {backupLoading ? "⏳ กำลังสร้าง Backup..." : "💾 สร้าง Backup"}
+                </button>
+              </div>
+
+              {/* Automatic Backup */}
+              <div style={{ border: "1px solid #4ade80", borderLeft: "4px solid #4ade80", borderRadius: 8, padding: 16, background: "#051910" }}>
+                <h3 style={{ margin: "0 0 12px", color: "#4ade80" }}>⏰ Automatic Backup</h3>
+                <p style={{ color: "#8b8fa8", margin: "0 0 12px", fontSize: 13 }}>Backup อัตโนมัติทุกวันจันทร์เวลา 00:00 (UTC+7)</p>
+                <div style={{ background: "#0f1a0f", padding: 12, borderRadius: 6, border: "1px solid #166534" }}>
+                  <div style={{ fontSize: 12, color: "#4ade80", lineHeight: 1.8 }}>
+                    ✅ สถานะ: เปิดใช้งาน<br/>
+                    📅 ตารางเวลา: ทุกวันจันทร์ 00:00<br/>
+                    💾 ตำแหน่ง: /backups/
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Message */}
+              {backupMessage && (
+                <div style={{
+                  padding: 14,
+                  borderRadius: 8,
+                  borderLeft: "4px solid " + (backupStatus === "success" ? "#4ade80" : "#f87171"),
+                  background: backupStatus === "success" ? "#0f2318" : "#1f0f0f",
+                  color: backupStatus === "success" ? "#4ade80" : "#f87171",
+                  fontSize: 13,
+                }}>
+                  {backupMessage}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
