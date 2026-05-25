@@ -83,7 +83,9 @@ export const fallbackClients = [
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
-    thumbnail: "momoge/momoge-space.jpg",
+    thumbnail: "/momoge/momoge-space.jpg",
+    thumbnail_fit: "contain",
+    thumbnail_style: "photo",
     system_url: "/energy-dashboard-login",
   },
   {
@@ -128,6 +130,7 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8105-0384",
     thumbnail: "/momoge/Logo-brand.png",
+    thumbnail_fit: "contain",
     system_url: "https://strong-dory-enabled.ngrok-free.app/momoge-product",
   },
   {
@@ -162,7 +165,20 @@ export const fallbackClients = [
     contact_email: "",
     contact_phone: "",
     thumbnail: "/ACC/134076.jpg",
+    thumbnail_fit: "contain",
+    thumbnail_style: "photo",
     system_url: "#",
+  },
+  {
+    id: 10,
+    name: "ห้องเรียนออนไลน์",
+    slug: "online-classroom",
+    description: "เรียนออนไลน์ — ห้องเรียนสด วิดีโอบันทึก เอกสาร และตารางเรียน",
+    status: "online",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010-8105-0384",
+    thumbnail: "/classroom/137806.jpg",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
   },
 ];
 
@@ -180,6 +196,8 @@ const PORTAL_URL_OVERRIDES = {
   "green-retail-energy": "/energy-dashboard-login",
   "m-group": "/m-group",
   "m-factory": "https://m-factoryandresort.com/",
+  "online-classroom":
+    "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
 };
 
 /** Resolve portal URL for API cards when DB systemUrl is empty or invalid. */

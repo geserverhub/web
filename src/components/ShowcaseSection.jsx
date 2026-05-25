@@ -14,6 +14,11 @@ export default function ShowcaseSection({ ui, filteredClients }) {
             {filteredClients.map((client, index) => {
               const name = ui.clientDescriptions?.[client.slug]?.name || client.name;
               const description = ui.clientDescriptions?.[client.slug]?.description || client.description;
+              const thumbSrc = client.thumbnail
+                ? (client.thumbnail.startsWith("/") ? client.thumbnail : `/${client.thumbnail}`)
+                : null;
+              const logoFit = client.thumbnail_fit === "contain";
+              const photoFit = client.thumbnail_style === "photo";
               return (
                 <div key={client.slug} className="col-12 col-md-6 col-lg-4">
                   <article
@@ -22,11 +27,18 @@ export default function ShowcaseSection({ ui, filteredClients }) {
                     className="showcase-card"
                   >
                     {/* Image area with title overlay */}
-                    <div className="showcase-visual">
-                      {client.thumbnail
-                        ? <div className="showcase-visual-bg" style={{ backgroundImage: `url(${client.thumbnail})` }} />
-                        : <div className="showcase-glow" />
-                      }
+                    <div
+                      className={`showcase-visual${logoFit ? " showcase-visual--logo" : ""}${photoFit ? " showcase-visual--photo" : ""}`}
+                    >
+                      {thumbSrc && logoFit ? (
+                        <div className="showcase-visual-logo-wrap" aria-hidden>
+                          <img src={thumbSrc} alt="" className="showcase-visual-logo" />
+                        </div>
+                      ) : thumbSrc ? (
+                        <div className="showcase-visual-bg" style={{ backgroundImage: `url(${thumbSrc})` }} />
+                      ) : (
+                        <div className="showcase-glow" />
+                      )}
                       <div className="showcase-visual-content">
                         <span className={`status-pill ${statusClassName(client.status)}`} />
                         <h3 className="showcase-card-title">{name}</h3>
