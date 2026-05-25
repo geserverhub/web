@@ -159,12 +159,11 @@ export default function AiTokenSettingsCard({
             <Sparkles className="w-4 h-4" />
             {ui.title}
           </h3>
-          {settings?.key_source && settings.key_source !== 'none' && (
-            <p className="text-xs font-medium text-violet-800 mt-2">
-              {sourceLabel}
-              {settings.api_key_masked ? ` · ${settings.api_key_masked}` : ''}
-            </p>
-          )}
+          <p className="text-xs text-violet-700 mt-0.5">{ui.subtitle}</p>
+          <p className="text-xs font-medium text-violet-800 mt-2">
+            {sourceLabel}
+            {settings?.api_key_masked ? ` · ${settings.api_key_masked}` : ''}
+          </p>
         </div>
       </div>
 

@@ -826,15 +826,15 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                 const title = locale === 'ko' ? s.ko : locale === 'th' ? s.th : s.en;
                 return (
                   <div key={s.step} className="flex items-center">
-                    <div className={`min-w-[8rem] rounded-xl border-2 ${c.border} ${c.bg} p-3 flex flex-col items-center text-center shadow-sm`}>
-                      <div className={`${c.num} text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center mb-1 flex-shrink-0`}>
+                    <div className={`w-36 rounded-xl border-2 ${c.border} ${c.bg} p-3 flex flex-col items-center text-center shadow-sm`}>
+                      <div className={`${c.num} text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center mb-1`}>
                         {s.step}
                       </div>
                       <div className="text-2xl mb-1">{s.icon}</div>
                       <p className={`text-xs font-semibold ${c.text} leading-tight mb-1.5`}>{title}</p>
-                      <code className="text-[10px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 mb-2 leading-tight w-full break-words whitespace-normal">{s.formula}</code>
-                      <p className={`text-sm font-bold ${c.text} leading-tight break-words`}>{s.value}</p>
-                      <p className="text-xs text-gray-400 mt-0.5 leading-tight break-words">{s.unit}</p>
+                      <code className="text-xs text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 mb-2 leading-tight w-full truncate">{s.formula}</code>
+                      <p className={`text-sm font-bold ${c.text} leading-tight`}>{s.value}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 leading-tight">{s.unit}</p>
                     </div>
                     {i < steps.length - 1 && (
                       <div className="px-1 text-gray-300 text-xl font-light select-none">→</div>
