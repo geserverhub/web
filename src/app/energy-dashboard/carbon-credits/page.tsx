@@ -26,6 +26,7 @@ import {
   Search,
   Calculator,
   X,
+  Printer,
 } from 'lucide-react';
 import './carbon-credits.css';
 
@@ -250,6 +251,219 @@ export default function CarbonCreditsPage() {
     fetchAllDevices();
   }, [fetchCarbonData, fetchMeterTable, fetchExchangeRate, fetchAllDevices]);
 
+  const printCarbonReport = useCallback(() => {
+    if (!data) return;
+    const reportId = `GE-CC-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const now = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+    const krwPrice = data.summary.currency === 'KRW' ? data.summary.creditPricePerTonne : (fxData.krwToThb ? Math.round(data.summary.creditPricePerTonne / fxData.krwToThb) : 32000);
+    const thbPrice = data.summary.currency === 'THB' ? data.summary.creditPricePerTonne : (fxData.krwToThb ? Math.round(data.summary.creditPricePerTonne * fxData.krwToThb) : 250);
+    const krwValue = data.summary.currency === 'KRW' ? data.summary.estimatedValue : (fxData.krwToThb ? Math.round(data.summary.estimatedValue / fxData.krwToThb) : 0);
+    const thbValue = data.summary.currency === 'THB' ? data.summary.estimatedValue : (fxData.krwToThb ? Math.round(data.summary.estimatedValue * fxData.krwToThb) : 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Carbon Credit Report — ${reportId}</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sarabun',Arial,sans-serif;font-size:10.5pt;color:#1a1a1a;line-height:1.55}
+.hdr{background:linear-gradient(135deg,#059669,#10b981);color:#fff;padding:22px 28px;border-radius:8px;margin-bottom:18px}
+.hdr h1{font-size:17pt;font-weight:800;margin-bottom:3px}
+.hdr h2{font-size:10.5pt;font-weight:400;opacity:.9}
+.hdr-meta{margin-top:14px;display:flex;gap:28px;font-size:9pt;flex-wrap:wrap}
+.hdr-meta div label{opacity:.75;font-size:8pt;display:block}
+.hdr-meta div strong{font-size:9.5pt}
+.sec-title{font-size:12pt;font-weight:800;color:#059669;border-bottom:2.5px solid #10b981;padding-bottom:5px;margin:20px 0 12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{border:1.5px solid #d1fae5;border-radius:8px;padding:10px;text-align:center;background:#f0fdf4}
+.kpi-val{font-size:16pt;font-weight:800;color:#059669}
+.kpi-lbl{font-size:8pt;color:#6b7280;margin-top:2px}
+.kpi-unit{font-size:7.5pt;color:#9ca3af}
+table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:12px}
+th{background:#059669;color:#fff;padding:7px 9px;text-align:left;font-size:8.5pt;font-weight:700}
+td{padding:6px 9px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+tr:nth-child(even) td{background:#f9fafb}
+.tfoot td{background:#ecfdf5;font-weight:700;border-top:2px solid #10b981}
+.step{display:flex;gap:10px;padding:9px;border:1px solid #d1fae5;border-radius:6px;margin-bottom:7px;break-inside:avoid}
+.step-num{background:#10b981;color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11pt;flex-shrink:0}
+.step-body{flex:1}
+.step-ttl{font-weight:700;color:#047857;font-size:10pt}
+.step-fml{background:#ecfdf5;border:1px solid #bbf7d0;border-radius:4px;padding:3px 7px;font-family:monospace;font-size:8.5pt;margin:3px 0;display:inline-block}
+.step-ex{font-size:8.5pt;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:3px 7px;margin:3px 0}
+.step-ref{font-size:8pt;color:#6b7280;margin-top:2px}
+.cert-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+.cert{border:1.5px solid #d1fae5;border-radius:6px;padding:9px;font-size:8.5pt;break-inside:avoid}
+.cert-ok{color:#10b981;font-weight:700;font-size:8pt}
+.cert-org{font-weight:700;color:#047857;font-size:9.5pt}
+.cert-std{color:#374151;margin:2px 0;font-size:8.5pt}
+.cert-url{font-size:7.5pt;color:#9ca3af;word-break:break-all}
+.decl{background:#f0fdf4;border:1.5px solid #d1fae5;border-radius:8px;padding:14px;font-size:9pt;line-height:1.7;margin-bottom:18px}
+.sig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:16px}
+.sig{border-top:1.5px solid #374151;padding-top:6px}
+.sig-lbl{font-size:9pt;font-weight:700;color:#374151}
+.sig-line{font-size:9pt;color:#374151;margin-top:6px}
+.footer{border-top:1px solid #d1fae5;padding-top:8px;font-size:8pt;color:#9ca3af;display:flex;justify-content:space-between;margin-top:20px}
+.pb{page-break-before:always}
+.badge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:7.5pt;font-weight:700;margin-left:5px;vertical-align:middle}
+.bg{background:#dcfce7;color:#15803d}
+.bb{background:#dbeafe;color:#1d4ed8}
+</style>
+</head>
+<body>
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div>
+      <div style="font-size:8.5pt;opacity:.8;margin-bottom:3px">GE Energy Technology Co., Ltd.</div>
+      <h1>รายงานโครงการลดการปล่อยก๊าซเรือนกระจก</h1>
+      <h2>GHG Emission Reduction Project Report — ISO 14064-2:2019 &nbsp;<span style="font-size:8pt;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px">T-VER / K-ETS Eligible</span></h2>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="opacity:.75;font-size:8pt">Report ID</div>
+      <div style="font-size:13pt;font-weight:800;letter-spacing:1.5px">${reportId}</div>
+    </div>
+  </div>
+  <div class="hdr-meta">
+    <div><label>วันที่ออกรายงาน / Issue Date</label><strong>${now}</strong></div>
+    <div><label>ช่วงเวลา / Reporting Period</label><strong>${period} วัน / days</strong></div>
+    <div><label>Site</label><strong>${selectedSite.toUpperCase()}</strong></div>
+    <div><label>มาตรฐาน / Standard</label><strong>ISO 14064-2:2019</strong></div>
+    <div><label>โปรแกรม / Program</label><strong>T-VER · K-ETS · GHG Protocol</strong></div>
+  </div>
+</div>
+
+<!-- ══ PAGE 1 · EXECUTIVE SUMMARY ══ -->
+<div class="sec-title">1. สรุปผลโครงการ / Executive Summary</div>
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-val">${fmt(data.summary.totalEnergySavedKwh)}</div><div class="kpi-lbl">พลังงานที่ประหยัด / Energy Saved</div><div class="kpi-unit">kWh</div></div>
+  <div class="kpi"><div class="kpi-val">${fmt(data.summary.totalCo2Kg)}</div><div class="kpi-lbl">CO₂ ที่ลดลง / CO₂ Avoided</div><div class="kpi-unit">kg CO₂</div></div>
+  <div class="kpi"><div class="kpi-val">${fmt(data.summary.carbonCreditsTonnes)}</div><div class="kpi-lbl">คาร์บอนเครดิต / Carbon Credits</div><div class="kpi-unit">tCO₂e</div></div>
+  <div class="kpi"><div class="kpi-val">₩${krwValue.toLocaleString()}</div><div class="kpi-lbl">มูลค่าตลาด / Market Value</div><div class="kpi-unit">≈ ฿${thbValue.toLocaleString()} THB</div></div>
+</div>
+<table>
+  <tr><th>พารามิเตอร์ / Parameter</th><th>ค่า / Value</th><th>หน่วย / Unit</th><th>แหล่งอ้างอิง / Source</th></tr>
+  <tr><td>ค่าแฟกเตอร์ปล่อยก๊าซ Thailand Grid</td><td><strong>0.5135</strong></td><td>kg CO₂/kWh</td><td>TGO / DEDE 2023</td></tr>
+  <tr><td>ราคาอ้างอิง Korea K-ETS</td><td><strong>₩${krwPrice.toLocaleString()}</strong></td><td>KRW / tCO₂e</td><td>KRX Carbon Market 2024</td></tr>
+  <tr><td>ราคาอ้างอิง Thailand T-VER</td><td><strong>฿${thbPrice.toLocaleString()}</strong></td><td>THB / tCO₂e</td><td>TGO Carbon Market 2024</td></tr>
+  ${fxData.krwToThb ? `<tr><td>อัตราแลกเปลี่ยน KRW/THB (เรียลไทม์)</td><td><strong>${fxData.krwToThb.toFixed(6)}</strong></td><td>THB per 1 KRW</td><td>open.er-api.com (Live ${new Date().toLocaleDateString()})</td></tr>` : ''}
+</table>
+
+<!-- ══ PAGE 2 · METHODOLOGY ══ -->
+<div class="pb"></div>
+<div class="sec-title">2. วิธีการคำนวณตามมาตรฐาน ISO 14064-2:2019 / Calculation Methodology</div>
+${ISO14064MethodologySteps.map(s => `
+<div class="step">
+  <div class="step-num">${s.step}</div>
+  <div class="step-body">
+    <div class="step-ttl">${s.titleTh} &nbsp;/&nbsp; ${s.titleEn}</div>
+    <div style="font-size:9pt;color:#374151;margin:3px 0">${s.descriptionTh}</div>
+    <div class="step-fml">Formula: ${s.formula} &nbsp;→&nbsp; ${s.unit}</div>
+    <div class="step-ex">📐 ${s.exampleTh}</div>
+    <div class="step-ref">📄 ${s.reference}</div>
+  </div>
+</div>`).join('')}
+
+<!-- ══ PAGE 3 · PER-METER DATA ══ -->
+<div class="pb"></div>
+<div class="sec-title">3. ข้อมูลรายมิเตอร์ / Per-Meter Device Data</div>
+${meterTable.meters.length > 0 ? `
+<table>
+  <thead><tr>
+    <th>#</th><th>อุปกรณ์ / Device</th><th>Meter ID</th>
+    <th style="text-align:right">kWh Saved</th>
+    <th style="text-align:right">CO₂ (kg)</th>
+    <th style="text-align:right">Credits (tCO₂e)</th>
+    <th style="text-align:right">Value (KRW)</th>
+    <th style="text-align:right">Value (THB)</th>
+  </tr></thead>
+  <tbody>
+    ${meterTable.meters.map(m => {
+      const tv = fxData.krwToThb ? Math.round(m.estimatedValueKRW * fxData.krwToThb) : m.estimatedValueTHB;
+      return `<tr>
+        <td>${m.rank}</td><td>${m.deviceName}</td>
+        <td style="font-family:monospace;font-size:9pt">${m.geID}</td>
+        <td style="text-align:right">${fmt(m.energySavedKwh)}</td>
+        <td style="text-align:right">${fmt(m.co2Kg)}</td>
+        <td style="text-align:right;font-weight:700;color:#059669">${fmt(m.carbonCreditsTonnes)}</td>
+        <td style="text-align:right">₩${m.estimatedValueKRW.toLocaleString()}</td>
+        <td style="text-align:right">฿${tv.toLocaleString()}</td>
+      </tr>`;
+    }).join('')}
+  </tbody>
+  ${meterTable.totals ? `<tfoot><tr class="tfoot">
+    <td colspan="3">✓ รวมทั้งหมด / Grand Total</td>
+    <td style="text-align:right">${fmt(meterTable.totals.energySavedKwh)}</td>
+    <td style="text-align:right">${fmt(meterTable.totals.co2Kg)}</td>
+    <td style="text-align:right">${fmt(meterTable.totals.carbonCreditsTonnes)}</td>
+    <td style="text-align:right">₩${meterTable.totals.estimatedValueKRW.toLocaleString()}</td>
+    <td style="text-align:right">฿${(fxData.krwToThb ? Math.round(meterTable.totals.estimatedValueKRW * fxData.krwToThb) : meterTable.totals.estimatedValueTHB).toLocaleString()}</td>
+  </tr></tfoot>` : ''}
+</table>` : '<p style="color:#9ca3af;font-style:italic;padding:12px 0">ไม่มีข้อมูลมิเตอร์ — กด "คำนวณ" ในหน้าหลักก่อนพิมพ์ / No meter data — press Calculate before printing</p>'}
+
+<!-- ══ PAGE 4 · CERTIFICATIONS & SIGNATURES ══ -->
+<div class="pb"></div>
+<div class="sec-title">4. มาตรฐานอ้างอิงและการรับรอง / Standards & Certification References</div>
+<div class="cert-grid">
+  <div class="cert"><div class="cert-ok">✓ Standard</div><div class="cert-org">ISO (International Organization for Standardization)</div><div class="cert-std">ISO 14064-2:2019 — GHG Accounting & Reporting</div><div class="cert-url">https://www.iso.org/standard/66454.html</div></div>
+  <div class="cert"><div class="cert-ok">✓ Guideline</div><div class="cert-org">IPCC</div><div class="cert-std">2006 IPCC Guidelines for National GHG Inventories</div><div class="cert-url">https://www.ipcc-nggip.iges.or.jp/public/2006gl/</div></div>
+  <div class="cert"><div class="cert-ok">✓ Emission Factor</div><div class="cert-org">TGO / DEDE (Thailand)</div><div class="cert-std">Grid Emission Factor 2023 — 0.5135 kgCO₂/kWh</div><div class="cert-url">https://www.tgo.or.th/2020/index.php/th/ghg-factor</div></div>
+  <div class="cert"><div class="cert-ok">✓ T-VER Program</div><div class="cert-org">TGO — Thailand Greenhouse Gas Management</div><div class="cert-std">T-VER Standard v3.0 — Voluntary Emission Reduction</div><div class="cert-url">https://www.tgo.or.th/2020/index.php/th/tver-standard</div></div>
+  <div class="cert"><div class="cert-ok">✓ K-ETS Market</div><div class="cert-org">KRX — Korea Exchange</div><div class="cert-std">Korea ETS (K-ETS) Carbon Market 2024</div><div class="cert-url">https://ets.krx.co.kr</div></div>
+  <div class="cert"><div class="cert-ok">✓ Protocol</div><div class="cert-org">GHG Protocol / World Bank</div><div class="cert-std">GHG Protocol Corporate Standard &amp; Carbon Pricing Dashboard</div><div class="cert-url">https://ghgprotocol.org/corporate-standard</div></div>
+  <div class="cert"><div class="cert-ok">✓ Methodology</div><div class="cert-org">UNFCCC CDM</div><div class="cert-std">CDM Methodology AMS-II.C / AMS-II.E (Energy Efficiency)</div><div class="cert-url">https://cdm.unfccc.int/methodologies/SSCmethodologies/approved</div></div>
+  <div class="cert"><div class="cert-ok">✓ Quality Standard</div><div class="cert-org">Gold Standard Foundation</div><div class="cert-std">Gold Standard for the Global Goals (GS4GG)</div><div class="cert-url">https://www.goldstandard.org</div></div>
+  <div class="cert"><div class="cert-ok">✓ Exchange Rate</div><div class="cert-org">Open Exchange Rates</div><div class="cert-std">Live KRW/THB Rate — ${fxData.krwToThb ? fxData.krwToThb.toFixed(6) + ' THB/KRW' : 'N/A'}</div><div class="cert-url">https://open.er-api.com</div></div>
+</div>
+
+<div class="sec-title">5. คำรับรองและลายมือชื่อ / Declaration & Authorized Signatures</div>
+<div class="decl">
+  <strong>คำรับรอง (ภาษาไทย):</strong> ข้าพเจ้าขอรับรองว่าข้อมูลในรายงานฉบับนี้ถูกต้องและครบถ้วนตามความเป็นจริง จัดทำตามมาตรฐาน ISO 14064-2:2019
+  ด้วยค่าแฟกเตอร์การปล่อยก๊าซเรือนกระจกจาก TGO/DEDE ปี 2566 (0.5135 kgCO₂/kWh) ข้อมูลนี้สามารถใช้เป็นหลักฐานประกอบการยื่นขอรับรองคาร์บอนเครดิต
+  ในโปรแกรม T-VER ของ TGO หรือโปรแกรมที่เกี่ยวข้อง<br/><br/>
+  <strong>Declaration (English):</strong> I hereby certify that the data in this report is accurate and complete, prepared in accordance with
+  ISO 14064-2:2019 using the Thailand national grid emission factor (TGO/DEDE 2023: 0.5135 kgCO₂/kWh). This report may serve as
+  supporting documentation for carbon credit certification under T-VER (TGO Thailand), K-ETS (KRX Korea), or equivalent voluntary/mandatory programs.
+</div>
+<div class="sig-grid">
+  <div class="sig">
+    <div class="sig-lbl">ผู้จัดทำรายงาน / Report Preparer</div>
+    <div style="height:44px"></div>
+    <div class="sig-line">ชื่อ / Name: _________________________</div>
+    <div class="sig-line">ตำแหน่ง / Title: _______________________</div>
+    <div class="sig-line">วันที่ / Date: ${now}</div>
+  </div>
+  <div class="sig">
+    <div class="sig-lbl">ผู้ตรวจสอบ / Independent Verifier</div>
+    <div style="height:44px"></div>
+    <div class="sig-line">ชื่อ / Name: _________________________</div>
+    <div class="sig-line">องค์กร / Organization: _________________</div>
+    <div class="sig-line">วันที่ / Date: _________________________</div>
+  </div>
+  <div class="sig">
+    <div class="sig-lbl">ผู้มีอำนาจลงนาม / Authorized Signatory</div>
+    <div style="height:44px"></div>
+    <div class="sig-line">ชื่อ / Name: _________________________</div>
+    <div class="sig-line">ตำแหน่ง / Title: _______________________</div>
+    <div class="sig-line">วันที่ / Date: _________________________</div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Report ID: <strong>${reportId}</strong> &nbsp;|&nbsp; Generated: ${now} &nbsp;|&nbsp; GE Energy Technology Co., Ltd.</span>
+  <span>ISO 14064-2:2019 &nbsp;·&nbsp; T-VER &nbsp;·&nbsp; K-ETS &nbsp;·&nbsp; GHG Protocol &nbsp;·&nbsp; Gold Standard</span>
+</div>
+</body></html>`;
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) { alert('กรุณาอนุญาต popup เพื่อพิมพ์รายงาน / Please allow popups to print'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 600);
+  }, [data, fxData, meterTable, period, selectedSite]);
+
   if (loading && !data) {
     return (
       <div className="cc-page">
@@ -300,6 +514,15 @@ export default function CarbonCreditsPage() {
           </p>
         </div>
         <div className="flex flex-col gap-3 flex-shrink-0">
+          {/* Print Report Button */}
+          <button
+            onClick={printCarbonReport}
+            disabled={!data}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-700 font-bold rounded-xl border-2 border-white/80 shadow hover:bg-emerald-50 disabled:opacity-40 transition text-sm"
+          >
+            <Printer className="w-4 h-4" />
+            {L(locale, '🖨️ พิมพ์รายงาน ISO 14064-2', '🖨️ Print ISO 14064-2 Report', '🖨️ ISO 14064-2 보고서 인쇄')}
+          </button>
           <div className="cc-period-selector">
             <label>{L(locale, 'ช่วงเวลา', 'Period', '기간')}:</label>
             <select value={period} onChange={(e) => { setPeriod(Number(e.target.value)); }}>
