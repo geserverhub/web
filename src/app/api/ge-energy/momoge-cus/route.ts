@@ -4,6 +4,12 @@ import { queryGeserverhub as query } from '@/lib/geserverhub-db'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const toDecimal = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
 // GET /api/ge-energy/momoge-cus?deviceId=4&search=xxx
 export async function GET(req: NextRequest) {
   try {
@@ -95,7 +101,7 @@ export async function POST(req: NextRequest) {
     `, [
       meterID || null, LocationID || null, serailID || null, device_id || null,
       nameTH || null, nameEN || null, nameKR || null, phone || null, address || null,
-      latitude ?? null, longitude ?? null,
+      toDecimal(latitude), toDecimal(longitude),
     ]) as unknown as { insertId: number }
 
     return NextResponse.json({ success: true, mmgID: result.insertId }, { status: 201 })
@@ -130,7 +136,7 @@ export async function PUT(req: NextRequest) {
     `, [
       meterID || null, LocationID || null, serailID || null, device_id || null,
       nameTH || null, nameEN || null, nameKR || null, phone || null, address || null,
-      latitude ?? null, longitude ?? null, mmgID,
+      toDecimal(latitude), toDecimal(longitude), mmgID,
     ])
 
     return NextResponse.json({ success: true })
