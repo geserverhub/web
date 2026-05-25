@@ -138,6 +138,8 @@ export default function DevicesSettingPage() {
   const [addLocationID, setAddLocationID] = useState('');
   const [addSerailID, setAddSerailID] = useState('');
   const [addNameKR, setAddNameKR] = useState('');
+  const [savingCusDirect, setSavingCusDirect] = useState(false);
+  const [saveCusMsgDirect, setSaveCusMsgDirect] = useState<string | null>(null);
 
   useEffect(() => { setClientReady(true); }, []);
 
@@ -277,6 +279,40 @@ export default function DevicesSettingPage() {
     const t = setTimeout(() => fetchCustomers(customerSearchTerm), 250);
     return () => clearTimeout(t);
   }, [customerSearchTerm]);
+
+  const saveCusInfoDirect = async () => {
+    setSavingCusDirect(true);
+    setSaveCusMsgDirect(null);
+    try {
+      const res = await fetch('/api/ge-energy/momoge-cus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nameTH: addForm.customerName || null,
+          nameEN: addForm.customerNameEn || null,
+          nameKR: addNameKR || null,
+          phone: addForm.customerPhone || null,
+          address: addForm.customerAddress || null,
+          latitude: addForm.latitude ?? null,
+          longitude: addForm.longitude ?? null,
+          meterID: addMeterID ? Number(addMeterID) : null,
+          LocationID: addLocationID ? Number(addLocationID) : null,
+          serailID: addSerailID || null,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSaveCusMsgDirect('✓ บันทึกสำเร็จ');
+      } else {
+        setSaveCusMsgDirect('เกิดข้อผิดพลาด: ' + (json.error || 'unknown'));
+      }
+    } catch (err) {
+      setSaveCusMsgDirect('เกิดข้อผิดพลาด');
+      console.error('[saveCusInfoDirect]', err);
+    } finally {
+      setSavingCusDirect(false);
+    }
+  };
 
   function openEdit(device: Device) {
     setEditingDevice(device);
@@ -608,6 +644,7 @@ export default function DevicesSettingPage() {
           customerNameEnPlaceholder: 'Customer Name (English)',
           customerNameKrLabel: 'ชื่อลูกค้า (ภาษาเกาหลี)',
           customerNameKrPlaceholder: '고객 이름 (한국어)',
+          saveCusInfo: 'บันทึกข้อมูลลูกค้า',
           phoneLabel: 'เบอร์โทร / Phone',
           phonePlaceholder: 'เช่น 02-123-4567 หรือ +66 81-234-5678',
           addressLabel: 'ที่อยู่ / Address',
@@ -687,6 +724,7 @@ export default function DevicesSettingPage() {
           customerNameEnPlaceholder: 'Customer Name (English)',
           customerNameKrLabel: '고객명 (한국어)',
           customerNameKrPlaceholder: '고객 이름 입력 (한국어)',
+          saveCusInfo: '고객 정보 저장',
           phoneLabel: '전화번호 / Phone',
           phonePlaceholder: '예: 02-123-4567 또는 +82 10-1234-5678',
           addressLabel: '주소 / Address',
@@ -766,6 +804,7 @@ export default function DevicesSettingPage() {
           customerNameEnPlaceholder: 'Customer full name in English',
           customerNameKrLabel: 'Customer Name (Korean)',
           customerNameKrPlaceholder: '고객 이름 (한국어)',
+          saveCusInfo: 'Save Customer Info',
           phoneLabel: 'Phone',
           phonePlaceholder: 'e.g. +66 81-234-5678',
           addressLabel: 'Address',
@@ -1616,12 +1655,18 @@ export default function DevicesSettingPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => fetchCustomers(customerSearchTerm)}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+                        disabled={savingCusDirect}
+                        onClick={saveCusInfoDirect}
+                        className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition whitespace-nowrap"
                       >
-                        {ui.search}
+                        {savingCusDirect ? ui.loading : ui.saveCusInfo}
                       </button>
                     </div>
+                    {saveCusMsgDirect && (
+                      <p className={`text-xs font-medium mt-1 ${saveCusMsgDirect.startsWith('✓') ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {saveCusMsgDirect}
+                      </p>
+                    )}
                     {customerLoading && <p className="text-xs text-gray-500">{ui.loading}</p>}
                     {!customerLoading && customerResults.length > 0 && (
                       <div className="max-h-44 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white shadow-sm">
