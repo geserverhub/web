@@ -1660,22 +1660,14 @@ export default function DevicesSettingPage() {
                       className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                       placeholder={ui.customerNamePlaceholder}
                     />
-                    <div className="flex items-center gap-2">
-                      <input
-                        value={customerSearchTerm}
-                        onChange={e => setCustomerSearchTerm(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder={ui.customerSearchPlaceholder || ui.searchPlaceholder || 'ค้นหา ชื่อลูกค้า, เบอร์โทร, ที่อยู่...'}
-                      />
-                      <button
-                        type="button"
-                        disabled={savingCusDirect}
-                        onClick={saveCusInfoDirect}
-                        className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition whitespace-nowrap"
-                      >
-                        {savingCusDirect ? ui.loading : ui.saveCusInfo}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      disabled={savingCusDirect}
+                      onClick={saveCusInfoDirect}
+                      className="w-full px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition"
+                    >
+                      {savingCusDirect ? ui.loading : ui.saveCusInfo}
+                    </button>
                     {saveCusMsgDirect && (
                       <p className={`text-xs font-medium mt-1 ${saveCusMsgDirect.startsWith('✓') ? 'text-emerald-600' : 'text-red-500'}`}>
                         {saveCusMsgDirect}
