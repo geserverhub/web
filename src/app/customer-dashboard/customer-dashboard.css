@@ -1302,3 +1302,6 @@
 
 /* KPI dark labels inside white cards */
 .cd-card .cd-kpi-label { color:#111827; font-weight:600; }
+
+/* Notification badge pulse */
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }

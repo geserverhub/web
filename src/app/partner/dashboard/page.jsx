@@ -470,6 +470,9 @@ export default function PartnerDashboard() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackFilter, setFeedbackFilter] = useState("all"); // "all" | "General Feedback" | "Suggestion" | "Bug Report"
   const [feedbackSearch, setFeedbackSearch] = useState("");
+  const [seenFeedbackIds, setSeenFeedbackIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("seenFeedbackIds") || "[]")); } catch { return new Set(); }
+  });
   // chat/reply state
   const [chatOpenId, setChatOpenId] = useState(null);
   const [chatReplies, setChatReplies] = useState({}); // { [feedbackId]: reply[] }
@@ -525,10 +528,39 @@ export default function PartnerDashboard() {
     setFeedbackLoading(true);
     fetch("/api/ge-energy/user-feedback")
       .then(r => r.json())
-      .then(d => setFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : []))
+      .then(d => {
+        const list = Array.isArray(d.feedbacks) ? d.feedbacks : [];
+        setFeedbacks(list);
+        // mark all current feedbacks as seen when tab is opened
+        setSeenFeedbackIds(prev => {
+          const next = new Set(prev);
+          list.forEach(f => next.add(f.id));
+          try { localStorage.setItem("seenFeedbackIds", JSON.stringify([...next])); } catch {}
+          return next;
+        });
+      })
       .catch(() => {})
       .finally(() => setFeedbackLoading(false));
   }, [tab]);
+
+  // Background poll every 60 s to detect new feedback (for badge)
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const poll = () => {
+      fetch("/api/ge-energy/user-feedback")
+        .then(r => r.json())
+        .then(d => {
+          if (tab !== "feedback") {
+            setFeedbacks(Array.isArray(d.feedbacks) ? d.feedbacks : []);
+          }
+        })
+        .catch(() => {});
+    };
+    const id = setInterval(poll, 60000);
+    return () => clearInterval(id);
+  }, [status, tab]);
+
+  const feedbackBadge = feedbacks.filter(f => !seenFeedbackIds.has(f.id)).length;
 
   async function openChat(feedbackId) {
     if (chatOpenId === feedbackId) { setChatOpenId(null); return; }
@@ -898,8 +930,13 @@ export default function PartnerDashboard() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
             {["overview", "transactions", "add", "products", "tasks", "vat", "income", "kpi", "print", "feedback"].map(tabKey => (
-              <button key={tabKey} style={S.tabBtn(tab === tabKey)} onClick={() => setTab(tabKey)}>
+              <button key={tabKey} style={{ ...S.tabBtn(tab === tabKey), position: "relative" }} onClick={() => setTab(tabKey)}>
                 {t.tabs[tabKey]}
+                {tabKey === "feedback" && feedbackBadge > 0 && (
+                  <span style={{ position: "absolute", top: -6, right: -6, background: "#dc2626", color: "#fff", borderRadius: "999px", minWidth: 18, height: 18, fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", lineHeight: 1, boxShadow: "0 0 0 2px #12141c" }}>
+                    {feedbackBadge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
