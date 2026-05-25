@@ -124,6 +124,11 @@ export default function ClientsUsersClient({ session }) {
   const [savingPerm, setSavingPerm] = useState(false);
   const [loadingPerm, setLoadingPerm] = useState(false);
 
+  // inline username edit
+  const [inlineEditId, setInlineEditId] = useState(null);
+  const [inlineEditVal, setInlineEditVal] = useState("");
+  const [inlineSaving, setInlineSaving] = useState(false);
+
   // invoice modal
   const [invoiceModal, setInvoiceModal] = useState(false);
   const [editInvoiceId, setEditInvoiceId] = useState(null);
@@ -620,6 +625,37 @@ export default function ClientsUsersClient({ session }) {
       showToast("บันทึกสิทธิ์ไม่สำเร็จ", false);
     } finally {
       setSavingPerm(false);
+    }
+  };
+
+  // ── Inline username edit ──
+  const startInlineEdit = (u) => {
+    setInlineEditId(u.id);
+    setInlineEditVal(u.username || "");
+  };
+
+  const cancelInlineEdit = () => {
+    setInlineEditId(null);
+    setInlineEditVal("");
+  };
+
+  const saveInlineUsername = async (userId) => {
+    const newVal = inlineEditVal.trim();
+    setInlineSaving(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: newVal || null }),
+      });
+      const data = await readJsonResponse(res);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, username: (data.user?.username ?? newVal) || null } : u));
+      showToast("บันทึก Username สำเร็จ");
+      setInlineEditId(null);
+    } catch (err) {
+      showToast(err.message || "บันทึกไม่สำเร็จ", false);
+    } finally {
+      setInlineSaving(false);
     }
   };
 
@@ -2477,9 +2513,46 @@ export default function ClientsUsersClient({ session }) {
                       <tr key={u.id}>
                         <td style={S.td}><span style={{ fontWeight: 600 }}>{u.name || <span style={{ color: "#4a5070" }}>—</span>}</span></td>
                         <td style={S.td}>
-                          {u.username
-                            ? <code style={{ background: "#1e2130", color: "#a78bfa", borderRadius: 4, padding: "2px 8px", fontSize: 12 }}>{u.username}</code>
-                            : <span style={{ color: "#4a5070" }}>—</span>}
+                          {inlineEditId === u.id ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <input
+                                autoFocus
+                                value={inlineEditVal}
+                                onChange={e => setInlineEditVal(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") saveInlineUsername(u.id);
+                                  if (e.key === "Escape") cancelInlineEdit();
+                                }}
+                                disabled={inlineSaving}
+                                style={{
+                                  background: "#1e2130", color: "#a78bfa", border: "1px solid #4a3a6a",
+                                  borderRadius: 4, padding: "3px 8px", fontSize: 12, width: 120,
+                                  outline: "none",
+                                }}
+                              />
+                              <button
+                                onClick={() => saveInlineUsername(u.id)}
+                                disabled={inlineSaving}
+                                style={{ background: "#14532d", color: "#4ade80", border: "none", borderRadius: 4, padding: "3px 7px", fontSize: 12, cursor: "pointer" }}
+                              >{inlineSaving ? "…" : "✓"}</button>
+                              <button
+                                onClick={cancelInlineEdit}
+                                disabled={inlineSaving}
+                                style={{ background: "#2a1f1f", color: "#f87171", border: "none", borderRadius: 4, padding: "3px 7px", fontSize: 12, cursor: "pointer" }}
+                              >✕</button>
+                            </div>
+                          ) : (
+                            <span
+                              title="คลิกเพื่อแก้ไข username"
+                              onClick={() => startInlineEdit(u)}
+                              style={{ cursor: "text", display: "inline-flex", alignItems: "center", gap: 5 }}
+                            >
+                              {u.username
+                                ? <code style={{ background: "#1e2130", color: "#a78bfa", borderRadius: 4, padding: "2px 8px", fontSize: 12 }}>{u.username}</code>
+                                : <span style={{ color: "#4a5070", fontSize: 12 }}>— คลิกแก้ไข</span>}
+                              <span style={{ color: "#3d3a5a", fontSize: 10 }}>✎</span>
+                            </span>
+                          )}
                         </td>
                         <td style={S.td}>
                           <span style={{ color: "#4a5070", letterSpacing: 2, fontSize: 13 }}>••••••••</span>
