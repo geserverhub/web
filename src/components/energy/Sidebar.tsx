@@ -14,7 +14,7 @@ import {
   Monitor,
   Activity,
   GitCompare,
-  Code,
+  Database,
   FileText,
   MessageSquare,
   HelpCircle,
@@ -93,7 +93,7 @@ const menuSections: NavSection[] = [
   },
   {
     sectionKey: "menuTools",
-    items: [{ key: "developer", icon: Code, href: "/energy-dashboard/developer" }],
+    items: [{ key: "developer", icon: Database, href: "/energy-dashboard/developer" }],
   },
   {
     sectionKey: "userSupports",
