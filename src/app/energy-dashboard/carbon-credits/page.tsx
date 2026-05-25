@@ -869,9 +869,18 @@ export default function CarbonCreditsPage() {
 
       {/* Market Info */}
       <div className="cc-card">
-        <h2 className="cc-card-title">{L(locale, 'ข้อมูลตลาดคาร์บอน', 'Carbon Market Info', '탄소 시장 정보')}</h2>
-        <div className="cc-market-info">
-          {/* KRW price */}
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h2 className="cc-card-title" style={{ margin: 0 }}>
+            {L(locale, 'ข้อมูลตลาดคาร์บอน', 'Carbon Market Info', '탄소 시장 정보')}
+          </h2>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs text-emerald-700 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+            {L(locale, 'อัตราแลกเปลี่ยนเรียลไทม์', 'Live Exchange Rate', '실시간 환율')}
+          </span>
+        </div>
+
+        {/* System price rows */}
+        <div className="cc-market-info mb-5">
           <div className="cc-market-row">
             <span>{L(locale, 'ราคาต่อตัน', 'Price per Tonne', '톤당 가격')} (KRW):</span>
             <strong>
@@ -882,7 +891,6 @@ export default function CarbonCreditsPage() {
                   : '—'}
             </strong>
           </div>
-          {/* THB price */}
           <div className="cc-market-row">
             <span>{L(locale, 'ราคาต่อตัน', 'Price per Tonne', '톤당 가격')} (THB):</span>
             <strong>
@@ -897,9 +905,8 @@ export default function CarbonCreditsPage() {
             <span>{L(locale, 'สกุลเงิน', 'Currency', '통화')}:</span>
             <strong>{data.summary.currency}</strong>
           </div>
-          {/* Exchange rate */}
           <div className="cc-market-row">
-            <span>{L(locale, 'อัตราแลกเปลี่ยน (เรียลไทม์)', 'Exchange Rate (real-time)', '환율 (실시간)')}:</span>
+            <span>{L(locale, 'อัตราแลกเปลี่ยน', 'Exchange Rate', '환율')}:</span>
             <span className="flex items-center gap-2">
               {fxData.loading ? (
                 <span className="text-gray-400 text-sm">{L(locale, 'กำลังโหลด...', 'Loading...', '로딩 중...')}</span>
@@ -912,19 +919,96 @@ export default function CarbonCreditsPage() {
                     </span>
                   )}
                 </span>
-              ) : (
-                <span className="text-gray-400 text-sm">—</span>
-              )}
-              <button
-                onClick={fetchExchangeRate}
-                disabled={fxData.loading}
+              ) : <span className="text-gray-400 text-sm">—</span>}
+              <button onClick={fetchExchangeRate} disabled={fxData.loading}
                 className="p-1 hover:bg-gray-100 rounded transition disabled:opacity-50"
-                title={L(locale, 'รีเฟรชอัตราแลกเปลี่ยน', 'Refresh exchange rate', '환율 새로고침')}
-              >
+                title={L(locale, 'รีเฟรชอัตราแลกเปลี่ยน', 'Refresh exchange rate', '환율 새로고침')}>
                 <RefreshCw className={`w-3 h-3 text-gray-400 ${fxData.loading ? 'animate-spin' : ''}`} />
               </button>
             </span>
           </div>
+        </div>
+
+        {/* Reference Market Prices */}
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+            {L(locale, '📊 ราคาอ้างอิงตลาดคาร์บอน (แหล่งทางการ)', '📊 Carbon Market Reference Prices (Official Sources)', '📊 탄소 시장 참고 가격 (공식 출처)')}
+          </p>
+          <div className="grid grid-cols-1 gap-2">
+            {[
+              {
+                flag: '🇹🇭',
+                market: 'Thailand T-VER',
+                org: 'TGO (องค์การบริหารจัดการก๊าซเรือนกระจก)',
+                price: L(locale, '฿250–400 / tCO₂e', '฿250–400 / tCO₂e', '฿250–400 / tCO₂e'),
+                note: L(locale, 'ตลาดคาร์บอนภาคสมัครใจ 2567', 'Voluntary Carbon Market 2024', '자발적 탄소 시장 2024'),
+                url: 'https://carbonmarket.tgo.or.th',
+                badge: 'T-VER',
+                color: 'blue',
+              },
+              {
+                flag: '🇰🇷',
+                market: 'Korea K-ETS',
+                org: 'KRX (Korea Exchange)',
+                price: L(locale, '₩7,000–35,000 / tCO₂e', '₩7,000–35,000 / tCO₂e', '₩7,000–35,000 / tCO₂e'),
+                note: L(locale, 'ระบบซื้อขายสิทธิ์การปล่อยก๊าซ 2567', 'Emissions Trading System 2024', '배출권거래제 2024'),
+                url: 'https://ets.krx.co.kr',
+                badge: 'K-ETS',
+                color: 'purple',
+              },
+              {
+                flag: '🌍',
+                market: 'World Bank Carbon Pricing',
+                org: 'World Bank Group',
+                price: L(locale, '$5–130 / tCO₂e (USD)', '$5–130 / tCO₂e (USD)', '$5–130 / tCO₂e (USD)'),
+                note: L(locale, 'ภาพรวมราคาคาร์บอนโลก 2567', 'Global Carbon Pricing Overview 2024', '글로벌 탄소 가격 개요 2024'),
+                url: 'https://carbonpricingdashboard.worldbank.org',
+                badge: 'World Bank',
+                color: 'green',
+              },
+              {
+                flag: '🌐',
+                market: 'Gold Standard GS4GG',
+                org: 'Gold Standard Foundation',
+                price: L(locale, '$3–50 / tCO₂e (USD)', '$3–50 / tCO₂e (USD)', '$3–50 / tCO₂e (USD)'),
+                note: L(locale, 'ตลาดคาร์บอนเครดิตคุณภาพสูง', 'High-quality carbon credit market', '고품질 탄소 크레딧 시장'),
+                url: 'https://www.goldstandard.org/our-work/innovations-consultations/gs4gg',
+                badge: 'Gold Standard',
+                color: 'amber',
+              },
+            ].map((src) => (
+              <a key={src.market} href={src.url} target="_blank" rel="noopener noreferrer"
+                className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition group">
+                <span className="text-2xl flex-shrink-0">{src.flag}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-sm text-gray-800 group-hover:text-emerald-700">{src.market}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
+                      src.color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                      src.color === 'purple' ? 'bg-purple-100 text-purple-700' :
+                      src.color === 'green' ? 'bg-green-100 text-green-700' :
+                      'bg-amber-100 text-amber-700'}`}>
+                      {src.badge}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">{src.org}</p>
+                  <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
+                    <span className="text-sm font-bold text-emerald-700">{src.price}</span>
+                    <span className="text-xs text-gray-400">{src.note}</span>
+                  </div>
+                </div>
+                <span className="text-gray-300 group-hover:text-emerald-500 text-sm flex-shrink-0">↗</span>
+              </a>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+            {L(
+              locale,
+              '* ราคาอ้างอิงจากแหล่งทางการ TGO, KRX, World Bank, Gold Standard — ราคาจริงอาจผันแปรตามตลาด อัตราแลกเปลี่ยนดึงจาก open.er-api.com แบบเรียลไทม์',
+              '* Reference prices from official sources: TGO, KRX, World Bank, Gold Standard — actual prices may vary. Exchange rate fetched live from open.er-api.com',
+              '* 참고 가격은 TGO, KRX, World Bank, Gold Standard 공식 출처 기준 — 실제 가격은 시장에 따라 변동. 환율은 open.er-api.com에서 실시간 제공'
+            )}
+          </p>
         </div>
       </div>
     </div>
