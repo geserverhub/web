@@ -103,6 +103,7 @@ export const ERP_NAV_STRUCTURE = [
       'add-customer',
       'customer-contact-report',
       'marketing-plan',
+      'after-sales-chat-live',
       'create-sales-order',
       'sales-report',
     ],
@@ -255,6 +256,11 @@ const ERP_NAV_LABELS = {
     th: 'วางแผนการตลาด',
     en: 'Marketing plan',
     ko: '마케팅 계획',
+  },
+  'after-sales-chat-live': {
+    th: 'ตอบแชทลูกค้า (หลังการขาย)',
+    en: 'After-sales live chat',
+    ko: '고객 채팅 응답 (AS)',
   },
   'create-sales-order': {
     th: 'สร้างใบสั่งขาย',
@@ -609,6 +615,11 @@ const ERP_PAGE_DESC = {
     th: 'วางแผนแคมเปญ ช่องทาง และงบการตลาด',
     en: 'Plan campaigns, channels, and marketing budget.',
     ko: '캠페인, 채널, 마케팅 예산을 계획합니다.',
+  },
+  'after-sales-chat-live': {
+    th: 'ห้องแชทสดสำหรับแผนกการตลาด เพื่อตอบลูกค้าที่แชทจากหน้า GE Energy Tech',
+    en: 'Live marketing inbox for replying to customer chats from GE Energy Tech pages.',
+    ko: 'GE Energy Tech 페이지에서 들어온 고객 채팅에 응답하는 마케팅 라이브 인박스입니다.',
   },
   'create-sales-order': {
     th: 'ออกใบสั่งขายและกำหนดกำหนดส่งมอบ',

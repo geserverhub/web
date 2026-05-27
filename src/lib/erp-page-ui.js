@@ -46,6 +46,9 @@ export const ERP_PAGE_UI = {
     type: 'table',
     columnKeys: ['campaign', 'period', 'channel', 'budget', 'owner', 'status'],
   },
+  'after-sales-chat-live': {
+    type: 'after-sales-chat-live',
+  },
   'create-sales-order': {
     type: 'form',
     fieldKeys: [

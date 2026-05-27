@@ -17,15 +17,51 @@ export default function AfterSalesChatPage() {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [typing, setTyping] = useState(false);
+  const [threadId, setThreadId] = useState('');
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  function lastServerMessageId(list) {
+    for (let i = list.length - 1; i >= 0; i -= 1) {
+      const n = Number(list[i]?.id);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+    return 0;
+  }
 
   useEffect(() => {
     const l = readGeetLang();
     setLang(l);
     const copy = getAfterSalesCopy(l);
     setMessages([{ id: 'welcome', role: 'agent', text: copy.welcome }]);
+    if (typeof window !== 'undefined') {
+      setThreadId(window.localStorage.getItem('ge-after-sales-thread-id') || '');
+    }
   }, []);
+
+  useEffect(() => {
+    if (!threadId) return undefined;
+    const timer = setInterval(async () => {
+      try {
+        const lastId = lastServerMessageId(messages);
+        const query = new URLSearchParams({
+          threadId,
+          after: String(lastId),
+        });
+        const res = await fetch(geEnergyTechApiUrl(`/api/ge-energy-tech/after-sales-chat?${query.toString()}`), {
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const incoming = Array.isArray(data?.messages) ? data.messages : [];
+        if (!incoming.length) return;
+        setMessages((prev) => [...prev, ...incoming]);
+      } catch {
+        // Keep polling silently.
+      }
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [threadId, messages]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,13 +83,20 @@ export default function AfterSalesChatPage() {
       const res = await fetch(geEnergyTechApiUrl('/api/ge-energy-tech/after-sales-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang, message: body }),
+        body: JSON.stringify({ lang, message: body, threadId }),
       });
       const data = await res.json();
+      const nextThreadId = String(data?.threadId || '');
+      if (nextThreadId) {
+        setThreadId(nextThreadId);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('ge-after-sales-thread-id', nextThreadId);
+        }
+      }
       const reply = data?.reply || t.welcome;
 
       setTimeout(() => {
-        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'agent', text: reply }]);
+        setMessages((prev) => [...prev, { id: `s-${Date.now()}`, role: 'system', text: reply }]);
         setTyping(false);
         inputRef.current?.focus();
       }, 600);
@@ -121,7 +164,7 @@ export default function AfterSalesChatPage() {
                 className={`get-chat-msg get-chat-msg--${m.role === 'user' ? 'user' : 'agent'}`}
               >
                 <span className="get-chat-avatar" aria-hidden>
-                  {m.role === 'user' ? 'You' : 'GE'}
+                  {m.role === 'user' ? 'You' : m.role === 'system' ? 'SYS' : 'GE'}
                 </span>
                 <div className="get-chat-bubble">{m.text}</div>
               </div>
