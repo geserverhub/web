@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 
-const VALID_PORTALS = ['energy', 'customer', 'classroom', 'partner', 'client', 'admin'];
+const VALID_PORTALS = ['energy', 'customer', 'geet_login', 'classroom', 'partner', 'client', 'erp', 'admin'];
 
 function isSuperAdmin(session) {
   return session?.user?.role === 'SUPER_ADMIN';

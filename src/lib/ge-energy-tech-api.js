@@ -7,7 +7,7 @@ export function getGeEnergyTechHubBase() {
   const base =
     process.env.NEXT_PUBLIC_PUBLIC_HUB_URL ||
     process.env.NEXT_PUBLIC_PORTAL_BASE_URL ||
-    '';
+    'https://strong-dory-enabled.ngrok-free.app';
   return String(base).replace(/\/$/, '');
 }
 
