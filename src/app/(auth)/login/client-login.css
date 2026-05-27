@@ -1,4 +1,4 @@
-/* Client hub login — GE SERVER HUB */
+/* MCT · M-Group back-office login */
 
 .hub-login-page {
   min-height: 100dvh;
@@ -9,7 +9,7 @@
   justify-content: safe center;
   padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
     max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-  background: linear-gradient(155deg, #0f172a 0%, #1e3a8a 38%, #1d4ed8 62%, #2563eb 100%);
+  background: linear-gradient(155deg, #052e16 0%, #14532d 35%, #15803d 58%, #166534 82%, #134e4a 100%);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   position: relative;
   overflow-x: hidden;
@@ -29,7 +29,7 @@
   right: -3rem;
   width: 16rem;
   height: 16rem;
-  background: rgba(96, 165, 250, 0.35);
+  background: rgba(134, 239, 172, 0.28);
 }
 
 .hub-login-page::after {
@@ -37,73 +37,159 @@
   left: -2rem;
   width: 14rem;
   height: 14rem;
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(6, 78, 59, 0.45);
+}
+
+.hub-login-lang {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 2;
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(6, 78, 59, 0.92);
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  border-radius: 999px;
+  padding: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.hub-login-lang button {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 9px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 10px;
+  color: #86efac;
+  background: transparent;
+}
+
+.hub-login-lang button.is-active {
+  color: #052e16;
+  background: linear-gradient(135deg, #bbf7d0, #86efac);
 }
 
 .hub-login-card {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  max-width: 440px;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
   border-radius: 1.35rem;
-  padding: 1.75rem 1.5rem 1.5rem;
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  padding: 1.75rem 1.5rem 1.4rem;
+  border: 1px solid rgba(21, 128, 61, 0.22);
   box-shadow:
-    0 24px 56px rgba(15, 23, 42, 0.28),
-    0 8px 24px rgba(37, 99, 235, 0.15),
+    0 24px 56px rgba(5, 46, 22, 0.28),
+    0 8px 24px rgba(21, 128, 61, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.98);
 }
 
 @media (min-width: 480px) {
   .hub-login-card {
-    padding: 2rem 2rem 1.65rem;
+    padding: 2rem 2rem 1.6rem;
     border-radius: 1.5rem;
   }
 }
 
 .hub-login-brand {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.35rem;
 }
 
 .hub-login-logo {
-  width: 3.25rem;
-  height: 3.25rem;
-  margin: 0 auto 0.85rem;
+  margin: 0 auto 0.75rem;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.25));
+  filter: drop-shadow(0 4px 12px rgba(21, 128, 61, 0.2));
+}
+
+.hub-login-logo--mgroup {
+  display: block;
+  width: auto;
+  max-width: min(72vw, 180px);
+  height: auto;
+  max-height: 56px;
+}
+
+.hub-login-logo-fallback {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  background: #dcfce7;
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
 }
 
 .hub-login-kicker {
   display: inline-block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   padding: 0.25rem 0.65rem;
   font-size: 0.625rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #1d4ed8;
-  background: linear-gradient(180deg, #eff6ff, #dbeafe);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: #166534;
+  background: linear-gradient(180deg, #f0fdf4, #dcfce7);
+  border: 1px solid rgba(21, 128, 61, 0.25);
   border-radius: 999px;
+}
+
+.hub-login-portal {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #16a34a;
 }
 
 .hub-login-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #14532d;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .hub-login-sub {
-  margin: 0.4rem 0 0;
-  font-size: 0.875rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.84rem;
   font-weight: 500;
-  color: #64748b;
-  line-height: 1.45;
+  color: #4b5563;
+  line-height: 1.55;
+}
+
+.hub-login-features {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  text-align: left;
+}
+
+.hub-login-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #166534;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.hub-login-features li svg {
+  flex-shrink: 0;
+  color: #15803d;
 }
 
 .hub-login-field {
@@ -115,7 +201,7 @@
   margin-bottom: 0.4rem;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #334155;
+  color: #374151;
 }
 
 .hub-login-input-wrap {
@@ -127,7 +213,7 @@
 .hub-login-input-icon {
   position: absolute;
   left: 0.85rem;
-  color: #94a3b8;
+  color: #9ca3af;
   pointer-events: none;
 }
 
@@ -135,21 +221,21 @@
   width: 100%;
   padding: 0.7rem 2.75rem 0.7rem 2.65rem;
   font-size: 0.9375rem;
-  color: #0f172a;
+  color: #111827;
   background: #fff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #d1d5db;
   border-radius: 0.65rem;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .hub-login-input::placeholder {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .hub-login-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
 }
 
 .hub-login-toggle-pw {
@@ -161,14 +247,14 @@
   padding: 0.35rem;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #6b7280;
   cursor: pointer;
   border-radius: 0.375rem;
 }
 
 .hub-login-toggle-pw:hover {
-  color: #2563eb;
-  background: #f1f5f9;
+  color: #15803d;
+  background: #f0fdf4;
 }
 
 .hub-login-error {
@@ -192,17 +278,41 @@
   border: none;
   border-radius: 0.65rem;
   cursor: pointer;
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
+  box-shadow: 0 6px 20px rgba(21, 128, 61, 0.4);
   transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
 }
 
 .hub-login-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.45);
+  box-shadow: 0 10px 28px rgba(21, 128, 61, 0.45);
 }
 
 .hub-login-submit:disabled {
   opacity: 0.72;
   cursor: wait;
+}
+
+.hub-login-footer {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+.hub-login-back {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #15803d;
+  text-decoration: none;
+}
+
+.hub-login-back:hover {
+  color: #14532d;
+  text-decoration: underline;
+}
+
+.hub-login-powered {
+  margin: 0.65rem 0 0;
+  font-size: 0.68rem;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
 }

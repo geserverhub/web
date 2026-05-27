@@ -21,9 +21,6 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // WSL + /mnt/c: avoid stale chunks and slow file watches (ChunkLoadError on app/page.js)
   webpack: (config, { dev }) => {
     if (dev) {
