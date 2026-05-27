@@ -4,6 +4,14 @@
  * On geet (Vercel) uses NEXT_PUBLIC_PUBLIC_HUB_URL / ngrok → hub :3005.
  */
 export function getGeEnergyTechHubBase() {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // On local development, keep API on same origin so ERP and customer chat share the same local backend.
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return '';
+    }
+  }
+
   const base =
     process.env.NEXT_PUBLIC_PUBLIC_HUB_URL ||
     process.env.NEXT_PUBLIC_PORTAL_BASE_URL ||
