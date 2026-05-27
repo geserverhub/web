@@ -1,0 +1,1415 @@
+@import './geerp-tokens.css';
+
+/* ── Shell ─────────────────────────────────────────────────────────────────── */
+.geerp-shell:has(> .geerp-loading) {
+  display: flex;
+  flex-direction: column;
+}
+
+.geerp-shell {
+  min-height: 100vh;
+  background: var(--geerp-bg);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(148, 163, 184, 0.18), transparent 55%),
+    linear-gradient(180deg, var(--geerp-bg) 0%, #dfe4ea 100%);
+  color: var(--geerp-slate-800);
+  font-family: var(--geerp-font);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+.geerp-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(180deg, var(--geerp-slate-800) 0%, var(--geerp-accent-deep) 100%);
+  color: var(--geerp-slate-100);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--geerp-shadow-topbar);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.geerp-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.geerp-topbar-logo {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--geerp-radius-md);
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.geerp-topbar-brand strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.geerp-topbar-brand span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--geerp-slate-400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.geerp-topbar-user {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--geerp-slate-300);
+  padding: 0.35rem 0.75rem;
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.geerp-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.geerp-lang {
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.geerp-lang button {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 9px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--geerp-slate-400);
+  background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.geerp-lang button:hover {
+  color: var(--geerp-slate-100);
+}
+
+.geerp-lang button.is-active {
+  color: var(--geerp-slate-800);
+  background: var(--geerp-slate-100);
+}
+
+.geerp-lang button:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus);
+}
+
+@media (max-width: 640px) {
+  .geerp-topbar {
+    flex-wrap: wrap;
+    padding: 0.65rem 1rem;
+  }
+
+  .geerp-topbar-user {
+    width: 100%;
+    order: 3;
+    text-align: center;
+  }
+}
+
+.geerp-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--geerp-radius-sm);
+  padding: 0.42rem 0.8rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.geerp-btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--geerp-slate-100);
+}
+
+.geerp-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.geerp-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus);
+}
+
+/* ── Navigation ──────────────────────────────────────────────────────────── */
+.geerp-dept-nav,
+.geerp-page-nav {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.5rem 1.25rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--geerp-slate-400) transparent;
+}
+
+.geerp-dept-nav {
+  background: linear-gradient(180deg, var(--geerp-slate-700) 0%, var(--geerp-slate-800) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.geerp-page-nav {
+  background: var(--geerp-bg-subtle);
+  border-bottom: 1px solid var(--geerp-border);
+}
+
+.geerp-dept-tab,
+.geerp-page-tab {
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: var(--geerp-radius-sm);
+  padding: 0.48rem 0.9rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.geerp-dept-tab {
+  color: var(--geerp-slate-300);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.geerp-dept-tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.geerp-dept-tab.is-active {
+  color: var(--geerp-slate-900);
+  background: var(--geerp-slate-100);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-page-tab {
+  color: var(--geerp-slate-600);
+  background: var(--geerp-bg-elevated);
+  border-color: var(--geerp-border);
+}
+
+.geerp-page-tab:hover {
+  border-color: var(--geerp-border-strong);
+  color: var(--geerp-slate-800);
+}
+
+.geerp-page-tab.is-active {
+  color: var(--geerp-slate-900);
+  background: var(--geerp-slate-100);
+  border-color: var(--geerp-accent);
+  box-shadow: var(--geerp-shadow-sm);
+  font-weight: 700;
+}
+
+.geerp-dept-tab:focus-visible,
+.geerp-page-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus);
+}
+
+/* ── Main content ────────────────────────────────────────────────────────── */
+.geerp-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+}
+
+.geerp-content {
+  position: relative;
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-lg);
+  padding: 1.5rem 1.35rem 1.65rem;
+  box-shadow: var(--geerp-shadow-lg);
+  overflow: hidden;
+}
+
+.geerp-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--geerp-slate-600), var(--geerp-slate-400), var(--geerp-slate-600));
+}
+
+.geerp-breadcrumb {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--geerp-slate-500);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.geerp-breadcrumb span {
+  color: var(--geerp-slate-400);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.geerp-content-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--geerp-slate-900);
+}
+
+.geerp-content-hint {
+  margin: 0 0 1.25rem;
+  color: var(--geerp-slate-500);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.geerp-subtitle {
+  margin: 0 0 0.75rem;
+  padding: 0 0.15rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--geerp-slate-700);
+  letter-spacing: -0.01em;
+}
+
+.geerp-section {
+  margin-top: 1.75rem;
+}
+
+/* ── Loading & alerts ────────────────────────────────────────────────────── */
+.geerp-page-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--geerp-slate-600);
+  background: var(--geerp-slate-100);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+}
+
+.geerp-page-loading::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--geerp-slate-300);
+  border-top-color: var(--geerp-accent);
+  border-radius: 50%;
+  animation: geerp-spin 0.7s linear infinite;
+}
+
+@keyframes geerp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.geerp-dev-alert {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--geerp-radius-md);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.geerp-dev-alert--error {
+  background: var(--geerp-danger-bg);
+  border: 1px solid #fecaca;
+  color: var(--geerp-danger);
+}
+
+.geerp-dev-alert--ok {
+  background: var(--geerp-success-bg);
+  border: 1px solid #bbf7d0;
+  color: var(--geerp-success);
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.geerp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.15rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--geerp-bg-subtle);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+}
+
+.geerp-search {
+  flex: 1 1 200px;
+  min-width: 160px;
+  padding: 0.52rem 0.8rem 0.52rem 2.1rem;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  font-size: 0.84rem;
+  font-family: inherit;
+  background: var(--geerp-bg-elevated)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242 1.1a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E")
+    no-repeat 0.65rem center;
+  color: var(--geerp-slate-800);
+  opacity: 0.65;
+}
+
+.geerp-tool-btn {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--geerp-accent);
+  border-radius: var(--geerp-radius-sm);
+  background: linear-gradient(180deg, var(--geerp-slate-600) 0%, var(--geerp-accent-strong) 100%);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-tool-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--geerp-shadow-md);
+}
+
+.geerp-tool-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.geerp-tool-btn--muted {
+  background: var(--geerp-bg-elevated);
+  color: var(--geerp-slate-700);
+  border-color: var(--geerp-border-strong);
+  box-shadow: none;
+}
+
+.geerp-tool-btn--muted:hover:not(:disabled) {
+  background: var(--geerp-slate-100);
+}
+
+.geerp-tool-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus);
+}
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+.geerp-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.geerp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.geerp-field span {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--geerp-slate-600);
+  letter-spacing: 0.02em;
+}
+
+.geerp-field input,
+.geerp-field textarea,
+.geerp-field--row select {
+  padding: 0.58rem 0.72rem;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  font-size: 0.86rem;
+  font-family: inherit;
+  color: var(--geerp-slate-900);
+  background: var(--geerp-bg-elevated);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.geerp-field input:hover,
+.geerp-field textarea:hover,
+.geerp-field--row select:hover {
+  border-color: var(--geerp-border-strong);
+}
+
+.geerp-field input:focus,
+.geerp-field textarea:focus,
+.geerp-field--row select:focus {
+  outline: none;
+  border-color: var(--geerp-accent);
+  box-shadow: var(--geerp-focus);
+}
+
+.geerp-field textarea {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.geerp-save-btn {
+  margin-top: 1.15rem;
+  padding: 0.62rem 1.35rem;
+  border: none;
+  border-radius: var(--geerp-radius-sm);
+  background: linear-gradient(180deg, var(--geerp-slate-600) 0%, var(--geerp-accent-deep) 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--geerp-shadow-md);
+  transition: transform 0.1s, opacity 0.15s, box-shadow 0.15s;
+}
+
+.geerp-save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--geerp-shadow-lg);
+}
+
+.geerp-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.geerp-save-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus), var(--geerp-shadow-md);
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+.geerp-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  background: var(--geerp-bg-elevated);
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.geerp-table th,
+.geerp-table td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--geerp-slate-200);
+}
+
+.geerp-table th {
+  background: var(--geerp-slate-100);
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--geerp-slate-600);
+  white-space: nowrap;
+}
+
+.geerp-table tbody tr {
+  transition: background 0.12s;
+}
+
+.geerp-table tbody tr:hover td {
+  background: var(--geerp-bg-subtle);
+}
+
+.geerp-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.geerp-table-empty {
+  text-align: center;
+  color: var(--geerp-slate-400);
+  font-weight: 500;
+  padding: 2.5rem 1rem !important;
+}
+
+/* ── Status badges ───────────────────────────────────────────────────────── */
+.geerp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.geerp-badge--ok,
+.geerp-badge--pass,
+.geerp-badge--active,
+.geerp-badge--completed,
+.geerp-badge--present {
+  color: var(--geerp-success);
+  background: var(--geerp-success-bg);
+  border-color: #bbf7d0;
+}
+
+.geerp-badge--pending,
+.geerp-badge--open,
+.geerp-badge--planned,
+.geerp-badge--draft {
+  color: var(--geerp-warning);
+  background: var(--geerp-warning-bg);
+  border-color: #fde68a;
+}
+
+.geerp-badge--fail,
+.geerp-badge--cancelled,
+.geerp-badge--error {
+  color: var(--geerp-danger);
+  background: var(--geerp-danger-bg);
+  border-color: #fecaca;
+}
+
+.geerp-badge--neutral {
+  color: var(--geerp-slate-600);
+  background: var(--geerp-slate-100);
+  border-color: var(--geerp-border);
+}
+
+/* ── Reports & metrics ───────────────────────────────────────────────────── */
+.geerp-report-period {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  color: var(--geerp-slate-600);
+}
+
+.geerp-report-period strong {
+  color: var(--geerp-slate-900);
+  font-weight: 700;
+}
+
+.geerp-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.geerp-metric-card {
+  position: relative;
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 0.9rem 0.85rem;
+  box-shadow: var(--geerp-shadow-sm);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.geerp-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0.85rem;
+  right: 0.85rem;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--geerp-slate-500), var(--geerp-slate-300));
+}
+
+.geerp-metric-card:hover {
+  border-color: var(--geerp-border-strong);
+  box-shadow: var(--geerp-shadow-md);
+}
+
+.geerp-metric-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--geerp-slate-500);
+  margin-bottom: 0.35rem;
+}
+
+.geerp-metric-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--geerp-slate-900);
+}
+
+.geerp-chart {
+  padding: 1rem 1.1rem 0.85rem;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  background: linear-gradient(180deg, var(--geerp-bg-elevated) 0%, var(--geerp-bg-subtle) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.geerp-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--geerp-slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.geerp-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  height: 140px;
+  padding-top: 0.25rem;
+}
+
+.geerp-chart-bars span {
+  flex: 1;
+  min-width: 0;
+  height: var(--h, 40%);
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, var(--geerp-slate-500) 0%, var(--geerp-slate-700) 100%);
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+
+.geerp-chart-bars span:hover {
+  opacity: 1;
+}
+
+.geerp-chart-bars span:nth-child(even) {
+  background: linear-gradient(180deg, var(--geerp-slate-400) 0%, var(--geerp-slate-600) 100%);
+}
+
+/* ── Cards (manuals / software) ──────────────────────────────────────────── */
+.geerp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.geerp-card,
+.geerp-card-item {
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 1.1rem 1rem;
+  box-shadow: var(--geerp-shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.geerp-card:hover,
+.geerp-card-item:hover {
+  border-color: var(--geerp-border-strong);
+  box-shadow: var(--geerp-shadow-md);
+}
+
+.geerp-card h3,
+.geerp-card-item h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--geerp-slate-900);
+}
+
+.geerp-card-meta,
+.geerp-card-item p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--geerp-slate-500);
+}
+
+.geerp-card--has-data {
+  border-left: 3px solid var(--geerp-success);
+}
+
+.geerp-card-btn {
+  margin-top: 0.65rem;
+  padding: 0.38rem 0.7rem;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  background: var(--geerp-slate-100);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Developer panels ──────────────────────────────────────────────────────── */
+.geerp-dev-hub {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.geerp-dev-hub-card {
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-lg);
+  padding: 1.35rem;
+  text-align: center;
+  box-shadow: var(--geerp-shadow-md);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.geerp-dev-hub-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--geerp-shadow-lg);
+}
+
+.geerp-dev-hub-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.geerp-dev-hub-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--geerp-slate-900);
+}
+
+.geerp-dev-hub-card p {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  color: var(--geerp-slate-500);
+  line-height: 1.5;
+}
+
+.geerp-dev-hub-btn {
+  display: inline-block;
+  padding: 0.48rem 1rem;
+  border: none;
+  border-radius: var(--geerp-radius-sm);
+  background: linear-gradient(180deg, var(--geerp-slate-600) 0%, var(--geerp-accent-deep) 100%);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-dev-panel-intro {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--geerp-slate-600);
+  line-height: 1.55;
+}
+
+.geerp-dev-subtitle {
+  margin: 1.25rem 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--geerp-slate-700);
+}
+
+.geerp-field--row select {
+  width: 100%;
+}
+
+.geerp-acl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.geerp-acl-group {
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 0.7rem 0.8rem;
+}
+
+.geerp-acl-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.geerp-acl-group-head h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--geerp-slate-700);
+}
+
+.geerp-acl-group-actions button {
+  border: 1px solid var(--geerp-border);
+  background: var(--geerp-slate-100);
+  border-radius: 4px;
+  padding: 0.12rem 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.geerp-acl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.geerp-acl-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--geerp-slate-600);
+  padding: 0.22rem 0;
+  cursor: pointer;
+}
+
+.geerp-acl-check input {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  accent-color: var(--geerp-accent-strong);
+}
+
+/* ── Loading screen ───────────────────────────────────────────────────────── */
+.geerp-loading {
+  flex: 1;
+  width: 100%;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  background: var(--geerp-bg);
+  color: var(--geerp-slate-600);
+  font-weight: 600;
+  font-family: var(--geerp-font);
+}
+
+.geerp-loading::before {
+  content: '';
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--geerp-slate-200);
+  border-top-color: var(--geerp-accent-strong);
+  border-radius: 50%;
+  animation: geerp-spin 0.75s linear infinite;
+}
+
+/* ── Executive department ─────────────────────────────────────────────────── */
+.geerp-exec-period {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  color: var(--geerp-slate-600);
+}
+
+.geerp-exec-period strong {
+  color: var(--geerp-slate-900);
+}
+
+.geerp-exec-block {
+  margin-bottom: 1.5rem;
+}
+
+.geerp-exec-block:last-child {
+  margin-bottom: 0;
+}
+
+.geerp-metric-card--exec {
+  border-left: 3px solid var(--geerp-accent);
+}
+
+.geerp-exec-dept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.geerp-exec-dept-card {
+  background: var(--geerp-bg-subtle);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 1rem;
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-exec-dept-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--geerp-slate-800);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--geerp-border);
+}
+
+.geerp-exec-kpi-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.geerp-exec-kpi-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.78rem;
+  color: var(--geerp-slate-600);
+}
+
+.geerp-exec-kpi-list strong {
+  color: var(--geerp-slate-900);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.geerp-exec-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.geerp-exec-btn {
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--geerp-radius-sm);
+  border: 1px solid var(--geerp-border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.geerp-exec-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.geerp-exec-btn--ok {
+  background: var(--geerp-success-bg);
+  color: var(--geerp-success);
+  border-color: #bbf7d0;
+}
+
+.geerp-exec-btn--no {
+  background: var(--geerp-danger-bg);
+  color: var(--geerp-danger);
+  border-color: #fecaca;
+}
+
+.geerp-exec-ai-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.geerp-exec-ai-card {
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 1.1rem 1rem;
+  box-shadow: var(--geerp-shadow-sm);
+  border-left: 4px solid var(--geerp-slate-400);
+}
+
+.geerp-exec-ai-card--high {
+  border-left-color: var(--geerp-danger);
+}
+
+.geerp-exec-ai-card--warning {
+  border-left-color: var(--geerp-warning);
+}
+
+.geerp-exec-ai-card--info {
+  border-left-color: var(--geerp-info);
+}
+
+.geerp-exec-ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.geerp-exec-ai-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--geerp-slate-600);
+  background: var(--geerp-slate-100);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.geerp-exec-trend {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.geerp-exec-trend--up {
+  color: var(--geerp-success);
+}
+
+.geerp-exec-trend--down {
+  color: var(--geerp-danger);
+}
+
+.geerp-exec-trend--stable {
+  color: var(--geerp-slate-500);
+}
+
+.geerp-exec-ai-card h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--geerp-slate-900);
+}
+
+.geerp-exec-ai-summary {
+  margin: 0 0 0.65rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--geerp-slate-600);
+}
+
+.geerp-exec-ai-block {
+  margin: 0.5rem 0;
+  padding: 0.65rem 0.75rem;
+  background: var(--geerp-danger-bg);
+  border-radius: var(--geerp-radius-sm);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.geerp-exec-ai-block strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--geerp-danger);
+}
+
+.geerp-exec-ai-block--fix {
+  background: var(--geerp-info-bg);
+}
+
+.geerp-exec-ai-block--fix strong {
+  color: var(--geerp-info);
+}
+
+.geerp-exec-ai-block p {
+  margin: 0;
+  color: var(--geerp-slate-700);
+}
+
+.geerp-exec-ai-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--geerp-border);
+  font-size: 0.72rem;
+  color: var(--geerp-slate-500);
+}
+
+/* ── Daily work calendar ──────────────────────────────────────────────────── */
+.geerp-calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.geerp-calendar-title {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--geerp-slate-900);
+  letter-spacing: -0.02em;
+  min-width: 140px;
+}
+
+.geerp-calendar-nav {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  background: var(--geerp-bg-elevated);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--geerp-slate-700);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.geerp-calendar-nav:hover {
+  background: var(--geerp-slate-100);
+  border-color: var(--geerp-border-strong);
+}
+
+.geerp-calendar-summary {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  color: var(--geerp-slate-600);
+}
+
+.geerp-calendar-layout {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 340px);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .geerp-calendar-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.geerp-calendar-grid-wrap {
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  overflow: hidden;
+  background: var(--geerp-bg-elevated);
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.geerp-calendar-table th {
+  padding: 0.55rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--geerp-slate-600);
+  background: var(--geerp-slate-100);
+  border-bottom: 1px solid var(--geerp-border);
+}
+
+.geerp-calendar-cell-wrap {
+  padding: 2px;
+  border: 1px solid var(--geerp-slate-200);
+  vertical-align: top;
+  height: 72px;
+}
+
+.geerp-calendar-cell--empty {
+  background: var(--geerp-bg-subtle);
+  border: 1px solid var(--geerp-slate-100);
+}
+
+.geerp-calendar-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  width: 100%;
+  height: 100%;
+  min-height: 64px;
+  padding: 0.35rem;
+  border: none;
+  border-radius: var(--geerp-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+
+.geerp-calendar-cell:hover {
+  background: var(--geerp-slate-100);
+}
+
+.geerp-calendar-cell.is-today {
+  outline: 2px solid var(--geerp-accent);
+  outline-offset: -2px;
+}
+
+.geerp-calendar-cell.is-selected {
+  background: var(--geerp-slate-700);
+  color: #fff;
+  box-shadow: var(--geerp-shadow-md);
+}
+
+.geerp-calendar-cell.is-selected .geerp-calendar-day {
+  color: #fff;
+}
+
+.geerp-calendar-cell.has-reports:not(.is-selected) {
+  background: var(--geerp-success-bg);
+}
+
+.geerp-calendar-day {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-calendar-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 1.25rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: var(--geerp-accent-strong);
+  color: #fff;
+}
+
+.geerp-calendar-cell.is-selected .geerp-calendar-badge {
+  background: #fff;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-calendar-empty-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--geerp-slate-300);
+}
+
+.geerp-calendar-side {
+  background: var(--geerp-bg-subtle);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 1rem;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.geerp-calendar-hint {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--geerp-slate-500);
+  line-height: 1.55;
+}
+
+.geerp-calendar-report-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.geerp-calendar-report-item {
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  padding: 0.65rem 0.75rem;
+}
+
+.geerp-calendar-report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.geerp-calendar-report-head strong {
+  font-size: 0.78rem;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-calendar-del {
+  border: none;
+  background: var(--geerp-danger-bg);
+  color: var(--geerp-danger);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.geerp-calendar-reporter {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  color: var(--geerp-slate-500);
+}
+
+.geerp-calendar-summary-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--geerp-slate-700);
+}
+
+.geerp-calendar-form {
+  border-top: 1px solid var(--geerp-border);
+  padding-top: 1rem;
+}
+
+.geerp-calendar-form-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-calendar-form .geerp-field select {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  font-size: 0.86rem;
+  font-family: inherit;
+  background: var(--geerp-bg-elevated);
+}
