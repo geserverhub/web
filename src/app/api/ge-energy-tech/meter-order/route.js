@@ -22,12 +22,7 @@ export async function POST(request) {
   try {
     const missing = getMissingSmtpEnv();
     const smtpOpts = getSmtpTransportOptions();
-    if (missing.length > 0 || !smtpOpts.host) {
-      return NextResponse.json(
-        { error: 'Email service is not configured on the server.' },
-        { status: 500 }
-      );
-    }
+    const emailEnabled = missing.length === 0 && Boolean(smtpOpts.host);
 
     const form = await request.formData();
     const buyerName = String(form.get('buyerName') || '').trim();
@@ -129,7 +124,8 @@ export async function POST(request) {
       `Quantity: ${quantity}`,
       `Unit price: ${unitFmt}`,
       `Total: ${totalFmt}`,
-      `Database: ${dbSaved ? 'saved to goeunserverhub' : 'email only (DB unavailable)'}`,
+      `Database: ${dbSaved ? 'saved to goeunserverhub' : 'save failed'}`,
+      `Email: ${emailEnabled ? 'notification sent' : 'SMTP not configured (skipped)'}`,
       '',
       `Bank: ${METER_ORDER_BANK.bankNameEn}`,
       `Account: ${METER_ORDER_BANK.accountNumber}`,
@@ -155,41 +151,51 @@ export async function POST(request) {
       </div>
     `;
 
-    const transporter = nodemailer.createTransport({
-      ...smtpOpts,
-      tls: { minVersion: 'TLSv1.2' },
+    let emailSent = false;
+    if (emailEnabled) {
+      const transporter = nodemailer.createTransport({
+        ...smtpOpts,
+        tls: { minVersion: 'TLSv1.2' },
+      });
+
+      const from = process.env.SMTP_FROM_EMAIL?.trim() || process.env.SMTP_USER;
+      const adminTo = process.env.CONTACT_TO_EMAIL?.trim() || process.env.SMTP_USER;
+
+      await transporter.sendMail({
+        from,
+        to: email,
+        subject: `[GE Energy Tech] Order confirmation ${orderId}`,
+        text: `Thank you for your order.\n\n${textBody}\n\nWe will verify your payment and contact you shortly.`,
+        html: `
+          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
+            <h2 style="color:#166534">Order confirmed</h2>
+            <p>Thank you, ${safe.buyerName}. Your GE-IoT Power Meter order has been received.</p>
+            ${htmlBody}
+            <p style="margin-top:16px">Please keep this email for your records.</p>
+          </div>
+        `,
+        attachments,
+      });
+
+      await transporter.sendMail({
+        from,
+        to: adminTo,
+        replyTo: email,
+        subject: `[GE Energy Tech] New meter order ${orderId} — ${buyerName}`,
+        text: textBody,
+        html: htmlBody,
+        attachments,
+      });
+      emailSent = true;
+    }
+
+    return NextResponse.json({
+      ok: true,
+      orderId,
+      dbSaved,
+      emailSent,
+      warning: emailEnabled ? null : 'SMTP not configured. Order saved without email notification.',
     });
-
-    const from = process.env.SMTP_FROM_EMAIL?.trim() || process.env.SMTP_USER;
-    const adminTo = process.env.CONTACT_TO_EMAIL?.trim() || process.env.SMTP_USER;
-
-    await transporter.sendMail({
-      from,
-      to: email,
-      subject: `[GE Energy Tech] Order confirmation ${orderId}`,
-      text: `Thank you for your order.\n\n${textBody}\n\nWe will verify your payment and contact you shortly.`,
-      html: `
-        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
-          <h2 style="color:#166534">Order confirmed</h2>
-          <p>Thank you, ${safe.buyerName}. Your GE-IoT Power Meter order has been received.</p>
-          ${htmlBody}
-          <p style="margin-top:16px">Please keep this email for your records.</p>
-        </div>
-      `,
-      attachments,
-    });
-
-    await transporter.sendMail({
-      from,
-      to: adminTo,
-      replyTo: email,
-      subject: `[GE Energy Tech] New meter order ${orderId} — ${buyerName}`,
-      text: textBody,
-      html: htmlBody,
-      attachments,
-    });
-
-    return NextResponse.json({ ok: true, orderId, dbSaved });
   } catch (err) {
     console.error('[meter-order]', err);
     return NextResponse.json(

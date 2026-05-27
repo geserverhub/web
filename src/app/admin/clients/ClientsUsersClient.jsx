@@ -588,9 +588,11 @@ export default function ClientsUsersClient({ session }) {
   const PORTAL_DEFS = [
     { key: "energy",    label: "Energy Dashboard",   icon: "⚡", desc: "/energy-dashboard-login" },
     { key: "customer",  label: "Customer Dashboard",  icon: "📊", desc: "/customer-dashboard-login" },
+    { key: "geet_login",label: "GE Energy Tech Login",icon: "🔐", desc: "/ge-energy-tech/login" },
     { key: "classroom", label: "Online Classroom",    icon: "🎓", desc: "/online-classroom-login" },
     { key: "partner",   label: "Partner Portal",      icon: "🤝", desc: "/partner/login" },
     { key: "client",    label: "Client Portal (MCT)", icon: "🛒", desc: "/login" },
+    { key: "erp",       label: "GE Energy ERP",       icon: "🏢", desc: "/ge-energy-erp-login" },
     { key: "admin",     label: "Admin System",        icon: "⚙️", desc: "/admin/login" },
   ];
 

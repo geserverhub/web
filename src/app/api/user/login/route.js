@@ -42,11 +42,13 @@ export async function POST(request) {
       page.startsWith('/ge-energy-erp/') ||
       page === '/ge-energy-erp-login';
 
+    const isGeEnergyTechLogin =
+      page === '/ge-energy-tech/login';
+
     const isCustomerPortal =
       page === '/customer-dashboard' ||
       page.startsWith('/customer-dashboard/') ||
-      page === '/customer-dashboard-login' ||
-      page === '/ge-energy-tech/login';
+      page === '/customer-dashboard-login';
 
     const allowedRoles = isEnergyDashboard
       ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
@@ -54,8 +56,10 @@ export async function POST(request) {
         ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
         : isGeEnergyErp
           ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN']
+          : isGeEnergyTechLogin
+            ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
           : isCustomerPortal
-            ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN']
+            ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
             : ['CLIENT', 'ADMIN', 'SUPER_ADMIN'];
 
     // Look up by username or email
@@ -81,6 +85,8 @@ export async function POST(request) {
           ? 'บัญชีนี้ไม่มีสิทธิ์เข้าห้องเรียนออนไลน์'
           : isGeEnergyErp
             ? 'บัญชีนี้ไม่มีสิทธิ์เข้าระบบ ERP'
+            : isGeEnergyTechLogin
+              ? 'บัญชีนี้ไม่มีสิทธิ์เข้า GE Energy Tech Login'
             : isCustomerPortal
               ? 'บัญชีนี้ไม่มีสิทธิ์เข้า Customer Dashboard'
               : 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า';
@@ -95,6 +101,8 @@ export async function POST(request) {
           ? 'classroom'
           : isGeEnergyErp
             ? 'erp'
+            : isGeEnergyTechLogin
+              ? 'geet_login'
             : isCustomerPortal
               ? 'customer'
               : 'customer';
@@ -110,6 +118,8 @@ export async function POST(request) {
               ? 'Online Classroom'
               : isGeEnergyErp
                 ? 'GE Energy ERP'
+                : isGeEnergyTechLogin
+                  ? 'GE Energy Tech Login'
                 : isCustomerPortal
                   ? 'Customer Dashboard'
                   : 'Customer Dashboard';
