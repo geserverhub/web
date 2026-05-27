@@ -134,12 +134,7 @@ export default function Page() {
 
   return (
     <div className="agency-app-layout">
-      <Sidebar
-        ui={ui}
-        profile={profile}
-        currentLanguage={currentLanguage}
-        setCurrentLanguage={setCurrentLanguage}
-      />
+      <Sidebar ui={ui} profile={profile} />
 
       <main className="agency-main-content">
         <div className="agency-page">

@@ -1,6 +1,5 @@
 "use client";
 
-import AgencyLanguageSwitcher from "@/components/AgencyLanguageSwitcher";
 import { authSelectUrl } from "@/lib/data";
 
 const NAV_ITEMS = [
@@ -63,7 +62,7 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar({ ui, profile, currentLanguage, setCurrentLanguage }) {
+export default function Sidebar({ ui, profile }) {
   return (
     <aside className="agency-sidebar">
       <div className="agency-sidebar-brand">
@@ -84,16 +83,6 @@ export default function Sidebar({ ui, profile, currentLanguage, setCurrentLangua
       </nav>
 
       <div className="agency-sidebar-divider" />
-
-      {setCurrentLanguage && (
-        <div className="agency-sidebar-lang">
-          <AgencyLanguageSwitcher
-            currentLanguage={currentLanguage}
-            setCurrentLanguage={setCurrentLanguage}
-            className="agency-language-switcher--sidebar"
-          />
-        </div>
-      )}
 
       <div className="agency-sidebar-bottom">
         <a
