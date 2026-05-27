@@ -13,28 +13,22 @@ function parseErpUser(req) {
   }
 }
 
-async function resolvePageId(req, params) {
-  const resolved = await params;
+function resolvePageId(req, body = null) {
   const fromHeader = req.headers.get('x-erp-page-id') || '';
   if (fromHeader) return String(fromHeader);
 
-  const searchParams = new URL(req.url).searchParams;
-  const fromQuery = searchParams.get('pageId') || searchParams.get('p') || '';
+  const url = new URL(req.url);
+  const fromQuery = url.searchParams.get('pageId') || url.searchParams.get('p') || '';
   if (fromQuery) return String(fromQuery);
 
-  const fromParams =
-    resolved?.pageId ||
-    resolved?.pageid ||
-    resolved?.['page-id'] ||
+  const fromBody =
+    body?.pageId ||
+    body?.pageid ||
+    body?.['page-id'] ||
+    body?.data?.pageId ||
     '';
-  if (fromParams) return String(fromParams);
+  if (fromBody) return String(fromBody);
 
-  // Fallback for framework variants that do not expose dynamic params reliably.
-  const pathname = new URL(req.url).pathname || '';
-  const tail = pathname.split('/').filter(Boolean).pop() || '';
-  if (tail) return decodeURIComponent(tail);
-
-  // Last fallback: derive page id from ERP screen URL in Referer.
   try {
     const referer = req.headers.get('referer') || '';
     if (referer) {
@@ -70,13 +64,13 @@ async function userCanAccessPage(user, pageId) {
   }
 }
 
-export async function GET(req, { params }) {
+export async function GET(req) {
   const user = parseErpUser(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const pageId = await resolvePageId(req, params);
+  const pageId = resolvePageId(req);
   if (!pageId) {
     return NextResponse.json({ error: 'pageId required' }, { status: 400 });
   }
@@ -95,34 +89,34 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function POST(req, { params }) {
+export async function POST(req) {
   const user = parseErpUser(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const pageId = await resolvePageId(req, params);
-  if (!pageId) {
-    return NextResponse.json({ error: 'pageId required' }, { status: 400 });
-  }
-
-  if (!(await userCanAccessPage(user, pageId))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const cfg = getErpPageData(pageId);
-  if (!cfg?.fields || ERP_REPORT_PAGES.has(pageId)) {
-    return NextResponse.json({ error: 'Page does not accept form saves' }, { status: 400 });
-  }
-
   try {
     const body = await req.json();
+    const pageId = resolvePageId(req, body);
+    if (!pageId) {
+      return NextResponse.json({ error: 'pageId required' }, { status: 400 });
+    }
+
+    if (!(await userCanAccessPage(user, pageId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const cfg = getErpPageData(pageId);
+    if (!cfg?.fields || ERP_REPORT_PAGES.has(pageId)) {
+      return NextResponse.json({ error: 'Page does not accept form saves' }, { status: 400 });
+    }
+
     const payload = body?.data && typeof body.data === 'object' ? body.data : body;
     const created = await insertErpRow(pageId, payload, user.userId);
     const listed = await listErpRows(pageId);
     return NextResponse.json({ success: true, ...created, ...listed });
   } catch (err) {
-    console.error('[ge-energy-erp/data POST]', pageId, err);
+    console.error('[ge-energy-erp/data POST]', err);
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
 }

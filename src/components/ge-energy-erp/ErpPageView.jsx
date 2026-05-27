@@ -14,6 +14,7 @@ import ErpPageAccessPanel from './ErpPageAccessPanel';
 import ErpUserCreatePanel from './ErpUserCreatePanel';
 import ErpExecutivePanel from './ErpExecutivePanel';
 import ErpWorkCalendar from './ErpWorkCalendar';
+import ErpAfterSalesChatPanel from './ErpAfterSalesChatPanel';
 
 const CHART_BAR_HEIGHTS = [58, 42, 72, 51, 68, 38, 64, 55, 76, 47, 61, 53];
 
@@ -67,6 +68,7 @@ export default function ErpPageView({
     'exec-ai-growth',
   ].includes(pageId);
   const isCalendarPage = pageId === 'exec-daily-work-calendar';
+  const isAfterSalesChatPage = pageId === 'after-sales-chat-live';
   const devAllowed = canManageErpAccess(erpUser);
 
   const [loading, setLoading] = useState(false);
@@ -75,14 +77,20 @@ export default function ErpPageView({
   const [rows, setRows] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [formData, setFormData] = useState({});
+  const dataApiPath = pageId
+    ? `/api/ge-energy-erp/data?pageId=${encodeURIComponent(pageId)}`
+    : '';
+  const dataApiHeaders = pageId
+    ? { ...erpApiHeaders(), 'x-erp-page-id': String(pageId) }
+    : erpApiHeaders();
 
   const loadData = useCallback(async () => {
-    if (!pageId || isDevPage || isExecPage || isCalendarPage || accessDenied) return;
+    if (!pageId || isDevPage || isExecPage || isCalendarPage || isAfterSalesChatPage || accessDenied) return;
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/ge-energy-erp/data/${encodeURIComponent(pageId)}`, {
-        headers: erpApiHeaders(),
+      const res = await fetch(dataApiPath, {
+        headers: dataApiHeaders,
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Load failed');
@@ -100,7 +108,7 @@ export default function ErpPageView({
     } finally {
       setLoading(false);
     }
-  }, [pageId, isDevPage, isExecPage, isCalendarPage, accessDenied]);
+  }, [dataApiHeaders, dataApiPath, pageId, isDevPage, isExecPage, isCalendarPage, isAfterSalesChatPage, accessDenied]);
 
   useEffect(() => {
     setFormData({});
@@ -117,9 +125,9 @@ export default function ErpPageView({
     setSaving(true);
     setError('');
     try {
-      const res = await fetch(`/api/ge-energy-erp/data/${encodeURIComponent(pageId)}`, {
+      const res = await fetch(dataApiPath, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...erpApiHeaders() },
+        headers: { 'Content-Type': 'application/json', ...dataApiHeaders },
         body: JSON.stringify({ data: formData }),
       });
       const json = await res.json();
@@ -195,11 +203,15 @@ export default function ErpPageView({
         <ErpWorkCalendar lang={lang} />
       ) : null}
 
+      {!accessDenied && isAfterSalesChatPage && ui ? (
+        <ErpAfterSalesChatPanel lang={lang} />
+      ) : null}
+
       {!accessDenied && isExecPage && !isCalendarPage && ui ? (
         <ErpExecutivePanel lang={lang} pageId={pageId} />
       ) : null}
 
-      {!accessDenied && !isDevPage && !isExecPage && ui ? (
+      {!accessDenied && !isDevPage && !isExecPage && !isCalendarPage && !isAfterSalesChatPage && ui ? (
       <>
       {error ? <div className="geerp-dev-alert geerp-dev-alert--error">{error}</div> : null}
       {loading ? (
