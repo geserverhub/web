@@ -1413,3 +1413,168 @@
   font-family: inherit;
   background: var(--geerp-bg-elevated);
 }
+
+/* ── After-sales live chat panel ─────────────────────────────────────────── */
+.geerp-chat-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 980px) {
+  .geerp-chat-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.geerp-chat-threads {
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  background: var(--geerp-bg-subtle);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.geerp-chat-threads-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.geerp-chat-threads-head h2 {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-chat-thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 540px;
+  overflow-y: auto;
+}
+
+.geerp-chat-thread-item {
+  text-align: left;
+  border: 1px solid var(--geerp-border);
+  background: var(--geerp-bg-elevated);
+  border-radius: var(--geerp-radius-sm);
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+}
+
+.geerp-chat-thread-item.is-active {
+  border-color: var(--geerp-accent);
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-chat-thread-item p {
+  margin: 0.25rem 0 0;
+  font-size: 0.76rem;
+  color: var(--geerp-slate-600);
+}
+
+.geerp-chat-thread-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.geerp-chat-thread-title strong {
+  font-size: 0.76rem;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-chat-unread {
+  display: inline-flex;
+  min-width: 18px;
+  justify-content: center;
+  align-items: center;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--geerp-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.geerp-chat-pane {
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  background: var(--geerp-bg-elevated);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 520px;
+}
+
+.geerp-chat-window {
+  flex: 1;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  background: var(--geerp-bg-subtle);
+  padding: 0.75rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.geerp-chat-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+}
+
+.geerp-chat-msg.is-agent {
+  margin-left: auto;
+  align-items: flex-end;
+}
+
+.geerp-chat-msg.is-customer {
+  margin-right: auto;
+  align-items: flex-start;
+}
+
+.geerp-chat-msg-meta {
+  font-size: 11px;
+  color: var(--geerp-slate-500);
+  margin-bottom: 2px;
+}
+
+.geerp-chat-msg-body {
+  border: 1px solid var(--geerp-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-chat-msg.is-agent .geerp-chat-msg-body {
+  background: var(--geerp-slate-700);
+  color: #fff;
+  border-color: var(--geerp-slate-700);
+}
+
+.geerp-chat-compose {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.geerp-chat-compose input {
+  flex: 1;
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.86rem;
+  font-family: inherit;
+}

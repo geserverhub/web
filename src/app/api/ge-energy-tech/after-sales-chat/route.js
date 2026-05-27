@@ -1,51 +1,77 @@
 ﻿import { NextResponse } from 'next/server';
+import {
+  appendChatMessage,
+  ensureThreadByCode,
+  getThreadByCode,
+  listThreadMessages,
+  markThreadReadByCustomer,
+} from '@/lib/ge-after-sales-chat-db';
 
-function detectLang(text) {
-  const t = String(text || '');
-  if (/[\u0E00-\u0E7F]/.test(t)) return 'th';
-  if (/[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(t)) return 'ko';
-  if (/[\u3040-\u30FF]/.test(t)) return 'ja';
-  if (/[\u4E00-\u9FFF]/.test(t)) return 'zh';
-  if (/[ăâđêôơưĂÂĐÊÔƠƯ]/i.test(t)) return 'vi';
-  if (/\b(saya|anda|boleh|tolong)\b/i.test(t)) return 'ms';
-  return 'en';
-}
-
-const BOT = {
-  th: [
-    'ขอบคุณที่ติดต่อค่ะ เจ้าหน้าที่กำลังตรวจสอบข้อมูลให้',
-    'เราแนะนำให้ส่งเลขที่ใบสั่งซื้อและรูปหน้างานเพิ่มเติมเพื่อช่วยตรวจสอบได้เร็วขึ้น',
-    'รับเรื่องเรียบร้อยค่ะ ทีมงานจะอัปเดตสถานะให้ภายใน 1 วันทำการ',
-  ],
-  en: [
-    'Thanks for contacting us. Our support team is checking your details now.',
-    'Please share your order number and site photo so we can assist faster.',
-    'Your request is logged. We will update you within 1 business day.',
-  ],
-  ko: [
-    '문의해 주셔서 감사합니다. 지원팀에서 내용을 확인 중입니다.',
-    '주문번호와 현장 사진을 보내주시면 더 빠르게 도와드릴 수 있습니다.',
-    '접수가 완료되었습니다. 1영업일 내 업데이트 드리겠습니다.',
-  ],
+const WAITING_REPLY = {
+  th: 'รับข้อความแล้วค่ะ ทีมการตลาดจะตอบกลับในไม่กี่นาที',
+  en: 'Message received. Our marketing team will reply shortly.',
+  ko: '메시지를 확인했습니다. 마케팅팀이 곧 답변드리겠습니다.',
+  zh: '已收到消息，市场团队将尽快回复。',
+  vi: 'Đã nhận tin nhắn. Đội marketing sẽ phản hồi sớm.',
+  ja: 'メッセージを受け付けました。マーケティング担当が間もなく返信します。',
+  'zh-tw': '已收到訊息，行銷團隊將儘快回覆。',
+  ms: 'Mesej diterima. Pasukan pemasaran akan membalas sebentar lagi.',
 };
 
-function pick(lang, idx) {
-  const arr = BOT[lang] || BOT.en;
-  return arr[idx % arr.length];
+function mapMessageRole(sender) {
+  return sender === 'customer' ? 'user' : sender === 'agent' ? 'agent' : 'system';
+}
+
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const threadId = searchParams.get('threadId');
+    const after = Number(searchParams.get('after') || '0');
+    const thread = await getThreadByCode(threadId);
+    if (!thread) {
+      return NextResponse.json({ error: 'Thread not found' }, { status: 404 });
+    }
+
+    const rows = await listThreadMessages(thread.id, after);
+    await markThreadReadByCustomer(thread.id);
+    return NextResponse.json({
+      ok: true,
+      threadId: thread.thread_code,
+      messages: rows.map((row) => ({
+        id: row.id,
+        role: mapMessageRole(row.sender),
+        text: row.message_text,
+        at: row.created_at,
+      })),
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error?.message || 'Internal error' }, { status: 500 });
+  }
 }
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const message = String(body?.message || '').trim();
-    const clientLang = String(body?.lang || '').trim();
+    const clientLang = String(body?.lang || 'en').trim();
+    const threadId = String(body?.threadId || '').trim();
     if (!message) return NextResponse.json({ error: 'Empty message' }, { status: 400 });
 
-    const lang = BOT[clientLang] ? clientLang : detectLang(message);
-    const seed = message.length + Date.now();
-    const reply = pick(lang, seed % 3);
+    const thread = await ensureThreadByCode(threadId, clientLang);
+    await appendChatMessage({
+      threadId: thread.id,
+      sender: 'customer',
+      senderName: null,
+      text: message,
+    });
 
-    return NextResponse.json({ ok: true, lang, reply, at: new Date().toISOString() });
+    const waiting = WAITING_REPLY[clientLang] || WAITING_REPLY.en;
+    return NextResponse.json({
+      ok: true,
+      threadId: thread.thread_code,
+      reply: waiting,
+      at: new Date().toISOString(),
+    });
   } catch (error) {
     return NextResponse.json({ error: error?.message || 'Internal error' }, { status: 500 });
   }
