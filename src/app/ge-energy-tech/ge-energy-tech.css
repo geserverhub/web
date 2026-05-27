@@ -148,6 +148,44 @@ body {
   box-shadow: 0 6px 24px rgba(21,101,192,0.55);
 }
 
+/* ── Language switcher ──────────────────────────────────────────────── */
+.get-lang-switch {
+  position: relative;
+  z-index: 20;
+  margin-top: 68px;
+  padding: 16px 0 0;
+}
+
+.get-lang-switch-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.get-lang-btn {
+  font-family: var(--get-font);
+  font-size: 12px;
+  color: var(--get-text2);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--get-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.get-lang-btn:hover {
+  color: #fff;
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+.get-lang-btn.is-active {
+  color: #fff;
+  border-color: rgba(96, 165, 250, 0.6);
+  background: rgba(96, 165, 250, 0.16);
+}
+
 /* ── Hero ───────────────────────────────────────────────────────────── */
 .get-hero {
   position: relative;
@@ -853,6 +891,7 @@ body {
 @media (max-width: 768px) {
   .get-hero-inner { grid-template-columns: 1fr; text-align: center; }
   .get-hero-visual { order: -1; }
+  .get-lang-switch-inner { justify-content: center; }
   .get-hero-logo-wrap { width: 220px; height: 220px; }
   .get-hero-logo-img { width: 150px; height: 150px; }
   .get-hero-tag { justify-content: center; }
