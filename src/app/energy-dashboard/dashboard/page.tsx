@@ -121,9 +121,9 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showAllDevices, setShowAllDevices] = useState(false)
   const [showAllCurrentAnalysis, setShowAllCurrentAnalysis] = useState(false)
-  const focusedDeviceParam = normalizeLookupValue(searchParams.get('device'))
-  const focusedKsaveParam = normalizeLookupValue(searchParams.get('ksave'))
-  const requestedSiteParam = String(searchParams.get('site') || '').trim().toLowerCase()
+  const focusedDeviceParam = normalizeLookupValue(searchParams?.get('device'))
+  const focusedKsaveParam = normalizeLookupValue(searchParams?.get('ksave'))
+  const requestedSiteParam = String(searchParams?.get('site') || '').trim().toLowerCase()
   const hasFocusedDevice = Boolean(focusedDeviceParam || focusedKsaveParam)
 
   useEffect(() => {

@@ -1,0 +1,328 @@
+@import '../ge-energy-erp/geerp-tokens.css';
+
+.geerp-login-page {
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: linear-gradient(160deg, var(--geerp-slate-900) 0%, var(--geerp-slate-800) 38%, var(--geerp-accent) 100%);
+  font-family: var(--geerp-font);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.geerp-login-page::before,
+.geerp-login-page::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+  pointer-events: none;
+}
+
+.geerp-login-page::before {
+  top: -6rem;
+  right: -4rem;
+  width: 14rem;
+  height: 14rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.geerp-login-page::after {
+  bottom: -5rem;
+  left: -3rem;
+  width: 12rem;
+  height: 12rem;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.geerp-login-lang {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 2;
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 3px;
+  box-shadow: var(--geerp-shadow-topbar);
+}
+
+.geerp-login-lang button {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 9px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--geerp-slate-400);
+  background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.geerp-login-lang button.is-active {
+  color: var(--geerp-slate-900);
+  background: var(--geerp-slate-100);
+}
+
+.geerp-login-lang button:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus);
+}
+
+.geerp-login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  background: var(--geerp-bg-elevated);
+  border-radius: var(--geerp-radius-lg);
+  padding: 1.75rem 1.5rem 1.5rem;
+  border: 1px solid var(--geerp-border);
+  box-shadow: var(--geerp-shadow-lg), 0 24px 48px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+}
+
+.geerp-login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--geerp-slate-600), var(--geerp-slate-400), var(--geerp-slate-600));
+}
+
+@media (min-width: 480px) {
+  .geerp-login-card {
+    padding: 2.1rem 2rem 1.65rem;
+  }
+}
+
+.geerp-login-brand {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.geerp-login-badge {
+  display: inline-block;
+  margin-bottom: 0.7rem;
+  padding: 0.22rem 0.7rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--geerp-slate-100);
+  background: var(--geerp-accent-strong);
+  border: 1px solid var(--geerp-slate-500);
+}
+
+.geerp-login-company {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--geerp-slate-900);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.geerp-login-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--geerp-slate-800);
+  letter-spacing: -0.025em;
+}
+
+.geerp-login-sub {
+  margin: 0.5rem 0 0;
+  font-size: 0.84rem;
+  color: var(--geerp-slate-500);
+  line-height: 1.55;
+}
+
+.geerp-login-modules {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+}
+
+.geerp-login-modules span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--geerp-slate-600);
+  background: var(--geerp-slate-100);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-sm);
+  padding: 0.18rem 0.5rem;
+}
+
+.geerp-login-field {
+  margin-bottom: 1rem;
+}
+
+.geerp-login-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--geerp-slate-600);
+  letter-spacing: 0.02em;
+}
+
+.geerp-login-input-wrap {
+  position: relative;
+}
+
+.geerp-login-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--geerp-slate-400);
+  pointer-events: none;
+}
+
+.geerp-login-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.68rem 2.5rem 0.68rem 2.35rem;
+  border-radius: var(--geerp-radius-sm);
+  border: 1px solid var(--geerp-border);
+  background: var(--geerp-bg-elevated);
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--geerp-slate-900);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.geerp-login-input:hover {
+  border-color: var(--geerp-border-strong);
+}
+
+.geerp-login-input:focus {
+  border-color: var(--geerp-accent);
+  box-shadow: var(--geerp-focus);
+}
+
+.geerp-login-toggle-pw {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--geerp-slate-400);
+}
+
+.geerp-login-toggle-pw:hover {
+  color: var(--geerp-slate-600);
+}
+
+.geerp-login-error {
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--geerp-radius-md);
+  background: var(--geerp-danger-bg);
+  border: 1px solid #fecaca;
+  color: var(--geerp-danger);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.geerp-login-submit {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--geerp-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--geerp-slate-600) 0%, var(--geerp-accent-deep) 100%);
+  box-shadow: var(--geerp-shadow-md);
+  transition: transform 0.1s, opacity 0.15s, box-shadow 0.15s;
+}
+
+.geerp-login-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--geerp-shadow-lg);
+}
+
+.geerp-login-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.geerp-login-submit:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus), var(--geerp-shadow-md);
+}
+
+.geerp-login-footer {
+  margin-top: 1.35rem;
+  text-align: center;
+}
+
+.geerp-login-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.geerp-login-link-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--geerp-slate-200);
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.15s, color 0.15s;
+}
+
+.geerp-login-link-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.geerp-login-link-btn--primary {
+  color: var(--geerp-slate-900);
+  background: var(--geerp-slate-100);
+  border-color: transparent;
+}
+
+.geerp-login-link-btn--primary:hover {
+  background: #fff;
+}
+
+.geerp-login-back {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--geerp-slate-500);
+  text-decoration: none;
+}
+
+.geerp-login-back:hover {
+  color: var(--geerp-slate-800);
+  text-decoration: underline;
+}

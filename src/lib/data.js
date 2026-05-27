@@ -6,7 +6,16 @@ export const languageStorageKey = "goeun-agency-language";
 /** Public hub (ngrok) — homepage login and external portal links */
 export const publicHubBaseUrl =
   process.env.NEXT_PUBLIC_PUBLIC_HUB_URL ||
+  process.env.NEXT_PUBLIC_PORTAL_BASE_URL ||
   "https://strong-dory-enabled.ngrok-free.app";
+
+/** Absolute URL on the public hub (e.g. ngrok) for platform / ERP pages */
+export function publicHubHref(path) {
+  const base = publicHubBaseUrl.replace(/\/$/, "");
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${normalized}`;
+}
+
 export const authSelectUrl = `${publicHubBaseUrl}/auth/select`;
 
 /** Homepage + agency pages: Thai, English, Korean only */

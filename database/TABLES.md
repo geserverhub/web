@@ -40,6 +40,14 @@ Database name: **`goeunserverhub`** (dump file: `geserverhub.sql`)
 | `device_connectivity` | Modbus / gateway per device |
 | `ai_settings` | OpenAI token per user |
 
-**Total: 19 + 9 = 28**
+## GE Energy Tech orders (2) — `prisma/migrate-ge-energy-tech-orders.sql`
 
-Restore: `bash scripts/db-restore.sh` or `npm run db:setup-energy`
+| Table | Purpose |
+|-------|---------|
+| `geet_meter_order` | Smart meter purchase orders (PK `id`, unique `order_no`) |
+| `geet_meter_order_event` | Shipment timeline events (FK → `geet_meter_order.id`) |
+
+**Total: 19 + 9 + 2 = 30** (plus ERP tables in separate migration)
+
+Restore: `bash scripts/db-restore.sh` or `npm run db:setup-energy`  
+Meter orders: `npm run db:setup-geet-orders`
