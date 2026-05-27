@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ERP_CALENDAR_COPY } from '@/lib/ge-energy-erp-i18n';
 import { erpApiHeaders } from '@/lib/erp-api-auth';
 
-const WEEKDAYS_TH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const WEEKDAYS_KO = ['일', '월', '화', '수', '목', '금', '토'];
+const WEEKDAYS_TH = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEKDAYS_KO = ['월', '화', '수', '목', '금', '토', '일'];
 
 function deptLabel(d, lang) {
   if (lang === 'en') return d.name_en || d.name_th;
@@ -17,7 +17,7 @@ function deptLabel(d, lang) {
 function buildMonthGrid(year, month) {
   const first = new Date(year, month - 1, 1);
   const lastDay = new Date(year, month, 0).getDate();
-  const startPad = first.getDay();
+  const startPad = (first.getDay() + 6) % 7; // Convert JS Sunday-first to Monday-first.
   const cells = [];
 
   for (let i = 0; i < startPad; i++) cells.push({ empty: true });

@@ -43,7 +43,7 @@ export async function GET(req, { params }) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const pageId = params.pageId;
+  const { pageId } = await params;
   if (!EXEC_PAGES.has(pageId)) {
     return NextResponse.json({ error: 'Invalid executive page' }, { status: 400 });
   }
@@ -67,7 +67,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const pageId = params.pageId;
+  const { pageId } = await params;
   if (pageId !== 'exec-pending-approvals') {
     return NextResponse.json({ error: 'POST not supported for this page' }, { status: 400 });
   }
