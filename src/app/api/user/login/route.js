@@ -55,7 +55,7 @@ export async function POST(request) {
       : isOnlineClassroom
         ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
         : isGeEnergyErp
-          ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN']
+          ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
           : isGeEnergyTechLogin
             ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
           : isCustomerPortal
