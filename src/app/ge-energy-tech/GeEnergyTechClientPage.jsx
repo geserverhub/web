@@ -36,7 +36,7 @@ const TRANSLATIONS = {
       about: 'เกี่ยวกับเรา',
       services: 'บริการ',
       products: 'สินค้าของเรา',
-      technology: 'เทคโนโลยี',
+      technology: 'ความน่าเชื่อถือ',
       contact: 'ติดต่อ',
       admin: 'Admin',
       register: 'ลงทะเบียนเข้าใช้แพลตฟอร์ม',
@@ -76,9 +76,9 @@ const TRANSLATIONS = {
       inquiry: 'สอบถามสินค้า',
     },
     tech: {
-      badge: 'เทคโนโลยีที่ใช้',
-      title: ['สร้างด้วย', 'เทคโนโลยีชั้นนำ'],
-      sub: 'พัฒนาเทคโนโลยีใหม่ด้านพลังงานอย่างต่อเนื่อง เพื่อเพิ่มประสิทธิภาพพลังงานและรองรับเป้าหมาย Net Zero',
+      badge: 'ความน่าเชื่อถือของบริษัท',
+      title: ['ผลงานและ', 'การยอมรับ'],
+      sub: 'สร้างความมั่นใจด้วยผลงานจริง หนังสือรับรอง ทรัพย์สินทางปัญญา และเส้นทางการเติบโตอย่างต่อเนื่องของ GE Energy Tech',
     },
     contact: {
       badge: 'ติดต่อเรา',
@@ -146,7 +146,7 @@ const TRANSLATIONS = {
       about: 'About',
       services: 'Services',
       products: 'Our Products',
-      technology: 'Technology',
+      technology: 'Credibility',
       contact: 'Contact',
       admin: 'Admin',
       register: 'Register for Platform',
@@ -186,9 +186,9 @@ const TRANSLATIONS = {
       inquiry: 'Product Inquiry',
     },
     tech: {
-      badge: 'Technology Stack',
-      title: ['Built with', 'Leading Technologies'],
-      sub: 'Continuous innovation in new energy technologies built to support green transition and Net Zero goals.',
+      badge: 'Company Credibility',
+      title: ['Track Record', '& Recognition'],
+      sub: 'Build trust through proven projects, certifications, intellectual property, and our continuous growth journey.',
     },
     contact: {
       badge: 'Contact',
@@ -275,56 +275,56 @@ for (const code of CLONED_LANGS) {
 
 const LANGUAGE_OVERRIDES = {
   zh: {
-    nav: { about: '关于我们', services: '服务', products: '我们的产品', technology: '技术', contact: '联系', admin: 'Admin', register: '注册使用平台', signIn: '登录平台' },
+    nav: { about: '关于我们', services: '服务', products: '我们的产品', technology: '企业信誉', contact: '联系', admin: 'Admin', register: '注册使用平台', signIn: '登录平台' },
     hero: { tag: '智慧能源 · IoT · 绿色创新', title1: '智慧能源', title2: '迈向', title3: '可持续未来', cta1: '查看服务', cta2: '联系我们', stats: ['监控设备', '企业客户', '可用性保障', '服务国家'] },
     services: { badge: '我们的服务', title: ['一体化解决方案', '适用于各类企业'], sub: '从物联网设备研发部署到AI能源监测与分析平台的全流程服务。' },
     products: { badge: '我们的产品', title: ['创新', '能源产品'], sub: '由GE Energy Tech工程师设计制造的设备与系统，提供最佳能源效率。', inquiry: '产品咨询' },
-    tech: { badge: '技术栈', title: ['采用', '领先技术'], sub: '持续创新新能源技术，支持绿色转型与净零目标。' },
+    tech: { badge: '企业信誉', title: ['成果与', '权威认可'], sub: '以实际项目、认证证书、知识产权和持续增长建立客户信任。' },
     contact: { badge: '联系', title: ['准备开始', '您的项目？'], head: '欢迎咨询', sub: '我们的团队可提供免费咨询、方案设计与预算评估。', submit: '发送消息 →', sending: '发送中...', success: '消息已发送，我们将通过邮件回复。', error: '发送失败，请重试。' },
     footer: { services: '服务', systems: '系统', rights: '版权所有。', privacy: '隐私', terms: '条款', portals: '门户' },
   },
   vi: {
-    nav: { about: 'Giới thiệu', services: 'Dịch vụ', products: 'Sản phẩm', technology: 'Công nghệ', contact: 'Liên hệ', admin: 'Admin', register: 'Đăng ký nền tảng', signIn: 'Đăng nhập nền tảng' },
+    nav: { about: 'Giới thiệu', services: 'Dịch vụ', products: 'Sản phẩm', technology: 'Uy tín', contact: 'Liên hệ', admin: 'Admin', register: 'Đăng ký nền tảng', signIn: 'Đăng nhập nền tảng' },
     hero: { tag: 'Năng lượng thông minh · IoT · Đổi mới xanh', title1: 'Năng lượng thông minh', title2: 'cho một', title3: 'tương lai bền vững', cta1: 'Xem dịch vụ', cta2: 'Liên hệ', stats: ['Thiết bị giám sát', 'Khách hàng doanh nghiệp', 'Cam kết uptime', 'Quốc gia phục vụ'] },
     services: { badge: 'Dịch vụ của chúng tôi', title: ['Giải pháp tích hợp', 'cho mọi doanh nghiệp'], sub: 'Dịch vụ trọn gói từ phát triển thiết bị IoT đến nền tảng giám sát và phân tích năng lượng bằng AI.' },
     products: { badge: 'Sản phẩm', title: ['Đổi mới', 'Sản phẩm năng lượng'], sub: 'Thiết bị và hệ thống do kỹ sư GE Energy Tech thiết kế để tối ưu hiệu quả năng lượng.', inquiry: 'Hỏi về sản phẩm' },
-    tech: { badge: 'Công nghệ sử dụng', title: ['Xây dựng bằng', 'công nghệ hàng đầu'], sub: 'Đổi mới liên tục về công nghệ năng lượng mới hỗ trợ chuyển đổi xanh và Net Zero.' },
+    tech: { badge: 'Uy tín doanh nghiệp', title: ['Thành tựu', '& công nhận'], sub: 'Tạo niềm tin qua dự án thực tế, chứng chỉ, quyền sở hữu trí tuệ và tăng trưởng bền vững.' },
     contact: { badge: 'Liên hệ', title: ['Sẵn sàng bắt đầu', 'dự án của bạn?'], head: 'Hãy trao đổi với chúng tôi', sub: 'Đội ngũ sẵn sàng tư vấn, thiết kế và báo giá miễn phí.', submit: 'Gửi tin nhắn →', sending: 'Đang gửi...', success: 'Đã gửi tin nhắn. Chúng tôi sẽ phản hồi qua email.', error: 'Gửi thất bại. Vui lòng thử lại.' },
     footer: { services: 'Dịch vụ', systems: 'Hệ thống', rights: 'Mọi quyền được bảo lưu.', privacy: 'Quyền riêng tư', terms: 'Điều khoản', portals: 'Cổng hệ thống' },
   },
   ko: {
-    nav: { about: '회사 소개', services: '서비스', products: '제품 소개', technology: '기술', contact: '문의', admin: 'Admin', register: '플랫폼 등록', signIn: '플랫폼 로그인' },
+    nav: { about: '회사 소개', services: '서비스', products: '제품 소개', technology: '신뢰도', contact: '문의', admin: 'Admin', register: '플랫폼 등록', signIn: '플랫폼 로그인' },
     hero: { tag: '스마트 에너지 · IoT · 그린 혁신', title1: '스마트 에너지', title2: '지속가능한', title3: '미래를 위해', cta1: '서비스 보기', cta2: '문의하기', stats: ['모니터링 장치', '기업 고객', '가동률 보장', '서비스 국가'] },
     services: { badge: '서비스', title: ['통합 솔루션', '모든 비즈니스를 위해'], sub: 'IoT 장치 개발·배포부터 AI 에너지 모니터링·분석 플랫폼까지 엔드투엔드 서비스를 제공합니다.' },
     products: { badge: '제품 소개', title: ['혁신', '에너지 제품'], sub: 'GE Energy Tech 엔지니어가 설계한 최고 효율의 에너지 장치 및 시스템.', inquiry: '제품 문의' },
-    tech: { badge: '기술 스택', title: ['최신', '핵심 기술로 구축'], sub: '그린 전환과 넷제로 목표를 지원하는 신에너지 기술 혁신을 지속합니다.' },
+    tech: { badge: '기업 신뢰도', title: ['성과와', '인정'], sub: '실제 프로젝트, 인증, 지적재산권, 지속 성장으로 신뢰를 구축합니다.' },
     contact: { badge: '문의', title: ['프로젝트를', '시작할 준비가 되셨나요?'], head: '지금 상담해 보세요', sub: '무료 상담, 솔루션 설계, 예산 견적을 제공합니다.', addressValue: '대한민국', submit: '메시지 보내기 →', sending: '전송 중...', success: '메시지가 전송되었습니다. 이메일로 답변드리겠습니다.', error: '전송에 실패했습니다. 다시 시도해 주세요.' },
     footer: { services: '서비스', systems: '시스템', rights: '모든 권리 보유.', privacy: '개인정보', terms: '이용약관', portals: '포털' },
   },
   ja: {
-    nav: { about: '会社情報', services: 'サービス', products: '製品紹介', technology: '技術', contact: 'お問い合わせ', admin: 'Admin', register: 'プラットフォーム登録', signIn: 'プラットフォームログイン' },
+    nav: { about: '会社情報', services: 'サービス', products: '製品紹介', technology: '信頼性', contact: 'お問い合わせ', admin: 'Admin', register: 'プラットフォーム登録', signIn: 'プラットフォームログイン' },
     hero: { tag: 'スマートエネルギー · IoT · グリーン革新', title1: 'スマートエネルギー', title2: '持続可能な', title3: '未来へ', cta1: 'サービスを見る', cta2: 'お問い合わせ', stats: ['監視デバイス', '法人顧客', '稼働率保証', '提供国'] },
     services: { badge: 'サービス', title: ['統合ソリューション', 'あらゆる企業向け'], sub: 'IoT機器の開発・導入からAIエネルギー監視・分析プラットフォームまで一貫して提供します。' },
     products: { badge: '製品紹介', title: ['革新的な', 'エネルギー製品'], sub: 'GE Energy Techエンジニアが設計した高効率エネルギー機器・システム。', inquiry: '製品について問い合わせ' },
-    tech: { badge: '技術スタック', title: ['先進', 'テクノロジーで構築'], sub: 'グリーン転換とネットゼロを支える新エネルギー技術を継続的に革新します。' },
+    tech: { badge: '企業の信頼性', title: ['実績と', '評価'], sub: '実プロジェクト、認証、知的財産、成長の歩みで信頼を築きます。' },
     contact: { badge: 'お問い合わせ', title: ['プロジェクトを', '始めませんか？'], head: 'まずはご相談ください', sub: '無料相談・ソリューション設計・見積もりに対応します。', submit: '送信する →', sending: '送信中...', success: 'メッセージを送信しました。メールでご連絡します。', error: '送信に失敗しました。もう一度お試しください。' },
     footer: { services: 'サービス', systems: 'システム', rights: '無断転載禁止。', privacy: 'プライバシー', terms: '利用規約', portals: 'ポータル' },
   },
   'zh-tw': {
-    nav: { about: '關於我們', services: '服務', products: '我們的產品', technology: '技術', contact: '聯絡', admin: 'Admin', register: '註冊使用平台', signIn: '登入平台' },
+    nav: { about: '關於我們', services: '服務', products: '我們的產品', technology: '企業信譽', contact: '聯絡', admin: 'Admin', register: '註冊使用平台', signIn: '登入平台' },
     hero: { tag: '智慧能源 · IoT · 綠色創新', title1: '智慧能源', title2: '邁向', title3: '永續未來', cta1: '查看服務', cta2: '聯絡我們', stats: ['監控設備', '企業客戶', '可用性保證', '服務國家'] },
     services: { badge: '我們的服務', title: ['整合解決方案', '適用各類企業'], sub: '從物聯網設備研發部署到 AI 能源監測與分析平台的全流程服務。' },
     products: { badge: '我們的產品', title: ['創新', '能源產品'], sub: '由GE Energy Tech工程師設計製造的設備與系統，提供最佳能源效率。', inquiry: '產品詢問' },
-    tech: { badge: '技術架構', title: ['採用', '領先技術'], sub: '持續創新新能源技術，支援綠色轉型與淨零目標。' },
+    tech: { badge: '企業信譽', title: ['成果與', '權威認可'], sub: '以實際專案、認證、智慧財產權與持續成長建立客戶信任。' },
     contact: { badge: '聯絡', title: ['準備開始', '您的專案？'], head: '歡迎與我們洽談', sub: '團隊可提供免費諮詢、方案設計與預算評估。', submit: '送出訊息 →', sending: '傳送中...', success: '訊息已送出，我們將以電子郵件回覆。', error: '傳送失敗，請再試一次。' },
     footer: { services: '服務', systems: '系統', rights: '版權所有。', privacy: '隱私', terms: '條款', portals: '入口' },
   },
   ms: {
-    nav: { about: 'Tentang', services: 'Perkhidmatan', products: 'Produk Kami', technology: 'Teknologi', contact: 'Hubungi', admin: 'Admin', register: 'Daftar Platform', signIn: 'Log Masuk Platform' },
+    nav: { about: 'Tentang', services: 'Perkhidmatan', products: 'Produk Kami', technology: 'Kredibiliti', contact: 'Hubungi', admin: 'Admin', register: 'Daftar Platform', signIn: 'Log Masuk Platform' },
     hero: { tag: 'Tenaga Pintar · IoT · Inovasi Hijau', title1: 'Tenaga Pintar', title2: 'untuk masa depan', title3: 'yang mampan', cta1: 'Lihat Perkhidmatan', cta2: 'Hubungi Kami', stats: ['Peranti Dipantau', 'Pelanggan Korporat', 'Jaminan Uptime', 'Negara Dilayan'] },
     services: { badge: 'Perkhidmatan Kami', title: ['Penyelesaian Bersepadu', 'untuk setiap perniagaan'], sub: 'Perkhidmatan hujung ke hujung dari pembangunan peranti IoT hingga platform pemantauan dan analitik tenaga AI.' },
     products: { badge: 'Produk Kami', title: ['Inovasi', 'Produk Tenaga'], sub: 'Peranti dan sistem yang direka oleh jurutera GE Energy Tech untuk kecekapan tenaga maksimum.', inquiry: 'Pertanyaan Produk' },
-    tech: { badge: 'Teknologi', title: ['Dibina dengan', 'teknologi terkemuka'], sub: 'Inovasi berterusan dalam teknologi tenaga baharu untuk sokongan peralihan hijau dan Net Zero.' },
+    tech: { badge: 'Kredibiliti syarikat', title: ['Rekod &', 'pengiktirafan'], sub: 'Membina kepercayaan melalui projek sebenar, pensijilan, harta intelek, dan pertumbuhan berterusan.' },
     contact: { badge: 'Hubungi', title: ['Bersedia mulakan', 'projek anda?'], head: 'Mari berbincang', sub: 'Pasukan kami sedia berunding, mereka bentuk penyelesaian dan anggaran tanpa bayaran awal.', submit: 'Hantar Mesej →', sending: 'Menghantar...', success: 'Mesej dihantar. Kami akan membalas melalui e-mel.', error: 'Gagal menghantar. Sila cuba lagi.' },
     footer: { services: 'Perkhidmatan', systems: 'Sistem', rights: 'Hak cipta terpelihara.', privacy: 'Privasi', terms: 'Terma', portals: 'Portal' },
   },
@@ -360,15 +360,55 @@ const SERVICES = [
   { icon: '🔬', title: { th: 'ห้องปฏิบัติการนวัตกรรมพลังงาน', en: 'Next-Gen Energy Innovation Lab' }, desc: { th: 'วิจัยและพัฒนาเทคโนโลยีพลังงานใหม่เพื่อความยั่งยืนและความได้เปรียบทางการแข่งขัน', en: 'R&D for new energy technologies and advanced digital solutions to improve sustainability and competitiveness.' }, tags: ['R&D', 'Innovation', 'New Tech'], accent: 'linear-gradient(90deg, #059669, #0891b2)', iconBg: 'rgba(5,150,105,0.14)' },
 ];
 
-const TECH = [
-  { icon: '⚙️', name: { th: 'Next.js 15', en: 'Next.js 15' }, desc: { th: 'เฟรมเวิร์ก React สำหรับแอปพลิเคชันระดับ production', en: 'Full-stack React framework for production-grade applications.' } },
-  { icon: '🗄️', name: { th: 'MySQL / Prisma', en: 'MySQL / Prisma' }, desc: { th: 'ฐานข้อมูลเชิงสัมพันธ์พร้อม migration และ schema', en: 'Relational data platform with migrations and schema governance.' } },
-  { icon: '📶', name: { th: 'MQTT Broker', en: 'MQTT Broker' }, desc: { th: 'รับส่งข้อมูล IoT แบบเรียลไทม์อย่างเสถียร', en: 'Reliable real-time telemetry and event streaming for IoT devices.' } },
-  { icon: '🤖', name: { th: 'AI Insights Engine', en: 'AI Insights Engine' }, desc: { th: 'วิเคราะห์และสร้าง insight อัตโนมัติจากข้อมูลปฏิบัติการ', en: 'Automated monitoring and insight generation from operational data.' } },
-  { icon: '🐳', name: { th: 'Docker & CI/CD', en: 'Docker & CI/CD' }, desc: { th: 'Pipeline แบบ container สำหรับ deploy ที่ทำซ้ำได้', en: 'Containerized release pipelines with repeatable deployments.' } },
-  { icon: '📱', name: { th: 'Responsive Web App', en: 'Responsive Web App' }, desc: { th: 'รองรับเดสก์ท็อป แท็บเล็ต และมือถือ', en: 'Optimized interface for desktop, tablet, and mobile.' } },
-  { icon: '🔐', name: { th: 'JWT / RBAC Auth', en: 'JWT / RBAC Auth' }, desc: { th: 'ยืนยันตัวตนด้วย token และสิทธิ์ตามบทบาท', en: 'Token authentication with granular role-based permissions.' } },
-  { icon: '☁️', name: { th: 'Cloud Infrastructure', en: 'Cloud Infrastructure' }, desc: { th: 'สถาปัตยกรรมคลาวด์ที่ขยายได้และเสถียร', en: 'Scalable and resilient architecture for enterprise reliability.' } },
+const CREDENTIALS = [
+  {
+    icon: '🏆',
+    name: { th: 'ผลงานที่โดดเด่น', en: 'Proven Track Record' },
+    desc: {
+      th: 'โครงการ IoT พลังงาน ระบบมอนิเตอร์ และแพลตฟอร์มวิเคราะห์ที่ติดตั้งและให้บริการจริงในโรงงานและองค์กร',
+      en: 'Delivered IoT energy monitoring, analytics platforms, and field deployments for industrial and enterprise clients.',
+    },
+  },
+  {
+    icon: '📜',
+    name: { th: 'หนังสือรับรอง', en: 'Certifications' },
+    desc: {
+      th: 'มาตรฐานด้านคุณภาพ ความปลอดภัยไฟฟ้า และการอบรมทีมวิศวกร/เทคนิคอย่างสม่ำเสมอ',
+      en: 'Quality, electrical safety, and technical training credentials that strengthen operational standards.',
+    },
+  },
+  {
+    icon: '©️',
+    name: { th: 'ลิขสิทธิ์', en: 'Copyright' },
+    desc: {
+      th: 'สิทธิในซอฟต์แวร์แพลตฟอร์ม แดชบอร์ด รายงาน และชุดข้อมูลเชิงวิเคราะห์ที่พัฒนาโดยทีม GE Energy Tech',
+      en: 'Protected platform software, dashboards, reports, and proprietary analytics developed in-house.',
+    },
+  },
+  {
+    icon: '📋',
+    name: { th: 'สิทธิบัตร & IP', en: 'Patents & IP' },
+    desc: {
+      th: 'ทรัพย์สินทางปัญญาในด้านอุปกรณ์พลังงาน IoT และระบบควบคุมคุณภาพไฟฟ้า — พัฒนาและยื่นจดอย่างต่อเนื่อง',
+      en: 'Intellectual property in energy IoT devices and power-quality systems under ongoing R&D and filing.',
+    },
+  },
+  {
+    icon: '📈',
+    name: { th: 'ความก้าวหน้า', en: 'Progress' },
+    desc: {
+      th: 'พัฒนาผลิตภัณฑ์และฟีเจอร์ใหม่ตาม feedback ลูกค้า พร้อมปรับปรุงประสิทธิภาพพลังงานอย่างต่อเนื่อง',
+      en: 'Continuous product evolution driven by customer feedback and measurable efficiency improvements.',
+    },
+  },
+  {
+    icon: '🌱',
+    name: { th: 'การเติบโต', en: 'Growth' },
+    desc: {
+      th: 'ขยายฐานลูกค้า พันธมิตร และทีม R&D เพื่อรองรับตลาดไทย เกาหลี และภูมิภาคเอเชีย',
+      en: 'Expanding customers, partners, and R&D capacity across Thailand, Korea, and Asia.',
+    },
+  },
 ];
 
 const PRODUCTS = [
@@ -523,7 +563,7 @@ export default function GeEnergyTechClientPage() {
           <a href="#about">{t.nav.about}</a>
           <a href="#services">{t.nav.services}</a>
           <a href="#products">{t.nav.products}</a>
-          <a href="#technology">{t.nav.technology}</a>
+          <a href="#credibility">{t.nav.technology}</a>
           <a href="#contact">{t.nav.contact}</a>
           <a href="/ge-energy-tech/shipping-tracking">{navExtra.tracking}</a>
           <a href="/ge-energy-tech/after-sales-chat">{navExtra.afterSales}</a>
@@ -742,7 +782,7 @@ export default function GeEnergyTechClientPage() {
         </div>
       </div>
 
-      <section className="get-section get-tech" id="technology">
+      <section className="get-section get-tech get-credibility" id="credibility">
         <div className="get-container">
           <div className="get-section-head">
             <div className="get-badge get-badge--green">{t.tech.badge}</div>
@@ -751,12 +791,14 @@ export default function GeEnergyTechClientPage() {
             </h2>
             <p className="get-section-sub">{t.tech.sub}</p>
           </div>
-          <div className="get-tech-grid">
-            {TECH.map((techItem) => (
-              <div key={pickLang(techItem.name, lang)} className="get-tech-card">
-                <span>{techItem.icon}</span>
-                <strong>{pickLang(techItem.name, lang)}</strong>
-                <p>{pickLang(techItem.desc, lang)}</p>
+          <div className="get-tech-grid get-credibility-grid">
+            {CREDENTIALS.map((item) => (
+              <div key={pickLang(item.name, lang)} className="get-tech-card get-credibility-card">
+                <span className="get-credibility-icon" aria-hidden>
+                  {item.icon}
+                </span>
+                <strong>{pickLang(item.name, lang)}</strong>
+                <p>{pickLang(item.desc, lang)}</p>
               </div>
             ))}
           </div>
