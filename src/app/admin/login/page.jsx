@@ -17,31 +17,33 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await signIn("credentials", {
-      email: email.trim(),
-      password,
-      portal: "admin",
-      redirect: false,
-    });
+    try {
+      const res = await signIn("credentials", {
+        email: email.trim(),
+        password,
+        portal: "admin",
+        redirect: false,
+      });
 
-    if (!res?.ok || res?.error) {
-      setLoading(false);
+      if (!res?.ok || res?.error) {
+        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        return;
+      }
+
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      const role = session?.user?.role;
+
+      if (role === "SUPER_ADMIN" || role === "ADMIN") {
+        router.push("/admin/clients");
+      } else {
+        await signOut({ redirect: false });
+        setError("บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบผู้ดูแล");
+      }
+    } catch {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      return;
-    }
-
-    // Fetch session to verify admin role
-    const sessionRes = await fetch("/api/auth/session");
-    const session = await sessionRes.json();
-    const role = session?.user?.role;
-
-    setLoading(false);
-
-    if (role === "SUPER_ADMIN" || role === "ADMIN") {
-      router.push("/admin/clients");
-    } else {
-      await signOut({ redirect: false });
-      setError("บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบผู้ดูแล");
+    } finally {
+      setLoading(false);
     }
   }
 

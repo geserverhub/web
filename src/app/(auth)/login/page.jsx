@@ -102,20 +102,25 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await signIn("credentials", {
-      email: email.trim(),
-      password,
-      portal: "client",
-      redirect: false,
-    });
+    try {
+      const res = await signIn("credentials", {
+        email: email.trim(),
+        password,
+        portal: "client",
+        redirect: false,
+      });
 
-    if (!res?.ok || res?.error) {
-      setLoading(false);
+      if (!res?.ok || res?.error) {
+        setError(t.invalid);
+        return;
+      }
+
+      window.location.href = MCT_PRODUCT_PATH;
+    } catch {
       setError(t.invalid);
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    window.location.href = MCT_PRODUCT_PATH;
   }
 
   return (
