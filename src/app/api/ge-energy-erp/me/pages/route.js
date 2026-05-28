@@ -4,6 +4,9 @@ import { getAllErpPages, ERP_ADMIN_PAGE_IDS } from '@/lib/erp-pages';
 import { ensureGeErpSchema } from '@/lib/erp-db';
 import { parseErpUserHeader } from '@/lib/erp-user-header';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 async function ensureAclSchema() {
   await ensureGeErpSchema();
 }

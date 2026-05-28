@@ -5,6 +5,9 @@ import { getErpPageData, ERP_REPORT_PAGES } from '@/lib/erp-page-registry';
 import { ensureGeErpSchema, insertErpRow, listErpRows } from '@/lib/erp-db';
 import { parseErpUserHeader } from '@/lib/erp-user-header';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function resolvePageId(req, body = null) {
   const fromHeader = req.headers.get('x-erp-page-id') || '';
   if (fromHeader) return String(fromHeader);
