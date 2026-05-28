@@ -36,37 +36,37 @@ async function canAccess(user, pageId) {
 }
 
 export async function GET(req) {
-  const user = parseErpUserHeader(req);
-  if (!user?.userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const { searchParams } = new URL(req.url);
-  const pageId = searchParams.get('pageId') || 'dept-daily-report';
-  if (!(await canAccess(user, pageId))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const year = Number(searchParams.get('year')) || new Date().getFullYear();
-  const month = Number(searchParams.get('month')) || new Date().getMonth() + 1;
-  const dept = searchParams.get('dept') || null;
-
   try {
+    const user = parseErpUserHeader(req);
+    if (!user?.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { searchParams } = new URL(req.url);
+    const pageId = searchParams.get('pageId') || 'dept-daily-report';
+    if (!(await canAccess(user, pageId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const year = Number(searchParams.get('year')) || new Date().getFullYear();
+    const month = Number(searchParams.get('month')) || new Date().getMonth() + 1;
+    const dept = searchParams.get('dept') || null;
+
     const calendar = await getCalendarMonth(year, month, dept);
     const departments = await getDepartmentsForForm();
     const department = dept ? await getDepartmentByCode(dept) : null;
     return NextResponse.json({ calendar, departments, dept, department });
   } catch (err) {
     console.error('[daily-work GET]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
 
 export async function POST(req) {
-  const user = parseErpUserHeader(req);
-  if (!user?.userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
   try {
+    const user = parseErpUserHeader(req);
+    if (!user?.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
     const pageId = body.pageId || 'dept-daily-report';
     if (!(await canAccess(user, pageId))) {
@@ -89,6 +89,6 @@ export async function POST(req) {
     return NextResponse.json({ success: true, ...created, calendar });
   } catch (err) {
     console.error('[daily-work POST]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
