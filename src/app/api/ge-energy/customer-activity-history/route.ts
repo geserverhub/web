@@ -12,38 +12,73 @@ function hasValue(v: unknown) {
   return toStr(v).length > 0;
 }
 
+function isTableMissingError(e: unknown): boolean {
+  const code = (e as { code?: string }).code;
+  if (code === 'ER_NO_SUCH_TABLE') return true;
+  const msg = e instanceof Error ? e.message : String(e);
+  return msg.includes("doesn't exist") || msg.includes('does not exist');
+}
+
+async function ensureTables() {
+  const ddls = [
+    `CREATE TABLE IF NOT EXISTS ge_customer_energy_saver_orders (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      order_no VARCHAR(64) NOT NULL,
+      customer_name VARCHAR(255) NOT NULL,
+      shipping_address TEXT NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      phone VARCHAR(80) NOT NULL,
+      breaker_size VARCHAR(64) NOT NULL,
+      machine_kva VARCHAR(64) NOT NULL,
+      quantity INT NOT NULL DEFAULT 1,
+      unit_price INT NOT NULL DEFAULT 0,
+      total_price INT NOT NULL DEFAULT 0,
+      site_photo_path VARCHAR(512) NOT NULL DEFAULT '',
+      payment_slip_path VARCHAR(512) NOT NULL DEFAULT '',
+      monthly_bill_paths_json LONGTEXT NULL,
+      monthly_bill_count INT NOT NULL DEFAULT 0,
+      status VARCHAR(32) NOT NULL DEFAULT 'pending',
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_customer_energy_saver_order_no (order_no),
+      KEY idx_customer_energy_saver_created_at (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    `CREATE TABLE IF NOT EXISTS geet_meter_order (
+      id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      order_no         VARCHAR(32)     NOT NULL,
+      buyer_name       VARCHAR(200)    NOT NULL,
+      ship_address     TEXT            NOT NULL,
+      email            VARCHAR(191)    NOT NULL,
+      phone            VARCHAR(40)     NOT NULL,
+      breaker_amps     VARCHAR(40)     NOT NULL,
+      machine_kva      VARCHAR(40)     NOT NULL,
+      quantity         INT UNSIGNED    NOT NULL DEFAULT 1,
+      unit_price       INT UNSIGNED    NOT NULL DEFAULT 0,
+      total_price      INT UNSIGNED    NOT NULL DEFAULT 0,
+      lang             VARCHAR(10)     NOT NULL DEFAULT 'th',
+      product_code     VARCHAR(80)     NOT NULL DEFAULT 'smart-meter',
+      payment_status   VARCHAR(30)     NOT NULL DEFAULT 'pending',
+      shipment_status  VARCHAR(30)     NOT NULL DEFAULT 'pending',
+      site_photo_path  VARCHAR(500)    NULL,
+      payment_slip_path VARCHAR(500)   NULL,
+      created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uk_geet_meter_order_no (order_no),
+      KEY idx_geet_meter_order_email (email),
+      KEY idx_geet_meter_order_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  ];
+  for (const ddl of ddls) {
+    try { await query(ddl); } catch { /* no CREATE privilege — SELECT may still succeed */ }
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
-    // Ensure table exists — swallow if DB user lacks CREATE privilege
-    try {
-      await query(`
-        CREATE TABLE IF NOT EXISTS ge_customer_energy_saver_orders (
-          id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-          order_no VARCHAR(64) NOT NULL,
-          customer_name VARCHAR(255) NOT NULL,
-          shipping_address TEXT NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          phone VARCHAR(80) NOT NULL,
-          breaker_size VARCHAR(64) NOT NULL,
-          machine_kva VARCHAR(64) NOT NULL,
-          quantity INT NOT NULL DEFAULT 1,
-          unit_price INT NOT NULL DEFAULT 0,
-          total_price INT NOT NULL DEFAULT 0,
-          site_photo_path VARCHAR(512) NOT NULL DEFAULT '',
-          payment_slip_path VARCHAR(512) NOT NULL DEFAULT '',
-          monthly_bill_paths_json LONGTEXT NULL,
-          monthly_bill_count INT NOT NULL DEFAULT 0,
-          status VARCHAR(32) NOT NULL DEFAULT 'pending',
-          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (id),
-          UNIQUE KEY uq_customer_energy_saver_order_no (order_no),
-          KEY idx_customer_energy_saver_created_at (created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-      `);
-    } catch {
-      // CREATE TABLE failed (e.g. insufficient privileges) — continue; SELECT may still work
-    }
+    await ensureTables();
 
     const { searchParams } = new URL(req.url);
     const userId = toStr(searchParams.get('userId'));
@@ -76,9 +111,7 @@ export async function GET(req: NextRequest) {
         orderParams
       )) as Array<Record<string, unknown>>;
     } catch (e: unknown) {
-      // Table not yet created — return empty, other activity types still load
-      const msg = e instanceof Error ? e.message : String(e);
-      if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+      if (!isTableMissingError(e)) throw e;
     }
 
     let geetRows: Array<Record<string, unknown>> = [];
@@ -93,8 +126,7 @@ export async function GET(req: NextRequest) {
         orderParams
       )) as Array<Record<string, unknown>>;
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+      if (!isTableMissingError(e)) throw e;
     }
 
     let feedbackRows: Array<Record<string, unknown>> = [];
@@ -109,8 +141,7 @@ export async function GET(req: NextRequest) {
           [Number(userId)]
         )) as Array<Record<string, unknown>>;
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+        if (!isTableMissingError(e)) throw e;
       }
     }
 
@@ -126,8 +157,7 @@ export async function GET(req: NextRequest) {
           [Number(userId)]
         )) as Array<Record<string, unknown>>;
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+        if (!isTableMissingError(e)) throw e;
       }
     }
 
