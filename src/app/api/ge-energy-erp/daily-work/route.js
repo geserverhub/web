@@ -9,6 +9,9 @@ import {
 } from '@/lib/erp-daily-work';
 import { parseErpUserHeader } from '@/lib/erp-user-header';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const DAILY_WORK_PAGES = new Set([
   'exec-daily-work-calendar',
   'dept-daily-report',

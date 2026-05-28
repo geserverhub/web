@@ -10,6 +10,9 @@ import {
 } from '@/lib/ge-after-sales-chat-db';
 import { parseErpUserHeader } from '@/lib/erp-user-header';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const PAGE_ID = 'after-sales-chat-live';
 
 async function userCanAccessPage(user, pageId) {

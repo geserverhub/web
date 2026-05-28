@@ -4,6 +4,9 @@ import { getAllErpPages } from '@/lib/erp-pages';
 import { ensureGeErpSchema } from '@/lib/erp-db';
 import { parseErpUserHeader } from '@/lib/erp-user-header';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function assertDeveloper(req) {
   const u = parseErpUserHeader(req);
   if (!u || !['ADMIN', 'SUPER_ADMIN'].includes(u.role)) {

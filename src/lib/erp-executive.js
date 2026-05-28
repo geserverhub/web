@@ -5,6 +5,8 @@ import { ensureGeErpSchema } from '@/lib/erp-db';
 
 const DEPT_CODES = ['production', 'marketing', 'accounting', 'hr', 'rnd'];
 
+let execSchemaReady = false;
+
 function currentPeriodKey() {
   const d = new Date();
   const y = d.getFullYear();
@@ -13,6 +15,7 @@ function currentPeriodKey() {
 }
 
 export async function ensureExecutiveSchema() {
+  if (execSchemaReady) return;
   await ensureGeErpSchema();
   const sqlPath = join(process.cwd(), 'prisma', 'migrate-ge-energy-erp-executive.sql');
   const raw = readFileSync(sqlPath, 'utf8');
@@ -30,6 +33,7 @@ export async function ensureExecutiveSchema() {
       throw err;
     }
   }
+  execSchemaReady = true;
 }
 
 async function deptIdByCode(code) {

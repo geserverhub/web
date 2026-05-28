@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
-import { getAllErpPages, ERP_ADMIN_PAGE_IDS } from '@/lib/erp-pages';
 import { getExecutivePageData, reviewApproval } from '@/lib/erp-executive';
 import { parseErpUserHeader } from '@/lib/erp-user-header';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const EXEC_PAGES = new Set([
   'exec-dept-kpi',
