@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 const LANGS = {
@@ -69,16 +69,7 @@ export default function PartnerLoginPage() {
         return;
       }
 
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-      const role = session?.user?.role;
-
-      if (role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN") {
-        router.push("/partner/dashboard");
-      } else {
-        await signOut({ redirect: false });
-        setError(t.errorRole);
-      }
+      router.push("/partner/dashboard");
     } catch {
       setError(t.errorLogin);
     } finally {

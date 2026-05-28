@@ -61,6 +61,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Check portal permission (skip for SUPER_ADMIN)
           const portal = credentials.portal?.trim();
           if (portal && user.role !== 'SUPER_ADMIN') {
+            // Role-based portal gate — block wrong role before hitting user_permissions
+            const PORTAL_ROLES = {
+              admin: ['ADMIN', 'SUPER_ADMIN'],
+              partner: ['PARTNER', 'ADMIN', 'SUPER_ADMIN'],
+              client: ['CLIENT', 'ADMIN', 'SUPER_ADMIN'],
+            };
+            if (PORTAL_ROLES[portal] && !PORTAL_ROLES[portal].includes(user.role)) {
+              console.log("[auth] role not allowed for portal:", portal, "role:", user.role);
+              return null;
+            }
+
             try {
               const permRows = await queryGeserverhub(
                 'SELECT is_allowed FROM user_permissions WHERE user_id = ? AND portal = ? LIMIT 1',
