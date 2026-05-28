@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as query } from '@/lib/geserverhub-db'
+import { ensureCarbonSchema } from '@/lib/ge-energy/ensure-carbon-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -7,6 +8,7 @@ export const dynamic = 'force-dynamic'
 // GET /api/ge-energy/carbon-records?site=all
 export async function GET(req: NextRequest) {
   try {
+    await ensureCarbonSchema();
     const site = new URL(req.url).searchParams.get('site') || 'all'
 
     const rows = await query(`
@@ -88,6 +90,7 @@ export async function GET(req: NextRequest) {
 // POST /api/ge-energy/carbon-records  — create new record
 export async function POST(req: NextRequest) {
   try {
+    await ensureCarbonSchema();
     const body = await req.json()
     const {
       meterID, LocationID, serailID, deviceID,

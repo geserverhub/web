@@ -283,6 +283,74 @@ SET @sql3 = IF(@fk3=0,
 PREPARE s3 FROM @sql3; EXECUTE s3; DEALLOCATE PREPARE s3;
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- carbon_locations — physical installation sites
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `carbon_locations` (
+  `locationID`   varchar(64)    NOT NULL,
+  `locationName` varchar(255)   NOT NULL,
+  `address`      text           DEFAULT NULL,
+  `site`         varchar(32)    NOT NULL DEFAULT 'thailand',
+  `latitude`     decimal(10,7)  DEFAULT NULL,
+  `longitude`    decimal(10,7)  DEFAULT NULL,
+  `created_at`   datetime       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   datetime       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`locationID`),
+  KEY `idx_carbon_locations_site` (`site`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- carbon_meters — meter registration (before / metrics)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `carbon_meters` (
+  `meterID`    varchar(64)              NOT NULL,
+  `deviceID`   int UNSIGNED             DEFAULT NULL,
+  `meterType`  enum('before','metrics') NOT NULL DEFAULT 'before',
+  `meterNo`    varchar(64)              NOT NULL,
+  `created_at` datetime                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime                 NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`meterID`),
+  KEY `idx_carbon_meters_device` (`deviceID`),
+  CONSTRAINT `fk_carbon_meters_device`
+    FOREIGN KEY (`deviceID`) REFERENCES `devices` (`deviceID`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- carboncre_cacu — carbon credit calculation records
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `carboncre_cacu` (
+  `carbonID`            bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `meterID`             varchar(64)     NOT NULL,
+  `LocationID`          varchar(64)     NOT NULL,
+  `serailID`            varchar(64)     DEFAULT NULL,
+  `deviceID`            int UNSIGNED    DEFAULT NULL,
+  `power_record_id`     bigint UNSIGNED DEFAULT NULL,
+  `power_preinstall_id` bigint UNSIGNED DEFAULT NULL,
+  `carbon_kg`           decimal(14,6)   DEFAULT NULL,
+  `energy_kwh`          decimal(14,4)   DEFAULT NULL,
+  `reduction_percent`   decimal(8,4)    DEFAULT NULL,
+  `record_date`         date            DEFAULT NULL,
+  `note`                text            DEFAULT NULL,
+  `created_at`          datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`          datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`carbonID`),
+  KEY `idx_carboncre_device`   (`deviceID`),
+  KEY `idx_carboncre_meter`    (`meterID`),
+  KEY `idx_carboncre_location` (`LocationID`),
+  KEY `idx_carboncre_date`     (`record_date`),
+  CONSTRAINT `fk_carboncre_device`
+    FOREIGN KEY (`deviceID`)            REFERENCES `devices`                  (`deviceID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_carboncre_meter`
+    FOREIGN KEY (`meterID`)             REFERENCES `carbon_meters`            (`meterID`)  ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_carboncre_location`
+    FOREIGN KEY (`LocationID`)          REFERENCES `carbon_locations`         (`locationID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_carboncre_power_record`
+    FOREIGN KEY (`power_record_id`)     REFERENCES `power_records`            (`id`)       ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_carboncre_preinstall`
+    FOREIGN KEY (`power_preinstall_id`) REFERENCES `power_records_preinstall` (`id`)       ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- momoge_cus — customer profile table (linked to devices, carbon_meters, carbon_locations)
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `momoge_cus` (
