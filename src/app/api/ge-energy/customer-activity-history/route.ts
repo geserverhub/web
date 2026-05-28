@@ -81,38 +81,54 @@ export async function GET(req: NextRequest) {
       if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
     }
 
-    const geetRows = (await query(
-      `SELECT id, order_no, buyer_name, ship_address, email, phone, breaker_amps, machine_kva,
-              quantity, unit_price, total_price, payment_status, shipment_status, created_at, updated_at
-       FROM geet_meter_order
-       WHERE ${whereOrders.join(' OR ')}
-       ORDER BY created_at DESC
-       LIMIT 300`,
-      orderParams
-    )) as Array<Record<string, unknown>>;
+    let geetRows: Array<Record<string, unknown>> = [];
+    try {
+      geetRows = (await query(
+        `SELECT id, order_no, buyer_name, ship_address, email, phone, breaker_amps, machine_kva,
+                quantity, unit_price, total_price, payment_status, shipment_status, created_at, updated_at
+         FROM geet_meter_order
+         WHERE ${whereOrders.join(' OR ')}
+         ORDER BY created_at DESC
+         LIMIT 300`,
+        orderParams
+      )) as Array<Record<string, unknown>>;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+    }
 
     let feedbackRows: Array<Record<string, unknown>> = [];
     if (hasValue(userId)) {
-      feedbackRows = (await query(
-        `SELECT id, category, subject, status, created_at
-         FROM user_feedback
-         WHERE user_id = ?
-         ORDER BY created_at DESC
-         LIMIT 300`,
-        [Number(userId)]
-      )) as Array<Record<string, unknown>>;
+      try {
+        feedbackRows = (await query(
+          `SELECT id, category, subject, status, created_at
+           FROM user_feedback
+           WHERE user_id = ?
+           ORDER BY created_at DESC
+           LIMIT 300`,
+          [Number(userId)]
+        )) as Array<Record<string, unknown>>;
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+      }
     }
 
     let ticketRows: Array<Record<string, unknown>> = [];
     if (hasValue(userId)) {
-      ticketRows = (await query(
-        `SELECT id, ticket_id, subject, type, priority, status, created_at, updated_at
-         FROM support_tickets
-         WHERE user_id = ?
-         ORDER BY created_at DESC
-         LIMIT 300`,
-        [Number(userId)]
-      )) as Array<Record<string, unknown>>;
+      try {
+        ticketRows = (await query(
+          `SELECT id, ticket_id, subject, type, priority, status, created_at, updated_at
+           FROM support_tickets
+           WHERE user_id = ?
+           ORDER BY created_at DESC
+           LIMIT 300`,
+          [Number(userId)]
+        )) as Array<Record<string, unknown>>;
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("doesn't exist") && !msg.includes('does not exist')) throw e;
+      }
     }
 
     const orderActivities = orderRows.map((r) => {
