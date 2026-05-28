@@ -237,6 +237,7 @@ export default function GeEnergyErpPageClient() {
         <ErpPageView
           key={`${activeDept}-${activePage}-${lang}`}
           lang={lang}
+          deptId={activeDept}
           deptLabel={activeDeptNav?.label || ''}
           pageId={activePage}
           pageLabel={activePageLabel}

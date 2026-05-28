@@ -1091,8 +1091,8 @@ export default function GeEnergyTechClientPage() {
           <a href="#products">{t.nav.products}</a>
           <a href="#credibility">{t.nav.technology}</a>
           <a href="#contact">{t.nav.contact}</a>
-          <a href="/ge-energy-tech/shipping-tracking">{navExtra.tracking}</a>
-          <a href="/ge-energy-tech/after-sales-chat">{navExtra.afterSales}</a>
+          <a href={publicHubHref('/ge-energy-tech/shipping-tracking')}>{navExtra.tracking}</a>
+          <a href={publicHubHref('/ge-energy-tech/after-sales-chat')}>{navExtra.afterSales}</a>
         </div>
         <div className="get-nav-actions">
           <a href={publicHubHref('/ge-energy-erp-login')} className="get-nav-btn get-nav-btn--admin">
@@ -1505,8 +1505,8 @@ export default function GeEnergyTechClientPage() {
                   <a href={publicHubHref('/register-geet')}>{t.footer.portalLinks.register}</a>
                   <a href={publicHubHref('/ge-energy-tech/login')}>{t.footer.portalLinks.signIn}</a>
                   <a href={publicHubHref('/ge-energy-erp-login')}>{t.footer.portalLinks.admin}</a>
-                  <a href="/ge-energy-tech/shipping-tracking">{t.footer.portalLinks.shipping}</a>
-                  <a href="/ge-energy-tech/after-sales-chat">{t.footer.portalLinks.afterSales}</a>
+                  <a href={publicHubHref('/ge-energy-tech/shipping-tracking')}>{t.footer.portalLinks.shipping}</a>
+                  <a href={publicHubHref('/ge-energy-tech/after-sales-chat')}>{t.footer.portalLinks.afterSales}</a>
                 </div>
               ) : null}
             </div>

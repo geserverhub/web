@@ -1,15 +1,27 @@
 @import '../ge-energy-erp/geerp-tokens.css';
 
 .geerp-login-page {
+  --geerp-login-hero-bg: linear-gradient(
+    145deg,
+    #0f172a 0%,
+    #1e293b 42%,
+    #334155 100%
+  );
+  --geerp-login-accent-line: linear-gradient(
+    90deg,
+    #94a3b8 0%,
+    #e2e8f0 50%,
+    #64748b 100%
+  );
+
   min-height: 100dvh;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: safe center;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-    max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-  background: linear-gradient(160deg, var(--geerp-slate-900) 0%, var(--geerp-slate-800) 38%, var(--geerp-accent) 100%);
+  align-items: stretch;
+  justify-content: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  background: #0f172a;
   font-family: var(--geerp-font);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   -webkit-font-smoothing: antialiased;
@@ -17,60 +29,46 @@
   overflow-x: hidden;
 }
 
-.geerp-login-page::before,
-.geerp-login-page::after {
+.geerp-login-page::before {
   content: '';
   position: absolute;
-  border-radius: 50%;
-  filter: blur(64px);
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(148, 163, 184, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(30, 41, 59, 0.8), transparent 50%);
   pointer-events: none;
 }
 
-.geerp-login-page::before {
-  top: -6rem;
-  right: -4rem;
-  width: 14rem;
-  height: 14rem;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.geerp-login-page::after {
-  bottom: -5rem;
-  left: -3rem;
-  width: 12rem;
-  height: 12rem;
-  background: rgba(15, 23, 42, 0.5);
-}
-
 .geerp-login-lang {
-  position: absolute;
-  top: max(0.75rem, env(safe-area-inset-top));
-  right: max(0.75rem, env(safe-area-inset-right));
-  z-index: 2;
+  position: fixed;
+  top: max(0.85rem, env(safe-area-inset-top));
+  right: max(0.85rem, env(safe-area-inset-right));
+  z-index: 10;
   display: inline-flex;
   gap: 2px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  padding: 3px;
-  box-shadow: var(--geerp-shadow-topbar);
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .geerp-login-lang button {
   border: none;
   border-radius: 999px;
-  padding: 4px 9px;
+  padding: 5px 10px;
   cursor: pointer;
   font-weight: 700;
-  font-size: 10px;
-  color: var(--geerp-slate-400);
+  font-size: 11px;
+  color: #94a3b8;
   background: transparent;
   transition: background 0.15s, color 0.15s;
 }
 
 .geerp-login-lang button.is-active {
   color: var(--geerp-slate-900);
-  background: var(--geerp-slate-100);
+  background: #f8fafc;
 }
 
 .geerp-login-lang button:focus-visible {
@@ -78,107 +76,165 @@
   box-shadow: var(--geerp-focus);
 }
 
-.geerp-login-card {
+.geerp-login-shell {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
   width: 100%;
-  max-width: 440px;
-  background: var(--geerp-bg-elevated);
-  border-radius: var(--geerp-radius-lg);
-  padding: 1.75rem 1.5rem 1.5rem;
-  border: 1px solid var(--geerp-border);
-  box-shadow: var(--geerp-shadow-lg), 0 24px 48px rgba(15, 23, 42, 0.35);
+  max-width: 960px;
+  min-height: min(640px, calc(100dvh - 1.5rem));
+  margin: auto;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
-.geerp-login-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--geerp-slate-600), var(--geerp-slate-400), var(--geerp-slate-600));
-}
-
-@media (min-width: 480px) {
-  .geerp-login-card {
-    padding: 2.1rem 2rem 1.65rem;
+@media (min-width: 768px) {
+  .geerp-login-shell {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    min-height: min(600px, calc(100dvh - 2rem));
   }
 }
 
-.geerp-login-brand {
-  text-align: center;
+/* —— Hero (left) —— */
+.geerp-login-hero {
+  position: relative;
+  background: var(--geerp-login-hero-bg);
+  color: #f8fafc;
+  padding: 2rem 1.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.geerp-login-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.geerp-login-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -3rem;
+  right: -3rem;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.08);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.geerp-login-hero-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.geerp-login-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
   margin-bottom: 1.5rem;
+}
+
+.geerp-login-logo {
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+}
+
+.geerp-login-hero-name {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e2e8f0;
 }
 
 .geerp-login-badge {
   display: inline-block;
-  margin-bottom: 0.7rem;
-  padding: 0.22rem 0.7rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--geerp-slate-100);
-  background: var(--geerp-accent-strong);
-  border: 1px solid var(--geerp-slate-500);
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.geerp-login-hero-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.25rem, 3.5vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  color: #fff;
 }
 
 .geerp-login-company {
-  margin: 0 0 0.35rem;
-  font-size: 1.05rem;
+  margin: 0;
+  font-size: clamp(0.88rem, 2.2vw, 1rem);
+  font-weight: 600;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+/* —— Form panel (right) —— */
+.geerp-login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--geerp-bg-elevated);
+  padding: 1.5rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .geerp-login-panel {
+    padding: 2rem 2.25rem;
+  }
+}
+
+.geerp-login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.geerp-login-form-head {
+  margin-bottom: 1.35rem;
+}
+
+.geerp-login-form-title {
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--geerp-slate-900);
-  line-height: 1.35;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
-.geerp-login-title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--geerp-slate-800);
-  letter-spacing: -0.025em;
-}
-
-.geerp-login-sub {
-  margin: 0.5rem 0 0;
-  font-size: 0.84rem;
-  color: var(--geerp-slate-500);
-  line-height: 1.55;
-}
-
-.geerp-login-modules {
+.geerp-login-form {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem;
-  margin-top: 0.9rem;
-}
-
-.geerp-login-modules span {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--geerp-slate-600);
-  background: var(--geerp-slate-100);
-  border: 1px solid var(--geerp-border);
-  border-radius: var(--geerp-radius-sm);
-  padding: 0.18rem 0.5rem;
+  flex-direction: column;
 }
 
 .geerp-login-field {
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .geerp-login-label {
   display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.78rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--geerp-slate-600);
-  letter-spacing: 0.02em;
+  color: var(--geerp-slate-700);
 }
 
 .geerp-login-input-wrap {
@@ -187,7 +243,7 @@
 
 .geerp-login-input-icon {
   position: absolute;
-  left: 0.75rem;
+  left: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--geerp-slate-400);
@@ -197,132 +253,209 @@
 .geerp-login-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.68rem 2.5rem 0.68rem 2.35rem;
-  border-radius: var(--geerp-radius-sm);
+  padding: 0.72rem 2.6rem 0.72rem 2.5rem;
+  border-radius: var(--geerp-radius-md);
   border: 1px solid var(--geerp-border);
-  background: var(--geerp-bg-elevated);
-  font-size: 0.9rem;
+  background: var(--geerp-bg-subtle);
+  font-size: 0.92rem;
   font-family: inherit;
   color: var(--geerp-slate-900);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.geerp-login-input::placeholder {
+  color: var(--geerp-slate-400);
 }
 
 .geerp-login-input:hover {
   border-color: var(--geerp-border-strong);
+  background: var(--geerp-bg-elevated);
 }
 
 .geerp-login-input:focus {
-  border-color: var(--geerp-accent);
+  border-color: var(--geerp-accent-strong);
+  background: var(--geerp-bg-elevated);
   box-shadow: var(--geerp-focus);
 }
 
 .geerp-login-toggle-pw {
   position: absolute;
-  right: 0.65rem;
+  right: 0.7rem;
   top: 50%;
   transform: translateY(-50%);
   border: none;
   background: none;
-  padding: 0;
+  padding: 0.25rem;
   cursor: pointer;
   color: var(--geerp-slate-400);
+  border-radius: 4px;
 }
 
 .geerp-login-toggle-pw:hover {
-  color: var(--geerp-slate-600);
+  color: var(--geerp-slate-700);
+}
+
+.geerp-login-toggle-pw:focus-visible {
+  outline: none;
+  box-shadow: var(--geerp-focus);
 }
 
 .geerp-login-error {
   margin-bottom: 1rem;
-  padding: 0.7rem 0.9rem;
+  padding: 0.75rem 0.9rem;
   border-radius: var(--geerp-radius-md);
   background: var(--geerp-danger-bg);
   border: 1px solid #fecaca;
   color: var(--geerp-danger);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 600;
+  line-height: 1.45;
 }
 
 .geerp-login-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
+  margin-top: 0.15rem;
   border: none;
-  border-radius: var(--geerp-radius-sm);
+  border-radius: var(--geerp-radius-md);
   font-size: 0.95rem;
   font-weight: 700;
   font-family: inherit;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(180deg, var(--geerp-slate-600) 0%, var(--geerp-accent-deep) 100%);
-  box-shadow: var(--geerp-shadow-md);
-  transition: transform 0.1s, opacity 0.15s, box-shadow 0.15s;
+  background: linear-gradient(180deg, #475569 0%, #1e293b 100%);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 6px 20px rgba(15, 23, 42, 0.22);
+  transition:
+    transform 0.12s,
+    opacity 0.15s,
+    box-shadow 0.15s;
 }
 
 .geerp-login-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: var(--geerp-shadow-lg);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.1),
+    0 10px 28px rgba(15, 23, 42, 0.28);
+}
+
+.geerp-login-submit:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .geerp-login-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none;
 }
 
 .geerp-login-submit:focus-visible {
   outline: none;
-  box-shadow: var(--geerp-focus), var(--geerp-shadow-md);
+  box-shadow: var(--geerp-focus), 0 6px 20px rgba(15, 23, 42, 0.22);
+}
+
+.geerp-login-divider {
+  margin: 1.35rem 0 1.1rem;
+}
+
+.geerp-login-divider span {
+  display: block;
+  height: 1px;
+  background: var(--geerp-border);
 }
 
 .geerp-login-footer {
-  margin-top: 1.35rem;
   text-align: center;
 }
 
 .geerp-login-footer-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 400px) {
+  .geerp-login-footer-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 .geerp-login-link-btn {
+  flex: 1;
+  min-width: 0;
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--geerp-slate-200);
-  background: rgba(255, 255, 255, 0.06);
-  transition: background 0.15s, color 0.15s;
+  text-align: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--geerp-radius-md);
+  color: var(--geerp-slate-700);
+  background: var(--geerp-slate-100);
+  border: 1px solid var(--geerp-border);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .geerp-login-link-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-}
-
-.geerp-login-link-btn--primary {
+  background: var(--geerp-slate-200);
+  border-color: var(--geerp-border-strong);
   color: var(--geerp-slate-900);
-  background: var(--geerp-slate-100);
-  border-color: transparent;
 }
 
-.geerp-login-link-btn--primary:hover {
-  background: #fff;
+.geerp-login-link-btn--outline {
+  background: var(--geerp-bg-elevated);
+  color: var(--geerp-slate-800);
+}
+
+.geerp-login-link-btn--outline:hover {
+  background: var(--geerp-bg-subtle);
 }
 
 .geerp-login-back {
-  font-size: 0.82rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  font-weight: 600;
   color: var(--geerp-slate-500);
   text-decoration: none;
+  transition: color 0.15s;
 }
 
 .geerp-login-back:hover {
   color: var(--geerp-slate-800);
-  text-decoration: underline;
+}
+
+.geerp-login-back svg {
+  flex-shrink: 0;
+}
+
+/* Mobile: compact hero */
+@media (max-width: 767px) {
+  .geerp-login-hero {
+    padding: 1.35rem 1.25rem 1.1rem;
+  }
+
+  .geerp-login-hero-title {
+    font-size: 1.15rem;
+  }
+
+  .geerp-login-company {
+    font-size: 0.85rem;
+  }
 }

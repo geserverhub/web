@@ -15,6 +15,7 @@ import ErpUserCreatePanel from './ErpUserCreatePanel';
 import ErpExecutivePanel from './ErpExecutivePanel';
 import ErpWorkCalendar from './ErpWorkCalendar';
 import ErpAfterSalesChatPanel from './ErpAfterSalesChatPanel';
+import ErpDeptDailyReport from './ErpDeptDailyReport';
 
 const CHART_BAR_HEIGHTS = [58, 42, 72, 51, 68, 38, 64, 55, 76, 47, 61, 53];
 
@@ -47,6 +48,7 @@ function renderCell(col, value) {
 
 export default function ErpPageView({
   lang,
+  deptId,
   deptLabel,
   pageId,
   pageLabel,
@@ -69,6 +71,8 @@ export default function ErpPageView({
   ].includes(pageId);
   const isCalendarPage = pageId === 'exec-daily-work-calendar';
   const isAfterSalesChatPage = pageId === 'after-sales-chat-live';
+  const isDeptDailyReport = pageId === 'dept-daily-report';
+  const isDeptMonthlySummary = pageId === 'dept-monthly-summary';
   const devAllowed = canManageErpAccess(erpUser);
 
   const [loading, setLoading] = useState(false);
@@ -85,7 +89,18 @@ export default function ErpPageView({
     : erpApiHeaders();
 
   const loadData = useCallback(async () => {
-    if (!pageId || isDevPage || isExecPage || isCalendarPage || isAfterSalesChatPage || accessDenied) return;
+    if (
+      !pageId ||
+      isDevPage ||
+      isExecPage ||
+      isCalendarPage ||
+      isAfterSalesChatPage ||
+      isDeptDailyReport ||
+      isDeptMonthlySummary ||
+      accessDenied
+    ) {
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -108,7 +123,18 @@ export default function ErpPageView({
     } finally {
       setLoading(false);
     }
-  }, [dataApiHeaders, dataApiPath, pageId, isDevPage, isExecPage, isCalendarPage, isAfterSalesChatPage, accessDenied]);
+  }, [
+    dataApiHeaders,
+    dataApiPath,
+    pageId,
+    isDevPage,
+    isExecPage,
+    isCalendarPage,
+    isAfterSalesChatPage,
+    isDeptDailyReport,
+    isDeptMonthlySummary,
+    accessDenied,
+  ]);
 
   useEffect(() => {
     setFormData({});
@@ -207,11 +233,30 @@ export default function ErpPageView({
         <ErpAfterSalesChatPanel lang={lang} />
       ) : null}
 
+      {!accessDenied && isDeptDailyReport && ui ? (
+        <ErpDeptDailyReport lang={lang} deptCode={deptId} erpUser={erpUser} />
+      ) : null}
+
+      {!accessDenied && isDeptMonthlySummary && ui ? (
+        <ErpWorkCalendar
+          lang={lang}
+          deptCode={deptId}
+          pageId="dept-monthly-summary"
+        />
+      ) : null}
+
       {!accessDenied && isExecPage && !isCalendarPage && ui ? (
         <ErpExecutivePanel lang={lang} pageId={pageId} />
       ) : null}
 
-      {!accessDenied && !isDevPage && !isExecPage && !isCalendarPage && !isAfterSalesChatPage && ui ? (
+      {!accessDenied &&
+      !isDevPage &&
+      !isExecPage &&
+      !isCalendarPage &&
+      !isAfterSalesChatPage &&
+      !isDeptDailyReport &&
+      !isDeptMonthlySummary &&
+      ui ? (
       <>
       {error ? <div className="geerp-dev-alert geerp-dev-alert--error">{error}</div> : null}
       {loading ? (

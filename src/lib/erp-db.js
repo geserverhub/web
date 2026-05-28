@@ -7,7 +7,20 @@ import { getErpPageData, ERP_REPORT_PAGES, ERP_CARD_PAGES } from '@/lib/erp-page
 
 let schemaReady = false;
 
+const UI_TYPE_ALIASES = {
+  'after-sales-chat-live': 'chat-live',
+  'dept-daily-report': 'dept-daily',
+  'dept-monthly-summary': 'dept-monthly',
+};
+
+function normalizeUiType(type) {
+  const raw = String(type || 'form');
+  const mapped = UI_TYPE_ALIASES[raw] || raw;
+  return mapped.length > 20 ? mapped.slice(0, 20) : mapped;
+}
+
 export async function ensureGeErpSchema() {
+  await ensureUiTypeColumnWidth();
   if (schemaReady) return;
 
   const sqlPath = join(process.cwd(), 'prisma', 'migrate-ge-energy-erp.sql');
@@ -37,7 +50,22 @@ export async function ensureGeErpSchema() {
   schemaReady = true;
 }
 
+/** Existing DBs may still have ui_type VARCHAR(20); widen for longer page types. */
+async function ensureUiTypeColumnWidth() {
+  try {
+    await queryGeserverhub(
+      `ALTER TABLE ge_erp_page MODIFY COLUMN ui_type VARCHAR(64) NOT NULL DEFAULT 'form'`
+    );
+  } catch (err) {
+    const msg = err?.message || '';
+    if (/doesn't exist|Unknown column/i.test(msg)) return;
+    throw err;
+  }
+}
+
 export async function seedErpMeta() {
+  await ensureUiTypeColumnWidth();
+
   const deptRows = [
     ['executive', 'ฝ่ายผู้บริหาร', 'Executive', 0],
     ['production', 'ฝ่ายผลิต', 'Production', 1],
@@ -67,7 +95,7 @@ export async function seedErpMeta() {
     for (const pageKey of dept.pages) {
       const ui = ERP_PAGE_UI[pageKey];
       const data = getErpPageData(pageKey);
-      const uiType = ui?.type || 'form';
+      const uiType = normalizeUiType(ui?.type || 'form');
       const tableName = data?.table || data?.cardsTable || null;
       await queryGeserverhub(
         `INSERT INTO ge_erp_page (department_id, page_key, ui_type, table_name)

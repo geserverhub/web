@@ -29,7 +29,7 @@ function buildMonthGrid(year, month) {
   return cells;
 }
 
-export default function ErpWorkCalendar({ lang }) {
+export default function ErpWorkCalendar({ lang, deptCode = null, pageId = 'exec-daily-work-calendar' }) {
   const t = ERP_CALENDAR_COPY[lang] || ERP_CALENDAR_COPY.th;
   const weekdays =
     lang === 'en' ? WEEKDAYS_EN : lang === 'ko' ? WEEKDAYS_KO : WEEKDAYS_TH;
@@ -42,6 +42,7 @@ export default function ErpWorkCalendar({ lang }) {
   const [error, setError] = useState('');
   const [calendar, setCalendar] = useState(null);
   const [departments, setDepartments] = useState([]);
+  const [lockedDeptId, setLockedDeptId] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
   const [form, setForm] = useState({
     departmentId: '',
@@ -56,20 +57,29 @@ export default function ErpWorkCalendar({ lang }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(
-        `/api/ge-energy-erp/daily-work?year=${year}&month=${month}`,
-        { headers: erpApiHeaders() }
-      );
+      const qs = new URLSearchParams({
+        year: String(year),
+        month: String(month),
+        pageId,
+      });
+      if (deptCode) qs.set('dept', deptCode);
+      const res = await fetch(`/api/ge-energy-erp/daily-work?${qs.toString()}`, {
+        headers: erpApiHeaders(),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Load failed');
       setCalendar(json.calendar);
       setDepartments(json.departments || []);
+      if (json.department?.id) {
+        setLockedDeptId(String(json.department.id));
+        setForm((f) => ({ ...f, departmentId: String(json.department.id) }));
+      }
     } catch (err) {
       setError(err.message || 'Error');
     } finally {
       setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, deptCode, pageId]);
 
   useEffect(() => {
     load();
@@ -104,6 +114,8 @@ export default function ErpWorkCalendar({ lang }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...erpApiHeaders() },
         body: JSON.stringify({
+          pageId,
+          dept: deptCode || undefined,
           reportDate: selectedDate,
           departmentId: Number(form.departmentId),
           reporterName: form.reporterName,
@@ -131,7 +143,14 @@ export default function ErpWorkCalendar({ lang }) {
       const res = await fetch('/api/ge-energy-erp/daily-work', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...erpApiHeaders() },
-        body: JSON.stringify({ action: 'delete', id, year, month }),
+        body: JSON.stringify({
+          action: 'delete',
+          id,
+          pageId,
+          dept: deptCode || undefined,
+          year,
+          month,
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Delete failed');
@@ -256,23 +275,27 @@ export default function ErpWorkCalendar({ lang }) {
 
               <form className="geerp-calendar-form" onSubmit={submitReport}>
                 <h4 className="geerp-calendar-form-title">{t.addReport}</h4>
-                <label className="geerp-field">
-                  <span>{t.department}</span>
-                  <select
-                    required
-                    value={form.departmentId}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, departmentId: e.target.value }))
-                    }
-                  >
-                    <option value="">{t.selectDept}</option>
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {deptLabel(d, lang)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {deptCode && lockedDeptId ? (
+                  <input type="hidden" value={lockedDeptId} readOnly />
+                ) : (
+                  <label className="geerp-field">
+                    <span>{t.department}</span>
+                    <select
+                      required
+                      value={form.departmentId}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, departmentId: e.target.value }))
+                      }
+                    >
+                      <option value="">{t.selectDept}</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {deptLabel(d, lang)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <label className="geerp-field">
                   <span>{t.reporter}</span>
                   <input

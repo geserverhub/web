@@ -9,11 +9,21 @@ function padMonth(y, m) {
   return `${y}-${String(m).padStart(2, '0')}`;
 }
 
-export async function getCalendarMonth(year, month) {
+export async function getDepartmentByCode(code) {
+  if (!code) return null;
+  const rows = await queryGeserverhub(
+    `SELECT id, code, name_th, name_en FROM ge_erp_department WHERE code = ? LIMIT 1`,
+    [code]
+  );
+  return rows[0] || null;
+}
+
+export async function getCalendarMonth(year, month, departmentCode = null) {
   await ensureDailyWorkSchema();
   const periodStart = `${year}-${String(month).padStart(2, '0')}-01`;
   const lastDay = new Date(year, month, 0).getDate();
   const periodEnd = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  const deptCode = departmentCode ? String(departmentCode) : null;
 
   const rows = await queryGeserverhub(
     `SELECT r.id, r.report_date, r.work_summary, r.hours_worked, r.status, r.reporter_name,
@@ -23,8 +33,9 @@ export async function getCalendarMonth(year, month) {
      JOIN ge_erp_department d ON d.id = r.department_id
      LEFT JOIN ge_erp_employee e ON e.id = r.employee_id
      WHERE r.report_date BETWEEN ? AND ?
+       AND (? IS NULL OR d.code = ?)
      ORDER BY r.report_date ASC, d.sort_order ASC, r.id ASC`,
-    [periodStart, periodEnd]
+    [periodStart, periodEnd, deptCode, deptCode]
   );
 
   const byDate = {};

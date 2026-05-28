@@ -7,10 +7,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env.local') });
 
 const REQUIRED_DB = 'goeunserverhub';
-const dbName = (process.env.DB_NAME || 'goeunserverhub').trim();
+const LEGACY_DB = 'geserverhub';
+const dbName = (process.env.DB_NAME || REQUIRED_DB).trim();
+const legacyOk =
+  process.env.DB_LEGACY_GESERVERHUB === '1' && dbName.toLowerCase() === LEGACY_DB;
 
-if (dbName.toLowerCase() !== REQUIRED_DB) {
-  console.error(`FAIL — DB_NAME must be ${REQUIRED_DB} for this app, got "${dbName}".`);
+if (dbName.toLowerCase() !== REQUIRED_DB && !legacyOk) {
+  console.error(
+    `FAIL — DB_NAME must be ${REQUIRED_DB}` +
+      (process.env.DB_LEGACY_GESERVERHUB === '1' ? ` or legacy ${LEGACY_DB}` : '') +
+      `, got "${dbName}".`
+  );
   process.exit(1);
 }
 
@@ -19,7 +26,7 @@ const opts = {
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: dbName === REQUIRED_DB ? dbName : REQUIRED_DB,
+  database: dbName,
 };
 
 console.log('Platform:', process.platform);

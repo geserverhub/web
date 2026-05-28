@@ -47,7 +47,7 @@ export const ERP_PAGE_UI = {
     columnKeys: ['campaign', 'period', 'channel', 'budget', 'owner', 'status'],
   },
   'after-sales-chat-live': {
-    type: 'after-sales-chat-live',
+    type: 'chat-live',
   },
   'create-sales-order': {
     type: 'form',
@@ -271,4 +271,6 @@ export const ERP_PAGE_UI = {
   'exec-ai-performance': { type: 'executive-ai', variant: 'performance' },
   'exec-ai-issues': { type: 'executive-ai', variant: 'issue' },
   'exec-ai-growth': { type: 'executive-ai', variant: 'growth' },
+  'dept-daily-report': { type: 'dept-daily' },
+  'dept-monthly-summary': { type: 'dept-monthly' },
 };

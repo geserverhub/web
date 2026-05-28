@@ -1,9 +1,13 @@
 ﻿'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
 import { parseJsonResponse } from '@/lib/parse-json-response';
+import { formatFetchError } from '@/lib/db-connect-error';
+import { erpHubApiUrl, erpHubFetchHeaders } from '@/lib/erp-hub-api';
 import {
   GE_ENERGY_ERP_TOKEN_KEY,
   GE_ENERGY_ERP_USER_KEY,
@@ -41,6 +45,7 @@ export default function GeEnergyErpLoginPage() {
 
   const t = ERP_LOGIN_COPY[lang] || ERP_LOGIN_COPY.th;
   const company = ERP_COMPANY_NAMES[lang] || ERP_COMPANY_NAMES.th;
+  const formTitle = t.formTitle || t.title;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -48,9 +53,9 @@ export default function GeEnergyErpLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/user/login', {
+      const res = await fetch(erpHubApiUrl('/api/user/login'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: erpHubFetchHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ username, password, pageName: '/ge-energy-erp' }),
       });
 
@@ -78,8 +83,8 @@ export default function GeEnergyErpLoginPage() {
       localStorage.setItem(GE_ENERGY_ERP_USER_KEY, JSON.stringify(userPayload));
 
       try {
-        const aclRes = await fetch('/api/ge-energy-erp/me/pages', {
-          headers: erpApiHeaders(),
+        const aclRes = await fetch(erpHubApiUrl('/api/ge-energy-erp/me/pages'), {
+          headers: erpHubFetchHeaders(erpApiHeaders()),
         });
         const aclData = await aclRes.json();
         if (aclData.pages) {
@@ -91,7 +96,7 @@ export default function GeEnergyErpLoginPage() {
 
       router.push('/ge-energy-erp');
     } catch (err) {
-      setError(err?.message || t.connection);
+      setError(formatFetchError(err) || t.connection);
     } finally {
       setLoading(false);
     }
@@ -106,88 +111,118 @@ export default function GeEnergyErpLoginPage() {
         ariaLabel={t.langLabel}
       />
 
-      <div className="geerp-login-card">
-        <header className="geerp-login-brand">
-          <span className="geerp-login-badge">{t.badge}</span>
-          <p className="geerp-login-company">{company}</p>
-          <h1 className="geerp-login-title">{t.title}</h1>
-          <p className="geerp-login-sub">{t.subtitle}</p>
-          <div className="geerp-login-modules">
-            {t.modules.map((mod) => (
-              <span key={mod}>{mod}</span>
-            ))}
-          </div>
-        </header>
-
-        <form onSubmit={handleSubmit}>
-          <div className="geerp-login-field">
-            <label className="geerp-login-label" htmlFor="geerp-username">
-              {t.username}
-            </label>
-            <div className="geerp-login-input-wrap">
-              <User size={18} className="geerp-login-input-icon" aria-hidden />
-              <input
-                id="geerp-username"
-                type="text"
-                autoComplete="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder={t.usernamePh}
-                className="geerp-login-input"
+      <div className="geerp-login-shell">
+        <aside className="geerp-login-hero">
+          <div className="geerp-login-hero-inner">
+            <div className="geerp-login-hero-brand">
+              <Image
+                src="/ge-energyTech/138568-transparent.png"
+                alt="GE Energy Tech"
+                width={56}
+                height={56}
+                className="geerp-login-logo"
+                priority
               />
+              <div>
+                <p className="geerp-login-hero-name">GE Energy Tech</p>
+                <span className="geerp-login-badge">{t.badge}</span>
+              </div>
             </div>
-          </div>
 
-          <div className="geerp-login-field">
-            <label className="geerp-login-label" htmlFor="geerp-password">
-              {t.password}
-            </label>
-            <div className="geerp-login-input-wrap">
-              <Lock size={18} className="geerp-login-input-icon" aria-hidden />
-              <input
-                id="geerp-password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder={t.passwordPh}
-                className="geerp-login-input"
-              />
-              <button
-                type="button"
-                className="geerp-login-toggle-pw"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            <h1 className="geerp-login-hero-title">{t.title}</h1>
+            <p className="geerp-login-company">{company}</p>
+          </div>
+        </aside>
+
+        <main className="geerp-login-panel">
+          <div className="geerp-login-card">
+            <header className="geerp-login-form-head">
+              <h2 className="geerp-login-form-title">{formTitle}</h2>
+            </header>
+
+            <form onSubmit={handleSubmit} className="geerp-login-form">
+              <div className="geerp-login-field">
+                <label className="geerp-login-label" htmlFor="geerp-username">
+                  {t.username}
+                </label>
+                <div className="geerp-login-input-wrap">
+                  <User size={18} className="geerp-login-input-icon" aria-hidden />
+                  <input
+                    id="geerp-username"
+                    type="text"
+                    autoComplete="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    placeholder={t.usernamePh}
+                    className="geerp-login-input"
+                  />
+                </div>
+              </div>
+
+              <div className="geerp-login-field">
+                <label className="geerp-login-label" htmlFor="geerp-password">
+                  {t.password}
+                </label>
+                <div className="geerp-login-input-wrap">
+                  <Lock size={18} className="geerp-login-input-icon" aria-hidden />
+                  <input
+                    id="geerp-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder={t.passwordPh}
+                    className="geerp-login-input"
+                  />
+                  <button
+                    type="button"
+                    className="geerp-login-toggle-pw"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {error ? (
+                <div className="geerp-login-error" role="alert">
+                  {error}
+                </div>
+              ) : null}
+
+              <button type="submit" className="geerp-login-submit" disabled={loading}>
+                <LogIn size={18} aria-hidden />
+                {loading ? t.signingIn : t.signIn}
               </button>
+            </form>
+
+            <div className="geerp-login-divider" role="presentation">
+              <span />
             </div>
+
+            <footer className="geerp-login-footer">
+              <div className="geerp-login-footer-actions">
+                <Link href="/register-geet" className="geerp-login-link-btn">
+                  {t.register}
+                </Link>
+                <Link
+                  href="/ge-energy-tech/login"
+                  className="geerp-login-link-btn geerp-login-link-btn--outline"
+                >
+                  {t.platformSignIn}
+                </Link>
+              </div>
+              <Link href="/ge-energy-tech" className="geerp-login-back">
+                <ArrowLeft size={16} aria-hidden />
+                {t.back.replace(/^←\s*/, '')}
+              </Link>
+            </footer>
           </div>
-
-          {error ? <div className="geerp-login-error" role="alert">{error}</div> : null}
-
-          <button type="submit" className="geerp-login-submit" disabled={loading}>
-            {loading ? t.signingIn : t.signIn}
-          </button>
-        </form>
-
-        <footer className="geerp-login-footer">
-          <div className="geerp-login-footer-actions">
-            <a href="/register-geet" className="geerp-login-link-btn">
-              {t.register}
-            </a>
-            <a href="/ge-energy-tech/login" className="geerp-login-link-btn geerp-login-link-btn--primary">
-              {t.platformSignIn}
-            </a>
-          </div>
-          <a href="/ge-energy-tech" className="geerp-login-back">
-            {t.back}
-          </a>
-        </footer>
+        </main>
       </div>
     </div>
   );
 }
-

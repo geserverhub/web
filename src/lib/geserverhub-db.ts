@@ -1,15 +1,42 @@
 import mysql, { type RowDataPacket } from 'mysql2/promise';
 
-/** Single database for this Next.js app — goeunserverhub only. */
+/** Canonical database name for this Next.js app. */
 export const GESERVERHUB_DATABASE = 'goeunserverhub';
+
+/** WSL dumps sometimes restore into `geserverhub`; set DB_LEGACY_GESERVERHUB=1 locally. */
+export const LEGACY_GESERVERHUB_DATABASE = 'geserverhub';
+
+function resolveDatabaseName(): string {
+  const fromEnv = process.env.DB_NAME?.trim();
+  if (fromEnv) return fromEnv;
+
+  const url = process.env.DATABASE_URL;
+  if (url?.startsWith('mysql://')) {
+    const pathDb = resolveDatabaseFromUrl(url);
+    if (pathDb) return pathDb;
+  }
+  return GESERVERHUB_DATABASE;
+}
 
 function assertGeserverhubDatabase(name: string): void {
   const normalized = name.trim().toLowerCase();
-  if (normalized !== GESERVERHUB_DATABASE) {
-    throw new Error(
-      `[geserverhub-db] DATABASE_URL must target "${GESERVERHUB_DATABASE}", got "${name}".`
-    );
-  }
+  const legacyOk =
+    process.env.DB_LEGACY_GESERVERHUB === '1' &&
+    normalized === LEGACY_GESERVERHUB_DATABASE;
+  if (normalized === GESERVERHUB_DATABASE || legacyOk) return;
+  throw new Error(
+    `[geserverhub-db] DATABASE_URL/DB_NAME must target "${GESERVERHUB_DATABASE}"` +
+      (process.env.DB_LEGACY_GESERVERHUB === '1'
+        ? ` or legacy "${LEGACY_GESERVERHUB_DATABASE}"`
+        : '') +
+      `, got "${name}".`
+  );
+}
+
+function activeDatabase(): string {
+  const name = resolveDatabaseName();
+  assertGeserverhubDatabase(name);
+  return name;
 }
 
 function resolveDatabaseFromUrl(url: string): string | null {
@@ -23,21 +50,18 @@ function resolveDatabaseFromUrl(url: string): string | null {
 }
 
 export function getGeserverhubConnectionConfig() {
-  const explicitDb = process.env.DB_NAME?.trim();
-  if (explicitDb) assertGeserverhubDatabase(explicitDb);
+  const database = activeDatabase();
 
   const url = process.env.DATABASE_URL;
   if (url?.startsWith('mysql://')) {
     const parsed = new URL(url);
-    const urlDb = resolveDatabaseFromUrl(url);
-    if (urlDb) assertGeserverhubDatabase(urlDb);
 
     return {
       host: process.env.DB_HOST || process.env.MYSQL_HOST || parsed.hostname || '127.0.0.1',
       port: Number(process.env.DB_PORT || process.env.MYSQL_PORT || parsed.port || 3306),
       user: decodeURIComponent(parsed.username),
       password: decodeURIComponent(parsed.password),
-      database: GESERVERHUB_DATABASE,
+      database,
     };
   }
 
@@ -46,7 +70,7 @@ export function getGeserverhubConnectionConfig() {
     port: Number(process.env.DB_PORT || process.env.MYSQL_PORT || 3306),
     user: process.env.DB_USER || process.env.MYSQL_USER || 'geserverhub',
     password: process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || '',
-    database: GESERVERHUB_DATABASE,
+    database,
   };
 }
 
