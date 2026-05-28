@@ -85,6 +85,10 @@ export async function GET(req: NextRequest) {
     const email = toStr(searchParams.get('email'));
     const phone = toStr(searchParams.get('phone'));
 
+    // userId must be a valid positive integer — "NaN", "undefined" etc. are rejected
+    const userIdNum = parseInt(userId, 10);
+    const validUserId = Number.isFinite(userIdNum) && userIdNum > 0 ? userIdNum : null;
+
     const whereOrders: string[] = [];
     const orderParams: unknown[] = [];
     if (hasValue(email)) {
@@ -95,42 +99,46 @@ export async function GET(req: NextRequest) {
       whereOrders.push('phone = ?');
       orderParams.push(phone);
     }
-    if (!whereOrders.length) {
+    if (!whereOrders.length && !validUserId) {
       return NextResponse.json({ success: true, activities: [] });
     }
 
     let orderRows: Array<Record<string, unknown>> = [];
-    try {
-      orderRows = (await query(
-        `SELECT id, order_no, customer_name, shipping_address, email, phone, breaker_size, machine_kva,
-                quantity, unit_price, total_price, monthly_bill_count, status, created_at, updated_at
-         FROM ge_customer_energy_saver_orders
-         WHERE ${whereOrders.join(' OR ')}
-         ORDER BY created_at DESC
-         LIMIT 300`,
-        orderParams
-      )) as Array<Record<string, unknown>>;
-    } catch (e: unknown) {
-      if (!isTableMissingError(e)) throw e;
+    if (whereOrders.length) {
+      try {
+        orderRows = (await query(
+          `SELECT id, order_no, customer_name, shipping_address, email, phone, breaker_size, machine_kva,
+                  quantity, unit_price, total_price, monthly_bill_count, status, created_at, updated_at
+           FROM ge_customer_energy_saver_orders
+           WHERE ${whereOrders.join(' OR ')}
+           ORDER BY created_at DESC
+           LIMIT 300`,
+          orderParams
+        )) as Array<Record<string, unknown>>;
+      } catch (e: unknown) {
+        if (!isTableMissingError(e)) throw e;
+      }
     }
 
     let geetRows: Array<Record<string, unknown>> = [];
-    try {
-      geetRows = (await query(
-        `SELECT id, order_no, buyer_name, ship_address, email, phone, breaker_amps, machine_kva,
-                quantity, unit_price, total_price, payment_status, shipment_status, created_at, updated_at
-         FROM geet_meter_order
-         WHERE ${whereOrders.join(' OR ')}
-         ORDER BY created_at DESC
-         LIMIT 300`,
-        orderParams
-      )) as Array<Record<string, unknown>>;
-    } catch (e: unknown) {
-      if (!isTableMissingError(e)) throw e;
+    if (whereOrders.length) {
+      try {
+        geetRows = (await query(
+          `SELECT id, order_no, buyer_name, ship_address, email, phone, breaker_amps, machine_kva,
+                  quantity, unit_price, total_price, payment_status, shipment_status, created_at, updated_at
+           FROM geet_meter_order
+           WHERE ${whereOrders.join(' OR ')}
+           ORDER BY created_at DESC
+           LIMIT 300`,
+          orderParams
+        )) as Array<Record<string, unknown>>;
+      } catch (e: unknown) {
+        if (!isTableMissingError(e)) throw e;
+      }
     }
 
     let feedbackRows: Array<Record<string, unknown>> = [];
-    if (hasValue(userId)) {
+    if (validUserId) {
       try {
         feedbackRows = (await query(
           `SELECT id, category, subject, status, created_at
@@ -138,7 +146,7 @@ export async function GET(req: NextRequest) {
            WHERE user_id = ?
            ORDER BY created_at DESC
            LIMIT 300`,
-          [Number(userId)]
+          [validUserId]
         )) as Array<Record<string, unknown>>;
       } catch (e: unknown) {
         if (!isTableMissingError(e)) throw e;
@@ -146,7 +154,7 @@ export async function GET(req: NextRequest) {
     }
 
     let ticketRows: Array<Record<string, unknown>> = [];
-    if (hasValue(userId)) {
+    if (validUserId) {
       try {
         ticketRows = (await query(
           `SELECT id, ticket_id, subject, type, priority, status, created_at, updated_at
@@ -154,7 +162,7 @@ export async function GET(req: NextRequest) {
            WHERE user_id = ?
            ORDER BY created_at DESC
            LIMIT 300`,
-          [Number(userId)]
+          [validUserId]
         )) as Array<Record<string, unknown>>;
       } catch (e: unknown) {
         if (!isTableMissingError(e)) throw e;
