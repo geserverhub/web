@@ -7,15 +7,7 @@ import {
   insertDailyWorkReport,
   deleteDailyWorkReport,
 } from '@/lib/erp-daily-work';
-
-function parseErpUser(req) {
-  try {
-    const raw = req.headers.get('x-erp-user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+import { parseErpUserHeader } from '@/lib/erp-user-header';
 
 const DAILY_WORK_PAGES = new Set([
   'exec-daily-work-calendar',
@@ -41,7 +33,7 @@ async function canAccess(user, pageId) {
 }
 
 export async function GET(req) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -67,7 +59,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

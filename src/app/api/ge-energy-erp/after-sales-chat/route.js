@@ -8,17 +8,9 @@ import {
   listThreadMessages,
   markThreadReadByAgent,
 } from '@/lib/ge-after-sales-chat-db';
+import { parseErpUserHeader } from '@/lib/erp-user-header';
 
 const PAGE_ID = 'after-sales-chat-live';
-
-function parseErpUser(req) {
-  try {
-    const raw = req.headers.get('x-erp-user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
 
 async function userCanAccessPage(user, pageId) {
   if (!user?.userId) return false;
@@ -37,7 +29,7 @@ async function userCanAccessPage(user, pageId) {
 }
 
 export async function GET(req) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -96,7 +88,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

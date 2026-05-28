@@ -23,6 +23,12 @@ function trendLabel(t, dir) {
   return t.trendStable;
 }
 
+function maxScore(items) {
+  if (!items?.length) return 1;
+  const m = Math.max(...items.map((i) => Number(i.kpi_score || 0)));
+  return m > 0 ? m : 1;
+}
+
 export default function ErpExecutivePanel({ lang, pageId }) {
   const t = ERP_EXEC_COPY[lang] || ERP_EXEC_COPY.th;
   const [loading, setLoading] = useState(true);
@@ -120,6 +126,63 @@ export default function ErpExecutivePanel({ lang, pageId }) {
                   </ul>
                 </article>
               ))}
+            </div>
+          </section>
+          <section className="geerp-exec-block">
+            <h2 className="geerp-subtitle">{t.reportCardsTitle}</h2>
+            <div className="geerp-exec-report-grid">
+              {(data.departments || []).map((d) => {
+                const s = d.reportSummary || {};
+                return (
+                  <article key={`${d.id}-report`} className="geerp-exec-report-card">
+                    <h3>{deptName(d, lang)}</h3>
+                    <div className="geerp-exec-report-stats">
+                      <p>
+                        <span>{t.dailyReportCount}</span>
+                        <strong>{Number(s.dailyCount || 0).toLocaleString()}</strong>
+                      </p>
+                      <p>
+                        <span>{t.monthlySummaryCount}</span>
+                        <strong>{Number(s.monthlyCount || 0).toLocaleString()}</strong>
+                      </p>
+                      <p>
+                        <span>{t.totalHours}</span>
+                        <strong>{Number(s.totalHours || 0).toLocaleString()}</strong>
+                      </p>
+                    </div>
+                    <div className="geerp-exec-report-last">
+                      <span>{t.latestUpdate}</span>
+                      <strong>{s.latestReportDate || '-'}</strong>
+                      {s.latestWorkSummary ? (
+                        <p className="geerp-exec-report-note">{s.latestWorkSummary}</p>
+                      ) : (
+                        <p className="geerp-exec-report-note">{t.noReportYet}</p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+          <section className="geerp-exec-block">
+            <h2 className="geerp-subtitle">{t.kpiChartTitle}</h2>
+            <div className="geerp-exec-chart">
+              {(data.chart || []).map((row) => {
+                const max = maxScore(data.chart || []);
+                const score = Number(row.kpi_score || 0);
+                const pct = Math.max(4, Math.round((score / max) * 100));
+                const name =
+                  lang === 'th' ? row.dept_name_th || row.dept_name_en : row.dept_name_en || row.dept_name_th;
+                return (
+                  <div className="geerp-exec-chart-row" key={row.dept_code}>
+                    <div className="geerp-exec-chart-label">{name}</div>
+                    <div className="geerp-exec-chart-track">
+                      <div className="geerp-exec-chart-bar" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="geerp-exec-chart-value">{score.toLocaleString()}</div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         </>

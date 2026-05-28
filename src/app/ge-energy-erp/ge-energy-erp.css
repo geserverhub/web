@@ -1005,6 +1005,116 @@
   white-space: nowrap;
 }
 
+.geerp-exec-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.85rem;
+}
+
+.geerp-exec-report-card {
+  background: var(--geerp-bg-elevated);
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 0.95rem;
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-exec-report-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--geerp-slate-800);
+}
+
+.geerp-exec-report-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.geerp-exec-report-stats p {
+  margin: 0;
+  padding: 0.45rem 0.4rem;
+  border-radius: 6px;
+  background: var(--geerp-bg-subtle);
+  border: 1px solid var(--geerp-border);
+}
+
+.geerp-exec-report-stats span {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--geerp-slate-500);
+}
+
+.geerp-exec-report-stats strong {
+  font-size: 0.84rem;
+  color: var(--geerp-slate-900);
+}
+
+.geerp-exec-report-last {
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--geerp-border);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.geerp-exec-report-last span {
+  font-size: 0.66rem;
+  color: var(--geerp-slate-500);
+}
+
+.geerp-exec-report-last strong {
+  font-size: 0.8rem;
+  color: var(--geerp-slate-700);
+}
+
+.geerp-exec-report-note {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--geerp-slate-600);
+  line-height: 1.45;
+}
+
+.geerp-exec-chart {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.geerp-exec-chart-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(140px, 3fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.geerp-exec-chart-label {
+  font-size: 0.75rem;
+  color: var(--geerp-slate-700);
+  font-weight: 600;
+}
+
+.geerp-exec-chart-track {
+  height: 10px;
+  background: var(--geerp-slate-200);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.geerp-exec-chart-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--geerp-accent), var(--geerp-slate-500));
+}
+
+.geerp-exec-chart-value {
+  min-width: 52px;
+  text-align: right;
+  font-size: 0.74rem;
+  color: var(--geerp-slate-900);
+  font-weight: 700;
+}
+
 .geerp-exec-actions {
   display: flex;
   flex-wrap: wrap;

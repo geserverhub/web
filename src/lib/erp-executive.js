@@ -40,6 +40,71 @@ async function deptIdByCode(code) {
   return row?.id ?? null;
 }
 
+async function getDeptReportSummary(periodKey) {
+  const [year, month] = String(periodKey || currentPeriodKey())
+    .split('-')
+    .map((v) => Number(v));
+  const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+  const monthEndDate = new Date(year, month, 0).getDate();
+  const monthEnd = `${year}-${String(month).padStart(2, '0')}-${String(monthEndDate).padStart(2, '0')}`;
+
+  const summary = await queryGeserverhub(
+    `SELECT d.id AS department_id, d.code AS dept_code,
+            COUNT(r.id) AS daily_count,
+            COUNT(DISTINCT r.report_date) AS active_days,
+            COALESCE(SUM(r.hours_worked), 0) AS total_hours,
+            MAX(r.report_date) AS latest_report_date
+     FROM ge_erp_department d
+     LEFT JOIN ge_erp_daily_work_report r
+       ON r.department_id = d.id
+      AND r.report_date BETWEEN ? AND ?
+     WHERE d.code IN (${DEPT_CODES.map(() => '?').join(',')})
+     GROUP BY d.id, d.code`,
+    [monthStart, monthEnd, ...DEPT_CODES]
+  );
+
+  const latestRows = await queryGeserverhub(
+    `SELECT d.id AS department_id, r.report_date, r.work_summary, r.reporter_name, r.hours_worked
+     FROM ge_erp_department d
+     LEFT JOIN ge_erp_daily_work_report r
+       ON r.department_id = d.id
+      AND r.report_date BETWEEN ? AND ?
+     WHERE d.code IN (${DEPT_CODES.map(() => '?').join(',')})
+       AND r.id = (
+         SELECT rr.id
+         FROM ge_erp_daily_work_report rr
+         WHERE rr.department_id = d.id
+           AND rr.report_date BETWEEN ? AND ?
+         ORDER BY rr.report_date DESC, rr.id DESC
+         LIMIT 1
+       )`,
+    [monthStart, monthEnd, ...DEPT_CODES, monthStart, monthEnd]
+  );
+
+  const map = new Map();
+  for (const row of summary) {
+    map.set(row.department_id, {
+      dailyCount: Number(row.daily_count || 0),
+      monthlyCount: Number(row.active_days || 0),
+      totalHours: Number(row.total_hours || 0),
+      latestReportDate: row.latest_report_date ? String(row.latest_report_date).slice(0, 10) : null,
+      latestWorkSummary: '',
+      latestReporter: '',
+      latestHours: null,
+    });
+  }
+  for (const row of latestRows) {
+    const current = map.get(row.department_id) || {};
+    map.set(row.department_id, {
+      ...current,
+      latestWorkSummary: row.work_summary || '',
+      latestReporter: row.reporter_name || '',
+      latestHours: row.hours_worked != null ? Number(row.hours_worked) : null,
+    });
+  }
+  return map;
+}
+
 export async function syncApprovalQueue() {
   const hrId = await deptIdByCode('hr');
   const accountingId = await deptIdByCode('accounting');
@@ -419,6 +484,7 @@ export async function getDeptKpiDashboard(periodKey = currentPeriodKey()) {
     DEPT_CODES
   );
 
+  const reportSummaryByDept = await getDeptReportSummary(periodKey);
   const byDept = [];
   for (const d of depts) {
     const metrics = await queryGeserverhub(
@@ -428,7 +494,19 @@ export async function getDeptKpiDashboard(periodKey = currentPeriodKey()) {
        ORDER BY metric_key`,
       [d.id, periodKey]
     );
-    byDept.push({ ...d, metrics });
+    byDept.push({
+      ...d,
+      metrics,
+      reportSummary: reportSummaryByDept.get(d.id) || {
+        dailyCount: 0,
+        monthlyCount: 0,
+        totalHours: 0,
+        latestReportDate: null,
+        latestWorkSummary: '',
+        latestReporter: '',
+        latestHours: null,
+      },
+    });
   }
 
   const company = await queryGeserverhub(
@@ -439,7 +517,19 @@ export async function getDeptKpiDashboard(periodKey = currentPeriodKey()) {
     [periodKey]
   );
 
-  return { periodKey, departments: byDept, company };
+  const chart = byDept.map((d) => {
+    const vals = (d.metrics || []).map((m) => Number(m.metric_value || 0));
+    const avg = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+    return {
+      dept_code: d.code,
+      dept_name_th: d.name_th,
+      dept_name_en: d.name_en,
+      kpi_score: Number(avg.toFixed(2)),
+      metric_count: vals.length,
+    };
+  });
+
+  return { periodKey, departments: byDept, company, chart };
 }
 
 export async function getPendingApprovals() {

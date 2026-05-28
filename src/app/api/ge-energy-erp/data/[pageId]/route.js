@@ -3,15 +3,7 @@ import { queryGeserverhub } from '@/lib/geserverhub-db';
 import { getAllErpPages, ERP_ADMIN_PAGE_IDS } from '@/lib/erp-pages';
 import { getErpPageData, ERP_REPORT_PAGES } from '@/lib/erp-page-registry';
 import { ensureGeErpSchema, insertErpRow, listErpRows } from '@/lib/erp-db';
-
-function parseErpUser(req) {
-  try {
-    const raw = req.headers.get('x-erp-user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+import { parseErpUserHeader } from '@/lib/erp-user-header';
 
 async function resolvePageId(req, params) {
   const resolved = await params;
@@ -71,7 +63,7 @@ async function userCanAccessPage(user, pageId) {
 }
 
 export async function GET(req, { params }) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -96,7 +88,7 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
