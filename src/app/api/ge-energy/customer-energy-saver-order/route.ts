@@ -2,39 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { queryGe } from '@/lib/mysql-ge';
+import { ensureEnergySaverOrderSchema } from '@/lib/ge-energy/ensure-energy-saver-schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
-
-async function ensureSchema() {
-  await queryGe(`
-    CREATE TABLE IF NOT EXISTS ge_customer_energy_saver_orders (
-      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-      order_no VARCHAR(64) NOT NULL,
-      customer_name VARCHAR(255) NOT NULL,
-      shipping_address TEXT NOT NULL,
-      email VARCHAR(255) NOT NULL,
-      phone VARCHAR(80) NOT NULL,
-      breaker_size VARCHAR(64) NOT NULL,
-      machine_kva VARCHAR(64) NOT NULL,
-      quantity INT NOT NULL DEFAULT 1,
-      unit_price INT NOT NULL DEFAULT 0,
-      total_price INT NOT NULL DEFAULT 0,
-      site_photo_path VARCHAR(512) NOT NULL,
-      payment_slip_path VARCHAR(512) NOT NULL,
-      monthly_bill_paths_json LONGTEXT NULL,
-      monthly_bill_count INT NOT NULL DEFAULT 0,
-      status VARCHAR(32) NOT NULL DEFAULT 'pending',
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY uq_customer_energy_saver_order_no (order_no),
-      KEY idx_customer_energy_saver_created_at (created_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  `);
-}
 
 function cleanFileName(name: string) {
   return String(name || 'file').replace(/[^\w.\-]+/g, '_');
@@ -55,7 +28,7 @@ async function saveUpload(orderNo: string, subdir: string, file: File) {
 
 export async function POST(req: NextRequest) {
   try {
-    await ensureSchema();
+    await ensureEnergySaverOrderSchema();
     const form = await req.formData();
 
     const customerName = String(form.get('customerName') || '').trim();
