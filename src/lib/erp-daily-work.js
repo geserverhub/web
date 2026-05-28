@@ -2,7 +2,11 @@ import { queryGeserverhub } from '@/lib/geserverhub-db';
 import { ensureExecutiveSchema } from '@/lib/erp-executive';
 
 export async function ensureDailyWorkSchema() {
-  await ensureExecutiveSchema();
+  try {
+    await ensureExecutiveSchema();
+  } catch (err) {
+    console.warn('[daily-work] ensureExecutiveSchema failed (continuing):', err?.message);
+  }
 }
 
 function padMonth(y, m) {
@@ -90,7 +94,9 @@ export async function insertDailyWorkReport(payload, createdBy) {
     ]
   );
 
-  return { id: result[0]?.insertId };
+  // queryGeserverhub returns OkPacket (with insertId) for INSERT, or wraps it in an array
+  const insertId = result?.insertId ?? result?.[0]?.insertId;
+  return { id: insertId };
 }
 
 export async function deleteDailyWorkReport(id) {
