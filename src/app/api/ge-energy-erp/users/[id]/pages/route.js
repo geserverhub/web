@@ -45,31 +45,27 @@ async function saveUserPages(userId, pages) {
 }
 
 export async function GET(req, { params }) {
-  if (!assertDeveloper(req)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const userId = params.id;
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
-
   try {
+    if (!assertDeveloper(req)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const { id: userId } = await params;
+    if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
     const pages = await loadUserPages(userId);
     return NextResponse.json({ pages });
   } catch (err) {
     console.error('[ge-energy-erp/users/pages GET]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
 
 export async function PUT(req, { params }) {
-  if (!assertDeveloper(req)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const userId = params.id;
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
-
   try {
+    if (!assertDeveloper(req)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const { id: userId } = await params;
+    if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
     const { pages } = await req.json();
     if (!pages || typeof pages !== 'object') {
       return NextResponse.json({ error: 'pages object required' }, { status: 400 });
@@ -79,6 +75,6 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ success: true, pages: saved });
   } catch (err) {
     console.error('[ge-energy-erp/users/pages PUT]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
