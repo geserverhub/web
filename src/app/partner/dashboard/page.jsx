@@ -21,7 +21,7 @@ const LANGS = {
     monthlyTitle: (_y) => `ยอดขายรายเดือน`,
     profitTitle: (y) => `กำไรสุทธิรายเดือน (หลังหัก VAT 10%) — ${y}`,
     profitCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
-    vatNote: "สูตร: (รายรับ − รายจ่าย) × 90% ÷ 2",
+    vatNote: "สูตร: (รายรับ × 90% − รายจ่าย) ÷ 2",
     categoryTitle: "รายรับแยกตามประเภท",
     kpi: {
       title: (y) => `🎯 KPI — ปี ${y}`,
@@ -43,7 +43,7 @@ const LANGS = {
       expRatioSub: "ค่าใช้จ่าย ÷ รายรับ",
       netProfit: "กำไรสุทธิ",
       perPerson: "กำไรต่อคน (หลัง VAT)",
-      perPersonSub: "(กำไรสุทธิ × 90%) ÷ 2",
+      perPersonSub: "(รายรับ × 90% − รายจ่าย) ÷ 2",
       vat16: "VAT งวด ม.ค.–มิ.ย.",
       vat16sub: "ชำระ ก.ค.",
       vat712: "VAT งวด ก.ค.–ธ.ค.",
@@ -205,7 +205,7 @@ const LANGS = {
     monthlyTitle: (y) => `월별 매출 — ${y}`,
     profitTitle: (y) => `월별 순이익 (VAT 10% 공제 후) — ${y}`,
     profitCols: { month: "월", revenue: "매출 (₩)", expense: "지출 (₩)", net: "순이익 (₩)", afterVat: "VAT 10% 후 (₩)", perPerson: "1인당 (₩)" },
-    vatNote: "공식: (매출 − 지출) × 90% ÷ 2",
+    vatNote: "공식: (매출 × 90% − 지출) ÷ 2",
     categoryTitle: "카테고리별 매출",
     kpi: {
       title: (y) => `🎯 KPI — ${y}년`,
@@ -227,7 +227,7 @@ const LANGS = {
       expRatioSub: "지출 ÷ 매출",
       netProfit: "순이익",
       perPerson: "1인당 순이익 (VAT 후)",
-      perPersonSub: "(순이익 × 90%) ÷ 2",
+      perPersonSub: "(매출 × 90% − 지출) ÷ 2",
       vat16: "부가세 1월–6월",
       vat16sub: "납부: 7월",
       vat712: "부가세 7월–12월",
@@ -987,7 +987,7 @@ export default function PartnerDashboard() {
                   <tbody>
                     {(monthlyRevenue || []).map(m => {
                       const net = m.revenue - m.expense;
-                      const afterVat = net * 0.9;
+                      const afterVat = (m.revenue * 0.9) - m.expense;
                       const perPerson = afterVat / 2;
                       const hasData = m.revenue > 0 || m.expense > 0;
                       return (
@@ -1648,14 +1648,15 @@ export default function PartnerDashboard() {
         {tab === "vat" && (() => {
           const vatData = (monthlyRevenue || []).map(m => {
             const net = Math.max(0, m.revenue - m.expense);
-            return { ...m, net, vat: Math.round(net * 0.1) };
+            const base = Math.max(0, m.revenue);
+            return { ...m, net, base, vat: Math.round(base * 0.1) };
           });
           const h1 = vatData.filter(m => m.month <= 6);
           const h2 = vatData.filter(m => m.month > 6);
           const h1Vat = h1.reduce((s, m) => s + m.vat, 0);
           const h2Vat = h2.reduce((s, m) => s + m.vat, 0);
-          const h1Base = h1.reduce((s, m) => s + m.net, 0);
-          const h2Base = h2.reduce((s, m) => s + m.net, 0);
+          const h1Base = h1.reduce((s, m) => s + m.base, 0);
+          const h2Base = h2.reduce((s, m) => s + m.base, 0);
 
           // Next due date calculation
           const today = new Date();
@@ -2013,11 +2014,11 @@ export default function PartnerDashboard() {
           const bestMonthName = bestMonth ? new Date(year, bestMonth.month - 1, 1).toLocaleString(t.locale, { month: "long" }) : "—";
 
           // VAT (10% of net profit)
-          const vat16 = months.filter(m => m.month >= 1 && m.month <= 6).reduce((s, m) => s + Math.max(0, (m.revenue - m.expense) * 0.1), 0);
-          const vat712 = months.filter(m => m.month >= 7 && m.month <= 12).reduce((s, m) => s + Math.max(0, (m.revenue - m.expense) * 0.1), 0);
+          const vat16 = months.filter(m => m.month >= 1 && m.month <= 6).reduce((s, m) => s + Math.max(0, m.revenue * 0.1), 0);
+          const vat712 = months.filter(m => m.month >= 7 && m.month <= 12).reduce((s, m) => s + Math.max(0, m.revenue * 0.1), 0);
 
           // Income tax (Korean progressive)
-          const perPersonNet = Math.max(0, netProfit * 0.9 / 2);
+          const perPersonNet = Math.max(0, ((totalRev * 0.9) - totalExp) / 2);
           function krTax(net) {
             if (net <= 0) return 0;
             const b = [[14e6,.06],[50e6,.15],[88e6,.24],[150e6,.35],[300e6,.38],[500e6,.40],[1e9,.42],[Infinity,.45]];
@@ -2294,7 +2295,7 @@ export default function PartnerDashboard() {
                     { label: ko.stats.totalRevenue, value: `₩${fmtNum(totalRev, koLocale)}` },
                     { label: ko.stats.totalExpense, value: `₩${fmtNum(totalExp, koLocale)}` },
                     { label: ko.stats.netProfit, value: `₩${fmtNum(totalNet, koLocale)}` },
-                    { label: "VAT 10%", value: `₩${fmtNum(Math.round(Math.max(0,totalNet)*0.1), koLocale)}` },
+                    { label: "VAT 10%", value: `₩${fmtNum(Math.round(Math.max(0,totalRev)*0.1), koLocale)}` },
                   ].map(c => <div key={c.label} className="pr-card" style={P.card}><div className="pr-label" style={P.label}>{c.label}</div><div className="pr-value" style={P.value}>{c.value}</div></div>)}
                 </div>
                 <SectionTitle>{pr.sections.monthly}</SectionTitle>
@@ -2307,7 +2308,7 @@ export default function PartnerDashboard() {
                   <tbody>
                     {filteredMonths.map(m => {
                       const net = m.revenue - m.expense;
-                      const vat = Math.round(Math.max(0, net) * 0.1);
+                      const vat = Math.round(Math.max(0, m.revenue) * 0.1);
                       const perPerson = Math.round((net - vat) / 2);
                       const hasData = m.revenue > 0 || m.expense > 0;
                       return (
@@ -2326,8 +2327,8 @@ export default function PartnerDashboard() {
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalRev, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalExp, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalNet, koLocale)}</td>
-                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(Math.max(0,totalNet)*0.1), koLocale)}</td>
-                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round((totalNet-Math.max(0,totalNet)*0.1)/2), koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(Math.max(0,totalRev)*0.1), koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(((totalRev * 0.9) - totalExp)/2), koLocale)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -2413,7 +2414,7 @@ export default function PartnerDashboard() {
                 <div style={{ marginBottom: 16 }}>
                   {[
                     { label: ko.stats.netProfit, value: `₩${fmtNum(annualNet, koLocale)}` },
-                    { label: "VAT 공제 후", value: `₩${fmtNum(Math.round(annualNet*0.9), koLocale)}` },
+                    { label: "VAT 공제 후", value: `₩${fmtNum(Math.round((totalRev * 0.9) - totalExp), koLocale)}` },
                   ].map(c => <div key={c.label} className="pr-card" style={P.card}><div className="pr-label" style={P.label}>{c.label}</div><div className="pr-value" style={P.value}>{c.value}</div></div>)}
                 </div>
                 <SectionTitle>{pr.perPersonTitle}</SectionTitle>
