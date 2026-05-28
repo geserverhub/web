@@ -294,12 +294,12 @@ export async function rebuildKpiSnapshots(periodKey = currentPeriodKey()) {
       { key: 'quality_pass_rate', label: 'QC pass rate', value: passRate, unit: '%' },
     ],
     marketing: [
-      { key: 'sales_value', label: 'Sales value', value: sales?.v || 0, unit: 'THB' },
+      { key: 'sales_value', label: 'Sales value', value: sales?.v || 0, unit: 'KRW' },
       { key: 'sales_orders', label: 'Sales orders', value: sales?.cnt || 0, unit: 'orders' },
     ],
     accounting: [
-      { key: 'invoiced', label: 'Invoiced', value: invoices?.v || 0, unit: 'THB' },
-      { key: 'expenses', label: 'Expenses', value: expenses?.v || 0, unit: 'THB' },
+      { key: 'invoiced', label: 'Invoiced', value: invoices?.v || 0, unit: 'KRW' },
+      { key: 'expenses', label: 'Expenses', value: expenses?.v || 0, unit: 'KRW' },
     ],
     hr: [
       { key: 'headcount', label: 'Headcount', value: hr?.cnt || 0, unit: 'people' },
@@ -331,24 +331,24 @@ export async function rebuildKpiSnapshots(periodKey = currentPeriodKey()) {
   const revenue = Number(invoices?.v || 0);
   const exp = Number(expenses?.v || 0);
   const companyMetrics = [
-    { key: 'total_revenue', label: 'Total revenue (invoiced)', value: revenue, unit: 'THB' },
-    { key: 'total_expenses', label: 'Total expenses', value: exp, unit: 'THB' },
-    { key: 'net_indicator', label: 'Net (revenue − expenses)', value: revenue - exp, unit: 'THB' },
-    { key: 'sales_pipeline', label: 'Sales pipeline value', value: sales?.v || 0, unit: 'THB' },
+    { key: 'total_revenue', label: 'Total revenue (invoiced)', value: revenue, unit: 'KRW' },
+    { key: 'total_expenses', label: 'Total expenses', value: exp, unit: 'KRW' },
+    { key: 'net_indicator', label: 'Net (revenue − expenses)', value: revenue - exp, unit: 'KRW' },
+    { key: 'sales_pipeline', label: 'Sales pipeline value', value: sales?.v || 0, unit: 'KRW' },
     { key: 'pending_approvals', label: 'Pending approvals', value: pending?.cnt || 0, unit: 'items' },
     { key: 'company_headcount', label: 'Headcount', value: hr?.cnt || 0, unit: 'people' },
   ];
 
+  // MySQL UNIQUE KEY doesn't deduplicate NULL department_id rows, so delete before re-insert
+  await queryGeserverhub(
+    `DELETE FROM ge_erp_kpi_snapshot WHERE department_id IS NULL AND period_key = ?`,
+    [periodKey]
+  );
   for (const m of companyMetrics) {
     await queryGeserverhub(
       `INSERT INTO ge_erp_kpi_snapshot
         (department_id, period_key, metric_key, metric_label, metric_value, unit)
-       VALUES (NULL, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-         metric_label = VALUES(metric_label),
-         metric_value = VALUES(metric_value),
-         unit = VALUES(unit),
-         updated_at = NOW()`,
+       VALUES (NULL, ?, ?, ?, ?, ?)`,
       [periodKey, m.key, m.label, m.value, m.unit]
     );
   }
@@ -381,7 +381,7 @@ export async function regenerateAiInsights(periodKey = currentPeriodKey()) {
     department_id: null,
     period_key: periodKey,
     title: 'Company financial snapshot',
-    summary: `Revenue (invoiced) ${revenue.toLocaleString()} THB, expenses ${expenses.toLocaleString()} THB. Estimated margin ${margin.toFixed(1)}%.`,
+    summary: `Revenue (invoiced) ₩${revenue.toLocaleString()}, expenses ₩${expenses.toLocaleString()}. Estimated margin ${margin.toFixed(1)}%.`,
     problem_detail: null,
     fix_recommendation:
       margin < 15
@@ -433,7 +433,7 @@ export async function regenerateAiInsights(periodKey = currentPeriodKey()) {
       department_id: await deptIdByCode('accounting'),
       period_key: periodKey,
       title: 'Expenses exceed invoiced revenue',
-      summary: `Expenses ${expenses.toLocaleString()} THB vs revenue ${revenue.toLocaleString()} THB.`,
+      summary: `Expenses ₩${expenses.toLocaleString()} vs revenue ₩${revenue.toLocaleString()}.`,
       problem_detail: 'Cash outflow may exceed recognized income for the current period.',
       fix_recommendation:
         'Freeze non-essential POs, reconcile expense categories, and update sales forecast with marketing.',
