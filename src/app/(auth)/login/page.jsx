@@ -85,6 +85,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [logoOk, setLogoOk] = useState(true);
+  const [checking, setChecking] = useState(true);
 
   const t = copy[lang] || copy.th;
 
@@ -92,9 +93,13 @@ export default function LoginPage() {
     fetch("/api/auth/session")
       .then((r) => r.json())
       .then((s) => {
-        if (s?.user) window.location.href = MCT_PRODUCT_PATH;
+        if (s?.user) {
+          window.location.href = MCT_PRODUCT_PATH;
+        } else {
+          setChecking(false);
+        }
       })
-      .catch(() => {});
+      .catch(() => setChecking(false));
   }, []);
 
   async function handleSubmit(e) {
@@ -121,6 +126,14 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checking) {
+    return (
+      <div className="hub-login-page" style={{ alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#86efac", fontSize: 14, fontWeight: 600 }}>กำลังตรวจสอบ...</div>
+      </div>
+    );
   }
 
   return (
