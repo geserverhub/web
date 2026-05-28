@@ -12,6 +12,7 @@ function deptName(row, lang) {
 
 function formatMetric(value, unit) {
   const n = Number(value);
+  if (unit === 'KRW') return `₩${n.toLocaleString()}`;
   if (unit === 'THB') return `${n.toLocaleString()} THB`;
   if (unit === '%') return `${n}%`;
   return `${n.toLocaleString()}${unit ? ` ${unit}` : ''}`;
