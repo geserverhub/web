@@ -1,13 +1,19 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { geEnergyTechApiUrl, portalHubHref } from '@/lib/ge-energy-tech-api';
 import {
+  buildOrderTimeline,
+  getOrderStatusLabels,
+  getOrderStatusLocale,
+} from '@/lib/ge-energy-tech/order-status-i18n';
+import {
   GEET_LANG_OPTIONS,
   getTrackingCopy,
   readGeetLang,
+  writeGeetLang,
 } from '@/lib/ge-energy-tech/customer-tools-i18n';
 import '../ge-energy-tech.css';
 import '../ge-energy-tech-auth.css';
@@ -17,6 +23,16 @@ function statusBadgeClass(statusKey) {
   if (statusKey === 'shipped') return 'get-track-status-badge get-track-status-badge--shipped';
   if (statusKey === 'pending') return 'get-track-status-badge get-track-status-badge--pending';
   return 'get-track-status-badge';
+}
+
+function localizeOrderResult(order, lang) {
+  if (!order?.statusKey) return order;
+  const labels = getOrderStatusLabels(lang);
+  return {
+    ...order,
+    status: labels[order.statusKey] || order.status,
+    timeline: buildOrderTimeline(order.statusKey, labels),
+  };
 }
 
 export default function ShippingTrackingPage() {
@@ -32,7 +48,17 @@ export default function ShippingTrackingPage() {
     setLang(readGeetLang());
   }, []);
 
-  const t = getTrackingCopy(lang);
+  useEffect(() => {
+    setResult((prev) => (prev ? localizeOrderResult(prev, lang) : null));
+  }, [lang]);
+
+  const t = useMemo(() => getTrackingCopy(lang), [lang]);
+  const dateLocale = useMemo(() => getOrderStatusLocale(lang), [lang]);
+
+  function handleLangChange(code) {
+    setLang(code);
+    writeGeetLang(code);
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -54,7 +80,7 @@ export default function ShippingTrackingPage() {
         setError(data?.error || t.notFound);
         return;
       }
-      setResult(data.order);
+      setResult(localizeOrderResult(data.order, lang));
     } catch {
       setError(t.notFound);
     } finally {
@@ -68,28 +94,23 @@ export default function ShippingTrackingPage() {
         <div className="get-track-brand">
           <Image
             src="/ge-energyTech/138568-transparent.png"
-            alt="GE Energy Tech"
+            alt={t.brandName}
             width={48}
             height={48}
             priority
           />
-          <span>GE Energy Tech</span>
+          <span>{t.brandName}</span>
         </div>
 
         <div className="get-track-card">
-          <div className="get-auth-lang" role="group" aria-label="Language">
+          <div className="get-auth-lang" role="group" aria-label={t.langLabel}>
             <div className="get-auth-lang-inner">
               {GEET_LANG_OPTIONS.map((opt) => (
                 <button
                   key={opt.code}
                   type="button"
                   className={opt.code === lang ? 'is-active' : ''}
-                  onClick={() => {
-                    setLang(opt.code);
-                    if (typeof window !== 'undefined') {
-                      window.localStorage.setItem('ge-energy-tech-lang', opt.code);
-                    }
-                  }}
+                  onClick={() => handleLangChange(opt.code)}
                 >
                   {opt.label}
                 </button>
@@ -101,7 +122,7 @@ export default function ShippingTrackingPage() {
           <p className="get-track-sub">{t.sub}</p>
 
           <form onSubmit={onSubmit}>
-            <div className="get-track-tabs" role="tablist">
+            <div className="get-track-tabs" role="tablist" aria-label={t.title}>
               <button
                 type="button"
                 role="tab"
@@ -131,7 +152,7 @@ export default function ShippingTrackingPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="customer@example.com"
+                  placeholder={t.emailPlaceholder}
                   required
                 />
               </div>
@@ -144,16 +165,20 @@ export default function ShippingTrackingPage() {
                   autoComplete="off"
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
-                  placeholder="GE-MTR-…"
+                  placeholder={t.orderPlaceholder}
                   required
                 />
               </div>
             )}
 
-            {error ? <p className="get-track-error" role="alert">{error}</p> : null}
+            {error ? (
+              <p className="get-track-error" role="alert">
+                {error}
+              </p>
+            ) : null}
 
             <button type="submit" className="get-track-submit" disabled={loading}>
-              {loading ? '…' : t.find}
+              {loading ? t.searching : t.find}
             </button>
           </form>
 
@@ -161,19 +186,19 @@ export default function ShippingTrackingPage() {
             <div className="get-track-result">
               <div className="get-track-result-head">
                 <div>
-                  <p style={{ margin: '0 0 6px', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>
-                    {t.orderNo}
-                  </p>
+                  <p className="get-track-result-label">{t.orderNo}</p>
                   <span className="get-track-order-id">{result.orderId}</span>
                 </div>
                 <span className={statusBadgeClass(result.statusKey)}>{result.status}</span>
               </div>
               <p className="get-track-meta">
-                {t.updatedAt}: {new Date(result.updatedAt).toLocaleString()}
+                {t.updatedAt}:{' '}
+                {new Date(result.updatedAt).toLocaleString(dateLocale, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
               </p>
-              <h2 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: 700, color: '#334155' }}>
-                {t.timeline}
-              </h2>
+              <h2 className="get-track-timeline-title">{t.timeline}</h2>
               <ul className="get-track-timeline">
                 {result.timeline.map((step) => (
                   <li key={step.statusKey || step.step} className={step.done ? 'is-done' : ''}>
@@ -191,10 +216,10 @@ export default function ShippingTrackingPage() {
             <Link href="/ge-energy-tech" className="get-track-back">
               ← {t.back}
             </Link>
-            <nav className="get-track-hub-links" aria-label="Platform">
-              <a href={portalHubHref('/register-geet')}>Register</a>
-              <a href={portalHubHref('/ge-energy-tech/login')}>Sign In</a>
-              <a href={portalHubHref('/ge-energy-erp-login')}>Admin</a>
+            <nav className="get-track-hub-links" aria-label={t.platformNav}>
+              <a href={portalHubHref('/register-geet')}>{t.register}</a>
+              <a href={portalHubHref('/ge-energy-tech/login')}>{t.signIn}</a>
+              <a href={portalHubHref('/ge-energy-erp-login')}>{t.admin}</a>
             </nav>
           </footer>
         </div>
