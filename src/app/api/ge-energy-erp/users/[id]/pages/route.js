@@ -44,12 +44,13 @@ async function saveUserPages(userId, pages) {
   }
 }
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   try {
     if (!assertDeveloper(req)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const { id: userId } = await params;
+    const p = await Promise.resolve(context?.params);
+    const userId = p?.id;
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
     const pages = await loadUserPages(userId);
     return NextResponse.json({ pages });
@@ -59,12 +60,13 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   try {
     if (!assertDeveloper(req)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    const { id: userId } = await params;
+    const p = await Promise.resolve(context?.params);
+    const userId = p?.id;
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
     const { pages } = await req.json();
     if (!pages || typeof pages !== 'object') {
