@@ -2428,9 +2428,7 @@ export default function CustomersPage() {
               <div className="cd-card-accent cd-card-accent--monitor" />
               <div className="cd-card-body">
                 <h2 className="cd-card-title">{L(locale, 'ประวัติการทำรายการ', '활동 내역', 'Activity History')}</h2>
-                <p className="cd-card-desc">
-                  {L(locale, 'แสดงทุกรายการที่ผู้ใช้รายนี้ทำกิจกรรมไว้ และแก้ไขรายการที่ยังไม่สมบูรณ์ได้แบบ inline', '이 사용자의 전체 활동 내역 및 미완료 항목 인라인 수정', 'Shows all activities by this user with inline edit for incomplete items')}
-                </p>
+
                 {historyError ? <p className="cd-error">{historyError}</p> : null}
                 {historyLoading ? (
                   <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{L(locale, 'กำลังโหลดประวัติ...', '내역 로딩 중...', 'Loading history...')}</p>
