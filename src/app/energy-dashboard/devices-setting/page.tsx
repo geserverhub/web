@@ -511,6 +511,10 @@ export default function DevicesSettingPage() {
       setCreateMsg('error');
       return;
     }
+    if (!addForm.seriesNo?.trim()) {
+      setCreateMsg('กรุณากรอกหมายเลขซีเรียล / Serial no');
+      return;
+    }
 
     setCreating(true);
     setCreateMsg(null);

@@ -282,6 +282,12 @@ export async function POST(req: NextRequest) {
         error: 'deviceName is required'
       }, { status: 400 })
     }
+    if (!seriesNo || !String(seriesNo).trim()) {
+      return NextResponse.json({
+        success: false,
+        error: 'seriesNo is required'
+      }, { status: 400 })
+    }
 
     const deviceColumns = await getDevicesColumnSet()
     const hasCustomerName = deviceColumns.has('customerName')
@@ -329,6 +335,21 @@ export async function POST(req: NextRequest) {
     if (hasSeriesNo && seriesNo !== undefined) {
       columns.push('series_no')
       values.push(seriesNo)
+    }
+
+    const duplicateRows = await queryGe(
+      `SELECT deviceID
+       FROM devices
+       WHERE LOWER(TRIM(COALESCE(series_no, ''))) = LOWER(TRIM(?))
+         AND LOWER(TRIM(COALESCE(deviceName, ''))) = LOWER(TRIM(?))
+       LIMIT 1`,
+      [String(seriesNo).trim(), String(deviceName).trim()]
+    )
+    if ((duplicateRows as any[]).length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Device serial and model already exists'
+      }, { status: 409 })
     }
 
     columns.push('ipAddress')

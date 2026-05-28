@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import prisma from "@/lib/prisma";
+import { queryGeserverhub } from "@/lib/geserverhub-db";
 import {
   escapeHtml,
   getMissingSmtpEnv,
@@ -34,6 +35,143 @@ function formatDeviceConnection(d) {
   }
   const legacy = String(d.simPhone || "").trim();
   return legacy ? `SIM: ${legacy}` : "—";
+}
+
+async function ensureDeviceRegistrationSchema() {
+  await queryGeserverhub(`
+    CREATE TABLE IF NOT EXISTS ge_platform_device_registration (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      user_id VARCHAR(191) NOT NULL,
+      device_id BIGINT NULL,
+      serial_no VARCHAR(191) NOT NULL,
+      model_name VARCHAR(191) NOT NULL,
+      connection_type VARCHAR(32) NULL,
+      sim_phone VARCHAR(64) NULL,
+      wifi_detail VARCHAR(255) NULL,
+      install_address TEXT NULL,
+      install_postal VARCHAR(32) NULL,
+      install_country VARCHAR(120) NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_ge_platform_registration_user (user_id),
+      UNIQUE KEY uq_ge_platform_registration_device (device_id),
+      UNIQUE KEY uq_ge_platform_registration_serial_model (serial_no, model_name),
+      KEY idx_ge_platform_registration_device (device_id),
+      CONSTRAINT fk_ge_platform_registration_user
+        FOREIGN KEY (user_id) REFERENCES \`User\`(id) ON DELETE CASCADE,
+      CONSTRAINT fk_ge_platform_registration_device
+        FOREIGN KEY (device_id) REFERENCES devices(deviceID) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+}
+
+async function findDeviceBySerialAndModel(serial, model) {
+  const serialNorm = String(serial || "").trim();
+  const modelNorm = String(model || "").trim();
+  if (!serialNorm || !modelNorm) return null;
+  const rows = await queryGeserverhub(
+    `SELECT d.deviceID, d.deviceName, d.series_no, d.location
+     FROM devices d
+     WHERE LOWER(TRIM(COALESCE(d.series_no, ''))) = LOWER(TRIM(?))
+       AND LOWER(TRIM(COALESCE(d.deviceName, ''))) = LOWER(TRIM(?))
+     ORDER BY d.deviceID DESC
+     LIMIT 1`,
+    [serialNorm, modelNorm]
+  );
+  return rows[0] || null;
+}
+
+async function updateDeviceProfile(deviceId, payload) {
+  const cols = await queryGeserverhub(
+    `SELECT COLUMN_NAME
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'devices'`
+  );
+  const colSet = new Set(cols.map((r) => String(r.COLUMN_NAME)));
+  const connectionType = String(payload.connectionType || "").trim();
+  const meterPhone =
+    connectionType === "sim"
+      ? String(payload.simPhone || "").trim()
+      : "";
+  const updates = [];
+  const params = [];
+  if (colSet.has("U_email")) {
+    updates.push("U_email = ?");
+    params.push(payload.email || null);
+  }
+  if (colSet.has("customerName")) {
+    updates.push("customerName = ?");
+    params.push(payload.customerName || null);
+  }
+  if (colSet.has("customerPhone")) {
+    updates.push("customerPhone = ?");
+    params.push(payload.customerPhone || null);
+  }
+  if (colSet.has("customerAddress")) {
+    updates.push("customerAddress = ?");
+    params.push(payload.installAddress || null);
+  }
+  if (colSet.has("location")) {
+    updates.push("location = COALESCE(NULLIF(?, ''), location)");
+    params.push(payload.installCountry || "");
+  }
+  if (colSet.has("phone")) {
+    updates.push("phone = COALESCE(NULLIF(?, ''), phone)");
+    params.push(meterPhone);
+  }
+  if (colSet.has("pass_phone")) {
+    updates.push("pass_phone = COALESCE(NULLIF(?, ''), pass_phone)");
+    params.push(meterPhone);
+  }
+  if (colSet.has("updated_at")) {
+    updates.push("updated_at = NOW()");
+  }
+  if (!updates.length) return;
+  params.push(deviceId);
+  await queryGeserverhub(`UPDATE devices SET ${updates.join(", ")} WHERE deviceID = ?`, params);
+}
+
+async function upsertMomogeCustomer(deviceId, payload) {
+  const rows = await queryGeserverhub(
+    `SELECT mmgID FROM momoge_cus WHERE device_id = ? ORDER BY mmgID DESC LIMIT 1`,
+    [deviceId]
+  );
+  const existing = rows[0];
+  if (existing?.mmgID) {
+    await queryGeserverhub(
+      `UPDATE momoge_cus
+       SET nameTH = COALESCE(NULLIF(?, ''), nameTH),
+           nameEN = COALESCE(NULLIF(?, ''), nameEN),
+           phone = COALESCE(NULLIF(?, ''), phone),
+           address = COALESCE(NULLIF(?, ''), address),
+           serailID = COALESCE(NULLIF(?, ''), serailID),
+           updated_at = NOW()
+       WHERE mmgID = ?`,
+      [
+        payload.customerName || "",
+        payload.customerNameEn || "",
+        payload.customerPhone || "",
+        payload.installAddress || "",
+        payload.serial || "",
+        existing.mmgID,
+      ]
+    );
+    return;
+  }
+  await queryGeserverhub(
+    `INSERT INTO momoge_cus (device_id, serailID, nameTH, nameEN, phone, address)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      deviceId,
+      payload.serial || null,
+      payload.customerName || null,
+      payload.customerNameEn || null,
+      payload.customerPhone || null,
+      payload.installAddress || null,
+    ]
+  );
 }
 
 async function notifyRegistrationEmail(payload) {
@@ -146,6 +284,21 @@ export async function POST(req) {
       }
     }
 
+    const matchedDevice = await findDeviceBySerialAndModel(
+      device?.serial,
+      device?.model
+    );
+    if (!matchedDevice) {
+      return NextResponse.json(
+        {
+          error:
+            "ไม่พบข้อมูลอุปกรณ์ที่ตรงกับเลขซีเรียลและชื่อรุ่นจากหน้าจัดการอุปกรณ์ กรุณาตรวจสอบข้อมูลอีกครั้ง",
+          code: "DEVICE_NOT_MATCHED",
+        },
+        { status: 400 }
+      );
+    }
+
     const hashed = await bcrypt.hash(password, 12);
     const displayName = [String(name).trim(), company?.trim() ? `(${company.trim()})` : ""]
       .filter(Boolean)
@@ -157,7 +310,7 @@ export async function POST(req) {
         : `sim:${String(device.simPhone || "").trim()}`;
     const deviceNote = ` · device:${device.serial}|${device.model}|${connTag}`;
 
-    await prisma.user.create({
+    const createdUser = await prisma.user.create({
       data: {
         name: `${displayName}${metaNote}${deviceNote}`,
         email: emailNorm,
@@ -178,6 +331,50 @@ export async function POST(req) {
       installPostal: String(device.installPostal).trim(),
       installCountry: String(device.installCountry).trim(),
     };
+
+    await ensureDeviceRegistrationSchema();
+    await queryGeserverhub(
+      `INSERT INTO ge_platform_device_registration
+        (user_id, device_id, serial_no, model_name, connection_type, sim_phone, wifi_detail, install_address, install_postal, install_country)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         device_id = VALUES(device_id),
+         serial_no = VALUES(serial_no),
+         model_name = VALUES(model_name),
+         connection_type = VALUES(connection_type),
+         sim_phone = VALUES(sim_phone),
+         wifi_detail = VALUES(wifi_detail),
+         install_address = VALUES(install_address),
+         install_postal = VALUES(install_postal),
+         install_country = VALUES(install_country),
+         updated_at = NOW()`,
+      [
+        createdUser.id,
+        matchedDevice.deviceID,
+        devicePayload.serial,
+        devicePayload.model,
+        devicePayload.connectionType || null,
+        devicePayload.simPhone || null,
+        devicePayload.wifiDetail || null,
+        devicePayload.installAddress || null,
+        devicePayload.installPostal || null,
+        devicePayload.installCountry || null,
+      ]
+    );
+
+    await updateDeviceProfile(matchedDevice.deviceID, {
+      email: emailNorm,
+      customerName: String(name || "").trim(),
+      customerNameEn: String(name || "").trim(),
+      customerPhone: phone?.trim() || "",
+      ...devicePayload,
+    });
+    await upsertMomogeCustomer(matchedDevice.deviceID, {
+      customerName: String(name || "").trim(),
+      customerNameEn: String(name || "").trim(),
+      customerPhone: phone?.trim() || "",
+      ...devicePayload,
+    });
 
     try {
       await notifyRegistrationEmail({
