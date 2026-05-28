@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS ge_erp_page (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   department_id INT UNSIGNED NOT NULL,
   page_key      VARCHAR(80)  NOT NULL,
-  ui_type       VARCHAR(20)  NOT NULL DEFAULT 'form',
+  ui_type       VARCHAR(64)  NOT NULL DEFAULT 'form',
   table_name    VARCHAR(80)  NULL,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),

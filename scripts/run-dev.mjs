@@ -87,24 +87,30 @@ async function startNextLocal(host = '127.0.0.1') {
 }
 
 async function startNextWsl() {
-  const wslPath = process.env.WSL_PROJECT_DIR || '~/web';
-  const cmd = `cd ${wslPath} && npm run dev`;
+  const wslPath = process.env.WSL_PROJECT_DIR || '/mnt/c/web/web';
+  const cmd = `cd ${wslPath} 2>/dev/null || cd ~/web; npm run dev`;
   console.log('\n[dev] Starting Next.js in WSL (MySQL + APIs)...\n');
   await run('wsl', ['-e', 'bash', '-lc', cmd], { cwd: root });
 }
 
 async function main() {
   if (process.platform === 'win32') {
-    if (process.env.DEV_USE_WSL === '1') {
+    if (process.env.DEV_USE_WSL === '1' || process.env.DEV_USE_WSL === 'true') {
       await startNextWsl();
       return;
     }
     const dbOk = await canConnectLocalDb();
-    console.log(
-      dbOk
-        ? '[dev] Windows MySQL OK — homepage + APIs on localhost.'
-        : '[dev] Windows MySQL unavailable — homepage uses fallback data; APIs need npm run dev:wsl'
-    );
+    if (!dbOk) {
+      console.log(
+        '[dev] Windows MySQL unavailable — starting Next.js in WSL (login/API need goeunserverhub there).'
+      );
+      console.log(
+        '[dev] If login still fails in WSL, run: cd /mnt/c/web/web && export MYSQL_ROOT_PASSWORD=... && npm run db:fix-wsl'
+      );
+      await startNextWsl();
+      return;
+    }
+    console.log('[dev] Windows MySQL OK — homepage + APIs on localhost.');
     await startNextLocal('127.0.0.1');
     return;
   }

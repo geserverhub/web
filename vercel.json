@@ -59,6 +59,16 @@
       "source": "/online-classroom/:path*",
       "destination": "https://strong-dory-enabled.ngrok-free.app/online-classroom/:path*",
       "permanent": false
+    },
+    {
+      "source": "/shipping-tracking",
+      "destination": "https://strong-dory-enabled.ngrok-free.app/ge-energy-tech/shipping-tracking",
+      "permanent": false
+    },
+    {
+      "source": "/ge-energy-tech/shipping-tracking",
+      "destination": "https://strong-dory-enabled.ngrok-free.app/ge-energy-tech/shipping-tracking",
+      "permanent": false
     }
   ]
 }

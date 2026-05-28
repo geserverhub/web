@@ -68,6 +68,14 @@ s = s.replace(/import { publicHubHref } from '@\/lib\/data';\r?\n/, '');
 s = s.replaceAll('publicHubHref(', 'portalHref(');
 s = s.replaceAll('/ge-energy-tech/shipping-tracking', '/shipping-tracking');
 s = s.replaceAll('/ge-energy-tech/after-sales-chat', '/after-sales-chat');
+s = s.replaceAll(
+  'href="/shipping-tracking"',
+  `href={portalHref('/ge-energy-tech/shipping-tracking')}`
+);
+s = s.replaceAll(
+  'href="/after-sales-chat"',
+  `href={portalHref('/ge-energy-tech/after-sales-chat')}`
+);
 s = s.replace(
   'export default function GeEnergyTechClientPage()',
   'export default function GePage()'

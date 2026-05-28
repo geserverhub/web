@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { getPrisma } from '@/lib/prisma';
+import { formatDbConnectError } from '@/lib/db-connect-error';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 
 export async function POST(request) {
@@ -162,16 +163,11 @@ export async function POST(request) {
     const msg = String(err?.message || '');
     if (
       msg.includes('Authentication failed') ||
+      msg.includes('denied access') ||
       msg.includes('credentials') ||
       err?.name === 'PrismaClientInitializationError'
     ) {
-      return NextResponse.json(
-        {
-          error:
-            'Database connection failed. Start dev in WSL (npm run dev:wsl) or create goeunserverhub DB user on Windows MySQL.',
-        },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: formatDbConnectError(err) }, { status: 503 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

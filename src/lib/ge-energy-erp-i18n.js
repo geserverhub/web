@@ -17,14 +17,15 @@ export const ERP_COMPANY_NAMES = {
 export const ERP_LOGIN_COPY = {
   th: {
     badge: 'Enterprise ERP',
-    title: 'Admin',
+    title: 'ระบบบริหารองค์กร',
+    formTitle: 'เข้าสู่ระบบ',
     subtitle: 'ศูนย์กลางบัญชี สต็อก การเงิน และรายงานผู้บริหาร',
     modules: ['ผู้บริหาร', 'บัญชี', 'สต็อก', 'HR', 'รายงาน'],
     username: 'ชื่อผู้ใช้',
     password: 'รหัสผ่าน',
     usernamePh: 'กรอกชื่อผู้ใช้',
     passwordPh: 'กรอกรหัสผ่าน',
-    signIn: 'Admin',
+    signIn: 'ผู้ดูแลระบบ',
     signingIn: 'กำลังเข้าสู่ระบบ…',
     register: 'ลงทะเบียนเข้าใช้แพลตฟอร์ม',
     platformSignIn: 'ลงชื่อเข้าใช้แพลตฟอร์ม',
@@ -36,14 +37,15 @@ export const ERP_LOGIN_COPY = {
   },
   en: {
     badge: 'Enterprise ERP',
-    title: 'Admin',
+    title: 'Enterprise Administration',
+    formTitle: 'Sign in',
     subtitle: 'Accounting, inventory, finance and executive reporting hub',
     modules: ['Executive', 'Accounting', 'Inventory', 'HR', 'Reports'],
     username: 'Username',
     password: 'Password',
     usernamePh: 'Enter username',
     passwordPh: 'Enter password',
-    signIn: 'Admin',
+    signIn: 'System Administrator',
     signingIn: 'Signing in…',
     register: 'Register for Platform',
     platformSignIn: 'Sign In to Platform',
@@ -55,14 +57,15 @@ export const ERP_LOGIN_COPY = {
   },
   ko: {
     badge: 'Enterprise ERP',
-    title: 'Admin',
+    title: '기업 관리 시스템',
+    formTitle: '로그인',
     subtitle: '회계, 재고, 재무 및 경영 보고 통합 허브',
     modules: ['경영진', '회계', '재고', 'HR', '보고서'],
     username: '사용자명',
     password: '비밀번호',
     usernamePh: '사용자명 입력',
     passwordPh: '비밀번호 입력',
-    signIn: 'Admin',
+    signIn: '시스템 관리자',
     signingIn: '로그인 중…',
     register: '플랫폼 등록',
     platformSignIn: '플랫폼 로그인',
@@ -73,6 +76,9 @@ export const ERP_LOGIN_COPY = {
     langLabel: '언어',
   },
 };
+
+/** Shared report menus appended to every department */
+const DEPT_REPORT_PAGES = ['dept-daily-report', 'dept-monthly-summary'];
 
 /** Department + page ids (stable keys) */
 export const ERP_NAV_STRUCTURE = [
@@ -85,6 +91,7 @@ export const ERP_NAV_STRUCTURE = [
       'exec-ai-performance',
       'exec-ai-issues',
       'exec-ai-growth',
+      ...DEPT_REPORT_PAGES,
     ],
   },
   {
@@ -95,6 +102,7 @@ export const ERP_NAV_STRUCTURE = [
       'production-run',
       'quality-check',
       'shipping',
+      ...DEPT_REPORT_PAGES,
     ],
   },
   {
@@ -106,6 +114,7 @@ export const ERP_NAV_STRUCTURE = [
       'after-sales-chat-live',
       'create-sales-order',
       'sales-report',
+      ...DEPT_REPORT_PAGES,
     ],
   },
   {
@@ -120,6 +129,7 @@ export const ERP_NAV_STRUCTURE = [
       'profit-loss-report',
       'vat-report',
       'corporate-tax-report',
+      ...DEPT_REPORT_PAGES,
     ],
   },
   {
@@ -135,6 +145,7 @@ export const ERP_NAV_STRUCTURE = [
       'suggestion-idea',
       'expense-reimbursement',
       'hr-department-report',
+      ...DEPT_REPORT_PAGES,
     ],
   },
   {
@@ -152,6 +163,7 @@ export const ERP_NAV_STRUCTURE = [
       'developers',
       'erp-page-access',
       'erp-user-create',
+      ...DEPT_REPORT_PAGES,
     ],
   },
 ];
@@ -191,6 +203,16 @@ const ERP_NAV_LABELS = {
     th: 'AI — แนวโน้มการเติบโต',
     en: 'AI — Growth trend',
     ko: 'AI — 성장 추세',
+  },
+  'dept-daily-report': {
+    th: 'บันทึกรายงานประจำวัน',
+    en: 'Daily work report',
+    ko: '일일 업무 보고',
+  },
+  'dept-monthly-summary': {
+    th: 'สรุปรายงานประจำเดือน',
+    en: 'Monthly report summary',
+    ko: '월간 보고 요약',
   },
   production: {
     th: 'แผนกผลิต',
@@ -815,6 +837,64 @@ const ERP_PAGE_DESC = {
     th: 'วิเคราะห์แนวโน้มการเติบโตของบริษัทจากข้อมูลยอดขายและกิจกรรม',
     en: 'AI analysis of company growth trends from sales and activity data.',
     ko: '매출·활동 기반 성장 추세 AI 분석.',
+  },
+  'dept-daily-report': {
+    th: 'บันทึกสรุปงานประจำวันของแผนกนี้ พร้อมดูรายการล่าสุด',
+    en: 'Log daily work for this department and review recent entries.',
+    ko: '이 부서의 일일 업무를 기록하고 최근 보고를 확인합니다.',
+  },
+  'dept-monthly-summary': {
+    th: 'ปฏิทินสรุปรายงานประจำเดือนของแผนก — คลิกวันเพื่อดูรายละเอียด',
+    en: 'Monthly calendar of this department’s daily reports — click a day for details.',
+    ko: '부서별 월간 보고 캘린더 — 날짜를 클릭해 상세를 확인합니다.',
+  },
+};
+
+export const ERP_DEPT_DAILY_COPY = {
+  th: {
+    formTitle: 'บันทึกรายงานประจำวัน',
+    reportDate: 'วันที่รายงาน',
+    reporter: 'ผู้รายงาน',
+    reporterPh: 'ชื่อผู้รายงาน',
+    workSummary: 'สรุปงานที่ทำ',
+    workSummaryPh: 'รายละเอียดงานที่ดำเนินการ',
+    hours: 'ชั่วโมงทำงาน',
+    submitReport: 'บันทึกรายงาน',
+    saving: 'กำลังบันทึก…',
+    recentTitle: 'รายงานล่าสุดของแผนก',
+    noReports: 'ยังไม่มีรายงานในเดือนนี้',
+    noDept: 'ไม่พบข้อมูลแผนก — รีเฟรชหน้าอีกครั้ง',
+    confirmDelete: 'ลบรายงานนี้?',
+  },
+  en: {
+    formTitle: 'Daily work report',
+    reportDate: 'Report date',
+    reporter: 'Reporter',
+    reporterPh: 'Reporter name',
+    workSummary: 'Work summary',
+    workSummaryPh: 'What was accomplished',
+    hours: 'Hours worked',
+    submitReport: 'Save report',
+    saving: 'Saving…',
+    recentTitle: 'Recent department reports',
+    noReports: 'No reports this month yet',
+    noDept: 'Department not found — refresh the page',
+    confirmDelete: 'Delete this report?',
+  },
+  ko: {
+    formTitle: '일일 업무 보고',
+    reportDate: '보고 일자',
+    reporter: '보고자',
+    reporterPh: '보고자 이름',
+    workSummary: '업무 요약',
+    workSummaryPh: '수행한 업무',
+    hours: '근무 시간',
+    submitReport: '보고 저장',
+    saving: '저장 중…',
+    recentTitle: '최근 부서 보고',
+    noReports: '이번 달 보고 없음',
+    noDept: '부서를 찾을 수 없습니다 — 새로고침하세요',
+    confirmDelete: '이 보고를 삭제할까요?',
   },
 };
 

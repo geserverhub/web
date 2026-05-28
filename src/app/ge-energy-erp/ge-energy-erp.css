@@ -1216,6 +1216,31 @@
   }
 }
 
+.geerp-dept-daily-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .geerp-dept-daily-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.geerp-dept-daily-form {
+  border: 1px solid var(--geerp-border);
+  border-radius: var(--geerp-radius-md);
+  padding: 1rem;
+  background: var(--geerp-bg-elevated);
+  box-shadow: var(--geerp-shadow-sm);
+}
+
+.geerp-dept-daily-list {
+  min-width: 0;
+}
+
 .geerp-calendar-grid-wrap {
   border: 1px solid var(--geerp-border);
   border-radius: var(--geerp-radius-md);
