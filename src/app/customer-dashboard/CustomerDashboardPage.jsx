@@ -14,9 +14,10 @@ import {
   Zap, TrendingDown, DollarSign, Leaf, Phone,
   CheckCircle, Send, Activity, Cpu, Wifi, WifiOff, RefreshCw,
   Thermometer, ChevronDown, BarChart2, Users, Sprout, Download,
-  AlertCircle, BrainCircuit, Lightbulb, ShieldAlert, TrendingUp, Table2,
+  AlertCircle, BrainCircuit, Lightbulb, ShieldAlert, TrendingUp, Table2, PackagePlus, Upload, Save, Pencil,
 } from 'lucide-react';
 import { generateMonthlyEnergyExcel, exportToExcel } from '@/lib/excel-export';
+import { calculateMeterUnitPrice, formatThb, METER_ORDER_BANK } from '@/lib/meter-order';
 
 function L(locale, th, ko, en) {
   if (locale === 'th') return th;
@@ -824,6 +825,32 @@ export default function CustomersPage() {
   }
   const [chartType, setChartType] = useState('bar');
   const [contactForm, setContactForm] = useState({ name: '', phone: '', email: '', message: '' });
+  const [productForm, setProductForm] = useState({
+    buyerName: '',
+    shipAddress: '',
+    email: '',
+    phone: '',
+    breakerSize: '',
+    machineKva: '',
+    quantity: 1,
+  });
+  const [productSitePhoto, setProductSitePhoto] = useState(null);
+  const [productPaymentSlip, setProductPaymentSlip] = useState(null);
+  const [productMonthlyBills, setProductMonthlyBills] = useState([]);
+  const [productUnitPrice, setProductUnitPrice] = useState(null);
+  const [productSubmitting, setProductSubmitting] = useState(false);
+  const [productSuccess, setProductSuccess] = useState(false);
+  const [productError, setProductError] = useState(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState(null);
+  const [energySaverProducts, setEnergySaverProducts] = useState([]);
+  const [iotProducts, setIotProducts] = useState([]);
+  const [allCatalogProducts, setAllCatalogProducts] = useState([]);
+  const [historyItems, setHistoryItems] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
+  const [historyEditing, setHistoryEditing] = useState({});
+  const [historySaving, setHistorySaving] = useState(false);
   const [sent, setSent] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
   const [dismissedBroadcasts, setDismissedBroadcasts] = useState(() => {
@@ -911,16 +938,200 @@ export default function CustomersPage() {
     }
   }
 
+  function handleProductField(e) {
+    const { name, value } = e.target;
+    setProductForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleProductOrder(e) {
+    e.preventDefault();
+    setProductSubmitting(true);
+    setProductError(null);
+    setProductSuccess(false);
+
+    try {
+      if (!productSitePhoto || !productPaymentSlip) {
+        throw new Error(
+          L(
+            locale,
+            'กรุณาอัปโหลดรูปเครื่องหน้างานและสลิปโอนเงิน',
+            '현장 사진과 이체 영수증을 업로드하세요',
+            'Please upload site photo and payment slip',
+          ),
+        );
+      }
+      if (!Array.isArray(productMonthlyBills) || productMonthlyBills.length !== 12) {
+        throw new Error(
+          L(
+            locale,
+            'กรุณาอัปโหลดบิลค่าไฟ 12 เดือนให้ครบ',
+            '전기요금 고지서 12개월분을 업로드하세요',
+            'Please upload all 12 monthly electricity bills',
+          ),
+        );
+      }
+
+      const qty = Math.max(1, Number(productForm.quantity) || 1);
+      const calculatedUnitPrice = calculateMeterUnitPrice(productForm.breakerSize, productForm.machineKva);
+      const safeUnitPrice = calculatedUnitPrice == null ? 0 : calculatedUnitPrice;
+      const totalPrice = safeUnitPrice * qty;
+      const fd = new FormData();
+      fd.append('customerName', productForm.buyerName.trim());
+      fd.append('shippingAddress', productForm.shipAddress.trim());
+      fd.append('email', productForm.email.trim());
+      fd.append('phone', productForm.phone.trim());
+      fd.append('breakerSize', String(productForm.breakerSize).trim());
+      fd.append('machineKva', String(productForm.machineKva).trim());
+      fd.append('quantity', String(qty));
+      fd.append('unitPrice', String(safeUnitPrice));
+      fd.append('totalPrice', String(totalPrice));
+      fd.append('sitePhoto', productSitePhoto);
+      fd.append('paymentSlip', productPaymentSlip);
+      for (const bill of productMonthlyBills) {
+        fd.append('monthlyBills', bill);
+      }
+
+      const res = await fetch('/api/ge-energy/customer-energy-saver-order', {
+        method: 'POST',
+        body: fd,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.error) {
+        throw new Error(json?.error || 'Submit failed');
+      }
+
+      setProductSuccess(true);
+      setProductForm({
+        buyerName: '',
+        shipAddress: '',
+        email: '',
+        phone: '',
+        breakerSize: '',
+        machineKva: '',
+        quantity: 1,
+      });
+      setProductSitePhoto(null);
+      setProductPaymentSlip(null);
+      setProductMonthlyBills([]);
+      setProductUnitPrice(null);
+    } catch (err) {
+      setProductError(err instanceof Error ? err.message : 'Submit failed');
+    } finally {
+      setProductSubmitting(false);
+    }
+  }
+
   const tabs = [
     { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),   icon: BarChart2 },
     { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),      icon: DollarSign },
+    { key: 'products',label: L(locale,'สินค้าของเรา','우리 제품','Our Products'), icon: PackagePlus },
     { key: 'meters',  label: L(locale,`มิเตอร์ (${customerMeters.length})`,`미터 (${customerMeters.length})`,`Meters (${customerMeters.length})`), icon: Cpu },
     { key: 'ai',      label: L(locale,'AI วิเคราะห์','AI 분석','AI Analysis'), icon: BrainCircuit },
     { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),          icon: Activity },
     { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
     { key: 'compare', label: L(locale,'เปรียบเทียบ','비교표','Compare'),      icon: Table2 },
+    { key: 'history', label: L(locale,'ประวัติการทำรายการ','활동 내역','Activity History'), icon: Table2 },
     { key: 'contact', label: L(locale,'ติดต่อ','연락','Contact'),             icon: Users },
   ];
+
+  useEffect(() => {
+    if (activeTab !== 'products') return;
+    if (energySaverProducts.length > 0 || iotProducts.length > 0) return;
+
+    let cancelled = false;
+    (async () => {
+      setCatalogLoading(true);
+      setCatalogError(null);
+      try {
+        const res = await fetch('/api/ge-energy/customer-product-catalog', { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json?.error || 'Failed to load catalog');
+        }
+        if (!cancelled) {
+          setEnergySaverProducts(Array.isArray(json.energySavers) ? json.energySavers : []);
+          setIotProducts(Array.isArray(json.iotProducts) ? json.iotProducts : []);
+          setAllCatalogProducts(Array.isArray(json.all) ? json.all : []);
+        }
+      } catch (e) {
+        if (!cancelled) setCatalogError(e instanceof Error ? e.message : 'Failed to load catalog');
+      } finally {
+        if (!cancelled) setCatalogLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, energySaverProducts.length, iotProducts.length]);
+
+  useEffect(() => {
+    if (activeTab !== 'history') return;
+    const u = customerUser || readStoredCustomerUser();
+    if (!u) return;
+
+    let cancelled = false;
+    (async () => {
+      setHistoryLoading(true);
+      setHistoryError(null);
+      try {
+        const q = new URLSearchParams();
+        if (u?.userId) q.set('userId', String(u.userId));
+        if (u?.email) q.set('email', String(u.email));
+        if (u?.phone) q.set('phone', String(u.phone));
+        const res = await fetch(`/api/ge-energy/customer-activity-history?${q.toString()}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json?.error || 'Failed to load history');
+        if (!cancelled) setHistoryItems(Array.isArray(json.activities) ? json.activities : []);
+      } catch (e) {
+        if (!cancelled) setHistoryError(e instanceof Error ? e.message : 'Failed to load history');
+      } finally {
+        if (!cancelled) setHistoryLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, customerUser]);
+
+  function beginInlineEdit(item) {
+    setHistoryEditing((prev) => ({ ...prev, [item.type + ':' + item.id]: { ...(item.fields || {}) } }));
+  }
+
+  function setInlineField(item, key, value) {
+    const mapKey = item.type + ':' + item.id;
+    setHistoryEditing((prev) => ({ ...prev, [mapKey]: { ...(prev[mapKey] || {}), [key]: value } }));
+  }
+
+  async function saveInlineHistory(item) {
+    const mapKey = item.type + ':' + item.id;
+    const fields = historyEditing[mapKey];
+    if (!fields) return;
+    setHistorySaving(true);
+    setHistoryError(null);
+    try {
+      const res = await fetch('/api/ge-energy/customer-activity-history', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: item.type, id: item.id, fields }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json?.error || 'Update failed');
+
+      setHistoryItems((prev) =>
+        prev.map((x) => (x.type === item.type && x.id === item.id ? { ...x, fields: { ...x.fields, ...fields }, incomplete: false } : x))
+      );
+      setHistoryEditing((prev) => {
+        const next = { ...prev };
+        delete next[mapKey];
+        return next;
+      });
+    } catch (e) {
+      setHistoryError(e instanceof Error ? e.message : 'Update failed');
+    } finally {
+      setHistorySaving(false);
+    }
+  }
 
   // Notification badge counts
   const unreadBroadcasts = broadcasts.filter(b => !dismissedBroadcasts.includes(b.id)).length;
@@ -1997,6 +2208,343 @@ export default function CustomersPage() {
             </div>
           );
         })()}
+
+        {activeTab === 'products' && (
+          <div className="cd-stack">
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--energy" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">
+                  {L(locale, 'สินค้าของเรา', '우리 제품', 'Our Products')}
+                </h2>
+                <p className="cd-card-desc">
+                  {L(
+                    locale,
+                    'เครื่องช่วยประหยัดพลังงาน GE Energy Tech สำหรับลดการใช้ไฟฟ้าในระบบ 3 เฟส',
+                    '3상 전력 절감을 위한 GE Energy Tech 에너지 절감 장치',
+                    'GE Energy Tech energy-saving devices for reducing 3-phase electricity usage',
+                  )}
+                </p>
+                {catalogError ? <p className="cd-error">{catalogError}</p> : null}
+                {catalogLoading ? (
+                  <p style={{ margin: 0, fontSize: 13, color: '#475569' }}>
+                    {L(locale, 'กำลังโหลดรายการสินค้า...', '상품 로딩 중...', 'Loading products...')}
+                  </p>
+                ) : (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>
+                      {L(locale, 'เครื่องประหยัดพลังงานแต่ละขนาด', '에너지 세이버 라인업', 'Energy Saver sizes')}
+                    </div>
+                    {(energySaverProducts.length ? energySaverProducts : []).map((p) => (
+                      <div key={`es-${p.id}`} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 12 }}>
+                        <p style={{ margin: 0, fontWeight: 700, color: '#166534' }}>{p.name}</p>
+                        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
+                          {p.description || '-'}
+                        </p>
+                        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#0f766e' }}>
+                          {L(locale, 'ขนาด', '용량', 'Capacity')}: {p.capacity || '-'} kVA | MCB: {p.mcb || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatThb(Number(p.priceWithVat || p.price || 0))}
+                        </p>
+                      </div>
+                    ))}
+                    {energySaverProducts.length === 0 && (
+                      <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
+                        {L(locale, 'ยังไม่มีสินค้าในหมวดเครื่องประหยัดพลังงาน', '에너지 세이버 상품이 아직 없습니다', 'No energy-saver products found yet')}
+                      </p>
+                    )}
+
+                    <div style={{ marginTop: 4, fontSize: 13, fontWeight: 700, color: '#1d4ed8' }}>
+                      {L(locale, 'อุปกรณ์ IoT ที่วางขาย', '판매 중 IoT 장비', 'Available IoT devices')}
+                    </div>
+                    {(iotProducts.length ? iotProducts : []).map((p) => (
+                      <div key={`iot-${p.id}`} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 12 }}>
+                        <p style={{ margin: 0, fontWeight: 700, color: '#1e40af' }}>{p.name}</p>
+                        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
+                          {p.description || '-'}
+                        </p>
+                        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8' }}>
+                          SKU: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatThb(Number(p.priceWithVat || p.price || 0))}
+                        </p>
+                      </div>
+                    ))}
+                    {iotProducts.length === 0 && allCatalogProducts.length > 0 && (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {allCatalogProducts.slice(0, 4).map((p) => (
+                          <div key={`fallback-iot-${p.id}`} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 12 }}>
+                            <p style={{ margin: 0, fontWeight: 700, color: '#1e40af' }}>{p.name}</p>
+                            <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
+                              {p.description || '-'}
+                            </p>
+                            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8' }}>
+                              SKU: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatThb(Number(p.priceWithVat || p.price || 0))}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {iotProducts.length === 0 && allCatalogProducts.length === 0 && (
+                      <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
+                        {L(locale, 'ยังไม่มีสินค้าอุปกรณ์ IoT', 'IoT 상품이 아직 없습니다', 'No IoT products found yet')}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--contact" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">
+                  {L(locale, 'อัปโหลดข้อมูลเพื่อสั่งซื้อเครื่องช่วยประหยัดพลังงาน', '절감 장치 주문 자료 업로드', 'Upload order details for energy-saving device')}
+                </h2>
+                <p className="cd-card-desc">
+                  {L(locale, 'กรอกข้อมูล + แนบรูปเครื่องหน้างาน + แนบสลิปโอนเงิน', '정보 입력 + 현장 사진 + 이체 영수증 첨부', 'Fill details + upload site photo + upload payment slip')}
+                </p>
+
+                <form onSubmit={handleProductOrder}>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'ชื่อผู้สั่งซื้อ', '주문자명', 'Buyer name')} *</label>
+                    <input className="cd-form-input" name="buyerName" required value={productForm.buyerName} onChange={handleProductField} />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'ที่อยู่จัดส่ง', '배송 주소', 'Shipping address')} *</label>
+                    <textarea className="cd-form-input cd-form-textarea" name="shipAddress" required value={productForm.shipAddress} onChange={handleProductField} rows={3} />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'อีเมล', '이메일', 'Email')} *</label>
+                    <input className="cd-form-input" type="email" name="email" required value={productForm.email} onChange={handleProductField} />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'เบอร์โทร', '전화번호', 'Phone')} *</label>
+                    <input className="cd-form-input" name="phone" required value={productForm.phone} onChange={handleProductField} />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'ขนาดเบรกเกอร์ (A)', '차단기 용량 (A)', 'Breaker size (A)')} *</label>
+                    <input className="cd-form-input" name="breakerSize" required value={productForm.breakerSize} onChange={handleProductField} />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'ขนาดเครื่อง (kVA)', '설비 용량 (kVA)', 'Machine size (kVA)')} *</label>
+                    <input className="cd-form-input" name="machineKva" required value={productForm.machineKva} onChange={handleProductField} />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">{L(locale, 'จำนวน', '수량', 'Quantity')} *</label>
+                    <input className="cd-form-input" type="number" min={1} name="quantity" required value={productForm.quantity} onChange={handleProductField} />
+                  </div>
+
+                  {productUnitPrice ? (
+                    <div className="cd-toolbar-row" style={{ marginBottom: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>
+                        {L(locale, 'ราคาต่อเครื่อง', '대당 가격', 'Unit price')}: {formatThb(productUnitPrice)}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">
+                      <Upload className="w-4 h-4 inline-block mr-1" />
+                      {L(locale, 'รูปเครื่องหน้างาน (บังคับ)', '현장 사진 (필수)', 'Site/machine photo (required)')}
+                    </label>
+                    <input
+                      className="cd-form-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      required
+                      onChange={(e) => setProductSitePhoto(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">
+                      <Upload className="w-4 h-4 inline-block mr-1" />
+                      {L(locale, 'สลิปโอนเงิน (บังคับ)', '이체 영수증 (필수)', 'Payment slip (required)')}
+                    </label>
+                    <input
+                      className="cd-form-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      required
+                      onChange={(e) => setProductPaymentSlip(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                  <div className="cd-form-field">
+                    <label className="cd-form-label">
+                      <Upload className="w-4 h-4 inline-block mr-1" />
+                      {L(locale, 'อัปโหลดบิลค่าไฟ 12 เดือน (บังคับ)', '전기요금 고지서 12개월 (필수)', 'Upload 12 monthly electricity bills (required)')}
+                    </label>
+                    <input
+                      className="cd-form-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      multiple
+                      required
+                      onChange={(e) => setProductMonthlyBills(Array.from(e.target.files || []))}
+                    />
+                    <p style={{ marginTop: 6, fontSize: 12, color: productMonthlyBills.length === 12 ? '#059669' : '#b45309' }}>
+                      {L(locale, 'จำนวนไฟล์บิลที่อัปโหลด', '업로드된 청구서 수', 'Uploaded bill files')}: {productMonthlyBills.length}/12
+                    </p>
+                    {productMonthlyBills.length !== 12 ? (
+                      <p className="cd-error" style={{ marginTop: 4 }}>
+                        {L(
+                          locale,
+                          'ต้องอัปโหลดบิลค่าไฟให้ครบ 12 ไฟล์ก่อนจึงจะสั่งซื้อได้',
+                          '주문하려면 전기요금 고지서 12개를 모두 업로드해야 합니다',
+                          'You must upload all 12 electricity bills before submitting the order',
+                        )}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 10, marginBottom: 12, fontSize: 13 }}>
+                    <div><strong>{L(locale, 'บัญชีโอนเงิน', '입금 계좌', 'Bank transfer')}</strong></div>
+                    <div>{METER_ORDER_BANK.company}</div>
+                    <div>{locale === 'th' ? METER_ORDER_BANK.bankNameTh : METER_ORDER_BANK.bankNameEn}</div>
+                    <div>{METER_ORDER_BANK.accountNumber}</div>
+                    <div>{METER_ORDER_BANK.accountName}</div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="cd-btn cd-btn--primary cd-form-submit"
+                    disabled={productSubmitting || productMonthlyBills.length !== 12}
+                  >
+                    {productSubmitting
+                      ? L(locale, 'กำลังส่งคำสั่งซื้อ...', '주문 전송 중...', 'Submitting order...')
+                      : L(locale, 'ยืนยันสั่งซื้อ', '주문 확인', 'Confirm order')}
+                  </button>
+                  {productError ? <p className="cd-error">{productError}</p> : null}
+                  {productSuccess ? (
+                    <p style={{ marginTop: 8, color: '#059669', fontSize: 13, fontWeight: 700 }}>
+                      {L(locale, 'ส่งคำสั่งซื้อสำเร็จ กรุณาตรวจสอบอีเมล', '주문이 접수되었습니다. 이메일을 확인하세요', 'Order submitted successfully. Please check your email.')}
+                    </p>
+                  ) : null}
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="cd-stack">
+            <div className="cd-card">
+              <div className="cd-card-accent cd-card-accent--monitor" />
+              <div className="cd-card-body">
+                <h2 className="cd-card-title">{L(locale, 'ประวัติการทำรายการ', '활동 내역', 'Activity History')}</h2>
+                <p className="cd-card-desc">
+                  {L(locale, 'แสดงทุกรายการที่ผู้ใช้รายนี้ทำกิจกรรมไว้ และแก้ไขรายการที่ยังไม่สมบูรณ์ได้แบบ inline', '이 사용자의 전체 활동 내역 및 미완료 항목 인라인 수정', 'Shows all activities by this user with inline edit for incomplete items')}
+                </p>
+                {historyError ? <p className="cd-error">{historyError}</p> : null}
+                {historyLoading ? (
+                  <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{L(locale, 'กำลังโหลดประวัติ...', '내역 로딩 중...', 'Loading history...')}</p>
+                ) : historyItems.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{L(locale, 'ยังไม่มีประวัติรายการ', '활동 내역이 없습니다', 'No activity history yet')}</p>
+                ) : (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {historyItems.map((item) => {
+                      const mapKey = item.type + ':' + item.id;
+                      const edit = historyEditing[mapKey];
+                      const isEditing = Boolean(edit);
+                      const f = isEditing ? edit : (item.fields || {});
+                      return (
+                        <div key={mapKey} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, background: item.incomplete ? '#fff7ed' : '#f8fafc' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                            <div>
+                              <p style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>{item.title}</p>
+                              <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
+                                {item.type} • {item.status} • {String(item.createdAt || '')}
+                              </p>
+                            </div>
+                            {item.incomplete && !isEditing ? (
+                              <button type="button" className="cd-btn cd-btn--ghost" onClick={() => beginInlineEdit(item)}>
+                                <Pencil className="w-4 h-4" /> {L(locale, 'แก้ไข', '수정', 'Edit')}
+                              </button>
+                            ) : null}
+                          </div>
+
+                          {item.type === 'energy_saver_order' || item.type === 'geet_meter_order' ? (
+                            <div style={{ display: 'grid', gap: 6 }}>
+                              {[
+                                ['customer_name', L(locale, 'ชื่อผู้สั่งซื้อ', '주문자명', 'Customer name')],
+                                ['shipping_address', L(locale, 'ที่อยู่จัดส่ง', '배송 주소', 'Shipping address')],
+                                ['email', 'Email'],
+                                ['phone', L(locale, 'เบอร์โทร', '전화번호', 'Phone')],
+                                ['breaker_size', L(locale, 'ขนาดเบรกเกอร์', '차단기', 'Breaker size')],
+                                ['machine_kva', 'kVA'],
+                                ['quantity', L(locale, 'จำนวน', '수량', 'Quantity')],
+                              ].map(([key, label]) => (
+                                <div key={key} style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8, alignItems: 'center' }}>
+                                  <span style={{ fontSize: 12, color: '#64748b' }}>{label}</span>
+                                  {isEditing ? (
+                                    <input
+                                      className="cd-form-input"
+                                      value={String(f[key] ?? '')}
+                                      onChange={(e) => setInlineField(item, key, e.target.value)}
+                                    />
+                                  ) : (
+                                    <span style={{ fontSize: 13, color: '#0f172a' }}>{String(f[key] ?? '-')}</span>
+                                  )}
+                                </div>
+                              ))}
+                              <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#64748b' }}>{L(locale, 'บิลค่าไฟ', '청구서', 'Monthly bills')}</span>
+                                <span style={{ fontSize: 13, color: Number(f.monthly_bill_count || 0) >= 12 ? '#059669' : '#b45309', fontWeight: 700 }}>
+                                  {item.type === 'energy_saver_order' ? `${Number(f.monthly_bill_count || 0)}/12` : '-'}
+                                </span>
+                              </div>
+                            </div>
+                          ) : null}
+                          {item.type === 'support_ticket' ? (
+                            <div style={{ display: 'grid', gap: 6 }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#64748b' }}>Ticket</span>
+                                <span style={{ fontSize: 13, color: '#0f172a' }}>{String(item.fields?.ticket_id || '-')}</span>
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#64748b' }}>{L(locale, 'ประเภท', '유형', 'Type')}</span>
+                                <span style={{ fontSize: 13, color: '#0f172a' }}>{String(item.fields?.type || '-')}</span>
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#64748b' }}>{L(locale, 'ความสำคัญ', '우선순위', 'Priority')}</span>
+                                <span style={{ fontSize: 13, color: '#0f172a' }}>{String(item.fields?.priority || '-')}</span>
+                              </div>
+                            </div>
+                          ) : null}
+                          {item.type === 'feedback' ? (
+                            <div style={{ display: 'grid', gap: 6 }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#64748b' }}>{L(locale, 'หมวดหมู่', '카테고리', 'Category')}</span>
+                                <span style={{ fontSize: 13, color: '#0f172a' }}>{String(item.fields?.category || '-')}</span>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {isEditing ? (
+                            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                              <button type="button" className="cd-btn cd-btn--primary" disabled={historySaving} onClick={() => saveInlineHistory(item)}>
+                                <Save className="w-4 h-4" /> {L(locale, 'บันทึก', '저장', 'Save')}
+                              </button>
+                              <button
+                                type="button"
+                                className="cd-btn cd-btn--ghost"
+                                onClick={() =>
+                                  setHistoryEditing((prev) => {
+                                    const next = { ...prev };
+                                    delete next[mapKey];
+                                    return next;
+                                  })
+                                }
+                              >
+                                {L(locale, 'ยกเลิก', '취소', 'Cancel')}
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Contact ── */}
         {activeTab === 'contact' && (

@@ -29,6 +29,7 @@ import {
   Building2,
   Cable,
   Wind,
+  Link2,
 } from "lucide-react";
 import "./energy-sidebar.css";
 
@@ -89,6 +90,7 @@ const menuSections: NavSection[] = [
       { key: "deviceConnectivity", icon: Cable, href: "/energy-dashboard/device-connectivity" },
       { key: "devicesSetting", icon: Settings, href: "/energy-dashboard/devices-setting" },
       { key: "meterSetting", icon: Gauge, href: "/energy-dashboard/meter-seting" },
+      { key: "meterBinding", icon: Link2, href: "/energy-dashboard/meter-binding" },
     ],
   },
   {
@@ -128,6 +130,11 @@ const sectionFallback: Record<string, Record<string, string>> = {
   },
   live: { th: "สด", en: "Live", ko: "실시간" },
   carbonTracker: { th: "คาร์บอน & พลังงาน", en: "Carbon & Energy", ko: "탄소 & 에너지" },
+  meterBinding: {
+    th: "ผูกเชื่อมต่อมิเตอร์กับเครื่องประหยัดพลังงาน",
+    en: "Bind meters to energy-saving devices",
+    ko: "미터-절감장치 연결",
+  },
 };
 
 function isActive(pathname: string, item: NavItem): boolean {

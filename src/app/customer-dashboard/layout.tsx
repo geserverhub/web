@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import CustomerDashboardShell from './CustomerDashboardShell';
 import {
   CHUNK_RECOVERY_INLINE_SCRIPT,
@@ -27,8 +28,12 @@ export default function CustomerDashboardLayout({
 }) {
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_INLINE_SCRIPT }} />
-      <script dangerouslySetInnerHTML={{ __html: CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT }} />
+      <Script id="customer-dashboard-chunk-recovery" strategy="beforeInteractive">
+        {CHUNK_RECOVERY_INLINE_SCRIPT}
+      </Script>
+      <Script id="customer-dashboard-auth-recovery" strategy="beforeInteractive">
+        {CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT}
+      </Script>
       <CustomerDashboardShell>{children}</CustomerDashboardShell>
     </>
   );
