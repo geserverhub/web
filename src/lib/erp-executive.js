@@ -598,7 +598,11 @@ export async function getAiInsights(type) {
 }
 
 export async function getExecutivePageData(pageId) {
-  await refreshExecutiveData();
+  try {
+    await refreshExecutiveData();
+  } catch (err) {
+    console.warn('[executive] refreshExecutiveData failed (continuing with existing data):', err?.message);
+  }
 
   switch (pageId) {
     case 'exec-dept-kpi':

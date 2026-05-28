@@ -30,45 +30,45 @@ async function userCanAccessPage(user, pageId) {
 }
 
 export async function GET(req, { params }) {
-  const user = parseErpUserHeader(req);
-  if (!user?.userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { pageId } = await params;
-  if (!EXEC_PAGES.has(pageId)) {
-    return NextResponse.json({ error: 'Invalid executive page' }, { status: 400 });
-  }
-
-  if (!(await userCanAccessPage(user, pageId))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
   try {
+    const user = parseErpUserHeader(req);
+    if (!user?.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { pageId } = await params;
+    if (!EXEC_PAGES.has(pageId)) {
+      return NextResponse.json({ error: 'Invalid executive page' }, { status: 400 });
+    }
+
+    if (!(await userCanAccessPage(user, pageId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const data = await getExecutivePageData(pageId);
     return NextResponse.json({ pageId, ...data });
   } catch (err) {
-    console.error('[ge-energy-erp/executive GET]', pageId, err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    console.error('[ge-energy-erp/executive GET]', err);
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
 
 export async function POST(req, { params }) {
-  const user = parseErpUserHeader(req);
-  if (!user?.userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { pageId } = await params;
-  if (pageId !== 'exec-pending-approvals') {
-    return NextResponse.json({ error: 'POST not supported for this page' }, { status: 400 });
-  }
-
-  if (!(await userCanAccessPage(user, pageId))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
   try {
+    const user = parseErpUserHeader(req);
+    if (!user?.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { pageId } = await params;
+    if (pageId !== 'exec-pending-approvals') {
+      return NextResponse.json({ error: 'POST not supported for this page' }, { status: 400 });
+    }
+
+    if (!(await userCanAccessPage(user, pageId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { approvalId, action, note } = body;
     if (!approvalId || !['approve', 'reject'].includes(action)) {
@@ -79,6 +79,6 @@ export async function POST(req, { params }) {
     return NextResponse.json({ success: true, ...data });
   } catch (err) {
     console.error('[ge-energy-erp/executive POST]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
