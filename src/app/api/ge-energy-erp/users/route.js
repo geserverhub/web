@@ -55,16 +55,16 @@ async function loadUserPages(userId) {
 }
 
 export async function GET(req) {
-  if (!assertDeveloper(req)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const prisma = getPrisma();
-  if (!prisma) {
-    return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
-  }
-
   try {
+    if (!assertDeveloper(req)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const prisma = getPrisma();
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+    }
+
     const users = await prisma.user.findMany({
       where: { role: { in: ['CLIENT', 'ADMIN', 'PARTNER'] } },
       orderBy: { createdAt: 'desc' },
@@ -81,21 +81,21 @@ export async function GET(req) {
     return NextResponse.json({ users });
   } catch (err) {
     console.error('[ge-energy-erp/users GET]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
 
 export async function POST(req) {
-  if (!assertDeveloper(req)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const prisma = getPrisma();
-  if (!prisma) {
-    return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
-  }
-
   try {
+    if (!assertDeveloper(req)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const prisma = getPrisma();
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+    }
+
     const body = await req.json();
     const { username, name, email, password, role, pages } = body;
 
@@ -141,6 +141,6 @@ export async function POST(req) {
     return NextResponse.json({ user, pages: savedPages });
   } catch (err) {
     console.error('[ge-energy-erp/users POST]', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
