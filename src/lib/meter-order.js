@@ -14,7 +14,22 @@ const BASE_PRICE_KRW = 30900;
 const PER_KVA_KRW = 420;
 
 function parseNum(value) {
-  const n = parseFloat(String(value || '').replace(/[^\d.]/g, ''));
+  const raw = String(value || '').trim();
+  if (!raw) return 0;
+
+  // Normalize localized digits (Thai / Arabic-Indic / full-width) to ASCII.
+  const normalizedDigits = raw
+    .replace(/[๐-๙]/g, (ch) => String(ch.charCodeAt(0) - 3664))
+    .replace(/[٠-٩]/g, (ch) => String(ch.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (ch) => String(ch.charCodeAt(0) - 1776))
+    .replace(/[０-９]/g, (ch) => String(ch.charCodeAt(0) - 65296));
+
+  // Keep only separators/digits, then support either "12.5" or "12,5".
+  const cleaned = normalizedDigits.replace(/[^\d,.\-]/g, '');
+  const decimalSafe =
+    cleaned.includes('.') ? cleaned.replace(/,/g, '') : cleaned.replace(',', '.');
+
+  const n = parseFloat(decimalSafe);
   return Number.isFinite(n) ? n : 0;
 }
 
