@@ -1895,6 +1895,20 @@ body {
   margin-bottom: 1rem;
 }
 
+.get-track-result-label {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.get-track-timeline-title {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #334155;
+}
+
 .get-track-order-id {
   font-family: ui-monospace, 'Cascadia Code', monospace;
   font-size: 0.95rem;

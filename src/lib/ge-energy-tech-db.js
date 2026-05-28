@@ -2,10 +2,11 @@ import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { readFileSync } from 'fs';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
+import { ORDER_STATUS_ORDER, buildOrderTimeline } from '@/lib/ge-energy-tech/order-status-i18n';
 
 let schemaReady = false;
 
-const STATUS_ORDER = ['pending', 'processing', 'shipped', 'delivered'];
+const STATUS_ORDER = ORDER_STATUS_ORDER;
 
 export async function ensureGeEnergyTechOrdersSchema() {
   if (schemaReady) return;
@@ -126,13 +127,7 @@ export async function findMeterOrder({ orderNo, email }) {
 }
 
 export function buildTimeline(shipmentStatus, labels) {
-  const index = STATUS_ORDER.indexOf(shipmentStatus);
-  const current = index >= 0 ? index : 0;
-  return STATUS_ORDER.map((key, i) => ({
-    step: labels[key] || key,
-    done: i <= current,
-    statusKey: key,
-  }));
+  return buildOrderTimeline(shipmentStatus, labels);
 }
 
 export { STATUS_ORDER };
