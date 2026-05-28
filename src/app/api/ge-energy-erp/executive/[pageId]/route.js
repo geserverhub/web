@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import { getAllErpPages, ERP_ADMIN_PAGE_IDS } from '@/lib/erp-pages';
 import { getExecutivePageData, reviewApproval } from '@/lib/erp-executive';
+import { parseErpUserHeader } from '@/lib/erp-user-header';
 
 const EXEC_PAGES = new Set([
   'exec-dept-kpi',
@@ -10,15 +11,6 @@ const EXEC_PAGES = new Set([
   'exec-ai-issues',
   'exec-ai-growth',
 ]);
-
-function parseErpUser(req) {
-  try {
-    const raw = req.headers.get('x-erp-user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
 
 async function userCanAccessPage(user, pageId) {
   if (!user?.userId) return false;
@@ -38,7 +30,7 @@ async function userCanAccessPage(user, pageId) {
 }
 
 export async function GET(req, { params }) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -62,7 +54,7 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

@@ -2,22 +2,14 @@ import { NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import { getAllErpPages, ERP_ADMIN_PAGE_IDS } from '@/lib/erp-pages';
 import { ensureGeErpSchema } from '@/lib/erp-db';
-
-function parseErpUser(req) {
-  try {
-    const raw = req.headers.get('x-erp-user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+import { parseErpUserHeader } from '@/lib/erp-user-header';
 
 async function ensureAclSchema() {
   await ensureGeErpSchema();
 }
 
 export async function GET(req) {
-  const user = parseErpUser(req);
+  const user = parseErpUserHeader(req);
   if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

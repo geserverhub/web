@@ -5,7 +5,8 @@ export function erpApiHeaders() {
   try {
     const raw = localStorage.getItem('ge_energy_erp_user');
     if (!raw) return {};
-    return { 'x-erp-user': raw };
+    const encoded = btoa(unescape(encodeURIComponent(raw)));
+    return { 'x-erp-user-b64': encoded };
   } catch {
     return {};
   }

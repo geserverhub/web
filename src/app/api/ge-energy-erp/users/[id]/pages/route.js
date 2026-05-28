@@ -2,18 +2,10 @@ import { NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import { getAllErpPages } from '@/lib/erp-pages';
 import { ensureGeErpSchema } from '@/lib/erp-db';
-
-function parseErpUser(req) {
-  try {
-    const raw = req.headers.get('x-erp-user');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+import { parseErpUserHeader } from '@/lib/erp-user-header';
 
 function assertDeveloper(req) {
-  const u = parseErpUser(req);
+  const u = parseErpUserHeader(req);
   if (!u || !['ADMIN', 'SUPER_ADMIN'].includes(u.role)) {
     return null;
   }
