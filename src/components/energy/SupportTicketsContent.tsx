@@ -187,7 +187,7 @@ export default function SupportTicketsContent() {
             <h1 className="text-xl font-bold text-emerald-900">{t('supportTickets')}</h1>
             <p className="text-sm text-slate-500">
               {lang === 'th'
-                ? 'แจ้งปัญหาและติดตามสถานะตั๋วสนับสนุน'
+                ? 'บันทึกและติดตามการให้บริการลูกค้า'
                 : lang === 'ko'
                   ? '문제를 보고하고 티켓 상태를 추적합니다'
                   : 'Report issues and track support tickets'}
@@ -207,7 +207,7 @@ export default function SupportTicketsContent() {
       {apiUnavailable && (
         <p className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           {lang === 'th'
-            ? 'บันทึกตั๋วในเครื่องของคุณ (API ยังไม่พร้อม) — จะซิงค์เมื่อ backend พร้อม'
+            ? 'บันทึกในเครื่องของคุณ (API ยังไม่พร้อม) — จะซิงค์เมื่อ backend พร้อม'
             : lang === 'ko'
               ? '로컬에 티켓 저장 (API 미연결)'
               : 'Tickets saved locally until API is available'}
@@ -217,7 +217,7 @@ export default function SupportTicketsContent() {
       {success && (
         <div className="mb-4 flex items-center gap-2 text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          {lang === 'th' ? 'ส่งตั๋วเรียบร้อยแล้ว' : lang === 'ko' ? '티켓이 제출되었습니다' : 'Ticket submitted'}
+          {t('submitTicket')}
         </div>
       )}
 
@@ -323,7 +323,7 @@ export default function SupportTicketsContent() {
 
         {!loading && filtered.length === 0 && (
           <p className="px-5 py-12 text-center text-sm text-slate-500">
-            {lang === 'th' ? 'ยังไม่มีตั๋ว — กดสร้างตั๋วใหม่' : lang === 'ko' ? '티켓 없음' : 'No tickets yet'}
+            {lang === 'th' ? 'ยังไม่มีรายการ — กดบันทึกบริการลูกค้า' : lang === 'ko' ? '티켓 없음' : 'No tickets yet'}
           </p>
         )}
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import AiCarbonInsightsPanel from '@/components/energy/AiCarbonInsightsPanel'
+import ElectricityRateManager from '@/components/energy/ElectricityRateManager'
 
 interface DashboardStats {
   totalDevices: number
@@ -937,6 +938,7 @@ export default function DashboardPage() {
       </div>
 
       <AiCarbonInsightsPanel periodDays={30} />
+      <ElectricityRateManager site={selectedSite} locale={locale} />
 
       {/* ── System Health + Quick Actions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

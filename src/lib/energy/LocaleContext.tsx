@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translations, getT } from '@/lib/translations';
+import { translations, getT } from '@/lib/energy/translations';
 
 type Locale = 'ko' | 'en' | 'th' | 'cn' | 'vn' | 'ms';
 

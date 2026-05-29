@@ -48,9 +48,16 @@ async function main() {
 
   await admin.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
 
-  const sql = readFileSync(resolve(__dirname, '../prisma/migrate-energy-geserverhub.sql'), 'utf8');
-  await admin.query(sql);
-  console.log('Migration applied on goeunserverhub.');
+  for (const file of [
+    '../prisma/migrate-energy-geserverhub.sql',
+    '../prisma/migrate-ge-energy-app-extensions.sql',
+    '../prisma/migrate-ge-energy-tech-orders.sql',
+  ]) {
+    const sql = readFileSync(resolve(__dirname, file), 'utf8');
+    console.log(`Applying ${file.replace('../prisma/', '')}…`);
+    await admin.query(sql);
+  }
+  console.log('All GE Energy migrations applied on goeunserverhub.');
   await admin.end();
 
   const db = await mysql.createConnection({ ...cfg, database: DB_NAME });

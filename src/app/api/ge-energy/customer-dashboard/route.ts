@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
 import {
   deviceFilterSql,
+  getSiteElectricityRates,
+  loadDeviceSitesByIds,
   resolveCustomerMeters,
   resolveRate,
   type CustomerScopeInput,
 } from '@/lib/ge-energy/customer-scope'
+import {
+  listElectricityRateRules,
+  resolveRateForDateWithMeta,
+} from '@/lib/ge-energy/electricity-rates'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,6 +20,7 @@ type MonthlyRow = {
   month_key: string
   year_num: number | string
   month_num: number | string
+  period_time?: string | null
   before_kwh: number | string | null
   after_kwh: number | string | null
   saved_kwh: number | string | null
@@ -108,6 +115,14 @@ export async function GET(request: NextRequest) {
       (siteParam && siteParam !== 'all' ? siteParam : 'thailand')
 
     const safeRate = resolveRate(primarySite, searchParams.get('rate'))
+    const rateOverride = searchParams.get('rate')
+    const rateRules = await listElectricityRateRules()
+    const deviceSiteMap = await loadDeviceSitesByIds(deviceIds)
+    const resolveMeterSite = (deviceId: number) =>
+      meters.find((m) => m.deviceId === deviceId)?.site ||
+      deviceSiteMap.get(deviceId) ||
+      primarySite
+
     const { sql: deviceSql, params: deviceParams } = deviceFilterSql(deviceIds)
 
     const dateFrom = searchParams.get('dateFrom')
@@ -123,39 +138,99 @@ export async function GET(request: NextRequest) {
       dateConditionParams = []
     }
 
-    const monthlyRows = await queryGe(
+    type MonthlyDeviceRow = MonthlyRow & {
+      device_id: number
+      co2_kg: number | string | null
+    }
+
+    const monthlyDeviceRows = (await queryGe(
       `SELECT
         DATE_FORMAT(pr.record_time, '%Y-%m') AS month_key,
         YEAR(pr.record_time) AS year_num,
         MONTH(pr.record_time) AS month_num,
+        MIN(pr.record_time) AS period_time,
+        pr.device_id,
         SUM(COALESCE(pr.before_kWh, 0)) AS before_kwh,
         SUM(COALESCE(pr.metrics_kWh, 0)) AS after_kwh,
-        SUM(COALESCE(pr.energy_reduction, 0)) AS saved_kwh
+        SUM(COALESCE(pr.energy_reduction, 0)) AS saved_kwh,
+        SUM(COALESCE(pr.co2_reduction, 0)) AS co2_kg
        FROM power_records pr
        INNER JOIN devices d ON d.deviceID = pr.device_id
        WHERE 1=1
        ${dateCondition}
        ${deviceSql}
-       GROUP BY DATE_FORMAT(pr.record_time, '%Y-%m'), YEAR(pr.record_time), MONTH(pr.record_time)
-       ORDER BY YEAR(pr.record_time) ASC, MONTH(pr.record_time) ASC`,
+       GROUP BY DATE_FORMAT(pr.record_time, '%Y-%m'), YEAR(pr.record_time), MONTH(pr.record_time), pr.device_id
+       ORDER BY YEAR(pr.record_time) ASC, MONTH(pr.record_time) ASC, pr.device_id ASC`,
       [...dateConditionParams, ...deviceParams],
-    )
+    )) as MonthlyDeviceRow[]
 
-    const monthly = (monthlyRows as MonthlyRow[]).map((row) => {
+    const monthlyByKey = new Map<
+      string,
+      {
+        monthKey: string
+        year: number
+        monthIndex: number
+        before: number
+        after: number
+        savedKwh: number
+        co2Kg: number
+        costBefore: number
+        costAfter: number
+      }
+    >()
+    const monthlyCostByDevice = new Map<number, { costBefore: number; costAfter: number }>()
+
+    for (const row of monthlyDeviceRows) {
       const before = toNumber(row.before_kwh)
       const after = toNumber(row.after_kwh)
+      const savedKwh = toNumber(row.saved_kwh)
+      const co2Kg = toNumber(row.co2_kg)
+      const deviceId = Number(row.device_id)
+      const meterSite = resolveMeterSite(deviceId)
+      const { rate: deviceRate } = resolveRateForDateWithMeta(
+        meterSite,
+        row.period_time || null,
+        rateRules,
+        rateOverride,
+      )
+      const costBefore = Math.round(before * deviceRate)
+      const costAfter = Math.round(after * deviceRate)
 
-      return {
-        monthKey: row.month_key,
-        year: toNumber(row.year_num),
-        monthIndex: toNumber(row.month_num),
-        before,
-        after,
-        costBefore: Math.round(before * safeRate),
-        costAfter: Math.round(after * safeRate),
-        savedKwh: toNumber(row.saved_kwh),
+      const key = String(row.month_key)
+      const existing = monthlyByKey.get(key)
+      if (existing) {
+        existing.before += before
+        existing.after += after
+        existing.savedKwh += savedKwh
+        existing.co2Kg += co2Kg
+        existing.costBefore += costBefore
+        existing.costAfter += costAfter
+      } else {
+        monthlyByKey.set(key, {
+          monthKey: key,
+          year: toNumber(row.year_num),
+          monthIndex: toNumber(row.month_num),
+          before,
+          after,
+          savedKwh,
+          co2Kg,
+          costBefore,
+          costAfter,
+        })
       }
-    })
+
+      const meterCost = monthlyCostByDevice.get(deviceId)
+      if (meterCost) {
+        meterCost.costBefore += costBefore
+        meterCost.costAfter += costAfter
+      } else {
+        monthlyCostByDevice.set(deviceId, { costBefore, costAfter })
+      }
+    }
+
+    const monthly = Array.from(monthlyByKey.values()).sort((a, b) =>
+      a.monthKey.localeCompare(b.monthKey),
+    )
 
     const summary = monthly.reduce(
       (acc, row) => {
@@ -168,12 +243,14 @@ export async function GET(request: NextRequest) {
       { totalBefore: 0, totalAfter: 0, totalCostBefore: 0, totalCostAfter: 0 },
     )
 
-    const totalSavedKwh = summary.totalBefore - summary.totalAfter
+    const totalSavedKwh = monthly.reduce((s, row) => s + row.savedKwh, 0)
     const totalSavedCost = summary.totalCostBefore - summary.totalCostAfter
+    const totalCo2Kg = monthly.reduce((s, row) => s + row.co2Kg, 0)
 
     // Per-meter aggregate stats
     let meterStats: Array<{
       deviceId: number
+      site: string
       beforeKwh: number
       afterKwh: number
       savedKwh: number
@@ -185,6 +262,9 @@ export async function GET(request: NextRequest) {
       savedCost: number
       savingPct: number
       co2SavedKg: number
+      electricityRate: number
+      rateSource: 'database' | 'env' | 'query'
+      rateLabel: string | null
     }> = []
 
     if (deviceIds.length > 0) {
@@ -195,6 +275,7 @@ export async function GET(request: NextRequest) {
            SUM(COALESCE(pr.before_kWh, 0))       AS before_kwh,
            SUM(COALESCE(pr.metrics_kWh, 0))       AS after_kwh,
            SUM(COALESCE(pr.energy_reduction, 0))  AS saved_kwh,
+           SUM(COALESCE(pr.co2_reduction, 0))     AS co2_kg,
            COUNT(*)                               AS record_count,
            MIN(pr.record_time)                    AS first_record,
            MAX(pr.record_time)                    AS last_record
@@ -210,6 +291,7 @@ export async function GET(request: NextRequest) {
         before_kwh: number | string | null
         after_kwh: number | string | null
         saved_kwh: number | string | null
+        co2_kg: number | string | null
         record_count: number | string
         first_record: string | null
         last_record: string | null
@@ -218,15 +300,24 @@ export async function GET(request: NextRequest) {
       // Use per-meter rate (match meter site)
       meterStats = meterRows.map((r) => {
         const dId = Number(r.device_id)
-        const mMeta = meters.find((m) => m.deviceId === dId)
-        const mRate = mMeta ? resolveRate(mMeta.site, searchParams.get('rate')) : safeRate
+        const meterSite = resolveMeterSite(dId)
         const bKwh = toNumber(r.before_kwh)
         const aKwh = toNumber(r.after_kwh)
         const sKwh = toNumber(r.saved_kwh)
-        const cB = Math.round(bKwh * mRate)
-        const cA = Math.round(aKwh * mRate)
+        const co2Kg = toNumber(r.co2_kg)
+        const meterCosts = monthlyCostByDevice.get(dId)
+        const rateMeta = resolveRateForDateWithMeta(
+          meterSite,
+          r.last_record || r.first_record || null,
+          rateRules,
+          rateOverride,
+        )
+        const cB = meterCosts ? meterCosts.costBefore : Math.round(bKwh * rateMeta.rate)
+        const cA = meterCosts ? meterCosts.costAfter : Math.round(aKwh * rateMeta.rate)
+        const effectiveRate = bKwh > 0 ? Number((cB / bKwh).toFixed(4)) : rateMeta.rate
         return {
           deviceId: dId,
+          site: meterSite,
           beforeKwh: bKwh,
           afterKwh: aKwh,
           savedKwh: sKwh,
@@ -236,11 +327,16 @@ export async function GET(request: NextRequest) {
           costBefore: cB,
           costAfter: cA,
           savedCost: cB - cA,
-          savingPct: bKwh > 0 ? Number(((bKwh - aKwh) / bKwh * 100).toFixed(1)) : 0,
-          co2SavedKg: Math.round((bKwh - aKwh) * 0.5313),
+          savingPct: bKwh > 0 ? Number(((sKwh / bKwh) * 100).toFixed(1)) : 0,
+          co2SavedKg: Math.round(co2Kg),
+          electricityRate: effectiveRate,
+          rateSource: rateMeta.source,
+          rateLabel: rateMeta.ruleLabel,
         }
       })
     }
+
+    const dbRuleCount = rateRules.filter((rule) => rule.isActive).length
 
     return NextResponse.json({
       success: true,
@@ -257,6 +353,15 @@ export async function GET(request: NextRequest) {
         })),
         meterStats,
         primarySite,
+        siteRates: getSiteElectricityRates(),
+        rateRules,
+        rateRuleCount: dbRuleCount,
+        dataSource: 'power_records',
+        rateLogic: {
+          siteField: 'devices.site / carbon_locations.site',
+          timeField: 'power_records.record_time',
+          fallback: 'env KOREA_ELECTRICITY_RATE / THAILAND_ELECTRICITY_RATE',
+        },
         summary: {
           ...summary,
           totalSavedKwh,
@@ -266,7 +371,7 @@ export async function GET(request: NextRequest) {
             summary.totalBefore > 0
               ? Number(((totalSavedKwh / summary.totalBefore) * 100).toFixed(1))
               : 0,
-          co2SavedKg: Math.round(totalSavedKwh * 0.5313),
+          co2SavedKg: Math.round(totalCo2Kg),
           electricityRate: safeRate,
         },
       },

@@ -23,6 +23,7 @@
     "db:seed-partner": "node scripts/seed-partner-products.mjs",
     "db:migrate": "node scripts/migrate-client-columns.mjs && node scripts/migrate-partner-product.mjs",
     "db:setup-energy": "node scripts/setup-ge-energy.mjs",
+    "db:setup-full": "node scripts/setup-full-database.mjs",
     "db:setup-geet-orders": "node scripts/apply-ge-energy-tech-orders-schema.mjs",
     "db:export": "node scripts/export-geserverhub-db.mjs",
     "mqtt:bridge": "node scripts/mqtt-bridge.mjs",
