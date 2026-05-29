@@ -531,6 +531,8 @@ export default function CustomersPage() {
   const currencyCode = getCurrencyCodeBySite(billingSite, locale);
   const formatCost = (n) =>
     formatCurrencyBySite(n, billingSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const formatCostForSite = (n, site) =>
+    formatCurrencyBySite(n, site || billingSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const labelCostBefore = L(locale, `ก่อน (${currencySymbol})`, `이전 (${currencySymbol})`, `Before (${currencyCode})`);
   const labelCostAfter = L(locale, `หลัง (${currencySymbol})`, `이후 (${currencySymbol})`, `After (${currencyCode})`);
   const labelCostSaved = L(locale, `ประหยัด (${currencySymbol})`, `절약 (${currencySymbol})`, `Saved (${currencyCode})`);
@@ -1912,6 +1914,9 @@ export default function CustomersPage() {
             ) : customerMeters.map((meter, idx) => {
               const st = meterStats.find(s => s.deviceId === meter.deviceId) || null;
               const hasData = st && st.recordCount > 0;
+              const meterSite = meter.site || billingSite || 'thailand';
+              const meterCurrencySymbol = getCurrencySymbolBySite(meterSite, locale);
+              const meterCurrencyCode = getCurrencyCodeBySite(meterSite, locale);
               const savePctColor = !hasData ? '#64748b' : st.savingPct >= 20 ? '#059669' : st.savingPct >= 10 ? '#d97706' : '#ef4444';
               const fmtDate = (d) => d ? new Date(d).toLocaleDateString(locale === 'ko' ? 'ko-KR' : locale === 'th' ? 'th-TH' : 'en-GB') : '—';
 
@@ -1987,9 +1992,9 @@ export default function CustomersPage() {
                           { icon: Zap, label: L(locale,'หลังติดตั้ง (kWh)','설치 후 (kWh)','After (kWh)'), val: fmt(Math.round(st.afterKwh)), color: '#059669', bg: '#ecfdf5' },
                           { icon: TrendingDown, label: L(locale,'ประหยัด (kWh)','절약 (kWh)','Saved (kWh)'), val: fmt(Math.round(st.savedKwh)), color: '#0d9488', bg: '#f0fdfa' },
                           { icon: TrendingDown, label: L(locale,'% ประหยัด','절약률','Saving %'), val: `${st.savingPct}%`, color: savePctColor, bg: '#f8fafc' },
-                          { icon: DollarSign, label: L(locale,`ค่าไฟก่อน (${currencySymbol})`,`이전 비용 (${currencySymbol})`,`Before Cost (${currencyCode})`), val: formatCost(st.costBefore), color: '#b45309', bg: '#fffbeb' },
-                          { icon: DollarSign, label: L(locale,`ค่าไฟหลัง (${currencySymbol})`,`이후 비용 (${currencySymbol})`,`After Cost (${currencyCode})`), val: formatCost(st.costAfter), color: '#059669', bg: '#ecfdf5' },
-                          { icon: DollarSign, label: L(locale,`ประหยัด (${currencySymbol})`,`절약 비용 (${currencySymbol})`,`Saved (${currencyCode})`), val: formatCost(st.savedCost), color: '#0d9488', bg: '#f0fdfa' },
+                          { icon: DollarSign, label: L(locale,`ค่าไฟก่อน (${meterCurrencySymbol})`,`이전 비용 (${meterCurrencySymbol})`,`Before Cost (${meterCurrencyCode})`), val: formatCostForSite(st.costBefore, meterSite), color: '#b45309', bg: '#fffbeb' },
+                          { icon: DollarSign, label: L(locale,`ค่าไฟหลัง (${meterCurrencySymbol})`,`이후 비용 (${meterCurrencySymbol})`,`After Cost (${meterCurrencyCode})`), val: formatCostForSite(st.costAfter, meterSite), color: '#059669', bg: '#ecfdf5' },
+                          { icon: DollarSign, label: L(locale,`ประหยัด (${meterCurrencySymbol})`,`절약 비용 (${meterCurrencySymbol})`,`Saved (${meterCurrencyCode})`), val: formatCostForSite(st.savedCost, meterSite), color: '#0d9488', bg: '#f0fdfa' },
                           { icon: Leaf, label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Reduced (kg)'), val: fmt(st.co2SavedKg), color: '#065f46', bg: '#ecfdf5' },
                         ].map(({ icon: Icon, label, val, color, bg }) => (
                           <div key={label} style={{ background: bg, borderRadius: '0.75rem', padding: '0.75rem', border: '1px solid #e2e8f0' }}>
