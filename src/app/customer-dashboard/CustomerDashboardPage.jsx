@@ -16,15 +16,20 @@ import {
   Thermometer, ChevronDown, BarChart2, Users, Sprout, Download,
   AlertCircle, BrainCircuit, Lightbulb, ShieldAlert, TrendingUp, Table2, PackagePlus, Upload, Save, Pencil,
 } from 'lucide-react';
-import { generateMonthlyEnergyExcel, exportToExcel } from '@/lib/excel-export';
+import { generateMonthlyEnergyExcel } from '@/lib/excel-export';
+import CurrentExportModal from '@/app/customer-dashboard/CurrentExportModal';
 import { calculateMeterUnitPrice, formatThb, METER_ORDER_BANK } from '@/lib/meter-order';
 import { parseJsonResponse } from '@/lib/parse-json-response';
-
-function L(locale, th, ko, en) {
-  if (locale === 'th') return th;
-  if (locale === 'ko') return ko;
-  return en;
-}
+import {
+  L,
+  Lfmt,
+  LSuffix,
+  cdMonthLabel,
+  cdLocaleTag,
+  cdWelcomeText,
+  cdProductCategoryLabel,
+  cdCatalogDescription,
+} from '@/lib/customer-dashboard-i18n';
 function fmt(n) { return n.toLocaleString(); }
 
 function formatCatalogPrice(p) {
@@ -54,6 +59,60 @@ function buildCustomerDashboardQuery(user, deviceId) {
   if (user?.username) params.set('username', String(user.username));
   if (deviceId) params.set('deviceId', String(deviceId));
   return params.toString();
+}
+
+/** CH1 = before (INPUT), CH2 = after (OUTPUT) — all derived KPIs from channel kWh */
+function deriveMeterChannelKpis(st) {
+  if (!st) return null;
+  const ch1Kwh = Number(st.channels?.ch1?.kwh ?? st.beforeKwh ?? 0);
+  const ch2Kwh = Number(st.channels?.ch2?.kwh ?? st.afterKwh ?? 0);
+  const beforeKwh = Number.isFinite(ch1Kwh) ? ch1Kwh : 0;
+  const afterKwh = Number.isFinite(ch2Kwh) ? ch2Kwh : 0;
+  const savedKwh = Math.max(0, beforeKwh - afterKwh);
+  const costBefore = Number(st.channels?.ch1?.cost ?? st.costBefore ?? 0);
+  const costAfter = Number(st.channels?.ch2?.cost ?? st.costAfter ?? 0);
+  const savedCost = costBefore - costAfter;
+  const savingPct = beforeKwh > 0 ? Number(((savedKwh / beforeKwh) * 100).toFixed(1)) : 0;
+  const co2SavedKg = Number(st.co2SavedKg ?? 0);
+  return { beforeKwh, afterKwh, savedKwh, costBefore, costAfter, savedCost, savingPct, co2SavedKg };
+}
+
+function findLinkedMeter(meters, deviceId) {
+  if (!deviceId || !Array.isArray(meters)) return null;
+  return meters.find((m) => String(m.deviceId) === String(deviceId)) || null;
+}
+
+function DeviceLocationSite({ meters, deviceId, dd, dev }) {
+  const linked = findLinkedMeter(meters, deviceId);
+  return (
+    <>
+      <p className="font-semibold text-gray-800">
+        {linked?.locationName || dd?.location || dev?.location || '—'}
+      </p>
+      <p className="text-xs text-gray-400 mt-0.5">
+        {linked?.site?.toUpperCase() || dd?.site || '-'}
+      </p>
+    </>
+  );
+}
+
+function aggregateChannelKpis(statsList) {
+  const rows = (statsList || [])
+    .map((st) => deriveMeterChannelKpis(st))
+    .filter(Boolean);
+  if (rows.length === 0) return null;
+  return rows.reduce(
+    (acc, k) => ({
+      beforeKwh: acc.beforeKwh + k.beforeKwh,
+      afterKwh: acc.afterKwh + k.afterKwh,
+      savedKwh: acc.savedKwh + k.savedKwh,
+      costBefore: acc.costBefore + k.costBefore,
+      costAfter: acc.costAfter + k.costAfter,
+      savedCost: acc.savedCost + k.savedCost,
+      co2SavedKg: acc.co2SavedKg + k.co2SavedKg,
+    }),
+    { beforeKwh: 0, afterKwh: 0, savedKwh: 0, costBefore: 0, costAfter: 0, savedCost: 0, co2SavedKg: 0 },
+  );
 }
 
 function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
@@ -208,7 +267,7 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
           <p className="cd-ai-metric-sub">
             {thdB > 0 && thdA > 0
               ? thdA < thdB
-                ? `✅ ${L(locale,`ลด ${(thdB - thdA).toFixed(1)}%`,`${(thdB - thdA).toFixed(1)}% 감소`,`Reduced ${(thdB - thdA).toFixed(1)}%`)}`
+                ? `✅ ${Lfmt(locale, 'ลด {pct}%', '{pct}% 감소', 'Reduced {pct}%', { pct: (thdB - thdA).toFixed(1) })}`
                 : `⚠️ ${L(locale,'ไม่ลดลง','미감소','Not reduced')}`
               : L(locale,'ไม่มีข้อมูล','데이터 없음','No data')}
           </p>
@@ -253,7 +312,7 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
                 ? (Math.max(...vals.map(v => Math.abs((v.a || avgA) - avgA))) / avgA * 100).toFixed(1)
                 : null;
               return imb !== null
-                ? `${Number(imb) > 10 ? '⚠️' : '✅'} ${L(locale,`ไม่สมดุล ${imb}%`,`불균형 ${imb}%`,`Imbalance ${imb}%`)}`
+                ? `${Number(imb) > 10 ? '⚠️' : '✅'} ${Lfmt(locale, 'ไม่สมดุล {pct}%', '불균형 {pct}%', 'Imbalance {pct}%', { pct: imb })}`
                 : L(locale,'ไม่มีข้อมูล','데이터 없음','No data');
             })()}
           </p>
@@ -296,11 +355,7 @@ function AiAnalysisTab({ snapshot, liveData, monthlyData, savingPct, locale }) {
             <h3 className="cd-card-title">{L(locale,'แนวโน้มรายเดือน (kWh)','월별 추세 (kWh)','Monthly Trend (kWh)')}</h3>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={monthlyData.map(d => {
-                const th = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-                const en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                const ko = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-                const idx = Math.max(0, Math.min(11, d.monthIndex - 1));
-                return { name: locale === 'th' ? th[idx] : locale === 'ko' ? ko[idx] : en[idx], before: d.before, after: d.after };
+                return { name: cdMonthLabel(locale, d.monthIndex), before: d.before, after: d.after };
               })}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -506,9 +561,10 @@ export default function CustomersPage() {
   const [monitorLoading, setMonitorLoading] = useState(false);
   const [monitorError, setMonitorError] = useState(null);
   const [lastMonitorAt, setLastMonitorAt] = useState(null);
-  const [monitorMinutes, setMonitorMinutes] = useState(30);
+  const [monitorSeconds, setMonitorSeconds] = useState(60);
   const [monitorMetric, setMonitorMetric] = useState('current');
   const [isLivePulse, setIsLivePulse] = useState(false);
+  const [currentExportOpen, setCurrentExportOpen] = useState(false);
 
   const monitorMetricOptions = [
     { key: 'current', label: L(locale, 'กระแสไฟ', '전류', 'Current') },
@@ -529,31 +585,49 @@ export default function CustomersPage() {
   const [compareFrom, setCompareFrom] = useState('');
   const [compareTo, setCompareTo] = useState('');
 
-  const totalBefore = monthlyData.reduce((s, d) => s + d.before, 0);
-  const totalAfter = monthlyData.reduce((s, d) => s + d.after, 0);
-  const totalSavedKwhFromDb = monthlyData.reduce((s, d) => s + (d.savedKwh ?? 0), 0);
-  const totalSavedKwh = totalSavedKwhFromDb > 0 ? totalSavedKwhFromDb : totalBefore - totalAfter;
-  const totalCostBefore = monthlyData.reduce((s, d) => s + d.costBefore, 0);
-  const totalCostAfter = monthlyData.reduce((s, d) => s + d.costAfter, 0);
-  const totalSavedCost = totalCostBefore - totalCostAfter;
+  const channelTotals = aggregateChannelKpis(meterStats);
+  const totalBefore = channelTotals
+    ? channelTotals.beforeKwh
+    : monthlyData.reduce((s, d) => s + d.before, 0);
+  const totalAfter = channelTotals
+    ? channelTotals.afterKwh
+    : monthlyData.reduce((s, d) => s + d.after, 0);
+  const totalSavedKwh = channelTotals
+    ? channelTotals.savedKwh
+    : Math.max(0, totalBefore - totalAfter);
+  const hasPowerRecords = channelTotals
+    ? channelTotals.beforeKwh > 0 || channelTotals.afterKwh > 0
+    : monthlyData.length > 0 &&
+      monthlyData.some((d) => d.before > 0 || d.after > 0 || (d.savedKwh ?? 0) > 0);
+  const totalCostBefore = channelTotals
+    ? channelTotals.costBefore
+    : monthlyData.reduce((s, d) => s + d.costBefore, 0);
+  const totalCostAfter = channelTotals
+    ? channelTotals.costAfter
+    : monthlyData.reduce((s, d) => s + d.costAfter, 0);
+  const totalSavedCost = channelTotals
+    ? channelTotals.savedCost
+    : totalCostBefore - totalCostAfter;
   const savingPct = totalBefore > 0 ? ((totalSavedKwh / totalBefore) * 100).toFixed(1) : '0.0';
   const co2FromMonthly = monthlyData.reduce((s, d) => s + (d.co2Kg ?? 0), 0);
-  const co2Saved = String(
-    summaryCo2Kg != null && summaryCo2Kg > 0
-      ? Math.round(summaryCo2Kg)
-      : co2FromMonthly > 0
-        ? Math.round(co2FromMonthly)
-        : Math.round(totalSavedKwh * 0.5313),
-  );
+  const co2FromChannels = channelTotals?.co2SavedKg > 0 ? Math.round(channelTotals.co2SavedKg) : 0;
+  const co2FromDb =
+    co2FromChannels > 0
+      ? co2FromChannels
+      : summaryCo2Kg != null && summaryCo2Kg > 0
+        ? Math.round(summaryCo2Kg)
+        : co2FromMonthly > 0
+          ? Math.round(co2FromMonthly)
+          : null;
   const currencySymbol = getCurrencySymbolBySite(billingSite, locale);
   const currencyCode = getCurrencyCodeBySite(billingSite, locale);
   const formatCost = (n) =>
     formatCurrencyBySite(n, billingSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const formatCostForSite = (n, site) =>
     formatCurrencyBySite(n, site || billingSite, locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const labelCostBefore = L(locale, `ก่อน (${currencySymbol})`, `이전 (${currencySymbol})`, `Before (${currencyCode})`);
-  const labelCostAfter = L(locale, `หลัง (${currencySymbol})`, `이후 (${currencySymbol})`, `After (${currencyCode})`);
-  const labelCostSaved = L(locale, `ประหยัด (${currencySymbol})`, `절약 (${currencySymbol})`, `Saved (${currencyCode})`);
+  const labelCostBefore = Lfmt(locale, 'ก่อน ({code})', '이전 ({code})', 'Before ({code})', { code: currencySymbol });
+  const labelCostAfter = Lfmt(locale, 'หลัง ({code})', '이후 ({code})', 'After ({code})', { code: currencySymbol });
+  const labelCostSaved = Lfmt(locale, 'ประหยัด ({code})', '절약 ({code})', 'Saved ({code})', { code: currencySymbol });
   const labelMonthlyCost = L(
     locale,
     `ค่าใช้จ่ายรายเดือน (${currencyCode})`,
@@ -638,7 +712,9 @@ export default function CustomersPage() {
           setMeterStats(Array.isArray(j.data.meterStats) ? j.data.meterStats : []);
           const site = j.data.primarySite || 'thailand';
           setBillingSite(site);
-          setSelectedSite(site);
+          if (site && site !== selectedSite) {
+            setSelectedSite(site);
+          }
           setElectricityRate(j.data.summary?.electricityRate ?? null);
           setSummaryCo2Kg(j.data.summary?.co2SavedKg ?? null);
           setRateRuleCount(Number(j.data.rateRuleCount || 0));
@@ -655,6 +731,9 @@ export default function CustomersPage() {
             const allowed = meterDevices.some((d) => String(d.deviceID) === String(keepId));
             const nextId = allowed ? String(keepId) : String(meterDevices[0].deviceID);
             if (!selectedDeviceId || !allowed) setSelectedDeviceId(nextId);
+            if (meterDevices.length === 1) {
+              setSelectedMeterDeviceId(String(meterDevices[0].deviceID));
+            }
           }
         } else {
           setMonthlyError(
@@ -687,7 +766,7 @@ export default function CustomersPage() {
     return () => {
       active = false;
     };
-  }, [customerUser, selectedMeterDeviceId, setSelectedSite]);
+  }, [customerUser, selectedMeterDeviceId, selectedSite, setSelectedSite, locale]);
 
   // ── Compare tab fetch ──
   useEffect(() => {
@@ -743,7 +822,7 @@ export default function CustomersPage() {
     setMonitorError(null);
     try {
       const res = await fetch(
-        `/api/ge-energy/customer-live-monitor?site=${encodeURIComponent(selectedSite)}&deviceId=${encodeURIComponent(selectedDeviceId)}&minutes=${monitorMinutes}`,
+        `/api/ge-energy/customer-live-monitor?site=${encodeURIComponent(selectedSite)}&deviceId=${encodeURIComponent(selectedDeviceId)}&seconds=${monitorSeconds}`,
         { cache: 'no-store' }
       );
       const json = await res.json();
@@ -775,7 +854,7 @@ export default function CustomersPage() {
     return () => {
       if (monitorTimer.current) clearInterval(monitorTimer.current);
     };
-  }, [activeTab, selectedDeviceId, selectedSite, monitorMinutes]);
+  }, [activeTab, selectedDeviceId, selectedSite, monitorSeconds]);
 
   useEffect(() => {
     fetch('/api/ge-energy/broadcast')
@@ -843,7 +922,7 @@ export default function CustomersPage() {
       const [histRes, snapRes, devRes] = await Promise.all([
         fetch(`/api/ge-energy/device-history?deviceId=${selectedDeviceId}&period=hour&from=${today}&to=${today}&limit=24`),
         fetch(`/api/ge-energy/device-monitoring?deviceId=${selectedDeviceId}`),
-        fetch(`/api/ge-energy/devices-setting?site=all`),
+        fetch(`/api/ge-energy/devices-setting?deviceId=${encodeURIComponent(selectedDeviceId)}`),
       ]);
       const histJson = await histRes.json();
       const snapJson = await snapRes.json();
@@ -919,13 +998,7 @@ export default function CustomersPage() {
     try { return new Set(JSON.parse(sessionStorage.getItem('readFeedbackIds') || '[]')); } catch { return new Set(); }
   });
 
-  const monthLabel = (d) => {
-    const th = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-    const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const ko = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-    const idx = Math.max(0, Math.min(11, d.monthIndex - 1));
-    return locale === 'th' ? th[idx] : locale === 'ko' ? ko[idx] : en[idx];
-  };
+  const monthLabel = (d) => cdMonthLabel(locale, d.monthIndex);
 
   const chartData = monthlyData.map(d => ({
     name: monthLabel(d),
@@ -1011,13 +1084,13 @@ export default function CustomersPage() {
           ),
         );
       }
-      if (!Array.isArray(productMonthlyBills) || productMonthlyBills.length !== 12) {
+      if (productMonthlyBills.length > 12) {
         throw new Error(
           L(
             locale,
-            'กรุณาอัปโหลดบิลค่าไฟ 12 เดือนให้ครบ',
-            '전기요금 고지서 12개월분을 업로드하세요',
-            'Please upload all 12 monthly electricity bills',
+            'อัปโหลดบิลค่าไฟได้ไม่เกิน 12 ไฟล์',
+            '전기요금 고지서는 최대 12개까지 업로드할 수 있습니다',
+            'You can upload at most 12 monthly electricity bills',
           ),
         );
       }
@@ -1076,7 +1149,7 @@ export default function CustomersPage() {
     { key: 'energy',  label: L(locale,'กราฟไฟฟ้า','전력 그래프','Energy'),   icon: BarChart2 },
     { key: 'cost',    label: L(locale,'กราฟค่าไฟ','비용 그래프','Cost'),      icon: DollarSign },
     { key: 'products',label: L(locale,'สินค้าของเรา','우리 제품','Our Products'), icon: PackagePlus },
-    { key: 'meters',  label: L(locale,`มิเตอร์ (${customerMeters.length})`,`미터 (${customerMeters.length})`,`Meters (${customerMeters.length})`), icon: Cpu },
+    { key: 'meters',  label: Lfmt(locale, 'มิเตอร์ ({n})', '미터 ({n})', 'Meters ({n})', { n: customerMeters.length }), icon: Cpu },
     { key: 'ai',      label: L(locale,'AI วิเคราะห์','AI 분석','AI Analysis'), icon: BrainCircuit },
     { key: 'live',    label: L(locale,'ไฟปัจจุบัน','실시간','Live'),          icon: Activity },
     { key: 'monitor', label: L(locale,'มอนิเตอร์เรียลไทม์','실시간 모니터','Real-time Monitor'), icon: Cpu },
@@ -1191,10 +1264,30 @@ export default function CustomersPage() {
   const contactBadge = unreadBroadcasts + unreadReplies;
 
   const kpiItems = [
-    { icon: Zap, val: `${fmt(totalSavedKwh)} kWh`, label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'), tone: 'energy' },
-    { icon: DollarSign, val: formatCost(totalSavedCost), label: L(locale,`ค่าไฟที่ประหยัด (${currencySymbol})`,`절약 비용 (${currencySymbol})`,`Cost Saved (${currencyCode})`), tone: 'cost' },
-    { icon: TrendingDown, val: `${savingPct}%`, label: L(locale,'% ที่ประหยัด','절약률','Saving Rate'), tone: 'rate' },
-    { icon: Leaf, val: `${fmt(Number(co2Saved))} kg`, label: L(locale,'CO₂ ที่ลดได้','CO₂ 절감량','CO₂ Reduced'), tone: 'co2' },
+    {
+      icon: Zap,
+      val: hasPowerRecords ? `${fmt(totalSavedKwh)} kWh` : '—',
+      label: L(locale,'ไฟฟ้าที่ประหยัด','절약 전력량','Energy Saved'),
+      tone: 'energy',
+    },
+    {
+      icon: DollarSign,
+      val: hasPowerRecords ? formatCost(totalSavedCost) : '—',
+      label: Lfmt(locale, 'ค่าไฟที่ประหยัด ({code})', '절약 비용 ({code})', 'Cost Saved ({code})', { code: currencySymbol }),
+      tone: 'cost',
+    },
+    {
+      icon: TrendingDown,
+      val: hasPowerRecords ? `${savingPct}%` : '—',
+      label: L(locale,'% ที่ประหยัด','절약률','Saving Rate'),
+      tone: 'rate',
+    },
+    {
+      icon: Leaf,
+      val: co2FromDb != null ? `${fmt(co2FromDb)} kg` : '—',
+      label: L(locale,'CO₂ ที่ลดได้','CO₂ 절감량','CO₂ Reduced'),
+      tone: 'co2',
+    },
   ];
 
   return (
@@ -1232,13 +1325,7 @@ export default function CustomersPage() {
           <div>
             {welcomeName ? (
               <p className="cd-hero-welcome">
-                {locale === 'ko' ? (
-                  <><strong>{welcomeName}</strong>님, 환영합니다</>
-                ) : locale === 'en' ? (
-                  <>Welcome, <strong>{welcomeName}</strong></>
-                ) : (
-                  <>ยินดีต้อนรับ, <strong>{welcomeName}</strong></>
-                )}
+                {cdWelcomeText(locale, welcomeName)}
               </p>
             ) : null}
             <h1 className="cd-hero-title">{L(locale,'รายงานเปรียบเทียบพลังงาน','에너지 비교 보고서','Energy Comparison Report')}</h1>
@@ -1288,44 +1375,46 @@ export default function CustomersPage() {
           </div>
         </nav>
 
+        {/* ── Meter filter (energy / cost / compare) ── */}
+        {(activeTab === 'energy' || activeTab === 'cost' || activeTab === 'compare') && customerMeters.length > 0 && (
+          <div className="cd-meter-toolbar">
+            <label htmlFor="cd-meter-select" className="cd-meter-toolbar-label">
+              {L(locale, 'มิเตอร์ของคุณ', '내 미터', 'Your meters')}
+            </label>
+            <div className="cd-meter-toolbar-row">
+              <select
+                id="cd-meter-select"
+                className="cd-meter-select"
+                value={selectedMeterDeviceId}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedMeterDeviceId(v);
+                  if (v) setSelectedDeviceId(v);
+                }}
+              >
+                <option value="">{L(locale, 'ทุกมิเตอร์', '전체 미터', 'All meters')}</option>
+                {customerMeters.map((m) => (
+                  <option key={m.deviceId} value={String(m.deviceId)}>
+                    {m.label}{m.locationName ? ` · ${m.locationName}` : ''} ({m.site})
+                  </option>
+                ))}
+              </select>
+              {electricityRate != null && activeTab !== 'compare' && (
+                <span className="cd-meter-rate">
+                  {L(locale, 'อัตราไฟ', '요금', 'Rate')}: {fmt(electricityRate)} / kWh ({currencyCode})
+                  {' · '}
+                  {rateRuleCount > 0
+                    ? L(locale, 'จากฐานข้อมูล', 'DB 적용', 'from database')
+                    : L(locale, 'จาก env', 'env 기본값', 'from env')}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ── Energy / Cost Charts ── */}
         {(activeTab === 'energy' || activeTab === 'cost') && (
           <div className="cd-stack">
-            {customerMeters.length > 0 && (
-              <div className="cd-meter-toolbar">
-                <label htmlFor="cd-meter-select" className="cd-meter-toolbar-label">
-                  {L(locale, 'มิเตอร์ของคุณ', '내 미터', 'Your meters')}
-                </label>
-                <div className="cd-meter-toolbar-row">
-                  <select
-                    id="cd-meter-select"
-                    className="cd-meter-select"
-                    value={selectedMeterDeviceId}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setSelectedMeterDeviceId(v);
-                      if (v) setSelectedDeviceId(v);
-                    }}
-                  >
-                    <option value="">{L(locale, 'ทุกมิเตอร์', '전체 미터', 'All meters')}</option>
-                    {customerMeters.map((m) => (
-                      <option key={m.deviceId} value={String(m.deviceId)}>
-                        {m.label}{m.locationName ? ` · ${m.locationName}` : ''} ({m.site})
-                      </option>
-                    ))}
-                  </select>
-                  {electricityRate != null && (
-                  <span className="cd-meter-rate">
-                    {L(locale, 'อัตราไฟ', '요금', 'Rate')}: {fmt(electricityRate)} / kWh ({currencyCode})
-                    {' · '}
-                    {rateRuleCount > 0
-                      ? L(locale, 'จากฐานข้อมูล', 'DB 적용', 'from database')
-                      : L(locale, 'จาก env', 'env 기본값', 'from env')}
-                  </span>
-                  )}
-                </div>
-              </div>
-            )}
 
             {!monthlyLoading && customerUser && customerMeters.length === 0 && (
               <p className="cd-error">
@@ -1469,7 +1558,7 @@ export default function CustomersPage() {
                     <div className="cd-kpi-icon cd-kpi-icon--co2">
                       <Leaf className="w-5 h-5" />
                     </div>
-                    <p className="cd-kpi-val">{fmt(co2Saved)}</p>
+                    <p className="cd-kpi-val">{co2FromDb != null ? fmt(co2FromDb) : '—'}</p>
                     <p className="cd-kpi-label">{L(locale,'CO₂ ลด (kg)','CO₂ 감소 (kg)','CO₂ Reduced (kg)')}</p>
                   </div>
                 </div>
@@ -1529,10 +1618,11 @@ export default function CustomersPage() {
                 </select>
                 <ChevronDown className="cd-select-chevron" />
               </div>
-              <select value={monitorMinutes} onChange={e => setMonitorMinutes(Number(e.target.value))} className="cd-select">
-                <option value={15}>{L(locale,'15 นาที','15분','15 min')}</option>
-                <option value={30}>{L(locale,'30 นาที','30분','30 min')}</option>
-                <option value={60}>{L(locale,'60 นาที','60분','60 min')}</option>
+              <select value={monitorSeconds} onChange={e => setMonitorSeconds(Number(e.target.value))} className="cd-select">
+                <option value={30}>{L(locale,'30 วินาที','30초','30 sec')}</option>
+                <option value={60}>{L(locale,'60 วินาที','60초','60 sec')}</option>
+                <option value={120}>{L(locale,'120 วินาที','120초','120 sec')}</option>
+                <option value={300}>{L(locale,'300 วินาที','300초','300 sec')}</option>
               </select>
               <div className="cd-metric-scroll">
                 {monitorMetricOptions.map((m) => (
@@ -1551,6 +1641,15 @@ export default function CustomersPage() {
                 className="cd-btn cd-btn--primary">
                 <RefreshCw className={`w-4 h-4 ${monitorLoading ? 'animate-spin' : ''}`} />
                 {L(locale,'รีเฟรช','새로고침','Refresh')}
+              </button>
+              <button
+                type="button"
+                disabled={!selectedDeviceId}
+                onClick={() => setCurrentExportOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                <Download className="w-4 h-4" />
+                {L(locale,'ส่งออก Excel','Excel보내기','Export Excel')}
               </button>
               <div className="cd-live-hint">
                 <span className={`cd-live-dot${isLivePulse ? ' cd-live-dot--on' : ''}`} />
@@ -1595,6 +1694,8 @@ export default function CustomersPage() {
                 </h2>
                 <p className="cd-card-desc">
                   {monitorSeries.length} {L(locale,'จุดข้อมูล','데이터 포인트','points')}
+                  {' · '}
+                  {monitorSeconds} {L(locale,'วินาที','초','sec')}
                 </p>
                 {monitorLoading && monitorSeries.length === 0 ? (
                   <div className="cd-chart-loading">
@@ -1684,25 +1785,12 @@ export default function CustomersPage() {
               </button>
               <button
                 type="button"
-                disabled={liveData.length === 0}
-                onClick={() => {
-                  const dev = devices.find(d => String(d.deviceID) === String(selectedDeviceId));
-                  const rows = liveData.map(d => ({
-                    [L(locale,'เวลา','시간','Time')]: d.time ? String(d.time).slice(11,16) : '',
-                    'L1 (A)': d.currentL1 ?? '', 'L2 (A)': d.currentL2 ?? '', 'L3 (A)': d.currentL3 ?? '',
-                    [L(locale,'กำลังไฟ (kW)','전력 (kW)','Power (kW)')]: d.totalPower ?? '',
-                    [L(locale,'แรงดัน L1 (V)','전압 L1','V L1')]: d.voltageL1 ?? '',
-                    [L(locale,'แรงดัน L2 (V)','전압 L2','V L2')]: d.voltageL2 ?? '',
-                    [L(locale,'แรงดัน L3 (V)','전압 L3','V L3')]: d.voltageL3 ?? '',
-                    [L(locale,'ความถี่ (Hz)','주파수','Hz')]: d.frequency ?? '',
-                    'Power Factor': d.powerFactor ?? '',
-                  }));
-                  exportToExcel(rows, `live_current_${dev?.deviceName || selectedDeviceId}`, L(locale,'กระแสไฟ','전류','Current'));
-                }}
+                disabled={!selectedDeviceId}
+                onClick={() => setCurrentExportOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
                 <Download className="w-4 h-4" />
-                {L(locale,'ดาวน์โหลด Excel','Excel 다운로드','Export Excel')}
+                {L(locale,'ส่งออก Excel','Excel보내기','Export Excel')}
               </button>
             </div>
 
@@ -1794,6 +1882,7 @@ export default function CustomersPage() {
               const d = snapshot;
               const dev = devices.find(x => String(x.deviceID) === String(selectedDeviceId));
               const dd = deviceDetails;
+              const liveDeviceId = selectedMeterDeviceId || selectedDeviceId;
               return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
                   <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-green-600" />
@@ -1838,8 +1927,12 @@ export default function CustomersPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">{L(locale,'สถานที่/ไซต์','설치 위치/사이트','Location / Site')}</p>
-                        <p className="font-semibold text-gray-800">{dd?.location ?? dev?.location ?? '-'}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{dd?.site ?? '-'}</p>
+                        <DeviceLocationSite
+                          meters={customerMeters}
+                          deviceId={liveDeviceId}
+                          dd={dd}
+                          dev={dev}
+                        />
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">{L(locale,'วันที่ลงทะเบียน','등록일','Register Date')}</p>
@@ -1918,11 +2011,36 @@ export default function CustomersPage() {
                         color: isActive ? '#065f46' : '#64748b',
                       }}>
                         <span>{isActive ? '🟢' : '⚪'}</span>
-                        {L(locale,'มิเตอร์','미터','Meter')} {i + 1}: {m.meterNo || m.meterId || `ID ${m.deviceId}`}
+                        {L(locale,'มิเตอร์','미터','Meter')} {i + 1}: {m.seriesNo || m.geId || m.deviceName || `ID ${m.deviceId}`}
                       </div>
                     );
                   })}
                 </div>
+
+                {channelTotals && (channelTotals.beforeKwh > 0 || channelTotals.afterKwh > 0) && (
+                  <div style={{ marginTop: '1.25rem' }}>
+                    <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+                      {L(locale, 'สรุปรวม CH1 + CH2 (ทุกมิเตอร์)', 'CH1+CH2 합계 (전체 미터)', 'Total CH1 + CH2 (all meters)')}
+                    </p>
+                    <div className="cd-stat-grid cd-stat-grid--8">
+                      {[
+                        { label: L(locale,'ก่อน (kWh)','이전 (kWh)','Before (kWh)'), val: fmt(Math.round(channelTotals.beforeKwh)), color: '#b45309' },
+                        { label: L(locale,'หลัง (kWh)','이후 (kWh)','After (kWh)'), val: fmt(Math.round(channelTotals.afterKwh)), color: '#059669' },
+                        { label: L(locale,'ประหยัด (kWh)','절약 (kWh)','Saved (kWh)'), val: fmt(Math.round(channelTotals.savedKwh)), color: '#0d9488' },
+                        { label: L(locale,'% ประหยัด','절약률','Saving %'), val: channelTotals.beforeKwh > 0 ? `${((channelTotals.savedKwh / channelTotals.beforeKwh) * 100).toFixed(1)}%` : '—', color: '#334155' },
+                        { label: Lfmt(locale, 'ค่าไฟก่อน ({code})', '이전 비용 ({code})', 'Before Cost ({code})', { code: currencySymbol }), val: formatCost(channelTotals.costBefore), color: '#b45309' },
+                        { label: Lfmt(locale, 'ค่าไฟหลัง ({code})', '이후 비용 ({code})', 'After Cost ({code})', { code: currencySymbol }), val: formatCost(channelTotals.costAfter), color: '#059669' },
+                        { label: Lfmt(locale, 'ประหยัด ({code})', '절약 비용 ({code})', 'Saved ({code})', { code: currencySymbol }), val: formatCost(channelTotals.savedCost), color: '#0d9488' },
+                        { label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Reduced (kg)'), val: channelTotals.co2SavedKg > 0 ? fmt(Math.round(channelTotals.co2SavedKg)) : '—', color: '#065f46' },
+                      ].map(({ label, val, color }) => (
+                        <div key={label} className="cd-stat-card">
+                          <p className="cd-stat-val" style={{ color }}>{val}</p>
+                          <p className="cd-stat-label">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1934,12 +2052,13 @@ export default function CustomersPage() {
               </div>
             ) : customerMeters.map((meter, idx) => {
               const st = meterStats.find(s => s.deviceId === meter.deviceId) || null;
-              const hasData = st && st.recordCount > 0;
+              const chKpi = deriveMeterChannelKpis(st);
+              const hasData = st && st.recordCount > 0 && chKpi;
               const meterSite = normalizeCurrencySite(st?.site ?? meter.site ?? billingSite);
               const meterCurrencySymbol = getCurrencySymbolBySite(meterSite, locale);
               const meterCurrencyCode = getCurrencyCodeBySite(meterSite, locale);
-              const savePctColor = !hasData ? '#64748b' : st.savingPct >= 20 ? '#059669' : st.savingPct >= 10 ? '#d97706' : '#ef4444';
-              const fmtDate = (d) => d ? new Date(d).toLocaleDateString(locale === 'ko' ? 'ko-KR' : locale === 'th' ? 'th-TH' : 'en-GB') : '—';
+              const savePctColor = !hasData ? '#64748b' : chKpi.savingPct >= 20 ? '#059669' : chKpi.savingPct >= 10 ? '#d97706' : '#ef4444';
+              const fmtDate = (d) => d ? new Date(d).toLocaleDateString(cdLocaleTag(locale)) : '—';
 
               return (
                 <div key={meter.deviceId} className="cd-card" style={{ overflow: 'hidden' }}>
@@ -1963,8 +2082,8 @@ export default function CustomersPage() {
                           </h3>
                           <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
                             Device ID: {meter.deviceId}
-                            {meter.meterNo ? ` · No. ${meter.meterNo}` : ''}
-                            {meter.meterId ? ` · ${meter.meterId}` : ''}
+                            {meter.seriesNo ? ` · ${L(locale, 'Serial', '시리얼', 'Serial')}: ${meter.seriesNo}` : ''}
+                            {meter.geId && meter.geId !== meter.deviceName ? ` · GE: ${meter.geId}` : ''}
                           </p>
                         </div>
                       </div>
@@ -1975,7 +2094,9 @@ export default function CustomersPage() {
                           color: hasData ? '#065f46' : '#94a3b8',
                           border: `1px solid ${hasData ? '#6ee7b7' : '#e2e8f0'}`,
                         }}>
-                          {hasData ? `${fmt(st.recordCount)} records` : L(locale,'ยังไม่มีข้อมูล','데이터 없음','No records')}
+                          {hasData
+                            ? `${fmt(st.recordCount)} ${L(locale, 'รายการ', '건', 'records')}`
+                            : L(locale,'ยังไม่มีข้อมูล','데이터 없음','No records')}
                         </span>
                         <span style={{
                           padding: '3px 10px', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700,
@@ -1987,12 +2108,16 @@ export default function CustomersPage() {
                     </div>
 
                     {/* Meter info grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.5rem', marginBottom: '1.25rem', background: '#f8fafc', borderRadius: '0.75rem', padding: '0.875rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.5rem', marginBottom: '1rem', background: '#f8fafc', borderRadius: '0.75rem', padding: '0.875rem' }}>
                       {[
                         [L(locale,'ชื่อเครื่อง','장치명','Device Name'), meter.deviceName || '—'],
-                        [L(locale,'หมายเลขมิเตอร์','미터 번호','Meter No.'), meter.meterNo || '—'],
+                        [L(locale,'Serial No.','시리얼 번호','Serial No.'), meter.seriesNo || '—'],
+                        [L(locale,'GE ID','GE ID','GE ID'), meter.geId || meter.deviceName || '—'],
+                        [L(locale,'มิเตอร์ CH1 (INPUT)','미터 CH1 (INPUT)','Meter CH1 (INPUT)'), meter.ch1MeterNo || '—'],
+                        [L(locale,'มิเตอร์ CH2 (OUTPUT)','미터 CH2 (OUTPUT)','Meter CH2 (OUTPUT)'), meter.ch2MeterNo || '—'],
+                        [L(locale,'หมายเลขมิเตอร์ (ระบบ)','미터 번호 (시스템)','Meter No. (system)'), meter.meterNo || '—'],
                         [L(locale,'Meter ID','미터 ID','Meter ID'), meter.meterId || '—'],
-                        [L(locale,'สถานที่','위치','Location'), meter.locationName || '—'],
+                        [L(locale,'สถานที่','위치','Location'), meter.locationName || meter.site?.toUpperCase() || '—'],
                         [L(locale,'ไซต์','사이트','Site'), meter.site?.toUpperCase() || '—'],
                         [L(locale,'อัตราไฟ','요금','Rate'), st?.electricityRate != null
                           ? `${fmt(st.electricityRate)} / kWh (${meterCurrencyCode})${st.rateSource === 'database' ? ` · ${L(locale,'DB','DB','DB')}` : st.rateSource === 'env' ? ` · ${L(locale,'env','env','env')}` : ''}${st.rateLabel ? ` (${st.rateLabel})` : ''}`
@@ -2008,18 +2133,95 @@ export default function CustomersPage() {
                       ))}
                     </div>
 
-                    {/* Energy KPI grid */}
-                    {hasData ? (
+                    {/* Dual channel CH1 + CH2 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                      {[
+                        {
+                          key: 'ch1',
+                          label: 'CH1',
+                          role: L(locale, 'มิเตอร์ INPUT (ก่อนติดตั้ง)', '미터 INPUT (설치 전)', 'Meter INPUT (Before)'),
+                          meterNo: meter.ch1MeterNo,
+                          tone: '#b45309',
+                          bg: '#fffbeb',
+                          border: '#fde68a',
+                          data: st?.channels?.ch1,
+                          kwh: chKpi?.beforeKwh ?? st?.channels?.ch1?.kwh,
+                          cost: chKpi?.costBefore ?? st?.channels?.ch1?.cost,
+                        },
+                        {
+                          key: 'ch2',
+                          label: 'CH2',
+                          role: L(locale, 'มิเตอร์ OUTPUT (หลังติดตั้ง)', '미터 OUTPUT (설치 후)', 'Meter OUTPUT (After)'),
+                          meterNo: meter.ch2MeterNo,
+                          tone: '#059669',
+                          bg: '#ecfdf5',
+                          border: '#a7f3d0',
+                          data: st?.channels?.ch2,
+                          kwh: chKpi?.afterKwh ?? st?.channels?.ch2?.kwh,
+                          cost: chKpi?.costAfter ?? st?.channels?.ch2?.cost,
+                        },
+                      ].map((ch) => (
+                        <div
+                          key={ch.key}
+                          style={{
+                            background: ch.bg,
+                            border: `1px solid ${ch.border}`,
+                            borderRadius: '0.75rem',
+                            padding: '0.875rem',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: ch.tone }}>{ch.label}</span>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b' }}>{ch.role}</span>
+                          </div>
+                          <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b' }}>
+                            {L(locale, 'Serial No.', '시리얼 번호', 'Serial No.')}:{' '}
+                            <strong style={{ color: '#334155' }}>{meter.seriesNo || '—'}</strong>
+                          </p>
+                          <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
+                            {L(locale, 'หมายเลขมิเตอร์ช่อง', '채널 미터 번호', 'Channel meter no.')}:{' '}
+                            <strong style={{ color: '#334155' }}>{ch.meterNo || '—'}</strong>
+                          </p>
+                          {hasData ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '0.5rem' }}>
+                              <div>
+                                <p style={{ margin: 0, fontSize: '0.65rem', color: '#94a3b8' }}>{L(locale,'พลังงานรวม (kWh)','총 전력 (kWh)','Total Energy (kWh)')}</p>
+                                <p style={{ margin: '2px 0 0', fontSize: '1rem', fontWeight: 800, color: ch.tone }}>{fmt(Math.round(ch.kwh ?? 0))}</p>
+                              </div>
+                              <div>
+                                <p style={{ margin: 0, fontSize: '0.65rem', color: '#94a3b8' }}>{Lfmt(locale, 'ค่าไฟ ({code})', '요금 ({code})', 'Cost ({code})', { code: meterCurrencyCode })}</p>
+                                <p style={{ margin: '2px 0 0', fontSize: '1rem', fontWeight: 800, color: ch.tone }}>{formatCostForSite(ch.cost ?? 0, meterSite)}</p>
+                              </div>
+                              {[ch.data?.currentL1, ch.data?.currentL2, ch.data?.currentL3].some((v) => v != null) && (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <p style={{ margin: 0, fontSize: '0.65rem', color: '#94a3b8' }}>{L(locale,'กระแสล่าสุด L1/L2/L3 (A)','최근 전류 L1/L2/L3 (A)','Latest Current L1/L2/L3 (A)')}</p>
+                                  <p style={{ margin: '2px 0 0', fontSize: '0.8rem', fontWeight: 700, color: '#334155', fontFamily: 'monospace' }}>
+                                    {[ch.data?.currentL1, ch.data?.currentL2, ch.data?.currentL3]
+                                      .map((v) => (v != null ? Number(v).toFixed(1) : '—'))
+                                      .join(' / ')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8' }}>{L(locale,'ยังไม่มีข้อมูลช่องนี้','이 채널 데이터 없음','No data on this channel')}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Energy KPI grid — CH1 (before) + CH2 (after) */}
+                    {hasData && chKpi ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '0.75rem' }}>
                         {[
-                          { icon: Zap, label: L(locale,'ก่อนติดตั้ง (kWh)','설치 전 (kWh)','Before (kWh)'), val: fmt(Math.round(st.beforeKwh)), color: '#b45309', bg: '#fffbeb' },
-                          { icon: Zap, label: L(locale,'หลังติดตั้ง (kWh)','설치 후 (kWh)','After (kWh)'), val: fmt(Math.round(st.afterKwh)), color: '#059669', bg: '#ecfdf5' },
-                          { icon: TrendingDown, label: L(locale,'ประหยัด (kWh)','절약 (kWh)','Saved (kWh)'), val: fmt(Math.round(st.savedKwh)), color: '#0d9488', bg: '#f0fdfa' },
-                          { icon: TrendingDown, label: L(locale,'% ประหยัด','절약률','Saving %'), val: `${st.savingPct}%`, color: savePctColor, bg: '#f8fafc' },
-                          { icon: DollarSign, label: L(locale,`ค่าไฟก่อน (${meterCurrencySymbol})`,`이전 비용 (${meterCurrencySymbol})`,`Before Cost (${meterCurrencyCode})`), val: formatCostForSite(st.costBefore, meterSite), color: '#b45309', bg: '#fffbeb' },
-                          { icon: DollarSign, label: L(locale,`ค่าไฟหลัง (${meterCurrencySymbol})`,`이후 비용 (${meterCurrencySymbol})`,`After Cost (${meterCurrencyCode})`), val: formatCostForSite(st.costAfter, meterSite), color: '#059669', bg: '#ecfdf5' },
-                          { icon: DollarSign, label: L(locale,`ประหยัด (${meterCurrencySymbol})`,`절약 비용 (${meterCurrencySymbol})`,`Saved (${meterCurrencyCode})`), val: formatCostForSite(st.savedCost, meterSite), color: '#0d9488', bg: '#f0fdfa' },
-                          { icon: Leaf, label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Reduced (kg)'), val: fmt(st.co2SavedKg), color: '#065f46', bg: '#ecfdf5' },
+                          { icon: Zap, label: L(locale,'ก่อน (kWh)','이전 (kWh)','Before (kWh)'), val: fmt(Math.round(chKpi.beforeKwh)), color: '#b45309', bg: '#fffbeb' },
+                          { icon: Zap, label: L(locale,'หลัง (kWh)','이후 (kWh)','After (kWh)'), val: fmt(Math.round(chKpi.afterKwh)), color: '#059669', bg: '#ecfdf5' },
+                          { icon: TrendingDown, label: L(locale,'ประหยัด (kWh)','절약 (kWh)','Saved (kWh)'), val: fmt(Math.round(chKpi.savedKwh)), color: '#0d9488', bg: '#f0fdfa' },
+                          { icon: TrendingDown, label: L(locale,'% ประหยัด','절약률','Saving %'), val: `${chKpi.savingPct}%`, color: savePctColor, bg: '#f8fafc' },
+                          { icon: DollarSign, label: Lfmt(locale, 'ค่าไฟก่อน ({code})', '이전 비용 ({code})', 'Before Cost ({code})', { code: meterCurrencySymbol }), val: formatCostForSite(chKpi.costBefore, meterSite), color: '#b45309', bg: '#fffbeb' },
+                          { icon: DollarSign, label: Lfmt(locale, 'ค่าไฟหลัง ({code})', '이후 비용 ({code})', 'After Cost ({code})', { code: meterCurrencySymbol }), val: formatCostForSite(chKpi.costAfter, meterSite), color: '#059669', bg: '#ecfdf5' },
+                          { icon: DollarSign, label: Lfmt(locale, 'ประหยัด ({code})', '절약 비용 ({code})', 'Saved ({code})', { code: meterCurrencySymbol }), val: formatCostForSite(chKpi.savedCost, meterSite), color: '#0d9488', bg: '#f0fdfa' },
+                          { icon: Leaf, label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Reduced (kg)'), val: chKpi.co2SavedKg > 0 ? fmt(Math.round(chKpi.co2SavedKg)) : '—', color: '#065f46', bg: '#ecfdf5' },
                         ].map(({ icon: Icon, label, val, color, bg }) => (
                           <div key={label} style={{ background: bg, borderRadius: '0.75rem', padding: '0.75rem', border: '1px solid #e2e8f0' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
@@ -2047,28 +2249,39 @@ export default function CustomersPage() {
 
         {/* ── Comparison Table ── */}
         {activeTab === 'compare' && (() => {
-          const rate = electricityRate ?? 3.88;
+          const compareMeter = selectedMeterDeviceId
+            ? customerMeters.find((m) => String(m.deviceId) === String(selectedMeterDeviceId))
+            : null;
+          const compareSite = normalizeCurrencySite(compareMeter?.site ?? billingSite);
+          const compareCurrencyCode = getCurrencyCodeBySite(compareSite, locale);
+          const compareSt = compareMeter
+            ? meterStats.find((s) => s.deviceId === compareMeter.deviceId)
+            : null;
+          const formatCompareCost = (n) =>
+            formatCurrencyBySite(n, compareSite, locale, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            });
+
           const rows = compareData.filter(d => d.before > 0 || d.after > 0);
           const totB     = rows.reduce((s,d) => s + d.before, 0);
           const totA     = rows.reduce((s,d) => s + d.after, 0);
-          const totSKwh  = totB - totA;
+          const totSKwh  = Math.max(0, totB - totA);
           const totCB    = rows.reduce((s,d) => s + d.costBefore, 0);
           const totCA    = rows.reduce((s,d) => s + d.costAfter, 0);
           const totSCost = totCB - totCA;
-          const totSavedKwhDb = rows.reduce((s, d) => s + (d.savedKwh ?? 0), 0);
-          const totSKwhFinal = totSavedKwhDb > 0 ? totSavedKwhDb : totSKwh;
+          const totSKwhFinal = totSKwh;
           const totCO2Db = rows.reduce((s, d) => s + (d.co2Kg ?? 0), 0);
-          const totCO2   = totCO2Db > 0 ? totCO2Db : totSKwhFinal * 0.5313;
+          const totCO2 = totCO2Db;
           const totPct   = totB > 0 ? (totSKwhFinal / totB * 100) : 0;
 
-          const MONTH_TH = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-          const MONTH_EN = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-          const MONTH_KO = ['','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-          const monthLabel = (d) => {
-            const m = d.monthIndex;
+          const scopeLabel = compareMeter
+            ? `${compareMeter.label}${compareMeter.seriesNo ? ` · ${compareMeter.seriesNo}` : ''}${compareMeter.locationName ? ` · ${compareMeter.locationName}` : ''}`
+            : L(locale, 'ทุกมิเตอร์ที่ผูกกับบัญชี', '연결된 전체 미터', 'All linked meters');
+
+          const monthLabelHistory = (d) => {
             const y = String(d.year).slice(-2);
-            const mn = locale === 'th' ? MONTH_TH[m] : locale === 'ko' ? MONTH_KO[m] : MONTH_EN[m];
-            return `${mn} '${y}`;
+            return `${cdMonthLabel(locale, d.monthIndex)} '${y}`;
           };
 
           const presets = [
@@ -2096,9 +2309,18 @@ export default function CustomersPage() {
               <div className="cd-card">
                 <div className="cd-card-accent cd-card-accent--compare" />
                 <div className="cd-card-body">
-                  <h2 className="cd-card-title" style={{ marginBottom:'0.75rem' }}>
+                  <h2 className="cd-card-title" style={{ marginBottom:'0.5rem' }}>
                     {L(locale,'ตัวกรองช่วงเวลา','기간 필터','Date Range Filter')}
                   </h2>
+                  <p style={{ margin:'0 0 0.75rem', fontSize:'0.8rem', color:'#64748b' }}>
+                    {L(locale,'มิเตอร์','미터','Meter')}: <strong style={{ color:'#334155' }}>{scopeLabel}</strong>
+                    {compareSt?.electricityRate != null && (
+                      <>
+                        {' · '}
+                        {L(locale,'อัตราไฟ','요금','Rate')}: {fmt(compareSt.electricityRate)} / kWh ({compareCurrencyCode})
+                      </>
+                    )}
+                  </p>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:'6px', marginBottom:'0.75rem' }}>
                     {presets.map(p => (
                       <button key={p.key} type="button" style={btnStyle(comparePreset === p.key)}
@@ -2143,10 +2365,10 @@ export default function CustomersPage() {
                         { label: L(locale,'พลังงานหลัง (kWh)','설치 후 에너지 (kWh)','After Energy (kWh)'), val: fmt(Math.round(totA)), color:'#059669' },
                         { label: L(locale,'ประหยัดได้ (kWh)','절약 에너지 (kWh)','Energy Saved (kWh)'), val: fmt(Math.round(totSKwhFinal)), color:'#4f46e5' },
                         { label: L(locale,'% ประหยัด','절약률','Saving %'), val: totPct > 0 ? `${totPct.toFixed(1)}%` : '—', color:'#059669' },
-                        { label: L(locale,`ค่าไฟก่อน (${currencyCode})`,`설치 전 요금 (${currencyCode})`,`Cost Before (${currencyCode})`), val: formatCost(totCB), color:'#dc2626' },
-                        { label: L(locale,`ค่าไฟหลัง (${currencyCode})`,`설치 후 요금 (${currencyCode})`,`Cost After (${currencyCode})`), val: formatCost(totCA), color:'#059669' },
-                        { label: L(locale,`ประหยัดค่าไฟ (${currencyCode})`,`절약 요금 (${currencyCode})`,`Cost Saved (${currencyCode})`), val: totSCost > 0 ? formatCost(totSCost) : '—', color:'#4f46e5' },
-                        { label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Saved (kg)'), val: fmt(Math.round(totCO2)), color:'#16a34a' },
+                        { label: Lfmt(locale, 'ค่าไฟก่อน ({code})', '설치 전 요금 ({code})', 'Cost Before ({code})', { code: compareCurrencyCode }), val: formatCompareCost(totCB), color:'#dc2626' },
+                        { label: Lfmt(locale, 'ค่าไฟหลัง ({code})', '설치 후 요금 ({code})', 'Cost After ({code})', { code: compareCurrencyCode }), val: formatCompareCost(totCA), color:'#059669' },
+                        { label: Lfmt(locale, 'ประหยัดค่าไฟ ({code})', '절약 요금 ({code})', 'Cost Saved ({code})', { code: compareCurrencyCode }), val: totSCost > 0 ? formatCompareCost(totSCost) : '—', color:'#4f46e5' },
+                        { label: L(locale,'CO₂ ลด (kg)','CO₂ 절감 (kg)','CO₂ Saved (kg)'), val: totCO2 > 0 ? fmt(Math.round(totCO2)) : '—', color:'#16a34a' },
                       ].map(({ label, val, color }) => (
                         <div key={label} className="cd-stat-card">
                           <p className="cd-stat-val" style={{ color }}>{val}</p>
@@ -2168,7 +2390,7 @@ export default function CustomersPage() {
                     </h2>
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={chartRows.map(d => ({
-                        name: monthLabel(d),
+                        name: monthLabelHistory(d),
                         [L(locale,'ก่อน','이전','Before')]: Math.round(d.before),
                         [L(locale,'หลัง','이후','After')]: Math.round(d.after),
                         [L(locale,'ประหยัด','절약','Saved')]: Math.round(Math.max(d.before - d.after, 0)),
@@ -2213,21 +2435,21 @@ export default function CustomersPage() {
                             <th>{L(locale,'หลัง (kWh)','이후 (kWh)','After (kWh)')}</th>
                             <th>{L(locale,'ประหยัด (kWh)','절약 (kWh)','Saved (kWh)')}</th>
                             <th>{L(locale,'% ประหยัด','절약률','% Saved')}</th>
-                            <th>{L(locale,`ค่าไฟก่อน (${currencyCode})`,`이전 요금 (${currencyCode})`,`Before (${currencyCode})`)}</th>
-                            <th>{L(locale,`ค่าไฟหลัง (${currencyCode})`,`이후 요금 (${currencyCode})`,`After (${currencyCode})`)}</th>
-                            <th style={{ color:'#d1fae5' }}>{L(locale,`ประหยัด (${currencyCode})`,`절약 (${currencyCode})`,`Saving (${currencyCode})`)}</th>
+                            <th>{Lfmt(locale, 'ค่าไฟก่อน ({code})', '이전 요금 ({code})', 'Before ({code})', { code: compareCurrencyCode })}</th>
+                            <th>{Lfmt(locale, 'ค่าไฟหลัง ({code})', '이후 요금 ({code})', 'After ({code})', { code: compareCurrencyCode })}</th>
+                            <th className="cd-table-th-saving">{Lfmt(locale, 'ประหยัด ({code})', '절약 ({code})', 'Saving ({code})', { code: compareCurrencyCode })}</th>
                             <th>{L(locale,'CO₂ ลด (kg)','CO₂ (kg)','CO₂ (kg)')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {rows.map(d => {
-                            const savedKwh   = d.savedKwh ?? (d.before - d.after);
-                            const pct        = d.before > 0 ? savedKwh / d.before * 100 : 0;
+                            const savedKwh   = Math.max(0, d.before - d.after);
+                            const pct        = d.before > 0 ? (savedKwh / d.before) * 100 : 0;
                             const savedCost  = d.costBefore - d.costAfter;
-                            const co2        = d.co2Kg ?? savedKwh * 0.5313;
+                            const co2        = d.co2Kg ?? 0;
                             return (
                               <tr key={d.monthKey}>
-                                <td style={{ fontWeight:700, color:'#4f46e5', textAlign:'left' }}>{monthLabel(d)}</td>
+                                <td style={{ fontWeight:700, color:'#4f46e5', textAlign:'left' }}>{monthLabelHistory(d)}</td>
                                 <td style={{ color:'#dc2626' }}>{d.before > 0 ? fmt(Math.round(d.before)) : '—'}</td>
                                 <td style={{ color:'#059669', fontWeight:700 }}>{d.after > 0 ? fmt(Math.round(d.after)) : '—'}</td>
                                 <td style={{ color: savedKwh > 0 ? '#4f46e5' : '#d97706', fontWeight:700 }}>
@@ -2236,28 +2458,28 @@ export default function CustomersPage() {
                                 <td style={{ fontWeight:800, color: pct > 0 ? '#059669' : '#d97706' }}>
                                   {d.before > 0 && d.after > 0 ? `${pct.toFixed(1)}%` : '—'}
                                 </td>
-                                <td style={{ color:'#dc2626' }}>{d.costBefore > 0 ? formatCost(d.costBefore) : '—'}</td>
-                                <td style={{ color:'#059669', fontWeight:700 }}>{d.costAfter > 0 ? formatCost(d.costAfter) : '—'}</td>
+                                <td style={{ color:'#dc2626' }}>{d.costBefore > 0 ? formatCompareCost(d.costBefore) : '—'}</td>
+                                <td style={{ color:'#059669', fontWeight:700 }}>{d.costAfter > 0 ? formatCompareCost(d.costAfter) : '—'}</td>
                                 <td style={{ color:'#059669', fontWeight:800 }}>
-                                  {savedCost > 0 ? formatCost(savedCost) : '—'}
+                                  {savedCost > 0 ? formatCompareCost(savedCost) : '—'}
                                 </td>
-                                <td style={{ color:'#16a34a' }}>{savedKwh > 0 ? co2.toFixed(1) : '—'}</td>
+                                <td style={{ color:'#16a34a' }}>{co2 > 0 ? co2.toFixed(1) : '—'}</td>
                               </tr>
                             );
                           })}
                         </tbody>
                         {rows.length > 1 && (
-                          <tfoot>
+                          <tfoot className="cd-table-tfoot">
                             <tr>
-                              <td style={{ textAlign:'left', fontWeight:800 }}>{L(locale,'รวม','합계','Total')}</td>
-                              <td style={{ color:'#dc2626', fontWeight:800 }}>{fmt(Math.round(totB))}</td>
-                              <td style={{ color:'#059669', fontWeight:800 }}>{fmt(Math.round(totA))}</td>
-                              <td style={{ color:'#4f46e5', fontWeight:800 }}>{fmt(Math.round(totSKwhFinal))}</td>
-                              <td style={{ fontWeight:800, color:'#059669' }}>{totPct > 0 ? `${totPct.toFixed(1)}%` : '—'}</td>
-                              <td style={{ color:'#dc2626', fontWeight:800 }}>{formatCost(totCB)}</td>
-                              <td style={{ color:'#059669', fontWeight:800 }}>{formatCost(totCA)}</td>
-                              <td style={{ color:'#059669', fontWeight:800 }}>{totSCost > 0 ? formatCost(totSCost) : '—'}</td>
-                              <td style={{ color:'#16a34a', fontWeight:800 }}>{totCO2 > 0 ? totCO2.toFixed(1) : '—'}</td>
+                              <td style={{ textAlign:'left' }}>{L(locale,'รวม','합계','Total')}</td>
+                              <td className="cd-table-tfoot-before">{fmt(Math.round(totB))}</td>
+                              <td className="cd-table-tfoot-after">{fmt(Math.round(totA))}</td>
+                              <td className="cd-table-tfoot-saved">{fmt(Math.round(totSKwhFinal))}</td>
+                              <td className="cd-table-tfoot-pct">{totPct > 0 ? `${totPct.toFixed(1)}%` : '—'}</td>
+                              <td className="cd-table-tfoot-before">{formatCompareCost(totCB)}</td>
+                              <td className="cd-table-tfoot-after">{formatCompareCost(totCA)}</td>
+                              <td className="cd-table-tfoot-saved">{totSCost > 0 ? formatCompareCost(totSCost) : '—'}</td>
+                              <td className="cd-table-tfoot-co2">{totCO2 > 0 ? totCO2.toFixed(1) : '—'}</td>
                             </tr>
                           </tfoot>
                         )}
@@ -2298,14 +2520,39 @@ export default function CustomersPage() {
                       {L(locale, 'เครื่องประหยัดพลังงานแต่ละขนาด', '에너지 세이버 라인업', 'Energy Saver sizes')}
                     </div>
                     {(energySaverProducts.length ? energySaverProducts : []).map((p) => (
-                      <div key={`es-${p.id}`} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 12 }}>
-                        <p style={{ margin: 0, fontWeight: 700, color: '#166534' }}>{p.name}</p>
-                        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
-                          {p.description || '-'}
-                        </p>
-                        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#0f766e' }}>
-                          {L(locale, 'ขนาด', '용량', 'Capacity')}: {p.capacity || '-'} kVA | MCB: {p.mcb || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatThb(Number(p.priceWithVat || p.price || 0))}
-                        </p>
+                      <div key={`es-${p.id}`} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        {p.image && p.image !== '/placeholder-product.jpg' ? (
+                          <img
+                            src={p.image}
+                            alt=""
+                            style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #bbf7d0' }}
+                          />
+                        ) : (
+                          <div style={{ width: 72, height: 72, borderRadius: 8, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 28 }}>
+                            ⚡
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontWeight: 700, color: '#166534' }}>{p.name}</p>
+                          {p.category && (
+                            <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, fontWeight: 600, color: '#166534', background: '#dcfce7', borderRadius: 6, padding: '2px 8px' }}>
+                              {cdProductCategoryLabel(locale, p.category)}
+                            </span>
+                          )}
+                          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
+                            {cdCatalogDescription(locale, p.description)}
+                          </p>
+                          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#0f766e' }}>
+                            {p.capacity
+                              ? `${L(locale, 'ขนาด', '용량', 'Capacity')}: ${p.capacity} kVA`
+                              : null}
+                            {p.capacity && p.mcb ? ' | ' : ''}
+                            {p.mcb ? `MCB: ${p.mcb}` : ''}
+                            {(p.capacity || p.mcb) ? ' | ' : ''}
+                            {L(locale, 'ราคา', '가격', 'Price')}: {formatCatalogPrice(p)}
+                            {p.source === 'partner' ? ` · ${L(locale, 'แคตตาล็อกสินค้า', '제품 카탈로그', 'Product catalog')}` : ''}
+                          </p>
+                        </div>
                       </div>
                     ))}
                     {energySaverProducts.length === 0 && (
@@ -2334,7 +2581,7 @@ export default function CustomersPage() {
                           <p style={{ margin: 0, fontWeight: 700, color: '#1e40af' }}>{p.name}</p>
                           {p.category && (
                             <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, fontWeight: 600, color: '#1d4ed8', background: '#dbeafe', borderRadius: 6, padding: '2px 8px' }}>
-                              {p.category}
+                              {cdProductCategoryLabel(locale, p.category)}
                             </span>
                           )}
                           {(p.brand || p.model) && (
@@ -2343,11 +2590,11 @@ export default function CustomersPage() {
                             </p>
                           )}
                           <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
-                            {p.description || '-'}
+                            {cdCatalogDescription(locale, p.description)}
                           </p>
                           <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8' }}>
-                            SKU: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatCatalogPrice(p)}
-                            {p.source === 'partner' ? ` · ${L(locale, 'จาก Partner', '파트너 등록', 'Partner catalog')}` : ''}
+                            {L(locale, 'รหัสสินค้า', 'SKU', 'SKU')}: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatCatalogPrice(p)}
+                            {p.source === 'partner' ? ` · ${L(locale, 'แคตตาล็อกสินค้า', '제품 카탈로그', 'Product catalog')}` : ''}
                           </p>
                         </div>
                       </div>
@@ -2439,26 +2686,26 @@ export default function CustomersPage() {
                   <div className="cd-form-field">
                     <label className="cd-form-label">
                       <Upload className="w-4 h-4 inline-block mr-1" />
-                      {L(locale, 'อัปโหลดบิลค่าไฟ 12 เดือน (บังคับ)', '전기요금 고지서 12개월 (필수)', 'Upload 12 monthly electricity bills (required)')}
+                      {L(locale, 'อัปโหลดบิลค่าไฟ (ไม่บังคับ)', '전기요금 고지서 (선택)', 'Upload electricity bills (optional)')}
                     </label>
                     <input
                       className="cd-form-input"
                       type="file"
                       accept="image/jpeg,image/png,image/webp,application/pdf"
                       multiple
-                      required
                       onChange={(e) => setProductMonthlyBills(Array.from(e.target.files || []))}
                     />
-                    <p style={{ marginTop: 6, fontSize: 12, color: productMonthlyBills.length === 12 ? '#059669' : '#b45309' }}>
-                      {L(locale, 'จำนวนไฟล์บิลที่อัปโหลด', '업로드된 청구서 수', 'Uploaded bill files')}: {productMonthlyBills.length}/12
+                    <p style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>
+                      {L(locale, 'จำนวนไฟล์บิลที่อัปโหลด', '업로드된 청구서 수', 'Uploaded bill files')}: {productMonthlyBills.length}
+                      {productMonthlyBills.length > 0 ? ` (${L(locale, 'สูงสุด 12', '최대 12', 'max 12')})` : ''}
                     </p>
-                    {productMonthlyBills.length !== 12 ? (
+                    {productMonthlyBills.length > 12 ? (
                       <p className="cd-error" style={{ marginTop: 4 }}>
                         {L(
                           locale,
-                          'ต้องอัปโหลดบิลค่าไฟให้ครบ 12 ไฟล์ก่อนจึงจะสั่งซื้อได้',
-                          '주문하려면 전기요금 고지서 12개를 모두 업로드해야 합니다',
-                          'You must upload all 12 electricity bills before submitting the order',
+                          'อัปโหลดได้ไม่เกิน 12 ไฟล์',
+                          '최대 12개 파일까지 업로드할 수 있습니다',
+                          'You can upload at most 12 files',
                         )}
                       </p>
                     ) : null}
@@ -2475,7 +2722,7 @@ export default function CustomersPage() {
                   <button
                     type="submit"
                     className="cd-btn cd-btn--primary cd-form-submit"
-                    disabled={productSubmitting || productMonthlyBills.length !== 12}
+                    disabled={productSubmitting || productMonthlyBills.length > 12}
                   >
                     {productSubmitting
                       ? L(locale, 'กำลังส่งคำสั่งซื้อ...', '주문 전송 중...', 'Submitting order...')
@@ -2554,8 +2801,8 @@ export default function CustomersPage() {
                               ))}
                               <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8 }}>
                                 <span style={{ fontSize: 12, color: '#64748b' }}>{L(locale, 'บิลค่าไฟ', '청구서', 'Monthly bills')}</span>
-                                <span style={{ fontSize: 13, color: Number(f.monthly_bill_count || 0) >= 12 ? '#059669' : '#b45309', fontWeight: 700 }}>
-                                  {item.type === 'energy_saver_order' ? `${Number(f.monthly_bill_count || 0)}/12` : '-'}
+                                <span style={{ fontSize: 13, color: '#334155', fontWeight: 700 }}>
+                                  {item.type === 'energy_saver_order' ? String(Number(f.monthly_bill_count || 0)) : '-'}
                                 </span>
                               </div>
                             </div>
@@ -2722,7 +2969,7 @@ export default function CustomersPage() {
                   const isOpen = inboxOpenId === f.id;
                   const replies = inboxReplies[f.id] || [];
                   const partnerReplies = replies.filter(r => r.sender_type === 'partner');
-                  const date = f.created_at ? new Date(f.created_at).toLocaleDateString(locale === 'th' ? 'th-TH' : locale === 'ko' ? 'ko-KR' : 'en-US', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+                  const date = f.created_at ? new Date(f.created_at).toLocaleDateString(cdLocaleTag(locale), { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
                   return (
                     <div key={f.id} style={{ background: '#12141c', borderRadius: 12, border: `1px solid ${isOpen ? '#1e3a2a' : '#2a2d3a'}`, marginBottom: 10, overflow: 'hidden' }}>
                       {/* Thread summary row */}
@@ -2734,7 +2981,7 @@ export default function CustomersPage() {
                         </div>
                         {partnerReplies.length > 0 ? (
                           <span style={{ background: '#1e3a2a', color: '#4ade80', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                            {L(locale,`ตอบกลับ ${partnerReplies.length} ข้อความ`,`답장 ${partnerReplies.length}개`,`${partnerReplies.length} repl${partnerReplies.length > 1 ? 'ies' : 'y'}`)}
+                            {Lfmt(locale, 'ตอบกลับ {n} ข้อความ', '답장 {n}개', '{n} replies', { n: partnerReplies.length })}
                           </span>
                         ) : (
                           <span style={{ background: '#1a1d26', color: '#4a5070', borderRadius: 20, padding: '2px 10px', fontSize: 11, whiteSpace: 'nowrap' }}>
@@ -2765,7 +3012,7 @@ export default function CustomersPage() {
                                 </div>
                                 <div style={{ fontSize: 12, color: '#c8cad8', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{r.message}</div>
                                 <div style={{ fontSize: 10, color: '#4a5070', marginTop: 4, textAlign: 'right' }}>
-                                  {r.created_at ? new Date(r.created_at).toLocaleString(locale === 'th' ? 'th-TH' : locale === 'ko' ? 'ko-KR' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                                  {r.created_at ? new Date(r.created_at).toLocaleString(cdLocaleTag(locale), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
                                 </div>
                               </div>
                             </div>
@@ -2805,6 +3052,15 @@ export default function CustomersPage() {
         )}
 
       </div>
+
+      <CurrentExportModal
+        open={currentExportOpen}
+        onClose={() => setCurrentExportOpen(false)}
+        locale={locale}
+        site={selectedSite}
+        deviceId={selectedDeviceId}
+        deviceName={devices.find((d) => String(d.deviceID) === String(selectedDeviceId))?.deviceName}
+      />
     </div>
   );
 }

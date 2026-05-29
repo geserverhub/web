@@ -178,7 +178,6 @@ export async function GET(req: NextRequest) {
         !hasValue(r.phone) ||
         !hasValue(r.breaker_size) ||
         !hasValue(r.machine_kva) ||
-        monthlyBillCount < 12 ||
         toStr(r.status).toLowerCase() === 'pending';
 
       return {

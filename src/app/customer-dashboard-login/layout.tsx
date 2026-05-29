@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { CHUNK_RECOVERY_INLINE_SCRIPT } from '@/lib/chunk-recovery';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,10 +20,5 @@ export default function CustomerDashboardLoginLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_INLINE_SCRIPT }} />
-      {children}
-    </>
-  );
+  return children;
 }

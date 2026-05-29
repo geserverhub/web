@@ -1,9 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import CustomerDashboardShell from './CustomerDashboardShell';
-import {
-  CHUNK_RECOVERY_INLINE_SCRIPT,
-  CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT,
-} from '@/lib/chunk-recovery';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -25,11 +21,5 @@ export default function CustomerDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_INLINE_SCRIPT }} />
-      <script dangerouslySetInnerHTML={{ __html: CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT }} />
-      <CustomerDashboardShell>{children}</CustomerDashboardShell>
-    </>
-  );
+  return <CustomerDashboardShell>{children}</CustomerDashboardShell>;
 }

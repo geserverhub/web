@@ -3,17 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
-import EnergyLangSwitcher from '@/components/energy/EnergyLangSwitcher';
+import CustomerDashboardLangSwitcher from '@/components/customer/CustomerDashboardLangSwitcher';
 import { formatEnergyDisplayUser } from '@/lib/energy/display-user';
+import { cdCompanyName } from '@/lib/customer-dashboard-i18n';
 import { GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 
 const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
-
-const companyNames = {
-  th: 'บริษัท จีอี อีเนอร์จี่ เทค จำกัด',
-  en: 'GE Energy Tech Co., Ltd.',
-  ko: '(주식회사)지이 에너지텍',
-};
 
 type StoredUser = {
   username?: string;
@@ -23,8 +18,7 @@ type StoredUser = {
 
 export default function CustomerDashboardHeader() {
   const { locale } = useLocale();
-  const lang = ['th', 'ko', 'en'].includes(locale) ? locale : 'th';
-  const company = companyNames[lang as keyof typeof companyNames] ?? companyNames.th;
+  const company = cdCompanyName(locale);
   const [user, setUser] = useState<StoredUser | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -63,7 +57,7 @@ export default function CustomerDashboardHeader() {
             </Link>
           </>
         ) : null}
-        <EnergyLangSwitcher />
+        <CustomerDashboardLangSwitcher />
       </div>
     </header>
   );

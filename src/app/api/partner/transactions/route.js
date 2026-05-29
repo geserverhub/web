@@ -7,6 +7,7 @@ import {
   buildPartnerIncomeSummary,
   syncPartnerMonthlyFinancial,
   syncPartnerPersonFinancialFromTransaction,
+  sumInvestmentBalanceBefore,
 } from "@/lib/partner-financial";
 
 function isPartnerOrAdmin(session) {
@@ -113,8 +114,21 @@ export async function GET(req) {
     });
     const partnerIncomeSummary = buildPartnerIncomeSummary(allPersonRows);
 
+    const priorFundingRows = await prisma.partnerTransaction.findMany({
+      where: {
+        ...baseFilter,
+        date: { lt: yearStart },
+        type: { in: [...INVESTMENT_TYPES, "EXPENSE"] },
+        status: { not: "CANCELLED" },
+        currency: "KRW",
+      },
+      select: { type: true, amount: true, currency: true, status: true, date: true },
+    });
+    const investmentOpeningBalance = sumInvestmentBalanceBefore(priorFundingRows, yearStart);
+
     return NextResponse.json({
       year,
+      investmentOpeningBalance,
       summary: {
         totalRevenue,
         totalInvestment,

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
+import {
+  ensurePartnerProductCategorySchema,
+  newCategoryId,
+} from '@/lib/partner-product-category-db';
 
 function isPartnerOrAdmin(session) {
   const role = session?.user?.role;
@@ -18,6 +22,16 @@ function categoryWhere(session) {
   return {};
 }
 
+function prismaUnavailable() {
+  return NextResponse.json(
+    {
+      error:
+        'Prisma client ยังไม่อัปเดต — รัน npx prisma generate แล้ว restart dev server',
+    },
+    { status: 503 }
+  );
+}
+
 export async function GET() {
   try {
     const session = await auth();
@@ -25,12 +39,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const prisma = getPrisma();
+    if (!prisma?.partnerProductCategory) return prismaUnavailable();
+
+    await ensurePartnerProductCategorySchema(prisma);
+
     const rows = await prisma.partnerProductCategory.findMany({
       where: categoryWhere(session),
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
     return NextResponse.json(rows);
   } catch (err) {
+    console.error('[product-categories GET]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -41,6 +61,11 @@ export async function POST(req) {
     if (!isPartnerOrAdmin(session)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const prisma = getPrisma();
+    if (!prisma?.partnerProductCategory) return prismaUnavailable();
+
+    await ensurePartnerProductCategorySchema(prisma);
 
     const { name, sortOrder } = await req.json();
     const trimmed = String(name || '').trim();
@@ -65,6 +90,7 @@ export async function POST(req) {
 
     const category = await prisma.partnerProductCategory.create({
       data: {
+        id: newCategoryId(),
         name: trimmed,
         sortOrder:
           sortOrder != null
@@ -75,6 +101,7 @@ export async function POST(req) {
     });
     return NextResponse.json(category, { status: 201 });
   } catch (err) {
+    console.error('[product-categories POST]', err);
     if (err.code === 'P2002') {
       return NextResponse.json({ error: 'หมวดนี้มีอยู่แล้ว' }, { status: 409 });
     }

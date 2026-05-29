@@ -4,6 +4,8 @@ import {
   deviceFilterSql,
   getSiteElectricityRates,
   loadDeviceSitesByIds,
+  formatDeviceLocation,
+  loadCustomerMetersByDeviceIds,
   resolveCustomerMeters,
   resolveRate,
   type CustomerScopeInput,
@@ -108,6 +110,26 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const deviceMeta = await loadCustomerMetersByDeviceIds(deviceIds)
+    const metaByDeviceId = new Map(deviceMeta.map((m) => [m.deviceId, m]))
+    if (!meters.length && deviceMeta.length) {
+      meters = deviceMeta
+    } else if (meters.length && deviceMeta.length) {
+      meters = meters.map((m) => {
+        const meta = metaByDeviceId.get(m.deviceId)
+        if (!meta) return m
+        return {
+          ...m,
+          geId: m.geId ?? meta.geId,
+          seriesNo: m.seriesNo ?? meta.seriesNo,
+          ch1MeterNo: m.ch1MeterNo ?? meta.ch1MeterNo,
+          ch2MeterNo: m.ch2MeterNo ?? meta.ch2MeterNo,
+          channels: m.channels?.length ? m.channels : meta.channels,
+          locationName: meta.locationName ?? m.locationName,
+        }
+      })
+    }
+
     const primarySite =
       (deviceIdParam
         ? meters.find((m) => m.deviceId === Number(deviceIdParam))?.site
@@ -197,11 +219,12 @@ export async function GET(request: NextRequest) {
       const costAfter = Math.round(after * deviceRate)
 
       const key = String(row.month_key)
+      const channelSavedKwh = Math.max(0, before - after)
       const existing = monthlyByKey.get(key)
       if (existing) {
         existing.before += before
         existing.after += after
-        existing.savedKwh += savedKwh
+        existing.savedKwh += channelSavedKwh
         existing.co2Kg += co2Kg
         existing.costBefore += costBefore
         existing.costAfter += costAfter
@@ -212,7 +235,7 @@ export async function GET(request: NextRequest) {
           monthIndex: toNumber(row.month_num),
           before,
           after,
-          savedKwh,
+          savedKwh: channelSavedKwh,
           co2Kg,
           costBefore,
           costAfter,
@@ -243,11 +266,20 @@ export async function GET(request: NextRequest) {
       { totalBefore: 0, totalAfter: 0, totalCostBefore: 0, totalCostAfter: 0 },
     )
 
-    const totalSavedKwh = monthly.reduce((s, row) => s + row.savedKwh, 0)
+    const totalSavedKwh = Math.max(0, summary.totalBefore - summary.totalAfter)
     const totalSavedCost = summary.totalCostBefore - summary.totalCostAfter
     const totalCo2Kg = monthly.reduce((s, row) => s + row.co2Kg, 0)
 
     // Per-meter aggregate stats
+    type ChannelLive = {
+      kwh: number
+      cost: number
+      currentL1: number | null
+      currentL2: number | null
+      currentL3: number | null
+      recordTime: string | null
+    }
+
     let meterStats: Array<{
       deviceId: number
       site: string
@@ -265,7 +297,26 @@ export async function GET(request: NextRequest) {
       electricityRate: number
       rateSource: 'database' | 'env' | 'query'
       rateLabel: string | null
+      channels: {
+        ch1: ChannelLive
+        ch2: ChannelLive
+      }
     }> = []
+
+    const latestByDevice = new Map<
+      number,
+      {
+        before_kwh: number | string | null
+        metrics_kwh: number | string | null
+        before_l1: number | string | null
+        before_l2: number | string | null
+        before_l3: number | string | null
+        metrics_l1: number | string | null
+        metrics_l2: number | string | null
+        metrics_l3: number | string | null
+        record_time: string | null
+      }
+    >()
 
     if (deviceIds.length > 0) {
       const { sql: meterDevSql, params: meterDevParams } = deviceFilterSql(deviceIds)
@@ -297,13 +348,60 @@ export async function GET(request: NextRequest) {
         last_record: string | null
       }>
 
+      if (deviceIds.length) {
+        const placeholders = deviceIds.map(() => '?').join(',')
+        const latestRows = (await queryGe(
+          `SELECT pr.device_id, pr.before_kWh, pr.metrics_kWh,
+                  pr.before_L1, pr.before_L2, pr.before_L3,
+                  pr.metrics_L1, pr.metrics_L2, pr.metrics_L3,
+                  pr.record_time
+           FROM power_records pr
+           INNER JOIN (
+             SELECT device_id, MAX(record_time) AS max_time
+             FROM power_records
+             WHERE device_id IN (${placeholders})
+             GROUP BY device_id
+           ) latest ON latest.device_id = pr.device_id AND latest.max_time = pr.record_time`,
+          deviceIds,
+        )) as Array<{
+          device_id: number
+          before_kWh: number | string | null
+          metrics_kWh: number | string | null
+          before_L1: number | string | null
+          before_L2: number | string | null
+          before_L3: number | string | null
+          metrics_L1: number | string | null
+          metrics_L2: number | string | null
+          metrics_L3: number | string | null
+          record_time: string | null
+        }>
+        for (const row of latestRows) {
+          latestByDevice.set(Number(row.device_id), {
+            before_kwh: row.before_kWh,
+            metrics_kwh: row.metrics_kWh,
+            before_l1: row.before_L1,
+            before_l2: row.before_L2,
+            before_l3: row.before_L3,
+            metrics_l1: row.metrics_L1,
+            metrics_l2: row.metrics_L2,
+            metrics_l3: row.metrics_L3,
+            record_time: row.record_time,
+          })
+        }
+      }
+
+      const toNullable = (v: number | string | null | undefined) => {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : null
+      }
+
       // Use per-meter rate (match meter site)
       meterStats = meterRows.map((r) => {
         const dId = Number(r.device_id)
         const meterSite = resolveMeterSite(dId)
         const bKwh = toNumber(r.before_kwh)
         const aKwh = toNumber(r.after_kwh)
-        const sKwh = toNumber(r.saved_kwh)
+        const sKwh = Math.max(0, bKwh - aKwh)
         const co2Kg = toNumber(r.co2_kg)
         const meterCosts = monthlyCostByDevice.get(dId)
         const rateMeta = resolveRateForDateWithMeta(
@@ -315,6 +413,23 @@ export async function GET(request: NextRequest) {
         const cB = meterCosts ? meterCosts.costBefore : Math.round(bKwh * rateMeta.rate)
         const cA = meterCosts ? meterCosts.costAfter : Math.round(aKwh * rateMeta.rate)
         const effectiveRate = bKwh > 0 ? Number((cB / bKwh).toFixed(4)) : rateMeta.rate
+        const live = latestByDevice.get(dId)
+        const ch1: ChannelLive = {
+          kwh: bKwh,
+          cost: cB,
+          currentL1: toNullable(live?.before_l1),
+          currentL2: toNullable(live?.before_l2),
+          currentL3: toNullable(live?.before_l3),
+          recordTime: live?.record_time ? String(live.record_time) : null,
+        }
+        const ch2: ChannelLive = {
+          kwh: aKwh,
+          cost: cA,
+          currentL1: toNullable(live?.metrics_l1),
+          currentL2: toNullable(live?.metrics_l2),
+          currentL3: toNullable(live?.metrics_l3),
+          recordTime: live?.record_time ? String(live.record_time) : null,
+        }
         return {
           deviceId: dId,
           site: meterSite,
@@ -332,6 +447,7 @@ export async function GET(request: NextRequest) {
           electricityRate: effectiveRate,
           rateSource: rateMeta.source,
           rateLabel: rateMeta.ruleLabel,
+          channels: { ch1, ch2 },
         }
       })
     }
@@ -345,10 +461,15 @@ export async function GET(request: NextRequest) {
         meters: meters.map((m) => ({
           deviceId: m.deviceId,
           deviceName: m.deviceName,
+          geId: m.geId,
+          seriesNo: m.seriesNo,
           meterId: m.meterId,
           meterNo: m.meterNo,
+          ch1MeterNo: m.ch1MeterNo,
+          ch2MeterNo: m.ch2MeterNo,
+          channels: m.channels,
           site: m.site,
-          locationName: m.locationName,
+          locationName: formatDeviceLocation(m.site, m.locationName),
           label: m.label,
         })),
         meterStats,

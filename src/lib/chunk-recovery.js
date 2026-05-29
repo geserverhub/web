@@ -28,6 +28,50 @@ export function reloadOnceForStaleChunk() {
   return true;
 }
 
+/** Client-side chunk error listeners (use in useLayoutEffect). */
+export function installChunkRecoveryClient() {
+  if (typeof window === 'undefined') return () => {};
+
+  window.__geHardReload = hardReloadForStaleChunk;
+
+  const onError = (e) => {
+    if (e.target && e.target.tagName === 'LINK') return;
+    if (isChunkLoadError(e?.message)) reloadOnceForStaleChunk();
+  };
+  const onRejection = (e) => {
+    const msg = (e.reason && e.reason.message) || String(e.reason || '');
+    if (isChunkLoadError(msg)) {
+      e.preventDefault();
+      reloadOnceForStaleChunk();
+    }
+  };
+
+  window.addEventListener('error', onError);
+  window.addEventListener('unhandledrejection', onRejection);
+  return () => {
+    window.removeEventListener('error', onError);
+    window.removeEventListener('unhandledrejection', onRejection);
+  };
+}
+
+function isCustomerDashboardAppPath(pathname = '') {
+  const path = String(pathname || '');
+  return path.includes('/customer-dashboard') && !path.includes('customer-dashboard-login');
+}
+
+/** Redirect to customer login when token missing (client fallback). */
+export function ensureCustomerDashboardAuthRedirect() {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!isCustomerDashboardAppPath(window.location.pathname)) return;
+    const token = localStorage.getItem('ge_admin_token');
+    if (token && String(token).trim()) return;
+    window.location.replace('/customer-dashboard-login');
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Inline script — runs before React chunks load (no imports). */
 export const CHUNK_RECOVERY_INLINE_SCRIPT = `(function(){
   function isChunkErr(msg){
@@ -60,10 +104,12 @@ export const CHUNK_RECOVERY_INLINE_SCRIPT = `(function(){
 /** Redirect to login before React if ge_admin_token is missing (works when JS chunks fail). */
 export const CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT = `(function(){
   try{
+    var path=location.pathname||'';
+    if(path.indexOf('/customer-dashboard')===-1)return;
+    if(path.indexOf('customer-dashboard-login')!==-1)return;
     var key='ge_admin_token';
     var token=localStorage.getItem(key);
     if(token&&String(token).trim())return;
-    if(location.pathname.indexOf('customer-dashboard-login')!==-1)return;
     location.replace('/customer-dashboard-login');
   }catch(_){}
 })();`;

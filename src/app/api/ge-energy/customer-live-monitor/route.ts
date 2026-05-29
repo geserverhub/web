@@ -54,16 +54,29 @@ function pickCol(available: Set<string>, candidates: string[]) {
   return candidates.find((c) => available.has(c)) ?? null;
 }
 
+function resolveWindowSeconds(searchParams: URLSearchParams) {
+  const secondsParam = searchParams.get('seconds');
+  if (secondsParam != null && secondsParam !== '') {
+    return Math.min(Math.max(parseInt(secondsParam, 10) || 60, 10), 3600);
+  }
+  const minutesParam = searchParams.get('minutes');
+  if (minutesParam != null && minutesParam !== '') {
+    const minutes = Math.min(Math.max(parseInt(minutesParam, 10) || 30, 5), 180);
+    return minutes * 60;
+  }
+  return 60;
+}
+
 /**
- * GET /api/ge-energy/customer-live-monitor?site=thailand&deviceId=1&minutes=30
- * Real-time current monitoring for customer portal — devices, snapshot, time series.
+ * GET /api/ge-energy/customer-live-monitor?site=thailand&deviceId=1&seconds=60
+ * Real-time monitoring — devices, snapshot, time series (window in seconds).
  */
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
     const site = (params.get('site') || 'thailand').toLowerCase();
     const deviceId = params.get('deviceId');
-    const minutes = Math.min(Math.max(parseInt(params.get('minutes') || '30', 10) || 30, 5), 180);
+    const seconds = resolveWindowSeconds(params);
 
     const siteSql =
       site === 'all'
@@ -211,23 +224,7 @@ export async function GET(request: NextRequest) {
     if (pfCol) avgParts.push(`AVG(${pfCol}) AS metrics_PF`);
     if (freqCol) avgParts.push(`AVG(${freqCol}) AS metrics_F`);
 
-    let series: Array<Record<string, unknown>> = [];
-    if (avgParts.length > 0 && powerCols.has('record_time')) {
-      const seriesRows = (await queryGe(
-        `SELECT
-          DATE_FORMAT(record_time, '%Y-%m-%d %H:%i') AS bucket,
-          MIN(record_time) AS record_time,
-          ${avgParts.join(',\n          ')}
-         FROM power_records
-         WHERE device_id = ?
-           AND record_time >= NOW() - INTERVAL ? MINUTE
-         GROUP BY DATE_FORMAT(record_time, '%Y-%m-%d %H:%i')
-         ORDER BY MIN(record_time) ASC`,
-        [deviceId, minutes]
-      )) as SeriesRow[];
-
-      series = seriesRows.map((row) => {
-        const t = row.record_time ? new Date(row.record_time) : new Date();
+    const mapSeriesRow = (row: SeriesRow & Record<string, unknown>, t: Date) => {
         const b1 = toNum(row.before_L1);
         const b2 = toNum(row.before_L2);
         const b3 = toNum(row.before_L3);
@@ -243,7 +240,12 @@ export async function GET(request: NextRequest) {
 
         return {
           time: t.toISOString(),
-          label: t.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          label: t.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          }),
           beforeL1: b1,
           beforeL2: b2,
           beforeL3: b3,
@@ -263,14 +265,68 @@ export async function GET(request: NextRequest) {
           powerFactor: toNum((row as SeriesRow & { metrics_PF?: unknown }).metrics_PF),
           frequency: toNum((row as SeriesRow & { metrics_F?: unknown }).metrics_F),
         };
-      });
+    };
+
+    let series: Array<Record<string, unknown>> = [];
+    if (powerCols.has('record_time')) {
+      const selectCols: string[] = ['record_time'];
+      if (beforeL1) selectCols.push(`${beforeL1} AS before_L1`);
+      if (beforeL2) selectCols.push(`${beforeL2} AS before_L2`);
+      if (beforeL3) selectCols.push(`${beforeL3} AS before_L3`);
+      if (outL1) selectCols.push(`${outL1} AS metrics_L1`);
+      if (outL2) selectCols.push(`${outL2} AS metrics_L2`);
+      if (outL3) selectCols.push(`${outL3} AS metrics_L3`);
+      if (voltL1) selectCols.push(`${voltL1} AS voltage_L1`);
+      if (voltL2) selectCols.push(`${voltL2} AS voltage_L2`);
+      if (voltL3) selectCols.push(`${voltL3} AS voltage_L3`);
+      if (powerInCol) selectCols.push(`${powerInCol} AS before_P`);
+      if (powerOutCol) selectCols.push(`${powerOutCol} AS metrics_P`);
+      if (reactiveInCol) selectCols.push(`${reactiveInCol} AS before_Q`);
+      if (reactiveOutCol) selectCols.push(`${reactiveOutCol} AS metrics_Q`);
+      if (pfCol) selectCols.push(`${pfCol} AS metrics_PF`);
+      if (freqCol) selectCols.push(`${freqCol} AS metrics_F`);
+
+      if (seconds <= 300 && selectCols.length > 1) {
+        const rawRows = (await queryGe(
+          `SELECT ${selectCols.join(', ')}
+           FROM power_records
+           WHERE device_id = ?
+             AND record_time >= NOW() - INTERVAL ? SECOND
+           ORDER BY record_time ASC
+           LIMIT 500`,
+          [deviceId, seconds]
+        )) as SeriesRow[];
+
+        series = rawRows.map((row) => {
+          const t = row.record_time ? new Date(String(row.record_time)) : new Date();
+          return mapSeriesRow(row as SeriesRow & Record<string, unknown>, t);
+        });
+      } else if (avgParts.length > 0) {
+        const seriesRows = (await queryGe(
+          `SELECT
+            DATE_FORMAT(record_time, '%Y-%m-%d %H:%i') AS bucket,
+            MIN(record_time) AS record_time,
+            ${avgParts.join(',\n          ')}
+           FROM power_records
+           WHERE device_id = ?
+             AND record_time >= NOW() - INTERVAL ? SECOND
+           GROUP BY DATE_FORMAT(record_time, '%Y-%m-%d %H:%i')
+           ORDER BY MIN(record_time) ASC`,
+          [deviceId, seconds]
+        )) as SeriesRow[];
+
+        series = seriesRows.map((row) => {
+          const t = row.record_time ? new Date(String(row.record_time)) : new Date();
+          return mapSeriesRow(row as SeriesRow & Record<string, unknown>, t);
+        });
+      }
     }
 
     return NextResponse.json({
       success: true,
       site,
       deviceId,
-      minutes,
+      seconds,
       devices,
       snapshot,
       series,

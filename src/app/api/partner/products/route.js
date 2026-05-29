@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import prisma, { getPrisma } from "@/lib/prisma";
+import { ensurePartnerProductCategorySchema } from "@/lib/partner-product-category-db";
 
 function isPartnerOrAdmin(session) {
   const role = session?.user?.role;
@@ -48,6 +49,10 @@ export async function POST(req) {
 
     let resolvedCategoryId = categoryId?.trim() || null;
     if (resolvedCategoryId) {
+      const db = getPrisma();
+      if (db?.partnerProductCategory) {
+        await ensurePartnerProductCategorySchema(db);
+      }
       const cat = await prisma.partnerProductCategory.findUnique({
         where: { id: resolvedCategoryId },
       });
