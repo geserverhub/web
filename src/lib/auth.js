@@ -4,8 +4,16 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { queryGeserverhub } from "@/lib/geserverhub-db";
+import { getAuthSecret } from "@/lib/auth-secret";
+import {
+  isRoleAllowedForNextAuthPortal,
+  NEXTAUTH_PORTAL_ROLES,
+} from "@/lib/login-portals";
+
+export { NEXTAUTH_PORTAL_ROLES };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: getAuthSecret(),
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   trustHost: true,
@@ -58,8 +66,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.log("[auth] password valid:", valid);
           if (!valid) return null;
 
-          // Check portal permission (skip for SUPER_ADMIN)
           const portal = credentials.portal?.trim();
+          if (!isRoleAllowedForNextAuthPortal(portal, user.role)) {
+            console.log("[auth] role blocked for portal:", portal, "role=", user.role);
+            return null;
+          }
+
+          // Check portal permission (skip for SUPER_ADMIN)
           if (portal && user.role !== 'SUPER_ADMIN') {
             // Role-based portal gate — block wrong role before hitting user_permissions
             const PORTAL_ROLES = {

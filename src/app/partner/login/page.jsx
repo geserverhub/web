@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { signIn, signOut, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+async function loadSession(maxAttempts = 4) {
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const session = await getSession();
+    if (session?.user) return session;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return null;
+}
 
 const LANGS = {
   th: {
@@ -51,6 +60,15 @@ export default function PartnerLoginPage() {
 
   const t = LANGS[lang];
 
+  useEffect(() => {
+    loadSession().then((session) => {
+      const role = session?.user?.role;
+      if (role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN") {
+        router.replace("/partner/dashboard");
+      }
+    });
+  }, [router]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -69,7 +87,17 @@ export default function PartnerLoginPage() {
         return;
       }
 
-      router.push("/partner/dashboard");
+      router.refresh();
+      const session = await loadSession();
+      const role = session?.user?.role;
+
+      if (role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN") {
+        router.push("/partner/dashboard");
+        return;
+      }
+
+      await signOut({ redirect: false });
+      setError(t.errorRole);
     } catch {
       setError(t.errorLogin);
     } finally {
