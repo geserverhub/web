@@ -27,21 +27,23 @@ const LOCALE_TO_TAG: Record<string, string> = {
 }
 
 const normalizeSite = (site: string): SupportedSite => {
-  if (site === 'korea' || site === 'vietnam' || site === 'malaysia' || site === 'thailand') return site
+  const s = String(site || '').trim().toLowerCase()
+  if (s.includes('korea') || s === 'kr' || s === 'ko') return 'korea'
+  if (s.includes('thai') || s === 'th') return 'thailand'
+  if (s.includes('viet') || s === 'vn') return 'vietnam'
+  if (s.includes('malay') || s === 'ms') return 'malaysia'
+  if (s === 'korea' || s === 'thailand' || s === 'vietnam' || s === 'malaysia') return s as SupportedSite
   return 'thailand'
 }
 
-const normalizeLocale = (locale?: string): SupportedLocale | null => {
-  if (locale === 'th' || locale === 'ko' || locale === 'en' || locale === 'cn' || locale === 'vn' || locale === 'ms') {
-    return locale
-  }
-  return null
-}
-
 const getCurrencyConfig = (site: string, locale?: string) => {
-  const normalizedLocale = normalizeLocale(locale)
-  if (normalizedLocale) return LOCALE_CURRENCY[normalizedLocale]
-  return SITE_CURRENCY[normalizeSite(site)]
+  const siteKey = normalizeSite(site || 'thailand')
+  const siteCfg = SITE_CURRENCY[siteKey]
+  return {
+    code: siteCfg.code,
+    symbol: siteCfg.symbol,
+    locale: getLocaleTag(locale, siteKey),
+  }
 }
 
 export const getCurrencyCodeBySite = (site: string, locale?: string): string => getCurrencyConfig(site, locale).code

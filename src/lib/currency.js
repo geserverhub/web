@@ -24,7 +24,12 @@ const LOCALE_TO_TAG = {
 };
 
 const normalizeSite = (site) => {
-  if (site === 'korea' || site === 'vietnam' || site === 'malaysia' || site === 'thailand') return site;
+  const s = String(site || '').trim().toLowerCase();
+  if (s.includes('korea') || s === 'kr' || s === 'ko') return 'korea';
+  if (s.includes('thai') || s === 'th') return 'thailand';
+  if (s.includes('viet') || s === 'vn') return 'vietnam';
+  if (s.includes('malay') || s === 'ms') return 'malaysia';
+  if (s === 'korea' || s === 'thailand' || s === 'vietnam' || s === 'malaysia') return s;
   return 'thailand';
 };
 
@@ -36,9 +41,13 @@ const normalizeLocale = (locale) => {
 };
 
 const getCurrencyConfig = (site, locale) => {
-  const normalizedLocale = normalizeLocale(locale);
-  if (normalizedLocale) return LOCALE_CURRENCY[normalizedLocale];
-  return SITE_CURRENCY[normalizeSite(site)];
+  const siteKey = normalizeSite(site || 'thailand');
+  const siteCfg = SITE_CURRENCY[siteKey];
+  return {
+    code: siteCfg.code,
+    symbol: siteCfg.symbol,
+    locale: getLocaleTag(locale, siteKey),
+  };
 };
 
 export const getCurrencyCodeBySite = (site, locale) => getCurrencyConfig(site, locale).code;
