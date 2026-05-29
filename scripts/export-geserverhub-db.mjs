@@ -68,5 +68,20 @@ if (result.status !== 0) {
   process.exit(1);
 }
 
-writeFileSync(outFile, result.stdout);
-console.log(`Exported ${cfg.database} → database/geserverhub.sql (${result.stdout.length} bytes)`);
+/** MariaDB / MySQL 5.7 cannot import MySQL 8.0 default collations. */
+function normalizeDumpForMariaDb(buf) {
+  return Buffer.from(
+    buf
+      .toString('utf8')
+      .replace(/utf8mb4_0900_ai_ci/g, 'utf8mb4_unicode_ci')
+      .replace(/utf8mb4_0900_as_ci/g, 'utf8mb4_unicode_ci')
+      .replace(/utf8mb4_0900_as_cs/g, 'utf8mb4_unicode_ci'),
+    'utf8',
+  );
+}
+
+const normalized = normalizeDumpForMariaDb(result.stdout);
+writeFileSync(outFile, normalized);
+console.log(
+  `Exported ${cfg.database} → database/geserverhub.sql (${normalized.length} bytes, MariaDB-safe collations)`,
+);
