@@ -3,6 +3,8 @@
 **28 tables** — see [TABLES.md](./TABLES.md) for the full list (19 Prisma + 9 GE Energy).
 
 - `geserverhub.sql` — Full MySQL dump (all 28 tables). Import into database `goeunserverhub`.
+- `seed-partner-transactions-20260529.sql` — Partner dashboard only (10 PIN/EXP rows, safe to re-run).
+- `GEserverhub-full-backup-*.tar.gz` — Full repo snapshot (code + `database/`, no `node_modules`/`.next`/`.env*`). Extract then `npm install` and restore DB.
 - `prisma/migrate-energy-geserverhub.sql` — energy DDL only (devices, power_records, mqtt_settings, device_connectivity, ai_settings, …).
 - `prisma/migrate-mfactory-inquiry.sql` — M-Factory booking table only.
 
