@@ -21,4 +21,13 @@ for (const target of targets) {
   }
 }
 
+// Pre-create dev log dir so Turbopack does not fail with ENOENT on WSL/Windows shares.
+for (const base of [appRoot, parentRoot]) {
+  try {
+    fs.mkdirSync(path.join(base, '.next', 'dev', 'logs'), { recursive: true });
+  } catch {
+    /* ignore */
+  }
+}
+
 console.log('Done. Start dev from ONE environment only (Windows OR WSL), not both.');
