@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { computeMonthlyInvestmentBalances } from "@/lib/partner-financial-calc";
 
 const LANGS = {
   th: {
@@ -24,7 +25,7 @@ const LANGS = {
     monthlyLegendExp: "รายจ่าย",
     profitTitle: (y) => `กำไรสุทธิรายเดือน (หลังหัก VAT 10%) — ${y}`,
     profitCols: { month: "เดือน", revenue: "รายรับ (₩)", investment: "เงินลงทุน (₩)", expense: "รายจ่าย (₩)", investmentBalance: "เงินลงทุนคงเหลือ (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
-    vatNote: "สูตรต่อคน: กำไรสุทธิ ÷ 2 · เงินลงทุนคงเหลือ = สะสม (ลงทุน − จ่าย)",
+    vatNote: "สูตรต่อคน: กำไรสุทธิ ÷ 2 · เงินลงทุนคงเหลือ = ยอดเดือนก่อน + ลงทุนใหม่ − รายจ่าย",
     categoryTitle: "รายรับแยกตามประเภท",
     kpi: {
       title: (y) => `🎯 KPI — ปี ${y}`,
@@ -114,6 +115,7 @@ const LANGS = {
       fBrand: "แบรนด์ / ผู้ผลิต", fBrandPh: "เช่น Shanghai Fangqiu",
       fCostPrice: "ราคาทุน / หน่วย", fSellPrice: "ราคาขาย / หน่วย", fCurrency: "สกุลเงิน",
       fCategory: "หมวดสินค้า", fCategoryPh: "— เลือกหมวด —",
+      categoryHint: "หมวด「เครื่องประหยัดพลังงาน」→ แสดงใน Customer Dashboard · 「อุปกรณ์ IoT」→ หมวด IoT",
       addCategory: "+ เพิ่มหมวด", newCategoryPh: "ชื่อหมวดใหม่ เช่น มิเตอร์ / บริการ",
       categorySaving: "กำลังเพิ่มหมวด...", categoryAdded: "✅ เพิ่มหมวดแล้ว",
       submit: "บันทึกสินค้า", submitting: "กำลังบันทึก...", success: "✅ เพิ่มสินค้าสำเร็จ",
@@ -217,7 +219,7 @@ const LANGS = {
     monthlyLegendExp: "지출",
     profitTitle: (y) => `월별 순이익 (VAT 10% 공제 후) — ${y}`,
     profitCols: { month: "월", revenue: "매출 (₩)", investment: "투자금 (₩)", expense: "지출 (₩)", investmentBalance: "투자금 잔액 (₩)", net: "순이익 (₩)", afterVat: "VAT 10% 후 (₩)", perPerson: "1인당 (₩)" },
-    vatNote: "1인당: 순이익 ÷ 2 · 투자금 잔액 = 누적 (투자 − 지출)",
+    vatNote: "1인당: 순이익 ÷ 2 · 투자금 잔액 = 전월 잔액 + 신규 투자 − 지출",
     categoryTitle: "카테고리별 매출",
     kpi: {
       title: (y) => `🎯 KPI — ${y}년`,
@@ -307,6 +309,7 @@ const LANGS = {
       fBrand: "브랜드 / 제조사", fBrandPh: "예: Shanghai Fangqiu",
       fCostPrice: "원가 / 단위", fSellPrice: "판매가 / 단위", fCurrency: "통화",
       fCategory: "상품 카테고리", fCategoryPh: "— 카테고리 선택 —",
+      categoryHint: "「에너지 절감」→ 고객 대시보드 · 「IoT」→ IoT 섹션",
       addCategory: "+ 카테고리 추가", newCategoryPh: "새 카테고리명",
       categorySaving: "추가 중...", categoryAdded: "✅ 카테고리 추가됨",
       submit: "상품 저장", submitting: "저장 중...", success: "✅ 상품 추가 완료",
@@ -435,22 +438,11 @@ function calcAfterVat(revenue, expense) {
   return revenue * 0.9 - expense;
 }
 
-/** ต่อคน = กำไรสุทธิ ÷ 2 (ไม่รวมเงินลงทุน) */
+/** ต่อคน = กำไรสุทธิ ÷ 2 (แสดงเมื่อมีกำไรสุทธิเท่านั้น) */
 function calcPerPerson(revenue, expense) {
-  return (revenue - expense) / 2;
-}
-
-/** สะสมเงินลงทุนคงเหลือรายเดือน: ยอดสะสม (ลงทุน − รายจ่าย) */
-function enrichMonthlyInvestmentBalance(monthlyRows) {
-  let balance = 0;
-  let started = false;
-  return (monthlyRows || []).map((m) => {
-    const inv = m.investment || 0;
-    const exp = m.expense || 0;
-    if (inv > 0 || exp > 0) started = true;
-    if (started) balance += inv - exp;
-    return { ...m, investmentBalance: started ? balance : null };
-  });
+  const net = (Number(revenue) || 0) - (Number(expense) || 0);
+  if (net <= 0) return null;
+  return net / 2;
 }
 
 function MonthBar({ month, revenue, expense, maxValue }) {
@@ -1005,7 +997,11 @@ export default function PartnerDashboard() {
     );
   }
 
-  const { summary, monthlyRevenue, recentTransactions, byCategory, profitShareTransactions, partnerIncomeSummary } = data || {};
+  const { summary, monthlyRevenue, recentTransactions, byCategory, profitShareTransactions, partnerIncomeSummary, investmentOpeningBalance } = data || {};
+  const monthlyWithInvestmentBalance = computeMonthlyInvestmentBalances(
+    monthlyRevenue,
+    investmentOpeningBalance ?? 0
+  );
   const maxMonthValue = Math.max(
     ...(monthlyRevenue || []).flatMap(m => [m.revenue, m.expense]),
     1,
@@ -1124,7 +1120,7 @@ export default function PartnerDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {enrichMonthlyInvestmentBalance(monthlyRevenue).map(m => {
+                    {monthlyWithInvestmentBalance.map(m => {
                       const net = m.revenue - m.expense;
                       const afterVat = calcAfterVat(m.revenue, m.expense);
                       const perPerson = calcPerPerson(m.revenue, m.expense);
@@ -1153,8 +1149,8 @@ export default function PartnerDashboard() {
                           <td style={{ ...S.td, textAlign: "right", color: afterVat >= 0 ? "#60a5fa" : "#f87171", fontFamily: "monospace" }}>
                             {m.revenue > 0 ? `₩${fmtNum(Math.round(afterVat), t.locale)}` : "-"}
                           </td>
-                          <td style={{ ...S.td, textAlign: "right", color: perPerson >= 0 ? "#4ade80" : "#f87171", fontWeight: 800, fontFamily: "monospace", fontSize: 14 }}>
-                            {hasData ? `₩${fmtNum(Math.round(perPerson), t.locale)}` : "-"}
+                          <td style={{ ...S.td, textAlign: "right", color: "#4ade80", fontWeight: 800, fontFamily: "monospace", fontSize: 14 }}>
+                            {perPerson != null ? `₩${fmtNum(Math.round(perPerson), t.locale)}` : "-"}
                           </td>
                         </tr>
                       );
@@ -1733,6 +1729,7 @@ export default function PartnerDashboard() {
                       {categoryFormState && categoryFormState !== "loading" && categoryFormState !== "success" && (
                         <div style={{ color: "#f87171", fontSize: 11, marginTop: 4 }}>❌ {categoryFormState}</div>
                       )}
+                      <p style={{ margin: "6px 0 0", fontSize: 11, color: "#60a5fa", lineHeight: 1.4 }}>{t.products.categoryHint}</p>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       <div>
@@ -2504,10 +2501,17 @@ export default function PartnerDashboard() {
 
           // ── 2. รายงานบัญชีรวมทั้งปี ──
           function ReportAnnual() {
+            const annualMonthsWithBalance = computeMonthlyInvestmentBalances(
+              filteredMonths,
+              investmentOpeningBalance ?? 0
+            );
             const totalRev = filteredMonths.reduce((s, m) => s + m.revenue, 0);
             const totalInv = filteredMonths.reduce((s, m) => s + m.investment, 0);
             const totalExp = filteredMonths.reduce((s, m) => s + m.expense, 0);
             const totalNet = totalRev - totalExp;
+            const endingInvestmentBalance =
+              [...annualMonthsWithBalance].reverse().find((m) => m.investmentBalance != null)?.investmentBalance ??
+              (investmentOpeningBalance ?? 0) + totalInv - totalExp;
             const drLabel = `${new Date(printDateFrom).toLocaleDateString(koLocale)} ~ ${new Date(printDateTo).toLocaleDateString(koLocale)}`;
             return (
               <div style={P.page}>
@@ -2529,10 +2533,10 @@ export default function PartnerDashboard() {
                     ))}
                   </tr></thead>
                   <tbody>
-                    {enrichMonthlyInvestmentBalance(filteredMonths).map(m => {
+                    {annualMonthsWithBalance.map(m => {
                       const net = m.revenue - m.expense;
                       const vat = Math.round(Math.max(0, m.revenue) * 0.1);
-                      const perPerson = Math.round(calcPerPerson(m.revenue, m.expense));
+                      const perPerson = calcPerPerson(m.revenue, m.expense);
                       const bal = m.investmentBalance;
                       const hasData = m.revenue > 0 || m.investment > 0 || m.expense > 0;
                       return (
@@ -2544,7 +2548,7 @@ export default function PartnerDashboard() {
                           <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{bal != null ? `₩${fmtNum(Math.round(bal), koLocale)}` : "-"}</td>
                           <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{hasData ? `₩${fmtNum(net, koLocale)}` : "-"}</td>
                           <td style={{ ...P.td, textAlign: "right" }}>{m.revenue > 0 ? `₩${fmtNum(vat, koLocale)}` : "-"}</td>
-                          <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{hasData ? `₩${fmtNum(perPerson, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{perPerson != null ? `₩${fmtNum(Math.round(perPerson), koLocale)}` : "-"}</td>
                         </tr>
                       );
                     })}
@@ -2553,10 +2557,10 @@ export default function PartnerDashboard() {
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalRev, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalInv, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalExp, koLocale)}</td>
-                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(totalInv - totalExp), koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(endingInvestmentBalance), koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalNet, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(Math.max(0,totalRev)*0.1), koLocale)}</td>
-                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(totalNet / 2), koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>{totalNet > 0 ? `₩${fmtNum(Math.round(totalNet / 2), koLocale)}` : "-"}</td>
                     </tr>
                   </tbody>
                 </table>

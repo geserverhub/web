@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
+import { formatDeviceLocation, normalizeSiteKey } from '@/lib/ge-energy/customer-scope'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const site = searchParams.get('site') || 'thailand'
+    const deviceIdParam = searchParams.get('deviceId')
     const deviceColumns = await getDevicesColumnSet()
     const hasCustomerName = deviceColumns.has('customerName')
     const hasCustomerPhone = deviceColumns.has('customerPhone')
@@ -63,6 +65,21 @@ export async function GET(req: NextRequest) {
       .filter(Boolean)
       .join('\n               ')
 
+    const deviceIdFilter = deviceIdParam && /^\d+$/.test(deviceIdParam)
+    const whereClause = deviceIdFilter
+      ? 'WHERE d.deviceID = ?'
+      : 'WHERE (LOWER(COALESCE(d.site, d.location, "")) LIKE ? OR ? = \'all\')'
+    const whereParams = deviceIdFilter
+      ? [Number(deviceIdParam)]
+      : [
+          site === 'thailand' ? '%thailand%'
+            : site === 'korea' ? '%korea%'
+            : site === 'vietnam' ? '%vietnam%'
+            : site === 'malaysia' ? '%malaysia%'
+            : '%',
+          site,
+        ]
+
     const devices = await queryGe(`
       SELECT
         d.deviceID,
@@ -85,30 +102,26 @@ export async function GET(req: NextRequest) {
         END as connection
       FROM devices d
       LEFT JOIN power_records p ON d.deviceID = p.device_id
-      WHERE d.location LIKE ? OR ? = 'all'
+      ${whereClause}
       GROUP BY d.deviceID, d.deviceName, d.geID, d.U_email,
                ${customerGroupByFields}
                d.location, d.latitude, d.longitude, d.ipAddress, d.site, d.phone, d.created_at
       ORDER BY d.deviceName ASC
-    `, [
-      site === 'thailand' ? '%Thailand%'
-        : site === 'korea' ? '%Korea%'
-        : site === 'vietnam' ? '%Vietnam%'
-        : site === 'malaysia' ? '%Malaysia%'
-        : '%',
-      site
-    ])
+    `, whereParams)
 
-    // Format time since update
-    const formattedDevices = devices.map((d: any) => ({
-      ...d,
-      type: 'Energy 3-Ph', // Default type
-      rssi: 0, // Not available yet
-      ramData: false, // Not available yet
-      timeSinceUpdate: d.secondsSinceUpdate ? formatTimeSince(d.secondsSinceUpdate) : 'N/A',
-      lastUpdate: d.lastUpdate || null,
-      registerDate: d.registerDate ? new Date(d.registerDate).toISOString().split('T')[0] : null
-    }))
+    const formattedDevices = devices.map((d: Record<string, unknown>) => {
+      const meterSite = normalizeSiteKey(d.site as string)
+      return {
+        ...d,
+        site: meterSite,
+        location: formatDeviceLocation(meterSite, d.location as string),
+        timeSinceUpdate: d.secondsSinceUpdate ? formatTimeSince(Number(d.secondsSinceUpdate)) : 'N/A',
+        lastUpdate: d.lastUpdate || null,
+        registerDate: d.registerDate
+          ? new Date(String(d.registerDate)).toISOString().split('T')[0]
+          : null,
+      }
+    })
 
     return NextResponse.json({
       success: true,

@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LocaleProvider } from '@/lib/LocaleContext';
 import { SiteProvider, useSite } from '@/lib/SiteContext';
 import CustomerDashboardHeader from '@/components/customer/CustomerDashboardHeader';
 import { GE_ADMIN_TOKEN_KEY, GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
+import {
+  ensureCustomerDashboardAuthRedirect,
+  installChunkRecoveryClient,
+} from '@/lib/chunk-recovery';
 import './customer-dashboard.css';
 
 function CustomerSiteInit({ children }) {
@@ -36,6 +40,11 @@ function CustomerSiteInit({ children }) {
 export default function CustomerDashboardShell({ children }) {
   const router = useRouter();
   const [authState, setAuthState] = useState('checking');
+
+  useLayoutEffect(() => {
+    ensureCustomerDashboardAuthRedirect();
+    return installChunkRecoveryClient();
+  }, []);
 
   useEffect(() => {
     let redirectTimer;

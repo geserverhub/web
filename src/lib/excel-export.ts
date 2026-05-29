@@ -4,10 +4,22 @@ interface ExcelRow {
   [key: string]: string | number | null;
 }
 
-export function exportToExcel(
+export type ExportFileFormat = 'xlsx' | 'csv' | 'xls';
+
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function exportDataFile(
   data: ExcelRow[],
   filename: string,
-  sheetName: string = 'Data'
+  sheetName: string = 'Data',
+  format: ExportFileFormat = 'xlsx'
 ) {
   if (!data || data.length === 0) {
     alert('No data to export');
@@ -17,7 +29,18 @@ export function exportToExcel(
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const dateTag = new Date().toISOString().split('T')[0];
+  const bookType = format === 'csv' ? 'csv' : format === 'xls' ? 'xls' : 'xlsx';
+  const ext = format === 'csv' ? 'csv' : format === 'xls' ? 'xls' : 'xlsx';
+  XLSX.writeFile(wb, `${filename}_${dateTag}.${ext}`, { bookType });
+}
+
+export function exportToExcel(
+  data: ExcelRow[],
+  filename: string,
+  sheetName: string = 'Data'
+) {
+  exportDataFile(data, filename, sheetName, 'xlsx');
 }
 
 export function generateCurrentMonitorExcel(

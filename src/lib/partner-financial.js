@@ -81,6 +81,8 @@ export async function syncPartnerMonthlyFinancial(year, month, { revenueKrw, inv
   });
 }
 
+export { computeMonthlyInvestmentBalances, sumInvestmentBalanceBefore } from '@/lib/partner-financial-calc';
+
 export function buildPartnerIncomeSummary(transactions) {
   const partnerIncomeMap = {};
 

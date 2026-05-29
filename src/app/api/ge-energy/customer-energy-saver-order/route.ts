@@ -61,9 +61,9 @@ export async function POST(req: NextRequest) {
     }
 
     const validBillFiles = billFiles.filter((f) => f instanceof File) as File[];
-    if (validBillFiles.length !== 12) {
+    if (validBillFiles.length > 12) {
       return NextResponse.json(
-        { success: false, error: 'Please upload exactly 12 monthly electricity bills' },
+        { success: false, error: 'You can upload at most 12 monthly electricity bills' },
         { status: 400 }
       );
     }

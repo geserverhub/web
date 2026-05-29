@@ -10,9 +10,16 @@ export function LocaleProvider({ children }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const validLocales = ['ko', 'en', 'th', 'cn', 'vn', 'ms'];
+    const validLocales = ['ko', 'en', 'th', 'cn', 'vn', 'ms', 'zh', 'vi', 'ja', 'zh-tw'];
 
-    const savedLocale = localStorage.getItem('locale');
+    let savedLocale = null;
+    try {
+      savedLocale =
+        localStorage.getItem('ge-energy-tech-lang') ||
+        localStorage.getItem('locale');
+    } catch {
+      /* ignore */
+    }
     if (savedLocale && validLocales.includes(savedLocale)) {
       setLocaleState(savedLocale);
     }
@@ -23,6 +30,11 @@ export function LocaleProvider({ children }) {
       const incoming = detail?.locale;
       if (incoming && validLocales.includes(incoming)) {
         setLocaleState(incoming);
+        try {
+          localStorage.setItem('ge-energy-tech-lang', incoming);
+        } catch {
+          /* ignore */
+        }
       }
     };
     window.addEventListener('locale-changed', handleLocaleChanged);
@@ -31,7 +43,12 @@ export function LocaleProvider({ children }) {
 
   const setLocale = (newLocale) => {
     setLocaleState(newLocale);
-    localStorage.setItem('locale', newLocale);
+    try {
+      localStorage.setItem('locale', newLocale);
+      localStorage.setItem('ge-energy-tech-lang', newLocale);
+    } catch {
+      /* ignore */
+    }
   };
 
   const t = (key) => {

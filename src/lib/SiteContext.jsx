@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const SiteContext = createContext(undefined);
 
@@ -17,10 +17,14 @@ export function SiteProvider({ children }) {
     setMounted(true);
   }, []);
 
-  const setSelectedSite = (site) => {
+  const setSelectedSite = useCallback((site) => {
     setSelectedSiteState(site);
-    localStorage.setItem("selectedSite", site);
-  };
+    try {
+      localStorage.setItem("selectedSite", site);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const activeSite = mounted ? selectedSite : "thailand";
 
