@@ -118,7 +118,7 @@ CREATE TABLE `Client` (
   `contactFax` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `systemUrl` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `logoUrl` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `lineUserId` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lineUserId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `domainRegisteredAt` datetime(3) DEFAULT NULL,
   `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` datetime(3) NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE `Client` (
 
 LOCK TABLES `Client` WRITE;
 /*!40000 ALTER TABLE `Client` DISABLE KEYS */;
-INSERT INTO `Client` VALUES ('cmo6viudt0001qhga9f5j4jzc','M-Factory','m-factory',NULL,'ONLINE','m.factoryandresort@gmail.com','+66 095-241-1833',NULL,'https://m-factoryandresort.com',NULL,NULL,'2026-04-20 07:28:50.513','2026-04-20 07:28:50.513',NULL,NULL),('cmo6viueb0002qhgad1v22u6k','M-Group','m-group',NULL,'ONLINE','sale@m-group.in.th','089-4871144',NULL,NULL,NULL,NULL,'2026-04-20 07:28:50.531','2026-04-20 07:28:50.531',NULL,NULL),('cmo6viuen0003qhga32hwcu3n','GOEUN SERVER HUB','goeun-server-hub','','ONLINE','goeunserverhub@gmail.com','+66081-234567',NULL,'ge-serverhub.com','/uploads/logos/1776694124366-rd4x8l.jpg',NULL,'2026-04-20 07:28:50.543','2026-04-20 14:08:48.344','',NULL),('cmo6x1sht0008qhvqygcgasiq','M-retsort','m-retsort','เอ็มรีสอร์ท  บริการที่พัก บรรยากาศส่วนตัว','ONLINE','mukhngamnuch@gmail.com','095-241-1833',NULL,'https://m-factoryandresort.com/','/uploads/logos/1776692894976-ecji3u.jpg',NULL,'2026-04-20 08:11:34.146','2026-04-20 15:02:10.074','เอ็มรีสอร์ท 222 ซอย คลองโซน 6 ตำบล ลาดหลุมแก้ว อำเภอลาดหลุมแก้ว ปทุมธานี 12140  ','เอ็มรีสอร์ท'),('cmo9bve0m0000qhtikd261ug2','Green Retail Group','green-retail-group','ระบบมอนิเตอริ่ง ผู้ใช้ Demo','ONLINE','it@green-retail.example.com','02-555-1199',NULL,'/customer-dashboard-login',NULL,NULL,'2026-04-22 00:42:02.038','2026-04-22 01:21:00.734',NULL,NULL);
+INSERT INTO `Client` VALUES ('cmo6viudt0001qhga9f5j4jzc','M-Factory','m-factory',NULL,'ONLINE','m.factoryandresort@gmail.com','+66 095-241-1833',NULL,'https://m-factoryandresort.com',NULL,NULL,NULL,'2026-04-20 07:28:50.513','2026-04-20 07:28:50.513',NULL,NULL),('cmo6viueb0002qhgad1v22u6k','M-Group','m-group',NULL,'ONLINE','sale@m-group.in.th','089-4871144',NULL,NULL,NULL,NULL,NULL,'2026-04-20 07:28:50.531','2026-04-20 07:28:50.531',NULL,NULL),('cmo6viuen0003qhga32hwcu3n','GOEUN SERVER HUB','goeun-server-hub','','ONLINE','goeunserverhub@gmail.com','+66081-234567',NULL,'ge-serverhub.com','/uploads/logos/1776694124366-rd4x8l.jpg',NULL,NULL,'2026-04-20 07:28:50.543','2026-04-20 14:08:48.344','',NULL),('cmo6x1sht0008qhvqygcgasiq','M-retsort','m-retsort','เอ็มรีสอร์ท  บริการที่พัก บรรยากาศส่วนตัว','ONLINE','mukhngamnuch@gmail.com','095-241-1833',NULL,'https://m-factoryandresort.com/','/uploads/logos/1776692894976-ecji3u.jpg',NULL,NULL,'2026-04-20 08:11:34.146','2026-04-20 15:02:10.074','เอ็มรีสอร์ท 222 ซอย คลองโซน 6 ตำบล ลาดหลุมแก้ว อำเภอลาดหลุมแก้ว ปทุมธานี 12140  ','เอ็มรีสอร์ท'),('cmo9bve0m0000qhtikd261ug2','Green Retail Group','green-retail-group','ระบบมอนิเตอริ่ง ผู้ใช้ Demo','ONLINE','it@green-retail.example.com','02-555-1199',NULL,'/customer-dashboard-login',NULL,NULL,NULL,'2026-04-22 00:42:02.038','2026-04-22 01:21:00.734',NULL,NULL);
 /*!40000 ALTER TABLE `Client` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -318,6 +318,71 @@ LOCK TABLES `Notification` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `PartnerMonthlyFinancial`
+--
+
+DROP TABLE IF EXISTS `PartnerMonthlyFinancial`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `PartnerMonthlyFinancial` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `year` smallint NOT NULL,
+  `month` tinyint NOT NULL,
+  `revenueKrw` decimal(14,2) NOT NULL DEFAULT '0.00',
+  `investmentKrw` decimal(14,2) NOT NULL DEFAULT '0.00',
+  `expenseKrw` decimal(14,2) NOT NULL DEFAULT '0.00',
+  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `PartnerMonthlyFinancial_year_month_key` (`year`,`month`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `PartnerMonthlyFinancial`
+--
+
+LOCK TABLES `PartnerMonthlyFinancial` WRITE;
+/*!40000 ALTER TABLE `PartnerMonthlyFinancial` DISABLE KEYS */;
+INSERT INTO `PartnerMonthlyFinancial` VALUES ('106c06e0-86ba-4fc8-b0aa-78ac69b637c8',2026,4,0.00,1500000.00,0.00,'2026-05-29 09:12:12.698'),('b299b373-ca8b-4ea5-9e59-c00ed9c9b512',2026,5,0.00,1000000.00,2062837.00,'2026-05-29 09:12:12.722');
+/*!40000 ALTER TABLE `PartnerMonthlyFinancial` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `PartnerPersonFinancial`
+--
+
+DROP TABLE IF EXISTS `PartnerPersonFinancial`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `PartnerPersonFinancial` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `personName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ledgerType` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'PROFIT_SHARE | INVESTMENT',
+  `amount` decimal(14,2) NOT NULL,
+  `currency` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'KRW',
+  `transactionId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `recordedAt` datetime(3) NOT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `PartnerPersonFinancial_transactionId_key` (`transactionId`),
+  KEY `PartnerPersonFinancial_personName_ledgerType_idx` (`personName`,`ledgerType`),
+  KEY `PartnerPersonFinancial_recordedAt_idx` (`recordedAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `PartnerPersonFinancial`
+--
+
+LOCK TABLES `PartnerPersonFinancial` WRITE;
+/*!40000 ALTER TABLE `PartnerPersonFinancial` DISABLE KEYS */;
+INSERT INTO `PartnerPersonFinancial` VALUES ('0d316772-0212-48c3-973a-07c5d164945f','김동규 부사님','INVESTMENT',1000000.00,'KRW','cmpqhew650000qhot2xedltbu','2026-05-29 00:00:00.000','공동 투자금 **강동규 부사님','2026-05-29 14:43:14.541','2026-05-29 14:57:19.808'),('43c37dc7-9099-4e24-a822-bc20dcadb3a5','복녀파위니','INVESTMENT',1500000.00,'KRW','cmpqhmgqt0000qh7564w9knmx','2026-04-01 00:00:00.000','파위니 투자금 ','2026-05-29 14:43:14.558','2026-05-29 14:57:19.783');
+/*!40000 ALTER TABLE `PartnerPersonFinancial` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `PartnerProduct`
 --
 
@@ -336,9 +401,11 @@ CREATE TABLE `PartnerProduct` (
   `updatedAt` datetime(3) NOT NULL,
   `costPrice` decimal(14,2) DEFAULT NULL,
   `sellPrice` decimal(14,2) DEFAULT NULL,
+  `categoryId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `PartnerProduct_name_idx` (`name`),
-  KEY `PartnerProduct_clientId_idx` (`clientId`)
+  KEY `PartnerProduct_clientId_idx` (`clientId`),
+  KEY `PartnerProduct_categoryId_idx` (`categoryId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -348,8 +415,39 @@ CREATE TABLE `PartnerProduct` (
 
 LOCK TABLES `PartnerProduct` WRITE;
 /*!40000 ALTER TABLE `PartnerProduct` DISABLE KEYS */;
-INSERT INTO `PartnerProduct` VALUES ('cmph1wrdv0001qhujairlnt97','AI Smart Energy Monitor (Basic)','SEM-B100','MOMOGE SPACE','KRW','[\"/momoge/Logo-brand.png\"]','cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.602','2026-05-22 15:05:01.602',89000.00,129000.00),('cmph1wree0003qhujn57sbuvp','Current Sensor Module 100A','CSM-100A','MOMOGE SPACE','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.622','2026-05-22 15:05:01.622',45000.00,69000.00),('cmph1wrer0005qhuj7wlp09e0','3-Phase Power Logger','PL-3P200','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.635','2026-05-22 15:05:01.635',180000.00,249000.00),('cmph1wrf10007qhujlatgiq8j','Cloud Dashboard Annual Plan','CD-12M','MOMOGE SPACE','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.646','2026-05-22 15:05:01.646',120000.00,198000.00),('cmph1wrfb0009qhujfnx5jq6b','Installation & Commissioning','SVC-INST','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.655','2026-05-22 15:05:01.655',150000.00,220000.00);
+INSERT INTO `PartnerProduct` VALUES ('cmph1wrer0005qhuj7wlp09e0','3-Phase Power Logger','PL-3P200','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.635','2026-05-22 15:05:01.635',180000.00,249000.00,NULL),('cmph1wrfb0009qhujfnx5jq6b','Installation & Commissioning','SVC-INST','GOEUN SERVER HUB','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-22 15:05:01.655','2026-05-22 15:05:01.655',150000.00,220000.00,NULL),('cmpqj0ln40003qhkb9efycsbo','3-Phase Meter Analysis SET + Platform  services','50kVA','Momoge Space','KRW',NULL,'cmo6viuen0003qhga32hwcu3n','2026-05-29 06:13:49.840','2026-05-29 06:13:49.840',559000.00,690000.00,NULL);
 /*!40000 ALTER TABLE `PartnerProduct` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `PartnerProductCategory`
+--
+
+DROP TABLE IF EXISTS `PartnerProductCategory`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `PartnerProductCategory` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sortOrder` int NOT NULL DEFAULT '0',
+  `clientId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `PartnerProductCategory_clientId_name_key` (`clientId`,`name`),
+  KEY `PartnerProductCategory_clientId_idx` (`clientId`),
+  KEY `PartnerProductCategory_sortOrder_idx` (`sortOrder`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `PartnerProductCategory`
+--
+
+LOCK TABLES `PartnerProductCategory` WRITE;
+/*!40000 ALTER TABLE `PartnerProductCategory` DISABLE KEYS */;
+INSERT INTO `PartnerProductCategory` VALUES ('cat-energy-default','เครื่องประหยัดพลังงาน',20,NULL,'2026-05-29 16:15:36.379','2026-05-29 16:15:36.379'),('cat-iot-default','อุปกรณ์ IoT',10,NULL,'2026-05-29 16:15:36.379','2026-05-29 16:15:36.379'),('cat-other-default','อื่นๆ',99,NULL,'2026-05-29 16:15:36.379','2026-05-29 16:15:36.379'),('cat-service-default','บริการ / ติดตั้ง',30,NULL,'2026-05-29 16:15:36.379','2026-05-29 16:15:36.379');
+/*!40000 ALTER TABLE `PartnerProductCategory` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -384,7 +482,7 @@ CREATE TABLE `PartnerTask` (
 
 LOCK TABLES `PartnerTask` WRITE;
 /*!40000 ALTER TABLE `PartnerTask` DISABLE KEYS */;
-INSERT INTO `PartnerTask` VALUES ('cmowezidp0000qhyqthb1w761','전력 품질 보정값 측정을 위한 테스트 장비를 확인하고 있습니다.','OPERATION','IN_PROGRESS','NORMAL','MOMOGE SPACE','2026-05-30 00:00:00.000',NULL,'고객 출고 전에 테스트할 수 있는 소형 전력 품질 개선 장비와 전류 데이터 측정용 테스트 장비를 검토하고 있습니다.','2026-05-08 04:27:55.208','2026-05-08 05:53:07.897');
+INSERT INTO `PartnerTask` VALUES ('cmowezidp0000qhyqthb1w761','전력 품질 보정값 측정을 위한 테스트 장비를 확인하고 있습니다.','OPERATION','COMPLETED','NORMAL','MOMOGE SPACE','2026-05-30 00:00:00.000','2026-05-29 05:51:30.174','고객 출고 전에 테스트할 수 있는 소형 전력 품질 개선 장비와 전류 데이터 측정용 테스트 장비를 검토하고 있습니다.','2026-05-08 04:27:55.208','2026-05-29 05:51:30.176');
 /*!40000 ALTER TABLE `PartnerTask` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -426,7 +524,7 @@ CREATE TABLE `PartnerTransaction` (
 
 LOCK TABLES `PartnerTransaction` WRITE;
 /*!40000 ALTER TABLE `PartnerTransaction` DISABLE KEYS */;
-INSERT INTO `PartnerTransaction` VALUES ('cmowmc6fu0000qhwtm76e9295','EXP20260508-0002','MOMOGE SPACE','EXPENSE','Meter + CT','Shanghai Fangqiu Electric Co.,Ltd',158.00,'USD','PENDING','ค่าอุปกรณ์','C/I NO : FQ26-KR01   Energy Meter  EM4373 2 PCS , Current transformer : SCT-T24','2026-05-08 00:00:00.000','2026-05-08 07:53:43.578','2026-05-08 07:53:43.578',NULL),('cmpjugsdh0000qh0np6qke3ff','EXP20260524-0001','MOMOGE SPACE','EXPENSE','ค่าใช้จ่ายรายหลัก',NULL,1051200.00,'KRW','COMPLETED',NULL,NULL,'2026-05-24 13:59:57.606','2026-05-24 13:59:57.606','2026-05-24 13:59:57.606',NULL);
+INSERT INTO `PartnerTransaction` VALUES ('cmowmc6fu0000qhwtm76e9295','EXP20260508-0002','MOMOGE SPACE','EXPENSE','Meter + CT','Shanghai Fangqiu Electric Co.,Ltd',402892.00,'KRW','COMPLETED','ค่าอุปกรณ์','C/I NO : FQ26-KR01   Energy Meter  EM4373 2 PCS , Current transformer : SCT-T24','2026-05-08 00:00:00.000','2026-05-08 07:53:43.578','2026-05-29 05:30:18.099','/uploads/partner-receipts/1780032617429-c9dfxm.jpg'),('cmpjugsdh0000qh0np6qke3ff','EXP20260524-0001','MOMOGE SPACE','EXPENSE','ค่าใช้จ่ายรายหลัก',NULL,1124000.00,'KRW','COMPLETED',NULL,NULL,'2026-05-24 13:59:57.606','2026-05-24 13:59:57.606','2026-05-29 06:18:25.623',NULL),('cmpqhew650000qhot2xedltbu','PIN20260529-0001','MOMOGE SPACE','PARTNER_INVESTMENT','공동 투자금 **강동규 부사님','김동규 부사님',1000000.00,'KRW','COMPLETED','เงินลงทุน','공동 투자금 **강동규 부사님','2026-05-29 00:00:00.000','2026-05-29 05:28:57.437','2026-05-29 14:57:19.797',NULL),('cmpqhmgqt0000qh7564w9knmx','PIN20260529-0002','MOMOGE SPACE','PARTNER_INVESTMENT','파위니 투자금 ','복녀파위니',1500000.00,'KRW','COMPLETED','เงินลงทุน','파위니 투자금 ','2026-04-01 00:00:00.000','2026-05-29 05:34:50.693','2026-05-29 14:57:19.770',NULL),('cmpqke11t0002qh0b5288tanw','EXP20260529-0003','MOMOGE SPACE','EXPENSE','서작권 수수료',NULL,53000.00,'KRW','COMPLETED','อื่นๆ','서작권 수수료','2026-05-16 00:00:00.000','2026-05-29 06:52:15.954','2026-05-29 06:52:15.954',NULL),('cmpqkgmuq0005qh0bnd84hp9o','EXP20260529-0004','MOMOGE SPACE','EXPENSE','통신판매  면허 수수료',NULL,40500.00,'KRW','COMPLETED','อื่นๆ','통신판매  면허 수수료','2026-05-19 00:00:00.000','2026-05-29 06:54:17.522','2026-05-29 06:54:17.522',NULL),('cmpqkkrbz0008qh0b6ilhr06m','EXP20260529-0005','MOMOGE SPACE','EXPENSE','명합 +  브렌드 로코',NULL,35000.00,'KRW','COMPLETED','ค่าอุปกรณ์','명합 +  브렌드 로코','2026-05-11 00:00:00.000','2026-05-29 06:57:29.952','2026-05-29 06:57:29.952',NULL),('cmpqkm811000bqh0bbq4s8171','EXP20260529-0006','MOMOGE SPACE','EXPENSE','current cable  200M ',NULL,82000.00,'KRW','COMPLETED','ค่าอุปกรณ์','current cable  200M ','2026-05-11 00:00:00.000','2026-05-29 06:58:38.245','2026-05-29 06:58:38.245',NULL),('cmpqkn5lp000eqh0bwdg75qzo','EXP20260529-0007','MOMOGE SPACE','EXPENSE','Box cass   2pcs',NULL,25000.00,'KRW','COMPLETED','ค่าอุปกรณ์','Box cass   2pcs','2026-05-05 00:00:00.000','2026-05-29 06:59:21.757','2026-05-29 06:59:21.757',NULL),('cmpqkq630000hqh0b2n0u0kf5','EXP20260529-0008','MOMOGE SPACE','EXPENSE','CLAUDE AI    1year',NULL,300445.00,'KRW','COMPLETED','อื่นๆ','CLAUDE AI  ','2026-05-26 00:00:00.000','2026-05-29 07:01:42.348','2026-05-29 07:01:42.348',NULL);
 /*!40000 ALTER TABLE `PartnerTransaction` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -676,6 +774,35 @@ LOCK TABLES `VerificationToken` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ai_settings`
+--
+
+DROP TABLE IF EXISTS `ai_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ai_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `openai_api_key` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `openai_model` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'gpt-4o-mini',
+  `anthropic_api_key` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `anthropic_model` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'claude-haiku-4-5-20251001',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ai_settings_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ai_settings`
+--
+
+LOCK TABLES `ai_settings` WRITE;
+/*!40000 ALTER TABLE `ai_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ai_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `broadcast_messages`
 --
 
@@ -766,6 +893,7 @@ CREATE TABLE `devices` (
   `customerName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `customerPhone` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `customerAddress` text COLLATE utf8mb4_general_ci,
+  `client_id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`deviceID`),
   UNIQUE KEY `unique_geID` (`geID`),
   KEY `idx_devices_site` (`site`)
@@ -778,8 +906,162 @@ CREATE TABLE `devices` (
 
 LOCK TABLES `devices` WRITE;
 /*!40000 ALTER TABLE `devices` DISABLE KEYS */;
-INSERT INTO `devices` VALUES (1,'GE01','GE01','GE2024010001','192.168.1.46','Seongnam Research Institute','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'GE Energy Demo','010-8105-0384',NULL),(2,'GE02','GE02','GE2024010002','192.168.1.2','Republic of Korea','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'Green Retail Demo','010-8105-0384',NULL),(3,'GE-TH01','GE-TH01','GE2024010007','192.168.1.3','Bangkok','thailand','OFF','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','02-555-1199','0000','2026-05-23 13:56:56.475955','2026-05-23 13:56:56.475955','administrator',NULL,NULL,'Thailand Demo','02-555-1199',NULL);
+INSERT INTO `devices` VALUES (1,'GE01','GE01','GE2024010001','192.168.1.46','KOREA','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-29 16:27:28.271763','administrator',NULL,NULL,'GE Energy Demo','010-8105-0384',NULL,'cmo6viuen0003qhga32hwcu3n'),(2,'GE02','GE02','GE2024010002','192.168.1.2','KOREA','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-29 16:27:28.271763','administrator',NULL,NULL,'Green Retail Demo','010-8105-0384',NULL,'cmo6viuen0003qhga32hwcu3n'),(3,'GE-TH01','GE-TH01','GE2024010007','192.168.1.3','Bangkok','thailand','OFF','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','02-555-1199','0000','2026-05-23 13:56:56.475955','2026-05-29 09:28:25.295982','administrator',NULL,NULL,'Thailand Demo','02-555-1199',NULL,'cmo6viuen0003qhga32hwcu3n');
 /*!40000 ALTER TABLE `devices` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ge_customer_energy_saver_orders`
+--
+
+DROP TABLE IF EXISTS `ge_customer_energy_saver_orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ge_customer_energy_saver_orders` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `order_no` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `customer_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shipping_address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `breaker_size` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `machine_kva` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` int NOT NULL DEFAULT '1',
+  `unit_price` int NOT NULL DEFAULT '0',
+  `total_price` int NOT NULL DEFAULT '0',
+  `site_photo_path` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `payment_slip_path` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `monthly_bill_paths_json` longtext COLLATE utf8mb4_unicode_ci,
+  `monthly_bill_count` int NOT NULL DEFAULT '0',
+  `status` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_customer_energy_saver_order_no` (`order_no`),
+  KEY `idx_customer_energy_saver_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ge_customer_energy_saver_orders`
+--
+
+LOCK TABLES `ge_customer_energy_saver_orders` WRITE;
+/*!40000 ALTER TABLE `ge_customer_energy_saver_orders` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ge_customer_energy_saver_orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ge_electricity_rates`
+--
+
+DROP TABLE IF EXISTS `ge_electricity_rates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ge_electricity_rates` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `site` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `rate_per_kwh` decimal(12,4) NOT NULL,
+  `effective_from` datetime DEFAULT NULL,
+  `effective_to` datetime DEFAULT NULL,
+  `label` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `idx_ge_rates_site` (`site`),
+  KEY `idx_ge_rates_range` (`site`,`effective_from`,`effective_to`),
+  KEY `idx_ge_rates_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ge_electricity_rates`
+--
+
+LOCK TABLES `ge_electricity_rates` WRITE;
+/*!40000 ALTER TABLE `ge_electricity_rates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ge_electricity_rates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `geet_meter_order`
+--
+
+DROP TABLE IF EXISTS `geet_meter_order`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `geet_meter_order` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `order_no` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `buyer_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ship_address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `breaker_amps` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `machine_kva` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` int unsigned NOT NULL DEFAULT '1',
+  `unit_price` int unsigned NOT NULL DEFAULT '0',
+  `total_price` int unsigned NOT NULL DEFAULT '0',
+  `lang` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'th',
+  `product_code` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'smart-meter',
+  `payment_status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `shipment_status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `site_photo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_slip_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_geet_meter_order_no` (`order_no`),
+  KEY `idx_geet_meter_order_email` (`email`),
+  KEY `idx_geet_meter_order_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `geet_meter_order`
+--
+
+LOCK TABLES `geet_meter_order` WRITE;
+/*!40000 ALTER TABLE `geet_meter_order` DISABLE KEYS */;
+/*!40000 ALTER TABLE `geet_meter_order` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type` enum('alert','warning','info','success') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'info',
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'System',
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `device_id` int DEFAULT NULL,
+  `site` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `metadata` text COLLATE utf8mb4_unicode_ci,
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `read_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_notifications_device` (`device_id`),
+  KEY `idx_notifications_site` (`site`),
+  KEY `idx_notifications_is_read` (`is_read`),
+  KEY `idx_notifications_created` (`created_at`),
+  CONSTRAINT `fk_notifications_device` FOREIGN KEY (`device_id`) REFERENCES `devices` (`deviceID`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -867,6 +1149,47 @@ LOCK TABLES `power_records_preinstall` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `product_list`
+--
+
+DROP TABLE IF EXISTS `product_list`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `product_list` (
+  `productID` int NOT NULL AUTO_INCREMENT,
+  `sku` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `Capacity (kVA)` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MCB` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Size (WxLxH) cm.` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Weight` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `price` decimal(12,2) DEFAULT '0.00',
+  `Pin_VAT` decimal(12,2) DEFAULT '0.00',
+  `unit` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'unit',
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'General',
+  `Pro_Image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `stock_qty` int DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`productID`),
+  KEY `idx_product_list_active` (`is_active`),
+  KEY `idx_product_list_category` (`category`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `product_list`
+--
+
+LOCK TABLES `product_list` WRITE;
+/*!40000 ALTER TABLE `product_list` DISABLE KEYS */;
+INSERT INTO `product_list` VALUES (1,'ES-15KVA','GE-IoT Energy Saver 15 kVA','เครื่องประหยัดพลังงานสำหรับโหลดเริ่มต้น','15','63A','38x28x17','8kg',39000.00,42900.00,'unit','Energy Saver','/placeholder-product.jpg',15,1,'2026-05-29 09:42:50','2026-05-29 09:42:50'),(2,'ES-30KVA','GE-IoT Energy Saver 30 kVA','เครื่องประหยัดพลังงานสำหรับร้านค้า/อาคารกลาง','30','100A','42x30x18','10kg',49000.00,53900.00,'unit','Energy Saver','/placeholder-product.jpg',12,1,'2026-05-29 09:42:50','2026-05-29 09:42:50'),(3,'ES-50KVA','GE-IoT Energy Saver 50 kVA','เครื่องประหยัดพลังงานสำหรับโรงงานขนาดกลาง','50','125A','48x34x20','14kg',62000.00,68200.00,'unit','Energy Saver','/placeholder-product.jpg',9,1,'2026-05-29 09:42:50','2026-05-29 09:42:50'),(4,'ES-100KVA','GE-IoT Energy Saver 100 kVA','เครื่องประหยัดพลังงานสำหรับโหลดสูง','100','250A','58x40x24','20kg',89000.00,97900.00,'unit','Energy Saver','/placeholder-product.jpg',6,1,'2026-05-29 09:42:50','2026-05-29 09:42:50'),(5,'IOT-CT-3P','GE 3-Phase CT Sensor Kit','ชุดเซ็นเซอร์ CT สำหรับการติดตามพลังงาน','','','','',6900.00,7590.00,'set','IoT Device','/placeholder-product.jpg',40,1,'2026-05-29 09:42:50','2026-05-29 09:42:50'),(6,'IOT-GW-LTE','GE IoT Gateway LTE','เกตเวย์ IoT สำหรับส่งข้อมูลขึ้นคลาวด์','','','','',9900.00,10890.00,'unit','IoT Device','/placeholder-product.jpg',25,1,'2026-05-29 09:42:50','2026-05-29 09:42:50'),(7,'IOT-MTR-PM','GE Smart Power Meter','มิเตอร์ไฟอัจฉริยะเชื่อมต่อแดชบอร์ดเรียลไทม์','','','','',12900.00,14190.00,'unit','IoT Device','/placeholder-product.jpg',30,1,'2026-05-29 09:42:50','2026-05-29 09:42:50');
+/*!40000 ALTER TABLE `product_list` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `support_tickets`
 --
 
@@ -948,4 +1271,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-28 18:12:39
+-- Dump completed on 2026-05-29 21:37:14
