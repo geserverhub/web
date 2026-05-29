@@ -47,7 +47,26 @@ Database name: **`goeunserverhub`** (dump file: `geserverhub.sql`)
 | `geet_meter_order` | Smart meter purchase orders (PK `id`, unique `order_no`) |
 | `geet_meter_order_event` | Shipment timeline events (FK → `geet_meter_order.id`) |
 
-**Total: 19 + 9 + 2 = 30** (plus ERP tables in separate migration)
+## GE Energy app extensions (14) — `prisma/migrate-ge-energy-app-extensions.sql`
 
-Restore: `bash scripts/db-restore.sh` or `npm run db:setup-energy`  
-Meter orders: `npm run db:setup-geet-orders`
+| Table | Purpose |
+|-------|---------|
+| `ge_electricity_rates` | Per-site / per-period electricity rate rules |
+| `ge_energy_meter_device_binding` | Meter channel ↔ device mapping |
+| `ge_customer_energy_saver_orders` | Energy saver product orders |
+| `broadcast_messages` | Customer broadcast banners |
+| `product_list` | Energy dashboard product catalog |
+| `notifications` | Dashboard alert feed |
+| `api_keys` | Developer API keys |
+| `feedback_replies` | Feedback thread replies |
+| `user_permissions` | Portal access per user |
+| `ge_after_sales_chat_thread` | After-sales chat sessions |
+| `ge_after_sales_chat_message` | Chat messages |
+| `ge_platform_device_registration` | Device registration on signup |
+
+**Total: 19 + 9 + 2 + 14 = 44** (plus ERP tables in separate migration)
+
+**Full setup (recommended):** `npm run db:setup-full`  
+Restore dump + migrations: `node scripts/setup-full-database.mjs --restore`  
+Energy SQL only: `npm run db:setup-energy`  
+Meter orders only: `npm run db:setup-geet-orders`

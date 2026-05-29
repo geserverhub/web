@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
 import { useSite } from '@/lib/SiteContext';
-import { formatCurrencyBySite, getCurrencyCodeBySite, getCurrencySymbolBySite } from '@/lib/currency';
+import { formatCurrencyBySite, getCurrencyCodeBySite, getCurrencySymbolBySite, normalizeCurrencySite } from '@/lib/currency';
 import { formatEnergyDisplayUser } from '@/lib/energy/display-user';
 import { GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
 import {
@@ -480,6 +480,8 @@ export default function CustomersPage() {
   const [selectedMeterDeviceId, setSelectedMeterDeviceId] = useState('');
   const [billingSite, setBillingSite] = useState('thailand');
   const [electricityRate, setElectricityRate] = useState(null);
+  const [summaryCo2Kg, setSummaryCo2Kg] = useState(null);
+  const [rateRuleCount, setRateRuleCount] = useState(0);
 
   // ── Live monitoring state ──
   const [devices, setDevices] = useState([]);
@@ -521,12 +523,20 @@ export default function CustomersPage() {
 
   const totalBefore = monthlyData.reduce((s, d) => s + d.before, 0);
   const totalAfter = monthlyData.reduce((s, d) => s + d.after, 0);
-  const totalSavedKwh = totalBefore - totalAfter;
+  const totalSavedKwhFromDb = monthlyData.reduce((s, d) => s + (d.savedKwh ?? 0), 0);
+  const totalSavedKwh = totalSavedKwhFromDb > 0 ? totalSavedKwhFromDb : totalBefore - totalAfter;
   const totalCostBefore = monthlyData.reduce((s, d) => s + d.costBefore, 0);
   const totalCostAfter = monthlyData.reduce((s, d) => s + d.costAfter, 0);
   const totalSavedCost = totalCostBefore - totalCostAfter;
   const savingPct = totalBefore > 0 ? ((totalSavedKwh / totalBefore) * 100).toFixed(1) : '0.0';
-  const co2Saved = (totalSavedKwh * 0.5313).toFixed(0);
+  const co2FromMonthly = monthlyData.reduce((s, d) => s + (d.co2Kg ?? 0), 0);
+  const co2Saved = String(
+    summaryCo2Kg != null && summaryCo2Kg > 0
+      ? Math.round(summaryCo2Kg)
+      : co2FromMonthly > 0
+        ? Math.round(co2FromMonthly)
+        : Math.round(totalSavedKwh * 0.5313),
+  );
   const currencySymbol = getCurrencySymbolBySite(billingSite, locale);
   const currencyCode = getCurrencyCodeBySite(billingSite, locale);
   const formatCost = (n) =>
@@ -622,6 +632,8 @@ export default function CustomersPage() {
           setBillingSite(site);
           setSelectedSite(site);
           setElectricityRate(j.data.summary?.electricityRate ?? null);
+          setSummaryCo2Kg(j.data.summary?.co2SavedKg ?? null);
+          setRateRuleCount(Number(j.data.rateRuleCount || 0));
           setMonthlyError(null);
 
           const meterDevices = (j.data.meters || []).map((m) => ({
@@ -1300,6 +1312,10 @@ export default function CustomersPage() {
                   {electricityRate != null && (
                   <span className="cd-meter-rate">
                     {L(locale, 'อัตราไฟ', '요금', 'Rate')}: {fmt(electricityRate)} / kWh ({currencyCode})
+                    {' · '}
+                    {rateRuleCount > 0
+                      ? L(locale, 'จากฐานข้อมูล', 'DB 적용', 'from database')
+                      : L(locale, 'จาก env', 'env 기본값', 'from env')}
                   </span>
                   )}
                 </div>
@@ -1914,7 +1930,7 @@ export default function CustomersPage() {
             ) : customerMeters.map((meter, idx) => {
               const st = meterStats.find(s => s.deviceId === meter.deviceId) || null;
               const hasData = st && st.recordCount > 0;
-              const meterSite = meter.site || billingSite || 'thailand';
+              const meterSite = normalizeCurrencySite(st?.site ?? meter.site ?? billingSite);
               const meterCurrencySymbol = getCurrencySymbolBySite(meterSite, locale);
               const meterCurrencyCode = getCurrencyCodeBySite(meterSite, locale);
               const savePctColor = !hasData ? '#64748b' : st.savingPct >= 20 ? '#059669' : st.savingPct >= 10 ? '#d97706' : '#ef4444';
@@ -1973,6 +1989,9 @@ export default function CustomersPage() {
                         [L(locale,'Meter ID','미터 ID','Meter ID'), meter.meterId || '—'],
                         [L(locale,'สถานที่','위치','Location'), meter.locationName || '—'],
                         [L(locale,'ไซต์','사이트','Site'), meter.site?.toUpperCase() || '—'],
+                        [L(locale,'อัตราไฟ','요금','Rate'), st?.electricityRate != null
+                          ? `${fmt(st.electricityRate)} / kWh (${meterCurrencyCode})${st.rateSource === 'database' ? ` · ${L(locale,'DB','DB','DB')}` : st.rateSource === 'env' ? ` · ${L(locale,'env','env','env')}` : ''}${st.rateLabel ? ` (${st.rateLabel})` : ''}`
+                          : '—'],
                         [L(locale,'บันทึกแรก','첫 기록','First Record'), fmtDate(st?.firstRecord)],
                         [L(locale,'บันทึกล่าสุด','최근 기록','Latest Record'), fmtDate(st?.lastRecord)],
                         [L(locale,'จำนวนรายการ','기록 수','Record Count'), st ? fmt(st.recordCount) : '—'],
@@ -2031,8 +2050,11 @@ export default function CustomersPage() {
           const totCB    = rows.reduce((s,d) => s + d.costBefore, 0);
           const totCA    = rows.reduce((s,d) => s + d.costAfter, 0);
           const totSCost = totCB - totCA;
-          const totCO2   = totSKwh * 0.5313;
-          const totPct   = totB > 0 ? (totSKwh / totB * 100) : 0;
+          const totSavedKwhDb = rows.reduce((s, d) => s + (d.savedKwh ?? 0), 0);
+          const totSKwhFinal = totSavedKwhDb > 0 ? totSavedKwhDb : totSKwh;
+          const totCO2Db = rows.reduce((s, d) => s + (d.co2Kg ?? 0), 0);
+          const totCO2   = totCO2Db > 0 ? totCO2Db : totSKwhFinal * 0.5313;
+          const totPct   = totB > 0 ? (totSKwhFinal / totB * 100) : 0;
 
           const MONTH_TH = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
           const MONTH_EN = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2114,7 +2136,7 @@ export default function CustomersPage() {
                       {[
                         { label: L(locale,'พลังงานก่อน (kWh)','설치 전 에너지 (kWh)','Before Energy (kWh)'), val: fmt(Math.round(totB)), color:'#dc2626' },
                         { label: L(locale,'พลังงานหลัง (kWh)','설치 후 에너지 (kWh)','After Energy (kWh)'), val: fmt(Math.round(totA)), color:'#059669' },
-                        { label: L(locale,'ประหยัดได้ (kWh)','절약 에너지 (kWh)','Energy Saved (kWh)'), val: fmt(Math.round(totSKwh)), color:'#4f46e5' },
+                        { label: L(locale,'ประหยัดได้ (kWh)','절약 에너지 (kWh)','Energy Saved (kWh)'), val: fmt(Math.round(totSKwhFinal)), color:'#4f46e5' },
                         { label: L(locale,'% ประหยัด','절약률','Saving %'), val: totPct > 0 ? `${totPct.toFixed(1)}%` : '—', color:'#059669' },
                         { label: L(locale,`ค่าไฟก่อน (${currencyCode})`,`설치 전 요금 (${currencyCode})`,`Cost Before (${currencyCode})`), val: formatCost(totCB), color:'#dc2626' },
                         { label: L(locale,`ค่าไฟหลัง (${currencyCode})`,`설치 후 요금 (${currencyCode})`,`Cost After (${currencyCode})`), val: formatCost(totCA), color:'#059669' },
@@ -2194,10 +2216,10 @@ export default function CustomersPage() {
                         </thead>
                         <tbody>
                           {rows.map(d => {
-                            const savedKwh   = d.before - d.after;
+                            const savedKwh   = d.savedKwh ?? (d.before - d.after);
                             const pct        = d.before > 0 ? savedKwh / d.before * 100 : 0;
                             const savedCost  = d.costBefore - d.costAfter;
-                            const co2        = savedKwh * 0.5313;
+                            const co2        = d.co2Kg ?? savedKwh * 0.5313;
                             return (
                               <tr key={d.monthKey}>
                                 <td style={{ fontWeight:700, color:'#4f46e5', textAlign:'left' }}>{monthLabel(d)}</td>
@@ -2225,7 +2247,7 @@ export default function CustomersPage() {
                               <td style={{ textAlign:'left', fontWeight:800 }}>{L(locale,'รวม','합계','Total')}</td>
                               <td style={{ color:'#dc2626', fontWeight:800 }}>{fmt(Math.round(totB))}</td>
                               <td style={{ color:'#059669', fontWeight:800 }}>{fmt(Math.round(totA))}</td>
-                              <td style={{ color:'#4f46e5', fontWeight:800 }}>{fmt(Math.round(totSKwh))}</td>
+                              <td style={{ color:'#4f46e5', fontWeight:800 }}>{fmt(Math.round(totSKwhFinal))}</td>
                               <td style={{ fontWeight:800, color:'#059669' }}>{totPct > 0 ? `${totPct.toFixed(1)}%` : '—'}</td>
                               <td style={{ color:'#dc2626', fontWeight:800 }}>{formatCost(totCB)}</td>
                               <td style={{ color:'#059669', fontWeight:800 }}>{formatCost(totCA)}</td>

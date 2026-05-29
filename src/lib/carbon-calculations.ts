@@ -131,7 +131,8 @@ export const ISO14064MethodologySteps: ISO14064Step[] = [
     reference: "UNFCCC CDM Methodology; Gold Standard for the Global Goals; T-VER (Thailand Voluntary Emission Reduction) Program — TGO",
     certifications: [
       { body: "UNFCCC", standard: "CDM Methodology — AMS-II.C / AMS-II.E (Energy Efficiency)", url: "https://cdm.unfccc.int/methodologies/SSCmethodologies/approved" },
-      { body: "Gold Standard", standard: "Gold Standard for the Global Goals (GS4GG)", url: "https://www.goldstandard.org/our-work/innovations-consultations/gs4gg" },
+      { body: "Gold Standard", standard: "Gold Standard for the Global Goals (GS4GG)", url: "https://www.goldstandard.org/gold-standard-for-the-global-goals" },
+      { body: "Gold Standard Registry", standard: "Impact Registry — verified GS credits", url: "https://registry.goldstandard.org/" },
       { body: "TGO (Thailand)", standard: "T-VER Standard v3.0", url: "https://www.tgo.or.th/2020/index.php/th/tver-standard" },
     ],
   },

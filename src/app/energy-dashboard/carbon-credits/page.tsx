@@ -551,7 +551,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
   <div class="cert"><div class="cert-ok">✓ K-ETS Market</div><div class="cert-org">KRX — Korea Exchange</div><div class="cert-std">Korea ETS (K-ETS) Carbon Market 2024</div><div class="cert-url">https://ets.krx.co.kr</div></div>
   <div class="cert"><div class="cert-ok">✓ Protocol</div><div class="cert-org">GHG Protocol / World Bank</div><div class="cert-std">GHG Protocol Corporate Standard &amp; Carbon Pricing</div><div class="cert-url">https://ghgprotocol.org/corporate-standard</div></div>
   <div class="cert"><div class="cert-ok">✓ CDM Methodology</div><div class="cert-org">UNFCCC</div><div class="cert-std">CDM AMS-II.C / AMS-II.E (Energy Efficiency)</div><div class="cert-url">https://cdm.unfccc.int/methodologies/SSCmethodologies/approved</div></div>
-  <div class="cert"><div class="cert-ok">✓ Gold Standard</div><div class="cert-org">Gold Standard Foundation</div><div class="cert-std">Gold Standard for the Global Goals (GS4GG)</div><div class="cert-url">https://www.goldstandard.org</div></div>
+  <div class="cert"><div class="cert-ok">✓ Gold Standard</div><div class="cert-org">Gold Standard Foundation</div><div class="cert-std">Gold Standard for the Global Goals (GS4GG)</div><div class="cert-url">https://www.goldstandard.org/gold-standard-for-the-global-goals</div><div class="cert-url">https://registry.goldstandard.org</div></div>
   <div class="cert"><div class="cert-ok">✓ ${t('อัตราแลกเปลี่ยน','Exchange Rate','환율')}</div><div class="cert-org">open.er-api.com</div><div class="cert-std">Live KRW/THB — ${fxData.krwToThb ? fxData.krwToThb.toFixed(6) + ' THB/KRW' : 'N/A'}</div><div class="cert-url">https://open.er-api.com</div></div>
 </div>
 
@@ -1318,6 +1318,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                 price: L(locale, '฿250–400 / tCO₂e', '฿250–400 / tCO₂e', '฿250–400 / tCO₂e'),
                 note: L(locale, 'ตลาดคาร์บอนภาคสมัครใจ 2567', 'Voluntary Carbon Market 2024', '자발적 탄소 시장 2024'),
                 url: 'https://carbonmarket.tgo.or.th',
+                urlHost: 'carbonmarket.tgo.or.th',
                 badge: 'T-VER',
                 color: 'blue',
               },
@@ -1328,6 +1329,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                 price: L(locale, '₩7,000–35,000 / tCO₂e', '₩7,000–35,000 / tCO₂e', '₩7,000–35,000 / tCO₂e'),
                 note: L(locale, 'ระบบซื้อขายสิทธิ์การปล่อยก๊าซ 2567', 'Emissions Trading System 2024', '배출권거래제 2024'),
                 url: 'https://ets.krx.co.kr',
+                urlHost: 'ets.krx.co.kr',
                 badge: 'K-ETS',
                 color: 'purple',
               },
@@ -1338,26 +1340,38 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                 price: L(locale, '$5–130 / tCO₂e (USD)', '$5–130 / tCO₂e (USD)', '$5–130 / tCO₂e (USD)'),
                 note: L(locale, 'ภาพรวมราคาคาร์บอนโลก 2567', 'Global Carbon Pricing Overview 2024', '글로벌 탄소 가격 개요 2024'),
                 url: 'https://carbonpricingdashboard.worldbank.org',
+                urlHost: 'carbonpricingdashboard.worldbank.org',
                 badge: 'World Bank',
                 color: 'green',
               },
               {
                 flag: '🌐',
-                market: 'Gold Standard GS4GG',
+                market: 'Gold Standard for the Global Goals (GS4GG)',
                 org: 'Gold Standard Foundation',
                 price: L(locale, '$3–50 / tCO₂e (USD)', '$3–50 / tCO₂e (USD)', '$3–50 / tCO₂e (USD)'),
-                note: L(locale, 'ตลาดคาร์บอนเครดิตคุณภาพสูง', 'High-quality carbon credit market', '고품질 탄소 크레딧 시장'),
-                url: 'https://www.goldstandard.org/our-work/innovations-consultations/gs4gg',
+                note: L(
+                  locale,
+                  'ทะเบียนเครดิตที่ตรวจสอบและรับรองแล้ว (Impact Registry)',
+                  'Verified credits on the official Impact Registry',
+                  '공식 Impact Registry의 검증된 크레딧',
+                ),
+                url: 'https://registry.goldstandard.org/',
+                urlHost: 'registry.goldstandard.org',
+                standardUrl: 'https://www.goldstandard.org/gold-standard-for-the-global-goals',
+                standardHost: 'goldstandard.org',
                 badge: 'Gold Standard',
                 color: 'amber',
               },
             ].map((src) => (
-              <a key={src.market} href={src.url} target="_blank" rel="noopener noreferrer"
+              <div key={src.market}
                 className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition group">
                 <span className="text-2xl flex-shrink-0">{src.flag}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm text-gray-800 group-hover:text-emerald-700">{src.market}</span>
+                    <a href={src.url} target="_blank" rel="noopener noreferrer"
+                      className="font-bold text-sm text-gray-800 group-hover:text-emerald-700 hover:underline">
+                      {src.market}
+                    </a>
                     <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
                       src.color === 'blue' ? 'bg-blue-100 text-blue-700' :
                       src.color === 'purple' ? 'bg-purple-100 text-purple-700' :
@@ -1367,13 +1381,23 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">{src.org}</p>
+                  <a href={src.url} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-emerald-700/80 hover:text-emerald-800 hover:underline mt-0.5 inline-flex items-center gap-1">
+                    {src.urlHost}
+                    <span className="text-gray-300 group-hover:text-emerald-500">↗</span>
+                  </a>
+                  {'standardUrl' in src && src.standardUrl ? (
+                    <a href={src.standardUrl} target="_blank" rel="noopener noreferrer"
+                      className="block text-xs text-gray-400 hover:text-emerald-700 hover:underline mt-0.5">
+                      {L(locale, 'มาตรฐาน GS4GG', 'GS4GG standard', 'GS4GG 표준')}: {src.standardHost} ↗
+                    </a>
+                  ) : null}
                   <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                     <span className="text-sm font-bold text-emerald-700">{src.price}</span>
                     <span className="text-xs text-gray-400">{src.note}</span>
                   </div>
                 </div>
-                <span className="text-gray-300 group-hover:text-emerald-500 text-sm flex-shrink-0">↗</span>
-              </a>
+              </div>
             ))}
           </div>
           <p className="text-xs text-gray-400 mt-3 leading-relaxed">

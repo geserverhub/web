@@ -41,6 +41,11 @@ export function resolveRate(site: string, override?: string | null) {
   return SITE_RATES[normalizeSiteKey(site)] ?? SITE_RATES.thailand
 }
 
+/** Configured electricity rates per site (THB/KRW/etc. per kWh). */
+export function getSiteElectricityRates(): Record<string, number> {
+  return { ...SITE_RATES }
+}
+
 async function tableExists(tableName: string) {
   const rows = await queryGe(
     `SELECT COUNT(*) AS count
@@ -233,6 +238,25 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     locationName: r.location_name ? String(r.location_name) : null,
     label: [r.display_name, r.meter_no, r.meter_id].filter(Boolean).join(' · ') || `Device ${r.device_id}`,
   }))
+}
+
+export async function loadDeviceSitesByIds(deviceIds: number[]) {
+  if (!deviceIds.length) return new Map<number, string>()
+  const placeholders = deviceIds.map(() => '?').join(',')
+  const rows = (await queryGe(
+    `SELECT
+      d.deviceID AS device_id,
+      COALESCE(NULLIF(LOWER(TRIM(d.site)), ''), NULLIF(LOWER(TRIM(d.location)), ''), 'thailand') AS meter_site
+     FROM devices d
+     WHERE d.deviceID IN (${placeholders})`,
+    deviceIds,
+  )) as Array<{ device_id: number; meter_site: string | null }>
+
+  const map = new Map<number, string>()
+  for (const row of rows) {
+    map.set(Number(row.device_id), normalizeSiteKey(row.meter_site))
+  }
+  return map
 }
 
 export function deviceFilterSql(deviceIds: number[]) {

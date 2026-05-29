@@ -26,7 +26,8 @@ const LOCALE_TO_TAG: Record<string, string> = {
   ms: 'ms-MY',
 }
 
-const normalizeSite = (site: string): SupportedSite => {
+/** Normalize site/location strings to a billing country key (matches customer-scope). */
+export function normalizeCurrencySite(site: string | null | undefined): SupportedSite {
   const s = String(site || '').trim().toLowerCase()
   if (s.includes('korea') || s === 'kr' || s === 'ko') return 'korea'
   if (s.includes('thai') || s === 'th') return 'thailand'
@@ -36,19 +37,13 @@ const normalizeSite = (site: string): SupportedSite => {
   return 'thailand'
 }
 
-const getCurrencyConfig = (site: string, locale?: string) => {
-  const siteKey = normalizeSite(site || 'thailand')
-  const siteCfg = SITE_CURRENCY[siteKey]
-  return {
-    code: siteCfg.code,
-    symbol: siteCfg.symbol,
-    locale: getLocaleTag(locale, siteKey),
-  }
-}
+const normalizeSite = normalizeCurrencySite
 
-export const getCurrencyCodeBySite = (site: string, locale?: string): string => getCurrencyConfig(site, locale).code
+export const getCurrencyCodeBySite = (site: string, _locale?: string): string =>
+  SITE_CURRENCY[normalizeSite(site || 'thailand')].code
 
-export const getCurrencySymbolBySite = (site: string, locale?: string): string => getCurrencyConfig(site, locale).symbol
+export const getCurrencySymbolBySite = (site: string, _locale?: string): string =>
+  SITE_CURRENCY[normalizeSite(site || 'thailand')].symbol
 
 export const getLocaleTag = (locale?: string, site?: string): string => {
   if (locale && LOCALE_TO_TAG[locale]) return LOCALE_TO_TAG[locale]
@@ -58,14 +53,14 @@ export const getLocaleTag = (locale?: string, site?: string): string => {
 export const formatCurrencyBySite = (
   value: number,
   site: string,
-  locale?: string,
+  _locale?: string,
   options?: Intl.NumberFormatOptions,
 ): string => {
-  const code = getCurrencyCodeBySite(site, locale)
-  const localeTag = getLocaleTag(locale, site)
-  return new Intl.NumberFormat(localeTag, {
+  const siteKey = normalizeSite(site || 'thailand')
+  const siteCfg = SITE_CURRENCY[siteKey]
+  return new Intl.NumberFormat(siteCfg.locale, {
     style: 'currency',
-    currency: code,
+    currency: siteCfg.code,
     ...options,
   }).format(Number.isFinite(value) ? value : 0)
 }
