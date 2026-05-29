@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { syncPartnerPersonFinancialFromTransaction } from "@/lib/partner-financial";
 
 function isPartnerOrAdmin(session) {
   const role = session?.user?.role;
@@ -21,6 +22,12 @@ export async function PATCH(req, { params }) {
 
     const { id } = await params;
     if (!(await ownsTx(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const existing = await prisma.partnerTransaction.findUnique({ where: { id } });
+    if (!existing) return NextResponse.json({ error: "ไม่พบรายการ" }, { status: 404 });
+    if (existing.status === "COMPLETED") {
+      return NextResponse.json({ error: "รายการสำเร็จแล้ว ไม่สามารถแก้ไขได้" }, { status: 403 });
+    }
 
     const body = await req.json();
     const { amount, currency, description, customerName, category, type, status, notes, date, receiptFile } = body;
@@ -43,6 +50,9 @@ export async function PATCH(req, { params }) {
     if (receiptFile !== undefined)  data.receiptFile  = receiptFile || null;
 
     const tx = await prisma.partnerTransaction.update({ where: { id }, data });
+    await syncPartnerPersonFinancialFromTransaction(tx).catch((err) => {
+      console.warn("[PATCH /api/partner/transactions/[id]] ledger sync:", err.message);
+    });
     return NextResponse.json(tx);
   } catch (err) {
     console.error("[PATCH /api/partner/transactions/[id]]", err.message);
@@ -57,6 +67,12 @@ export async function DELETE(_req, { params }) {
   try {
     const { id } = await params;
     if (!(await ownsTx(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const existing = await prisma.partnerTransaction.findUnique({ where: { id } });
+    if (!existing) return NextResponse.json({ error: "ไม่พบรายการ" }, { status: 404 });
+    if (existing.status === "COMPLETED") {
+      return NextResponse.json({ error: "รายการสำเร็จแล้ว ไม่สามารถลบได้" }, { status: 403 });
+    }
 
     await prisma.partnerTransaction.delete({ where: { id } });
     return NextResponse.json({ ok: true });

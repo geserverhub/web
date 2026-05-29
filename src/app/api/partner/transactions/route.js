@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import {
+  REVENUE_TYPES,
+  INVESTMENT_TYPES,
+  buildPartnerIncomeSummary,
+  syncPartnerMonthlyFinancial,
+  syncPartnerPersonFinancialFromTransaction,
+} from "@/lib/partner-financial";
 
 function isPartnerOrAdmin(session) {
   const role = session?.user?.role;
@@ -31,12 +38,13 @@ export async function GET(req) {
       orderBy: { date: "desc" },
     });
 
-    const revenueTypes = new Set(["SALE", "PROFIT_SHARE", "PARTNER_INVESTMENT"]);
-    const sales    = transactions.filter(t => revenueTypes.has(t.type) && t.status !== "CANCELLED");
+    const sales = transactions.filter(t => REVENUE_TYPES.has(t.type) && t.status !== "CANCELLED");
+    const investments = transactions.filter(t => INVESTMENT_TYPES.has(t.type) && t.status !== "CANCELLED");
     const expenses = transactions.filter(t => t.type === "EXPENSE" && t.status !== "CANCELLED");
-    const pending  = transactions.filter(t => t.status === "PENDING");
+    const pending = transactions.filter(t => t.status === "PENDING");
 
     const totalRevenue = sales.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
+    const totalInvestment = investments.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
     const totalExpense = expenses.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
     const totalPending = pending.filter(t => t.currency === "KRW").reduce((s, t) => s + Number(t.amount), 0);
 
@@ -48,6 +56,7 @@ export async function GET(req) {
       }, {});
     }
     const revenueByCurrency = groupByCurrency(sales);
+    const investmentByCurrency = groupByCurrency(investments);
     const expenseByCurrency = groupByCurrency(expenses);
     const pendingByCurrency = groupByCurrency(pending);
 
@@ -55,6 +64,7 @@ export async function GET(req) {
       month: i + 1,
       label: new Date(year, i, 1).toLocaleString("ko-KR", { month: "short" }),
       revenue: 0,
+      investment: 0,
       expense: 0,
       count: 0,
     }));
@@ -65,9 +75,26 @@ export async function GET(req) {
       monthlyRevenue[m].count += 1;
     }
 
+    for (const t of investments.filter(t => t.currency === "KRW")) {
+      const m = new Date(t.date).getMonth();
+      monthlyRevenue[m].investment += Number(t.amount);
+    }
+
     for (const t of expenses.filter(t => t.currency === "KRW")) {
       const m = new Date(t.date).getMonth();
       monthlyRevenue[m].expense += Number(t.amount);
+    }
+
+    for (const m of monthlyRevenue) {
+      try {
+        await syncPartnerMonthlyFinancial(year, m.month, {
+          revenueKrw: m.revenue,
+          investmentKrw: m.investment,
+          expenseKrw: m.expense,
+        });
+      } catch (syncErr) {
+        console.warn("[GET /api/partner/transactions] monthly sync:", syncErr.message);
+      }
     }
 
     const byCategory = {};
@@ -76,35 +103,30 @@ export async function GET(req) {
       byCategory[key] = (byCategory[key] || 0) + Number(t.amount);
     }
 
-    const allProfitShare = await prisma.partnerTransaction.findMany({
-      where: { ...baseFilter, type: "PROFIT_SHARE", status: { not: "CANCELLED" } },
-      select: { customerName: true, amount: true, currency: true, status: true },
+    const allPersonRows = await prisma.partnerTransaction.findMany({
+      where: {
+        ...baseFilter,
+        type: { in: ["PROFIT_SHARE", "PARTNER_INVESTMENT"] },
+        status: { not: "CANCELLED" },
+      },
+      select: { customerName: true, amount: true, currency: true, status: true, type: true },
     });
-    const partnerIncomeMap = {};
-    for (const t of allProfitShare) {
-      const name = t.customerName || "ไม่ระบุ";
-      if (!partnerIncomeMap[name]) partnerIncomeMap[name] = { total: 0, byCurrency: {} };
-      if (t.currency === "KRW") {
-        partnerIncomeMap[name].total += Number(t.amount);
-      } else {
-        partnerIncomeMap[name].byCurrency[t.currency] = (partnerIncomeMap[name].byCurrency[t.currency] || 0) + Number(t.amount);
-      }
-    }
-    const partnerIncomeSummary = Object.entries(partnerIncomeMap)
-      .map(([name, data]) => ({ name, total: data.total, byCurrency: data.byCurrency }))
-      .sort((a, b) => b.total - a.total);
+    const partnerIncomeSummary = buildPartnerIncomeSummary(allPersonRows);
 
     return NextResponse.json({
       year,
       summary: {
         totalRevenue,
+        totalInvestment,
         totalExpense,
         netProfit: totalRevenue - totalExpense,
         totalPending,
         saleCount: sales.length,
+        investmentCount: investments.length,
         expenseCount: expenses.length,
         pendingCount: pending.length,
         revenueByCurrency,
+        investmentByCurrency,
         expenseByCurrency,
         pendingByCurrency,
       },
@@ -137,6 +159,9 @@ export async function POST(req) {
     }
 
     const txType = type || "SALE";
+    if ((txType === "PROFIT_SHARE" || txType === "PARTNER_INVESTMENT") && !String(customerName || "").trim()) {
+      return NextResponse.json({ error: "กรุณากรอกชื่อพาร์ทเนอร์" }, { status: 400 });
+    }
     const prefix = { SALE: "SAL", EXPENSE: "EXP", REFUND: "REF", PROFIT_SHARE: "PSH", PARTNER_INVESTMENT: "PIN" }[txType] || "TXN";
     const count = await prisma.partnerTransaction.count({ where: { type: txType } });
     const now = new Date();
@@ -159,6 +184,10 @@ export async function POST(req) {
         notes: notes || null,
         date: date ? new Date(date) : new Date(),
       },
+    });
+
+    await syncPartnerPersonFinancialFromTransaction(tx).catch((err) => {
+      console.warn("[POST /api/partner/transactions] ledger sync:", err.message);
     });
 
     return NextResponse.json(tx, { status: 201 });

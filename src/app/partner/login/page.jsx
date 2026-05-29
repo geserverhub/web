@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signIn, signOut, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { NEXTAUTH_PORTAL_ROLES } from "@/lib/login-portals";
+import { credentialsPortalLogin, hardRedirect, portalLoginErrorMessage, waitForAuthSession } from "@/lib/portal-login";
 
-async function loadSession(maxAttempts = 4) {
-  for (let i = 0; i < maxAttempts; i += 1) {
-    const session = await getSession();
-    if (session?.user) return session;
-    await new Promise((resolve) => setTimeout(resolve, 120));
-  }
-  return null;
-}
+const PARTNER_HOME = "/partner/dashboard";
 
 const LANGS = {
   th: {
@@ -20,10 +13,9 @@ const LANGS = {
     emailPlaceholder: "กรอก username หรือ email",
     passwordLabel: "รหัสผ่าน",
     btn: "เข้าสู่ระบบ",
-    loading: "กำลังตรวจสอบ...",
+    loading: "กำลังเข้าสู่ระบบ...",
     back: "← กลับหน้าเลือกประเภทผู้ใช้",
     errorLogin: "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
-    errorRole: "บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลพาร์ทเนอร์",
   },
   en: {
     title: "Partner Sign In",
@@ -31,10 +23,9 @@ const LANGS = {
     emailPlaceholder: "Enter username or email",
     passwordLabel: "Password",
     btn: "Sign In",
-    loading: "Verifying...",
+    loading: "Signing in...",
     back: "← Back to user type selection",
     errorLogin: "Incorrect email or password",
-    errorRole: "This account does not have access to the Partner Portal",
   },
   ko: {
     title: "파트너 로그인",
@@ -42,15 +33,13 @@ const LANGS = {
     emailPlaceholder: "사용자명 또는 이메일 입력",
     passwordLabel: "비밀번호",
     btn: "로그인",
-    loading: "확인 중...",
+    loading: "로그인 중...",
     back: "← 사용자 유형 선택으로 돌아가기",
     errorLogin: "이메일 또는 비밀번호가 올바르지 않습니다",
-    errorRole: "이 계정은 파트너 포털에 접근 권한이 없습니다",
   },
 };
 
 export default function PartnerLoginPage() {
-  const router = useRouter();
   const [lang, setLang] = useState("th");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,13 +50,13 @@ export default function PartnerLoginPage() {
   const t = LANGS[lang];
 
   useEffect(() => {
-    loadSession().then((session) => {
+    waitForAuthSession(6, 100).then((session) => {
       const role = session?.user?.role;
-      if (role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN") {
-        router.replace("/partner/dashboard");
+      if (role && NEXTAUTH_PORTAL_ROLES.partner.includes(role)) {
+        hardRedirect(PARTNER_HOME);
       }
     });
-  }, [router]);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -75,29 +64,19 @@ export default function PartnerLoginPage() {
     setLoading(true);
 
     try {
-      const res = await signIn("credentials", {
-        email: email.trim(),
+      const result = await credentialsPortalLogin({
+        email,
         password,
         portal: "partner",
-        redirect: false,
+        callbackPath: PARTNER_HOME,
       });
 
-      if (!res?.ok || res?.error) {
-        setError(t.errorLogin);
+      if (!result.ok) {
+        setError(portalLoginErrorMessage(result.error, lang === 'ko' ? 'en' : lang === 'en' ? 'en' : 'th'));
         return;
       }
 
-      router.refresh();
-      const session = await loadSession();
-      const role = session?.user?.role;
-
-      if (role === "PARTNER" || role === "ADMIN" || role === "SUPER_ADMIN") {
-        router.push("/partner/dashboard");
-        return;
-      }
-
-      await signOut({ redirect: false });
-      setError(t.errorRole);
+      hardRedirect(PARTNER_HOME);
     } catch {
       setError(t.errorLogin);
     } finally {
@@ -195,7 +174,7 @@ export default function PartnerLoginPage() {
     <div style={S.page}>
       <div style={S.langBar}>
         {[["th", "ไทย"], ["en", "EN"], ["ko", "한국어"]].map(([code, label]) => (
-          <button key={code} style={S.langBtn(lang === code)} onClick={() => setLang(code)}>
+          <button key={code} type="button" style={S.langBtn(lang === code)} onClick={() => setLang(code)}>
             {label}
           </button>
         ))}

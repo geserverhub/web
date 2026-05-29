@@ -14,14 +14,17 @@ const LANGS = {
       totalRevenue: "รายรับรวม",
       saleCount: (n) => `${n} รายการ`,
       totalExpense: "รายจ่ายรวม",
+      totalInvestment: "เงินลงทุนรวม",
       netProfit: "กำไรสุทธิ",
       totalPending: "รอชำระ",
       pendingCount: (n) => `${n} รายการ`,
     },
-    monthlyTitle: (_y) => `ยอดขายรายเดือน`,
+    monthlyTitle: (_y) => `รายรับ vs รายจ่าย รายเดือน`,
+    monthlyLegendRev: "รายรับ",
+    monthlyLegendExp: "รายจ่าย",
     profitTitle: (y) => `กำไรสุทธิรายเดือน (หลังหัก VAT 10%) — ${y}`,
-    profitCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
-    vatNote: "สูตร: (รายรับ × 90% − รายจ่าย) ÷ 2",
+    profitCols: { month: "เดือน", revenue: "รายรับ (₩)", investment: "เงินลงทุน (₩)", expense: "รายจ่าย (₩)", investmentBalance: "เงินลงทุนคงเหลือ (₩)", net: "กำไรสุทธิ (₩)", afterVat: "หลังหัก VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
+    vatNote: "สูตรต่อคน: กำไรสุทธิ ÷ 2 · เงินลงทุนคงเหลือ = สะสม (ลงทุน − จ่าย)",
     categoryTitle: "รายรับแยกตามประเภท",
     kpi: {
       title: (y) => `🎯 KPI — ปี ${y}`,
@@ -43,7 +46,7 @@ const LANGS = {
       expRatioSub: "ค่าใช้จ่าย ÷ รายรับ",
       netProfit: "กำไรสุทธิ",
       perPerson: "กำไรต่อคน (หลัง VAT)",
-      perPersonSub: "(รายรับ × 90% − รายจ่าย) ÷ 2",
+      perPersonSub: "กำไรสุทธิ ÷ 2",
       vat16: "VAT งวด ม.ค.–มิ.ย.",
       vat16sub: "ชำระ ก.ค.",
       vat712: "VAT งวด ก.ค.–ธ.ค.",
@@ -58,10 +61,12 @@ const LANGS = {
     categoryCols: { name: "ประเภท", amount: "ยอดรวม (₩)", share: "สัดส่วน" },
     txTitle: (n) => `รายการทั้งหมด (${n} รายการ)`,
     txCols: { number: "เลขที่", date: "วันที่", type: "ประเภท", desc: "รายละเอียด", customer: "คู่ค้า", amount: "จำนวน", status: "สถานะ" },
+    txLockedHint: "รายการสำเร็จแล้ว — แก้ไขไม่ได้",
     uploadBtn: "📎 อัพโหลดไฟล์",
     uploadFail: "อัพโหลดไฟล์ไม่สำเร็จ: ",
     partnerIncomeTitle: "💼 รายได้สะสมรายบุคคล (ทุกปี)",
     partnerIncomeNoData: "ยังไม่มีรายการรายได้ส่วนแบ่ง",
+    partnerIncomeCols: { name: "ชื่อ", profitShare: "รายได้ส่วนแบ่ง (₩)", investment: "เงินลงทุน (₩)", total: "รวม (₩)" },
     noData: "ไม่มีข้อมูล",
     types: { SALE: "ขาย", EXPENSE: "ค่าใช้จ่าย", REFUND: "คืนเงิน", PROFIT_SHARE: "รายได้กำไรส่วนแบ่งรายบุคคล", PARTNER_INVESTMENT: "รายรับการลงทุนจาก partner" },
     statuses: { COMPLETED: "สำเร็จ", PENDING: "รอดำเนินการ", CANCELLED: "ยกเลิก" },
@@ -69,7 +74,7 @@ const LANGS = {
     typeColors: { SALE: "#60a5fa", EXPENSE: "#f87171", REFUND: "#a78bfa", PROFIT_SHARE: "#22c55e", PARTNER_INVESTMENT: "#f59e0b" },
     form: {
       title: "เพิ่มรายการใหม่",
-      type: "ประเภท", desc: "รายละเอียด", customer: "ชื่อคู่ค้า", supplier: "ชื่อซัพพลายเออร์", amount: "จำนวนเงิน",
+      type: "ประเภท", desc: "รายละเอียด", customer: "ชื่อคู่ค้า", partnerName: "ชื่อพาร์ทเนอร์", supplier: "ชื่อซัพพลายเออร์", amount: "จำนวนเงิน",
       currency: "สกุลเงิน", category: "หมวดหมู่", status: "สถานะ", date: "วันที่", notes: "หมายเหตุ",
       currencies: { KRW: "₩ วอน (KRW)", USD: "$ ดอลล่า (USD)", THB: "฿ บาท (THB)" },
       categories: {
@@ -108,6 +113,9 @@ const LANGS = {
       fModel: "รุ่น (Model)", fModelPh: "เช่น SF-200A",
       fBrand: "แบรนด์ / ผู้ผลิต", fBrandPh: "เช่น Shanghai Fangqiu",
       fCostPrice: "ราคาทุน / หน่วย", fSellPrice: "ราคาขาย / หน่วย", fCurrency: "สกุลเงิน",
+      fCategory: "หมวดสินค้า", fCategoryPh: "— เลือกหมวด —",
+      addCategory: "+ เพิ่มหมวด", newCategoryPh: "ชื่อหมวดใหม่ เช่น มิเตอร์ / บริการ",
+      categorySaving: "กำลังเพิ่มหมวด...", categoryAdded: "✅ เพิ่มหมวดแล้ว",
       submit: "บันทึกสินค้า", submitting: "กำลังบันทึก...", success: "✅ เพิ่มสินค้าสำเร็จ",
       listTitle: (n) => `รายการสินค้าทั้งหมด (${n})`,
       noData: "ยังไม่มีสินค้า",
@@ -149,7 +157,8 @@ const LANGS = {
       titleIncome:  (y) => `รายงานภาษีรายได้รายบุคคล — ปี ${y}`,
       sections: { summary: "สรุปภาพรวม", transactions: "รายการทั้งหมด", monthly: "ยอดรวมรายเดือน", vat: "ภาษีมูลค่าเพิ่ม (VAT 10%)", partnerIncome: "รายได้สะสมรายบุคคล" },
       cols: { number: "เลขที่", date: "วันที่", type: "ประเภท", desc: "รายละเอียด", customer: "คู่ค้า", amount: "จำนวน", currency: "สกุลเงิน", status: "สถานะ" },
-      monthlyCols: { month: "เดือน", revenue: "รายรับ (₩)", expense: "รายจ่าย (₩)", net: "กำไรสุทธิ (₩)", vat: "VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
+      monthlyCols: { month: "เดือน", revenue: "รายรับ (₩)", investment: "เงินลงทุน (₩)", expense: "รายจ่าย (₩)", investmentBalance: "เงินลงทุนคงเหลือ (₩)", net: "กำไรสุทธิ (₩)", vat: "VAT 10% (₩)", perPerson: "ต่อคน (₩)" },
+      partnerIncomeCols: { name: "ชื่อ", profitShare: "รายได้ส่วนแบ่ง (₩)", investment: "เงินลงทุน (₩)", total: "รวม (₩)" },
       vatCols: { number: "เลขที่", date: "วันที่", desc: "รายละเอียด", customer: "คู่ค้า", amount: "ยอดรายรับ (₩)", vat: "VAT 10% (₩)", period: "รอบ" },
       total: "รวม",
       generatedOn: (d) => `พิมพ์เมื่อ ${d}`,
@@ -198,14 +207,17 @@ const LANGS = {
       totalRevenue: "총 매출",
       saleCount: (n) => `${n}건`,
       totalExpense: "총 지출",
+      totalInvestment: "총 투자금",
       netProfit: "순이익",
       totalPending: "미수금",
       pendingCount: (n) => `${n}건`,
     },
-    monthlyTitle: (y) => `월별 매출 — ${y}`,
+    monthlyTitle: (y) => `월별 매출 vs 지출 — ${y}`,
+    monthlyLegendRev: "매출",
+    monthlyLegendExp: "지출",
     profitTitle: (y) => `월별 순이익 (VAT 10% 공제 후) — ${y}`,
-    profitCols: { month: "월", revenue: "매출 (₩)", expense: "지출 (₩)", net: "순이익 (₩)", afterVat: "VAT 10% 후 (₩)", perPerson: "1인당 (₩)" },
-    vatNote: "공식: (매출 × 90% − 지출) ÷ 2",
+    profitCols: { month: "월", revenue: "매출 (₩)", investment: "투자금 (₩)", expense: "지출 (₩)", investmentBalance: "투자금 잔액 (₩)", net: "순이익 (₩)", afterVat: "VAT 10% 후 (₩)", perPerson: "1인당 (₩)" },
+    vatNote: "1인당: 순이익 ÷ 2 · 투자금 잔액 = 누적 (투자 − 지출)",
     categoryTitle: "카테고리별 매출",
     kpi: {
       title: (y) => `🎯 KPI — ${y}년`,
@@ -227,7 +239,7 @@ const LANGS = {
       expRatioSub: "지출 ÷ 매출",
       netProfit: "순이익",
       perPerson: "1인당 순이익 (VAT 후)",
-      perPersonSub: "(매출 × 90% − 지출) ÷ 2",
+      perPersonSub: "순이익 ÷ 2",
       vat16: "부가세 1월–6월",
       vat16sub: "납부: 7월",
       vat712: "부가세 7월–12월",
@@ -242,10 +254,12 @@ const LANGS = {
     categoryCols: { name: "카테고리", amount: "합계 (₩)", share: "비율" },
     txTitle: (n) => `전체 거래내역 (${n}건)`,
     txCols: { number: "번호", date: "날짜", type: "유형", desc: "내용", customer: "거래처", amount: "금액", status: "상태" },
+    txLockedHint: "완료된 거래 — 수정 불가",
     uploadBtn: "📎 파일 업로드",
     uploadFail: "파일 업로드 실패: ",
     partnerIncomeTitle: "💼 파트너별 누적 수익 (전체 기간)",
     partnerIncomeNoData: "이익 분배 내역이 없습니다",
+    partnerIncomeCols: { name: "이름", profitShare: "이익 분배 (₩)", investment: "투자금 (₩)", total: "합계 (₩)" },
     noData: "데이터 없음",
     types: { SALE: "매출", EXPENSE: "지출", REFUND: "환불", PROFIT_SHARE: "개인 이익 분배 수익", PARTNER_INVESTMENT: "파트너 투자 수익" },
     statuses: { COMPLETED: "완료", PENDING: "대기", CANCELLED: "취소" },
@@ -253,7 +267,7 @@ const LANGS = {
     typeColors: { SALE: "#60a5fa", EXPENSE: "#f87171", REFUND: "#a78bfa", PROFIT_SHARE: "#22c55e", PARTNER_INVESTMENT: "#f59e0b" },
     form: {
       title: "거래 추가",
-      type: "유형", desc: "내용", customer: "거래처명", supplier: "공급업체명", amount: "금액",
+      type: "유형", desc: "내용", customer: "거래처명", partnerName: "파트너 이름", supplier: "공급업체명", amount: "금액",
       currency: "통화", category: "카테고리", status: "상태", date: "날짜", notes: "메모",
       currencies: { KRW: "₩ 원 (KRW)", USD: "$ 달러 (USD)", THB: "฿ 바트 (THB)" },
       categories: {
@@ -292,6 +306,9 @@ const LANGS = {
       fModel: "모델명", fModelPh: "예: SF-200A",
       fBrand: "브랜드 / 제조사", fBrandPh: "예: Shanghai Fangqiu",
       fCostPrice: "원가 / 단위", fSellPrice: "판매가 / 단위", fCurrency: "통화",
+      fCategory: "상품 카테고리", fCategoryPh: "— 카테고리 선택 —",
+      addCategory: "+ 카테고리 추가", newCategoryPh: "새 카테고리명",
+      categorySaving: "추가 중...", categoryAdded: "✅ 카테고리 추가됨",
       submit: "상품 저장", submitting: "저장 중...", success: "✅ 상품 추가 완료",
       listTitle: (n) => `전체 상품 목록 (${n})`,
       noData: "상품이 없습니다",
@@ -333,7 +350,8 @@ const LANGS = {
       titleIncome:  (y) => `${y}년 개인 종합소득세 보고서`,
       sections: { summary: "요약", transactions: "전체 거래내역", monthly: "월별 합계", vat: "부가세 (VAT 10%)", partnerIncome: "파트너별 누적 수익" },
       cols: { number: "번호", date: "날짜", type: "유형", desc: "내용", customer: "거래처", amount: "금액", currency: "통화", status: "상태" },
-      monthlyCols: { month: "월", revenue: "매출 (₩)", expense: "지출 (₩)", net: "순이익 (₩)", vat: "VAT 10% (₩)", perPerson: "1인당 (₩)" },
+      monthlyCols: { month: "월", revenue: "매출 (₩)", investment: "투자금 (₩)", expense: "지출 (₩)", investmentBalance: "투자금 잔액 (₩)", net: "순이익 (₩)", vat: "VAT 10% (₩)", perPerson: "1인당 (₩)" },
+      partnerIncomeCols: { name: "이름", profitShare: "이익 분배 (₩)", investment: "투자금 (₩)", total: "합계 (₩)" },
       vatCols: { number: "번호", date: "날짜", desc: "내용", customer: "거래처", amount: "매출 (₩)", vat: "부가세 10% (₩)", period: "기간" },
       total: "합계",
       generatedOn: (d) => `출력일: ${d}`,
@@ -406,15 +424,71 @@ function StatCard({ icon, label, value, sub, color, extra }) {
   );
 }
 
-function MonthBar({ month, revenue, maxRevenue }) {
-  const pct = maxRevenue > 0 ? (revenue / maxRevenue) * 100 : 0;
+function fmtManKrw(amount) {
+  if (!amount || amount <= 0) return "";
+  if (amount >= 10000) return `${Math.round(amount / 10000)}만`;
+  return `${Math.round(amount / 1000)}천`;
+}
+
+/** รายรับหลังหัก VAT 10% = (รายรับ × 90%) − รายจ่าย */
+function calcAfterVat(revenue, expense) {
+  return revenue * 0.9 - expense;
+}
+
+/** ต่อคน = กำไรสุทธิ ÷ 2 (ไม่รวมเงินลงทุน) */
+function calcPerPerson(revenue, expense) {
+  return (revenue - expense) / 2;
+}
+
+/** สะสมเงินลงทุนคงเหลือรายเดือน: ยอดสะสม (ลงทุน − รายจ่าย) */
+function enrichMonthlyInvestmentBalance(monthlyRows) {
+  let balance = 0;
+  let started = false;
+  return (monthlyRows || []).map((m) => {
+    const inv = m.investment || 0;
+    const exp = m.expense || 0;
+    if (inv > 0 || exp > 0) started = true;
+    if (started) balance += inv - exp;
+    return { ...m, investmentBalance: started ? balance : null };
+  });
+}
+
+function MonthBar({ month, revenue, expense, maxValue }) {
+  const maxV = maxValue > 0 ? maxValue : 1;
+  const revH = Math.round((revenue / maxV) * 80);
+  const expH = Math.round((expense / maxV) * 80);
+  const hasData = revenue > 0 || expense > 0;
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
-      <div style={{ fontSize: 10, color: "#4ade80", fontWeight: 600 }}>
-        {revenue > 0 ? `${Math.round(revenue / 10000)}만` : ""}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1, opacity: hasData ? 1 : 0.45 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minHeight: 22 }}>
+        {revenue > 0 && (
+          <div style={{ fontSize: 9, color: "#4ade80", fontWeight: 700, lineHeight: 1.2 }}>{fmtManKrw(revenue)}</div>
+        )}
+        {expense > 0 && (
+          <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, lineHeight: 1.2 }}>{fmtManKrw(expense)}</div>
+        )}
       </div>
-      <div style={{ width: "100%", height: 80, background: "#1e2130", borderRadius: 4, display: "flex", alignItems: "flex-end" }}>
-        <div style={{ width: "100%", height: `${Math.max(pct, revenue > 0 ? 4 : 0)}%`, background: "linear-gradient(180deg,#4ade80,#16a34a)", borderRadius: "3px 3px 0 0", transition: "height .4s" }} />
+      <div style={{ width: "100%", height: 80, display: "flex", gap: 2, alignItems: "flex-end" }}>
+        <div
+          style={{
+            flex: 1,
+            height: Math.max(revH, revenue > 0 ? 4 : 0),
+            background: "linear-gradient(180deg,#4ade80,#16a34a)",
+            borderRadius: "3px 3px 0 0",
+            transition: "height .4s",
+          }}
+          title={`รายรับ ₩${revenue.toLocaleString()}`}
+        />
+        <div
+          style={{
+            flex: 1,
+            height: Math.max(expH, expense > 0 ? 4 : 0),
+            background: "linear-gradient(180deg,#f87171,#dc2626)",
+            borderRadius: "3px 3px 0 0",
+            transition: "height .4s",
+          }}
+          title={`รายจ่าย ₩${expense.toLocaleString()}`}
+        />
       </div>
       <div style={{ fontSize: 10, color: "#8b8fa8" }}>{month}</div>
     </div>
@@ -453,7 +527,10 @@ export default function PartnerDashboard() {
   const [editingTaskSaving, setEditingTaskSaving] = useState(false);
 
   const [products, setProducts] = useState([]);
-  const [productForm, setProductForm] = useState({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW" });
+  const [productCategories, setProductCategories] = useState([]);
+  const [productForm, setProductForm] = useState({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW", categoryId: "" });
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryFormState, setCategoryFormState] = useState("");
   const [productFormState, setProductFormState] = useState("");
   const [productImages, setProductImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState([]);
@@ -519,9 +596,18 @@ export default function PartnerDashboard() {
     fetch("/api/partner/products").then(r => r.json()).then(d => setProducts(Array.isArray(d) ? d : []));
   };
 
+  const fetchProductCategories = () => {
+    if (status !== "authenticated") return;
+    fetch("/api/partner/product-categories")
+      .then(r => r.json())
+      .then(d => setProductCategories(Array.isArray(d) ? d : []))
+      .catch(() => setProductCategories([]));
+  };
+
   useEffect(fetchData, [year, status]);
   useEffect(fetchTasks, [status]);
   useEffect(fetchProducts, [status]);
+  useEffect(fetchProductCategories, [status]);
 
   useEffect(() => {
     if (tab !== "feedback") return;
@@ -717,6 +803,7 @@ export default function PartnerDashboard() {
   }
 
   async function handleInlineAmountSave(tx) {
+    if (tx.status === "COMPLETED") return;
     if (!editingTx || editingTx.id !== tx.id) return;
     const raw = editingTx.value.replace(/,/g, "");
     if (raw === "" || isNaN(Number(raw))) { setEditingTx(null); return; }
@@ -738,7 +825,7 @@ export default function PartnerDashboard() {
   }
 
   async function handleReceiptUpload(tx, file) {
-    if (!file) return;
+    if (!file || tx.status === "COMPLETED") return;
     setUploadingTxId(tx.id);
     setUploadErrorId(null);
     try {
@@ -789,6 +876,30 @@ export default function PartnerDashboard() {
     e.target.value = "";
   }
 
+  async function handleAddCategory(e) {
+    e?.preventDefault?.();
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+    setCategoryFormState("loading");
+    try {
+      const res = await fetch("/api/partner/product-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "error");
+      setNewCategoryName("");
+      setCategoryFormState("success");
+      fetchProductCategories();
+      if (data.id) setProductForm(f => ({ ...f, categoryId: data.id }));
+      setTimeout(() => setCategoryFormState(""), 2500);
+    } catch (err) {
+      setCategoryFormState(err.message || "error");
+      setTimeout(() => setCategoryFormState(""), 4000);
+    }
+  }
+
   async function handleAddProduct(e) {
     e.preventDefault();
     setProductFormState("loading");
@@ -796,11 +907,15 @@ export default function PartnerDashboard() {
       const res = await fetch("/api/partner/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...productForm, imageUrls: productImages }),
+        body: JSON.stringify({
+          ...productForm,
+          categoryId: productForm.categoryId || null,
+          imageUrls: productImages,
+        }),
       });
       if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || "error"); }
       setProductFormState("success");
-      setProductForm({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW" });
+      setProductForm({ name: "", model: "", brand: "", costPrice: "", sellPrice: "", currency: "KRW", categoryId: productForm.categoryId });
       setProductImages([]);
       fetchProducts();
       setTimeout(() => setProductFormState(""), 3000);
@@ -891,7 +1006,10 @@ export default function PartnerDashboard() {
   }
 
   const { summary, monthlyRevenue, recentTransactions, byCategory, profitShareTransactions, partnerIncomeSummary } = data || {};
-  const maxMonthRevenue = Math.max(...(monthlyRevenue || []).map(m => m.revenue), 1);
+  const maxMonthValue = Math.max(
+    ...(monthlyRevenue || []).flatMap(m => [m.revenue, m.expense]),
+    1,
+  );
 
   return (
     <>
@@ -951,6 +1069,7 @@ export default function PartnerDashboard() {
             <div style={S.section}>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                 <StatCard icon="💰" label={t.stats.totalRevenue} value={`₩${fmtNum(summary.totalRevenue, t.locale)}`} sub={t.stats.saleCount(summary.saleCount)} color="#4ade80" extra={summary.revenueByCurrency} />
+                <StatCard icon="🏦" label={t.stats.totalInvestment} value={`₩${fmtNum(summary.totalInvestment || 0, t.locale)}`} sub={summary.investmentCount ? `${summary.investmentCount} รายการ` : undefined} color="#f59e0b" extra={summary.investmentByCurrency} />
                 <StatCard icon="💸" label={t.stats.totalExpense} value={`₩${fmtNum(summary.totalExpense, t.locale)}`} color="#f87171" extra={summary.expenseByCurrency} />
                 <StatCard icon="📈" label={t.stats.netProfit} value={`₩${fmtNum(summary.netProfit, t.locale)}`} color={summary.netProfit >= 0 ? "#4ade80" : "#f87171"} />
                 <StatCard icon="⏳" label={t.stats.totalPending} value={`₩${fmtNum(summary.totalPending, t.locale)}`} sub={t.stats.pendingCount(summary.pendingCount)} color="#fbbf24" extra={summary.pendingByCurrency} />
@@ -961,7 +1080,25 @@ export default function PartnerDashboard() {
               <div style={S.sectionTitle}>{t.monthlyTitle(year)}</div>
               <div style={{ background: "#16181f", border: "1px solid #1e2130", borderRadius: 12, padding: "20px 16px" }}>
                 <div style={{ display: "flex", gap: 4, alignItems: "flex-end" }}>
-                  {(monthlyRevenue || []).map(m => <MonthBar key={m.month} month={new Date(year, m.month - 1, 1).toLocaleString(t.locale, { month: "short" })} revenue={m.revenue} maxRevenue={maxMonthRevenue} />)}
+                  {(monthlyRevenue || []).map(m => (
+                    <MonthBar
+                      key={m.month}
+                      month={new Date(year, m.month - 1, 1).toLocaleString(t.locale, { month: "short" })}
+                      revenue={m.revenue}
+                      expense={m.expense}
+                      maxValue={maxMonthValue}
+                    />
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 12, fontSize: 11, color: "#8b8fa8" }}>
+                  <span>
+                    <span style={{ display: "inline-block", width: 10, height: 10, background: "linear-gradient(180deg,#4ade80,#16a34a)", borderRadius: 2, marginRight: 6, verticalAlign: "middle" }} />
+                    {t.monthlyLegendRev}
+                  </span>
+                  <span>
+                    <span style={{ display: "inline-block", width: 10, height: 10, background: "linear-gradient(180deg,#f87171,#dc2626)", borderRadius: 2, marginRight: 6, verticalAlign: "middle" }} />
+                    {t.monthlyLegendExp}
+                  </span>
                 </div>
               </div>
             </div>
@@ -978,18 +1115,21 @@ export default function PartnerDashboard() {
                     <tr>
                       <th style={{ ...S.th, whiteSpace: "nowrap" }}>{t.profitCols.month}</th>
                       <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap" }}>{t.profitCols.revenue}</th>
+                      <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap", color: "#f59e0b" }}>{t.profitCols.investment}</th>
                       <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap" }}>{t.profitCols.expense}</th>
+                      <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap", color: "#fbbf24" }}>{t.profitCols.investmentBalance}</th>
                       <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap" }}>{t.profitCols.net}</th>
                       <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap" }}>{t.profitCols.afterVat}</th>
                       <th style={{ ...S.th, textAlign: "right", whiteSpace: "nowrap", color: "#4ade80" }}>{t.profitCols.perPerson}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(monthlyRevenue || []).map(m => {
+                    {enrichMonthlyInvestmentBalance(monthlyRevenue).map(m => {
                       const net = m.revenue - m.expense;
-                      const afterVat = (m.revenue * 0.9) - m.expense;
-                      const perPerson = afterVat / 2;
-                      const hasData = m.revenue > 0 || m.expense > 0;
+                      const afterVat = calcAfterVat(m.revenue, m.expense);
+                      const perPerson = calcPerPerson(m.revenue, m.expense);
+                      const bal = m.investmentBalance;
+                      const hasData = m.revenue > 0 || m.investment > 0 || m.expense > 0;
                       return (
                         <tr key={m.month} style={{ opacity: hasData ? 1 : 0.4 }}>
                           <td style={{ ...S.td, whiteSpace: "nowrap", fontWeight: 600 }}>
@@ -998,16 +1138,22 @@ export default function PartnerDashboard() {
                           <td style={{ ...S.td, textAlign: "right", color: "#4ade80", fontFamily: "monospace" }}>
                             {m.revenue > 0 ? `₩${fmtNum(m.revenue, t.locale)}` : "-"}
                           </td>
+                          <td style={{ ...S.td, textAlign: "right", color: "#f59e0b", fontFamily: "monospace" }}>
+                            {m.investment > 0 ? `₩${fmtNum(m.investment, t.locale)}` : "-"}
+                          </td>
                           <td style={{ ...S.td, textAlign: "right", color: "#f87171", fontFamily: "monospace" }}>
                             {m.expense > 0 ? `₩${fmtNum(m.expense, t.locale)}` : "-"}
+                          </td>
+                          <td style={{ ...S.td, textAlign: "right", color: bal != null && bal >= 0 ? "#fbbf24" : "#f87171", fontWeight: 700, fontFamily: "monospace" }}>
+                            {bal != null ? `₩${fmtNum(Math.round(bal), t.locale)}` : "-"}
                           </td>
                           <td style={{ ...S.td, textAlign: "right", color: net >= 0 ? "#4ade80" : "#f87171", fontWeight: 700, fontFamily: "monospace" }}>
                             {hasData ? `₩${fmtNum(net, t.locale)}` : "-"}
                           </td>
                           <td style={{ ...S.td, textAlign: "right", color: afterVat >= 0 ? "#60a5fa" : "#f87171", fontFamily: "monospace" }}>
-                            {hasData ? `₩${fmtNum(Math.round(afterVat), t.locale)}` : "-"}
+                            {m.revenue > 0 ? `₩${fmtNum(Math.round(afterVat), t.locale)}` : "-"}
                           </td>
-                          <td style={{ ...S.td, textAlign: "right", color: "#4ade80", fontWeight: 800, fontFamily: "monospace", fontSize: 14 }}>
+                          <td style={{ ...S.td, textAlign: "right", color: perPerson >= 0 ? "#4ade80" : "#f87171", fontWeight: 800, fontFamily: "monospace", fontSize: 14 }}>
                             {hasData ? `₩${fmtNum(Math.round(perPerson), t.locale)}` : "-"}
                           </td>
                         </tr>
@@ -1018,29 +1164,39 @@ export default function PartnerDashboard() {
               </div>
             </div>
 
-            {/* Partner income cards */}
+            {/* Partner income table */}
             <div style={S.section}>
               <div style={S.sectionTitle}>{t.partnerIncomeTitle}</div>
               {!partnerIncomeSummary || partnerIncomeSummary.length === 0 ? (
                 <div style={{ color: "#4a5070", fontSize: 13, padding: "12px 0" }}>{t.partnerIncomeNoData}</div>
               ) : (
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                  {partnerIncomeSummary.map((p, i) => {
-                    const colors = ["#4ade80", "#60a5fa", "#a78bfa", "#fbbf24", "#f472b6"];
-                    const color = colors[i % colors.length];
-                    return (
-                      <div key={p.name} style={{ background: "#16181f", border: `1px solid ${color}33`, borderRadius: 12, padding: "18px 24px", flex: "1 1 180px", minWidth: 180 }}>
-                        <div style={{ fontSize: 20, marginBottom: 6 }}>👤</div>
-                        <div style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
-                        <div style={{ color, fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>₩{fmtNum(p.total, t.locale)}</div>
-                        {Object.entries(p.byCurrency || {}).map(([cur, amt]) => (
-                          <div key={cur} style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>
-                            {cur === "USD" ? "$" : cur === "THB" ? "฿" : cur}{fmtNum(amt, t.locale)} {cur}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
+                <div style={{ background: "#16181f", border: "1px solid #1e2130", borderRadius: 12, overflow: "auto" }}>
+                  <table style={S.table}>
+                    <thead>
+                      <tr>
+                        <th style={S.th}>{t.partnerIncomeCols.name}</th>
+                        <th style={{ ...S.th, textAlign: "right" }}>{t.partnerIncomeCols.profitShare}</th>
+                        <th style={{ ...S.th, textAlign: "right", color: "#f59e0b" }}>{t.partnerIncomeCols.investment}</th>
+                        <th style={{ ...S.th, textAlign: "right", color: "#4ade80" }}>{t.partnerIncomeCols.total}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {partnerIncomeSummary.map((p) => (
+                        <tr key={p.name}>
+                          <td style={{ ...S.td, fontWeight: 600 }}>👤 {p.name}</td>
+                          <td style={{ ...S.td, textAlign: "right", color: "#60a5fa", fontFamily: "monospace" }}>
+                            ₩{fmtNum(p.profitShare ?? p.total ?? 0, t.locale)}
+                          </td>
+                          <td style={{ ...S.td, textAlign: "right", color: "#f59e0b", fontFamily: "monospace" }}>
+                            ₩{fmtNum(p.investment || 0, t.locale)}
+                          </td>
+                          <td style={{ ...S.td, textAlign: "right", color: "#4ade80", fontWeight: 800, fontFamily: "monospace" }}>
+                            ₩{fmtNum((p.profitShare ?? p.total ?? 0) + (p.investment || 0), t.locale)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -1114,6 +1270,7 @@ export default function PartnerDashboard() {
                   ) : recentTransactions.map(tx => {
                     const typeColor = t.typeColors[tx.type] || "#8b8fa8";
                     const statusColor = t.statusColors[tx.status] || "#8b8fa8";
+                    const txLocked = tx.status === "COMPLETED";
                     return (
                       <tr key={tx.id}>
                         <td style={{ ...S.td, color: "#60a5fa", fontFamily: "monospace", fontSize: 11, whiteSpace: "nowrap" }}>{tx.number}</td>
@@ -1156,9 +1313,17 @@ export default function PartnerDashboard() {
                             </div>
                           ) : (
                             <span
-                              title="คลิกเพื่อแก้ไข"
-                              onClick={() => setEditingTx({ id: tx.id, value: String(Number(tx.amount)), currency: tx.currency })}
-                              style={{ color: tx.type === "EXPENSE" ? "#f87171" : "#4ade80", fontWeight: 700, cursor: "pointer", borderBottom: "1px dashed", borderColor: tx.type === "EXPENSE" ? "#f8717166" : "#4ade8066", paddingBottom: 1 }}
+                              title={txLocked ? t.txLockedHint : "คลิกเพื่อแก้ไข"}
+                              onClick={txLocked ? undefined : () => setEditingTx({ id: tx.id, value: String(Number(tx.amount)), currency: tx.currency })}
+                              style={{
+                                color: tx.type === "EXPENSE" ? "#f87171" : "#4ade80",
+                                fontWeight: 700,
+                                cursor: txLocked ? "default" : "pointer",
+                                borderBottom: txLocked ? "none" : "1px dashed",
+                                borderColor: tx.type === "EXPENSE" ? "#f8717166" : "#4ade8066",
+                                paddingBottom: txLocked ? 0 : 1,
+                                opacity: txLocked ? 0.85 : 1,
+                              }}
                             >
                               {tx.type === "EXPENSE" ? "-" : ""}{currencySymbol(tx.currency)}{fmtNum(tx.amount, t.locale)}
                             </span>
@@ -1465,9 +1630,20 @@ export default function PartnerDashboard() {
                   {/* Customer / Supplier */}
                   <div>
                     <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>
-                      {form.type === "EXPENSE" ? t.form.supplier : t.form.customer}
+                      {form.type === "EXPENSE"
+                        ? t.form.supplier
+                        : ["PROFIT_SHARE", "PARTNER_INVESTMENT"].includes(form.type)
+                          ? t.form.partnerName
+                          : t.form.customer}
                     </label>
-                    <input type="text" value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} style={INPUT_STYLE} />
+                    <input
+                      type="text"
+                      required={["PROFIT_SHARE", "PARTNER_INVESTMENT"].includes(form.type)}
+                      value={form.customerName}
+                      onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))}
+                      placeholder={["PROFIT_SHARE", "PARTNER_INVESTMENT"].includes(form.type) ? "เช่น 복녀파위니" : ""}
+                      style={INPUT_STYLE}
+                    />
                   </div>
                   {/* Category */}
                   <div>
@@ -1521,6 +1697,42 @@ export default function PartnerDashboard() {
                     <div>
                       <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fBrand}</label>
                       <input type="text" value={productForm.brand} onChange={e => setProductForm(f => ({ ...f, brand: e.target.value }))} placeholder={t.products.fBrandPh} style={INPUT_STYLE} />
+                    </div>
+                    <div>
+                      <label style={{ color: "#8b8fa8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.products.fCategory}</label>
+                      <select
+                        value={productForm.categoryId}
+                        onChange={e => setProductForm(f => ({ ...f, categoryId: e.target.value }))}
+                        style={INPUT_STYLE}
+                      >
+                        <option value="">{t.products.fCategoryPh}</option>
+                        {productCategories.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                        <input
+                          type="text"
+                          value={newCategoryName}
+                          onChange={e => setNewCategoryName(e.target.value)}
+                          placeholder={t.products.newCategoryPh}
+                          style={{ ...INPUT_STYLE, flex: 1, minWidth: 140 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCategory}
+                          disabled={categoryFormState === "loading" || !newCategoryName.trim()}
+                          style={{ background: "#1e3a5f", border: "1px solid #2563eb", color: "#93c5fd", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", opacity: (!newCategoryName.trim() || categoryFormState === "loading") ? 0.5 : 1 }}
+                        >
+                          {categoryFormState === "loading" ? t.products.categorySaving : t.products.addCategory}
+                        </button>
+                      </div>
+                      {categoryFormState === "success" && (
+                        <div style={{ color: "#4ade80", fontSize: 11, marginTop: 4 }}>{t.products.categoryAdded}</div>
+                      )}
+                      {categoryFormState && categoryFormState !== "loading" && categoryFormState !== "success" && (
+                        <div style={{ color: "#f87171", fontSize: 11, marginTop: 4 }}>❌ {categoryFormState}</div>
+                      )}
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       <div>
@@ -1595,6 +1807,11 @@ export default function PartnerDashboard() {
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ color: "#e8eaf0", fontWeight: 600, fontSize: 13 }}>{p.name}{p.model ? <span style={{ color: "#60a5fa", marginLeft: 6 }}>({p.model})</span> : ""}</div>
+                              {p.categoryName && (
+                                <span style={{ display: "inline-block", marginTop: 4, fontSize: 10, fontWeight: 600, color: "#93c5fd", background: "#1e3a5f", border: "1px solid #2563eb", borderRadius: 4, padding: "2px 8px" }}>
+                                  {p.categoryName}
+                                </span>
+                              )}
                               {p.brand && <div style={{ color: "#8b8fa8", fontSize: 11, marginTop: 2 }}>{p.brand}</div>}
                               <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap" }}>
                                 {p.costPrice && <span style={{ color: "#fbbf24", fontSize: 11 }}>ทุน {Number(p.costPrice).toLocaleString()} {p.currency}</span>}
@@ -1793,7 +2010,7 @@ export default function PartnerDashboard() {
           }
           const estTax = estimateTax(annualNet);
           const effectiveRate = annualNet > 0 ? ((estTax / annualNet) * 100).toFixed(1) : "0.0";
-          const perPersonNet = Math.max(0, annualNet) / 2;
+          const perPersonNet = Math.max(0, annualNet / 2);
           const perPersonTax = estimateTax(perPersonNet);
           const perPersonRate = perPersonNet > 0 ? ((perPersonTax / perPersonNet) * 100).toFixed(1) : "0.0";
 
@@ -2018,7 +2235,7 @@ export default function PartnerDashboard() {
           const vat712 = months.filter(m => m.month >= 7 && m.month <= 12).reduce((s, m) => s + Math.max(0, m.revenue * 0.1), 0);
 
           // Income tax (Korean progressive)
-          const perPersonNet = Math.max(0, ((totalRev * 0.9) - totalExp) / 2);
+          const perPersonNet = netProfit / 2;
           function krTax(net) {
             if (net <= 0) return 0;
             const b = [[14e6,.06],[50e6,.15],[88e6,.24],[150e6,.35],[300e6,.38],[500e6,.40],[1e9,.42],[Infinity,.45]];
@@ -2026,9 +2243,10 @@ export default function PartnerDashboard() {
             for (const [lim, r] of b) { if (net <= p) break; t += (Math.min(net, lim) - p) * r; p = lim; }
             return Math.round(t);
           }
-          const taxAmt = krTax(perPersonNet);
-          const taxRate = perPersonNet > 0 ? (taxAmt / perPersonNet * 100).toFixed(1) : "0";
-          const marginal = perPersonNet <= 0 ? 0 : perPersonNet <= 14e6 ? 6 : perPersonNet <= 50e6 ? 15 : perPersonNet <= 88e6 ? 24 : perPersonNet <= 150e6 ? 35 : perPersonNet <= 300e6 ? 38 : perPersonNet <= 500e6 ? 40 : perPersonNet <= 1e9 ? 42 : 45;
+          const taxAmt = krTax(Math.max(0, perPersonNet));
+          const taxRate = perPersonNet > 0 ? (taxAmt / Math.max(0, perPersonNet) * 100).toFixed(1) : "0";
+          const marginalBase = Math.max(0, perPersonNet);
+          const marginal = marginalBase <= 0 ? 0 : marginalBase <= 14e6 ? 6 : marginalBase <= 50e6 ? 15 : marginalBase <= 88e6 ? 24 : marginalBase <= 150e6 ? 35 : marginalBase <= 300e6 ? 38 : marginalBase <= 500e6 ? 40 : marginalBase <= 1e9 ? 42 : 45;
 
           const K = ({ icon, label, value, sub, color = "#7eb8f7", bar, barColor }) => (
             <div style={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 10, padding: "14px 16px" }}>
@@ -2131,7 +2349,8 @@ export default function PartnerDashboard() {
             const mTx = txFiltered.filter(tx => new Date(tx.date).getMonth() === i);
             return {
               month: i + 1,
-              revenue: mTx.filter(tx => ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
+              revenue: mTx.filter(tx => ["SALE","PROFIT_SHARE"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
+              investment: mTx.filter(tx => tx.type === "PARTNER_INVESTMENT" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
               expense: mTx.filter(tx => tx.type === "EXPENSE" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0),
             };
           });
@@ -2258,7 +2477,8 @@ export default function PartnerDashboard() {
           // ── 1. รายบัญชีแต่ละเดือน ──
           function ReportMonthly() {
             const monthTx = txAll.filter(tx => new Date(tx.date).getMonth() + 1 === printMonth && new Date(tx.date).getFullYear() === year);
-            const rev = monthTx.filter(tx => ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
+            const rev = monthTx.filter(tx => ["SALE","PROFIT_SHARE"].includes(tx.type) && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
+            const inv = monthTx.filter(tx => tx.type === "PARTNER_INVESTMENT" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
             const exp = monthTx.filter(tx => tx.type === "EXPENSE" && tx.status !== "CANCELLED" && tx.currency === "KRW").reduce((s,tx) => s + Number(tx.amount), 0);
             const net = rev - exp;
             const vat = Math.round(Math.max(0, net) * 0.1);
@@ -2269,6 +2489,7 @@ export default function PartnerDashboard() {
                 <div style={{ marginBottom: 16 }}>
                   {[
                     { label: ko.stats.totalRevenue, value: `₩${fmtNum(rev, koLocale)}` },
+                    { label: ko.stats.totalInvestment, value: `₩${fmtNum(inv, koLocale)}` },
                     { label: ko.stats.totalExpense, value: `₩${fmtNum(exp, koLocale)}` },
                     { label: ko.stats.netProfit, value: `₩${fmtNum(net, koLocale)}` },
                     { label: "VAT 10%", value: `₩${fmtNum(vat, koLocale)}` },
@@ -2284,6 +2505,7 @@ export default function PartnerDashboard() {
           // ── 2. รายงานบัญชีรวมทั้งปี ──
           function ReportAnnual() {
             const totalRev = filteredMonths.reduce((s, m) => s + m.revenue, 0);
+            const totalInv = filteredMonths.reduce((s, m) => s + m.investment, 0);
             const totalExp = filteredMonths.reduce((s, m) => s + m.expense, 0);
             const totalNet = totalRev - totalExp;
             const drLabel = `${new Date(printDateFrom).toLocaleDateString(koLocale)} ~ ${new Date(printDateTo).toLocaleDateString(koLocale)}`;
@@ -2293,6 +2515,7 @@ export default function PartnerDashboard() {
                 <div style={{ marginBottom: 16 }}>
                   {[
                     { label: ko.stats.totalRevenue, value: `₩${fmtNum(totalRev, koLocale)}` },
+                    { label: ko.stats.totalInvestment, value: `₩${fmtNum(totalInv, koLocale)}` },
                     { label: ko.stats.totalExpense, value: `₩${fmtNum(totalExp, koLocale)}` },
                     { label: ko.stats.netProfit, value: `₩${fmtNum(totalNet, koLocale)}` },
                     { label: "VAT 10%", value: `₩${fmtNum(Math.round(Math.max(0,totalRev)*0.1), koLocale)}` },
@@ -2301,23 +2524,26 @@ export default function PartnerDashboard() {
                 <SectionTitle>{pr.sections.monthly}</SectionTitle>
                 <table style={P.table}>
                   <thead><tr>
-                    {[pr.monthlyCols.month, pr.monthlyCols.revenue, pr.monthlyCols.expense, pr.monthlyCols.net, pr.monthlyCols.vat, pr.monthlyCols.perPerson].map(h => (
+                    {[pr.monthlyCols.month, pr.monthlyCols.revenue, pr.monthlyCols.investment, pr.monthlyCols.expense, pr.monthlyCols.investmentBalance, pr.monthlyCols.net, pr.monthlyCols.vat, pr.monthlyCols.perPerson].map(h => (
                       <th key={h} style={{ ...P.th, textAlign: h === pr.monthlyCols.month ? "left" : "right" }}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
-                    {filteredMonths.map(m => {
+                    {enrichMonthlyInvestmentBalance(filteredMonths).map(m => {
                       const net = m.revenue - m.expense;
                       const vat = Math.round(Math.max(0, m.revenue) * 0.1);
-                      const perPerson = Math.round((net - vat) / 2);
-                      const hasData = m.revenue > 0 || m.expense > 0;
+                      const perPerson = Math.round(calcPerPerson(m.revenue, m.expense));
+                      const bal = m.investmentBalance;
+                      const hasData = m.revenue > 0 || m.investment > 0 || m.expense > 0;
                       return (
                         <tr key={m.month} style={{ opacity: hasData ? 1 : 0.4 }}>
                           <td style={P.td}>{new Date(year, m.month - 1, 1).toLocaleString(koLocale, { month: "long" })}</td>
                           <td style={{ ...P.td, textAlign: "right" }}>{m.revenue > 0 ? `₩${fmtNum(m.revenue, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right" }}>{m.investment > 0 ? `₩${fmtNum(m.investment, koLocale)}` : "-"}</td>
                           <td style={{ ...P.td, textAlign: "right" }}>{m.expense > 0 ? `₩${fmtNum(m.expense, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{bal != null ? `₩${fmtNum(Math.round(bal), koLocale)}` : "-"}</td>
                           <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{hasData ? `₩${fmtNum(net, koLocale)}` : "-"}</td>
-                          <td style={{ ...P.td, textAlign: "right" }}>{hasData ? `₩${fmtNum(vat, koLocale)}` : "-"}</td>
+                          <td style={{ ...P.td, textAlign: "right" }}>{m.revenue > 0 ? `₩${fmtNum(vat, koLocale)}` : "-"}</td>
                           <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>{hasData ? `₩${fmtNum(perPerson, koLocale)}` : "-"}</td>
                         </tr>
                       );
@@ -2325,10 +2551,12 @@ export default function PartnerDashboard() {
                     <tr style={{ fontWeight: 800, background: "#f8fafc" }}>
                       <td style={P.td}>{pr.total}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalRev, koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalInv, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalExp, koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(totalInv - totalExp), koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(totalNet, koLocale)}</td>
                       <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(Math.max(0,totalRev)*0.1), koLocale)}</td>
-                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(((totalRev * 0.9) - totalExp)/2), koLocale)}</td>
+                      <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(Math.round(totalNet / 2), koLocale)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -2445,14 +2673,23 @@ export default function PartnerDashboard() {
                 {partnerIncomeSummary?.length > 0 && (
                   <>
                     <SectionTitle>{pr.sections.partnerIncome}</SectionTitle>
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12, marginBottom: 16 }}>
-                      {partnerIncomeSummary.map(p => (
-                        <div key={p.name} className="pr-card" style={P.card}>
-                          <div className="pr-label" style={P.label}>👤 {p.name}</div>
-                          <div className="pr-value" style={P.value}>₩{fmtNum(p.total, koLocale)}</div>
-                        </div>
-                      ))}
-                    </div>
+                    <table style={{ ...P.table, marginTop: 12, marginBottom: 16 }}>
+                      <thead><tr>
+                        {[pr.partnerIncomeCols.name, pr.partnerIncomeCols.profitShare, pr.partnerIncomeCols.investment, pr.partnerIncomeCols.total].map(h => (
+                          <th key={h} style={{ ...P.th, textAlign: h === pr.partnerIncomeCols.name ? "left" : "right" }}>{h}</th>
+                        ))}
+                      </tr></thead>
+                      <tbody>
+                        {partnerIncomeSummary.map(p => (
+                          <tr key={p.name}>
+                            <td style={P.td}>👤 {p.name}</td>
+                            <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(p.profitShare ?? p.total ?? 0, koLocale)}</td>
+                            <td style={{ ...P.td, textAlign: "right" }}>₩{fmtNum(p.investment || 0, koLocale)}</td>
+                            <td style={{ ...P.td, textAlign: "right", fontWeight: 700 }}>₩{fmtNum((p.profitShare ?? p.total ?? 0) + (p.investment || 0), koLocale)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </>
                 )}
                 <ReportFooter />
