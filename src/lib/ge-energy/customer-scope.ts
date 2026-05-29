@@ -52,6 +52,93 @@ async function tableExists(tableName: string) {
   return Number(row?.count || 0) > 0
 }
 
+async function columnExists(tableName: string, columnName: string) {
+  const rows = await queryGe(
+    `SELECT COUNT(*) AS count
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    [tableName, columnName],
+  )
+  const row = rows[0] as { count?: number | string } | undefined
+  return Number(row?.count || 0) > 0
+}
+
+let devicesClientIdEnsured = false
+let devicesClientIdAvailable = false
+
+/** Legacy DBs may lack devices.client_id — add column and backfill demo rows once. */
+async function ensureDevicesClientIdColumn() {
+  if (devicesClientIdEnsured) return devicesClientIdAvailable
+
+  try {
+    let hasColumn = await columnExists('devices', 'client_id')
+    if (!hasColumn) {
+      await queryGe(
+        `ALTER TABLE devices
+         ADD COLUMN client_id varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL`,
+      )
+      try {
+        await queryGe(`ALTER TABLE devices ADD INDEX idx_devices_client_id (client_id)`)
+      } catch {
+        /* index may already exist */
+      }
+      hasColumn = await columnExists('devices', 'client_id')
+    }
+
+    if (hasColumn) {
+      await queryGe(
+        `UPDATE devices d
+         LEFT JOIN Client c ON c.slug = 'goeun-server-hub'
+         SET d.client_id = c.id
+         WHERE d.client_id IS NULL AND c.id IS NOT NULL`,
+      )
+    }
+
+    devicesClientIdAvailable = hasColumn
+  } catch (err) {
+    console.warn('[customer-scope] devices.client_id unavailable:', err)
+    devicesClientIdAvailable = false
+  } finally {
+    devicesClientIdEnsured = true
+  }
+
+  return devicesClientIdAvailable
+}
+
+function pushDeviceIdentityConditions(
+  conditions: string[],
+  params: unknown[],
+  scope: { email?: string | null; phone?: string | null; username?: string | null; userId?: string | null },
+) {
+  const email = scope.email?.trim().toLowerCase() || null
+  const phone = scope.phone?.trim() || null
+  const username = scope.username?.trim() || null
+  const userId = scope.userId?.trim() || null
+
+  if (email) {
+    conditions.push(
+      '(LOWER(TRIM(d.U_email)) = ? OR LOWER(TRIM(d.P_email)) = ? OR LOWER(TRIM(d.geID)) = ?)',
+    )
+    params.push(email, email, email)
+  }
+  if (phone) {
+    conditions.push(
+      '(d.phone = ? OR d.customerPhone = ? OR REPLACE(REPLACE(d.phone, "-", ""), " ", "") = REPLACE(REPLACE(?, "-", ""), " ", ""))',
+    )
+    params.push(phone, phone, phone)
+  }
+  if (username) {
+    conditions.push(
+      '(LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) = LOWER(?) OR LOWER(TRIM(d.U_email)) = LOWER(?))',
+    )
+    params.push(username, username, username)
+  }
+  if (userId) {
+    conditions.push('(LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) LIKE ?)')
+    params.push(userId, `%${userId}%`)
+  }
+}
+
 /** Resolve devices/meters owned by the logged-in customer. */
 export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<CustomerMeter[]> {
   const userId = scope.userId?.trim() || null
@@ -64,7 +151,11 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     return []
   }
 
+  await ensureDevicesClientIdColumn()
+
   const hasMomoge = await tableExists('momoge_cus')
+  const hasMomogeUserId = hasMomoge && (await columnExists('momoge_cus', 'user_id'))
+  const hasDevicesClientId = devicesClientIdAvailable || (await columnExists('devices', 'client_id'))
   const hasCarbonLoc = await tableExists('carbon_locations')
   const hasCarbonMeter = await tableExists('carbon_meters')
 
@@ -77,11 +168,11 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
   const conditions: string[] = []
   const params: unknown[] = []
 
-  if (clientId) {
+  if (clientId && hasDevicesClientId) {
     conditions.push('d.client_id = ?')
     params.push(clientId)
   }
-  if (hasMomoge && userId) {
+  if (hasMomogeUserId && userId) {
     conditions.push('mc.user_id = ?')
     params.push(userId)
   }
@@ -99,10 +190,8 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     )
     params.push(username, username, username)
   }
-  if (userId && !hasMomoge) {
-    conditions.push('(LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) LIKE ?)')
-    params.push(userId, `%${userId}%`)
-  }
+
+  pushDeviceIdentityConditions(conditions, params, { email, phone, username, userId })
 
   if (!conditions.length) return []
 

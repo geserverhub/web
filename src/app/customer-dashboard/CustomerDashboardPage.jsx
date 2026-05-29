@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { generateMonthlyEnergyExcel, exportToExcel } from '@/lib/excel-export';
 import { calculateMeterUnitPrice, formatThb, METER_ORDER_BANK } from '@/lib/meter-order';
+import { parseJsonResponse } from '@/lib/parse-json-response';
 
 function L(locale, th, ko, en) {
   if (locale === 'th') return th;
@@ -596,10 +597,22 @@ export default function CustomersPage() {
     const query = buildCustomerDashboardQuery(user, selectedMeterDeviceId || undefined);
 
     fetch(`/api/ge-energy/customer-dashboard?${query}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(j => {
+      .then(async (r) => {
+        const j = await parseJsonResponse(r);
         if (!active) return;
-        if (j.success && Array.isArray(j.data?.monthly)) {
+        if (!r.ok || j._html || j._parseError || !j.success) {
+          setMonthlyError(
+            j.error ||
+              L(
+                locale,
+                'โหลดข้อมูลเปรียบเทียบรายเดือนไม่สำเร็จ',
+                '월별 비교 데이터를 불러오지 못했습니다',
+                'Failed to load monthly comparison data',
+              ),
+          );
+          return;
+        }
+        if (Array.isArray(j.data?.monthly)) {
           setMonthlyData(j.data.monthly);
           setCustomerMeters(Array.isArray(j.data.meters) ? j.data.meters : []);
           setMeterStats(Array.isArray(j.data.meterStats) ? j.data.meterStats : []);
@@ -622,11 +635,28 @@ export default function CustomersPage() {
             if (!selectedDeviceId || !allowed) setSelectedDeviceId(nextId);
           }
         } else {
-          setMonthlyError(j.error || 'Failed to load monthly comparison data');
+          setMonthlyError(
+            L(
+              locale,
+              'โหลดข้อมูลเปรียบเทียบรายเดือนไม่สำเร็จ',
+              '월별 비교 데이터를 불러오지 못했습니다',
+              'Failed to load monthly comparison data',
+            ),
+          );
         }
       })
-      .catch(() => {
-        if (active) setMonthlyError('Failed to load monthly comparison data');
+      .catch((err) => {
+        if (active) {
+          setMonthlyError(
+            err?.message ||
+              L(
+                locale,
+                'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ',
+                '서버 연결 실패',
+                'Failed to fetch',
+              ),
+          );
+        }
       })
       .finally(() => {
         if (active) setMonthlyLoading(false);
@@ -665,10 +695,10 @@ export default function CustomersPage() {
     const user = customerUser || readStoredCustomerUser();
     const params = buildCustomerDashboardQuery(user, selectedMeterDeviceId || undefined);
     fetch(`/api/ge-energy/customer-dashboard?${params}&dateFrom=${from}&dateTo=${to}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(j => {
+      .then(async (r) => {
+        const j = await parseJsonResponse(r);
         if (!active) return;
-        if (j.success && Array.isArray(j.data?.monthly)) setCompareData(j.data.monthly);
+        if (r.ok && j.success && Array.isArray(j.data?.monthly)) setCompareData(j.data.monthly);
       })
       .catch(() => {})
       .finally(() => { if (active) setCompareLoading(false); });

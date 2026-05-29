@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { signIn, signOut, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+async function loadSession(maxAttempts = 4) {
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const session = await getSession();
+    if (session?.user) return session;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return null;
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -11,6 +20,15 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    loadSession().then((session) => {
+      const role = session?.user?.role;
+      if (role === "SUPER_ADMIN" || role === "ADMIN") {
+        router.replace("/admin/clients");
+      }
+    });
+  }, [router]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,7 +48,17 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin/clients");
+      router.refresh();
+      const session = await loadSession();
+      const role = session?.user?.role;
+
+      if (role === "SUPER_ADMIN" || role === "ADMIN") {
+        router.push("/admin/clients");
+        return;
+      }
+
+      await signOut({ redirect: false });
+      setError("บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบผู้ดูแล");
     } catch {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     } finally {

@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { getAuthSecret } from "./auth-secret";
 
 declare module "next-auth" {
   interface User {
@@ -16,6 +17,7 @@ declare module "next-auth" {
 
 /** Edge-safe auth config — NO Prisma, NO bcrypt */
 const authConfig: NextAuthConfig = {
+  secret: getAuthSecret(),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -36,6 +38,8 @@ const authConfig: NextAuthConfig = {
       if (pathname === "/customer-momoge-login") return true;
       if (pathname === "/energy-dashboard-login") return true;
       if (pathname === "/online-classroom-login") return true;
+      if (pathname === "/ge-energy-erp-login") return true;
+      if (pathname === "/ge-energy-tech/login") return true;
 
       // ระบบผู้ดูแล — ADMIN / SUPER_ADMIN เท่านั้น
       if (pathname.startsWith("/admin")) {

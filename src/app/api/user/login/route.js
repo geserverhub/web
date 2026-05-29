@@ -4,6 +4,11 @@ import { randomUUID } from 'crypto';
 import { getPrisma } from '@/lib/prisma';
 import { formatDbConnectError } from '@/lib/db-connect-error';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
+import {
+  isRoleAllowedForUserLogin,
+  userLoginDeniedMessage,
+  userLoginPortalKey,
+} from '@/lib/login-portals';
 
 export async function POST(request) {
   const prisma = getPrisma();
@@ -28,40 +33,6 @@ export async function POST(request) {
     }
 
     const page = String(pageName || '').trim();
-    const isEnergyDashboard =
-      page === '/energy-dashboard' ||
-      page.startsWith('/energy-dashboard/') ||
-      page === '/energy-dashboard-login';
-
-    const isOnlineClassroom =
-      page === '/online-classroom' ||
-      page.startsWith('/online-classroom/') ||
-      page === '/online-classroom-login';
-
-    const isGeEnergyErp =
-      page === '/ge-energy-erp' ||
-      page.startsWith('/ge-energy-erp/') ||
-      page === '/ge-energy-erp-login';
-
-    const isGeEnergyTechLogin =
-      page === '/ge-energy-tech/login';
-
-    const isCustomerPortal =
-      page === '/customer-dashboard' ||
-      page.startsWith('/customer-dashboard/') ||
-      page === '/customer-dashboard-login';
-
-    const allowedRoles = isEnergyDashboard
-      ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
-      : isOnlineClassroom
-        ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
-        : isGeEnergyErp
-          ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
-          : isGeEnergyTechLogin
-            ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
-          : isCustomerPortal
-            ? ['CLIENT', 'ADMIN', 'SUPER_ADMIN', 'PARTNER']
-            : ['CLIENT', 'ADMIN', 'SUPER_ADMIN'];
 
     // Look up by username or email
     const identifier = String(username).trim();
@@ -79,53 +50,21 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
-    if (!allowedRoles.includes(user.role)) {
-      const error = isEnergyDashboard
-        ? 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบ Energy Dashboard'
-        : isOnlineClassroom
-          ? 'บัญชีนี้ไม่มีสิทธิ์เข้าห้องเรียนออนไลน์'
-          : isGeEnergyErp
-            ? 'บัญชีนี้ไม่มีสิทธิ์เข้าระบบ ERP'
-            : isGeEnergyTechLogin
-              ? 'บัญชีนี้ไม่มีสิทธิ์เข้า GE Energy Tech Login'
-            : isCustomerPortal
-              ? 'บัญชีนี้ไม่มีสิทธิ์เข้า Customer Dashboard'
-              : 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงพอร์ทัลลูกค้า';
-      return NextResponse.json({ error }, { status: 403 });
+    if (!isRoleAllowedForUserLogin(page, user.role)) {
+      return NextResponse.json({ error: userLoginDeniedMessage(page) }, { status: 403 });
     }
 
     // Check portal permissions (skip for SUPER_ADMIN)
     if (user.role !== 'SUPER_ADMIN') {
-      const portalKey = isEnergyDashboard
-        ? 'energy'
-        : isOnlineClassroom
-          ? 'classroom'
-          : isGeEnergyErp
-            ? 'erp'
-            : isGeEnergyTechLogin
-              ? 'geet_login'
-            : isCustomerPortal
-              ? 'customer'
-              : 'customer';
+      const portalKey = userLoginPortalKey(page);
       try {
         const permRows = await queryGeserverhub(
           'SELECT is_allowed FROM user_permissions WHERE user_id = ? AND portal = ? LIMIT 1',
           [user.id, portalKey]
         );
         if (permRows.length > 0 && !permRows[0].is_allowed) {
-          const portalName = isEnergyDashboard
-            ? 'Energy Dashboard'
-            : isOnlineClassroom
-              ? 'Online Classroom'
-              : isGeEnergyErp
-                ? 'GE Energy ERP'
-                : isGeEnergyTechLogin
-                  ? 'GE Energy Tech Login'
-                : isCustomerPortal
-                  ? 'Customer Dashboard'
-                  : 'Customer Dashboard';
           return NextResponse.json(
-            { error: `บัญชีนี้ถูกระงับสิทธิ์การเข้าถึง ${portalName}` },
+            { error: `บัญชีนี้ถูกระงับสิทธิ์การเข้าถึง ${portalKey}` },
             { status: 403 }
           );
         }

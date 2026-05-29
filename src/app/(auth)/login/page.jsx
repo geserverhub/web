@@ -1,12 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
 import { User, Lock, Eye, EyeOff, Package, Layers, Upload, Store } from "lucide-react";
+import { NEXTAUTH_PORTAL_ROLES } from "@/lib/login-portals";
 import "./client-login.css";
 
 const MCT_PRODUCT_PATH = "/mct-product";
+
+async function loadSession(maxAttempts = 4) {
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const session = await getSession();
+    if (session?.user) return session;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return null;
+}
 
 const copy = {
   th: {
@@ -90,10 +100,10 @@ export default function LoginPage() {
   const t = copy[lang] || copy.th;
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then((s) => {
-        if (s?.user) {
+    loadSession()
+      .then((session) => {
+        const role = session?.user?.role;
+        if (role && NEXTAUTH_PORTAL_ROLES.client.includes(role)) {
           window.location.href = MCT_PRODUCT_PATH;
         } else {
           setChecking(false);
@@ -120,7 +130,14 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href = MCT_PRODUCT_PATH;
+      const session = await loadSession();
+      const role = session?.user?.role;
+      if (role && NEXTAUTH_PORTAL_ROLES.client.includes(role)) {
+        window.location.href = MCT_PRODUCT_PATH;
+        return;
+      }
+
+      setError(t.invalid);
     } catch {
       setError(t.invalid);
     } finally {
