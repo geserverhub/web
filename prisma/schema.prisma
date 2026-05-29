@@ -91,7 +91,8 @@ model Client {
   invoices Invoice[]
   receipts Receipt[]
   customers Customer[]
-  partnerProducts PartnerProduct[]
+  partnerProducts         PartnerProduct[]
+  partnerProductCategories PartnerProductCategory[]
 
   @@index([slug])
   @@index([status])
@@ -345,23 +346,70 @@ model PartnerTransaction {
   @@index([brand])
 }
 
-model PartnerProduct {
+model PartnerProductCategory {
   id        String   @id @default(cuid())
   name      String
-  model     String?
-  brand     String?
-  costPrice Decimal? @db.Decimal(14, 2)
-  sellPrice Decimal? @db.Decimal(14, 2)
-  currency  String   @default("KRW")
-  imageUrls String?  @db.Text
+  sortOrder Int      @default(0)
   clientId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  client   Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  products PartnerProduct[]
+
+  @@unique([clientId, name])
+  @@index([clientId])
+  @@index([sortOrder])
+}
+
+model PartnerProduct {
+  id         String   @id @default(cuid())
+  name       String
+  model      String?
+  brand      String?
+  costPrice  Decimal? @db.Decimal(14, 2)
+  sellPrice  Decimal? @db.Decimal(14, 2)
+  currency   String   @default("KRW")
+  imageUrls  String?  @db.Text
+  categoryId String?
+  clientId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  client   Client?                 @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  category PartnerProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([name])
   @@index([clientId])
+  @@index([categoryId])
+}
+
+model PartnerPersonFinancial {
+  id            String   @id @default(cuid())
+  personName    String
+  ledgerType    String   // PROFIT_SHARE | INVESTMENT
+  amount        Decimal  @db.Decimal(14, 2)
+  currency      String   @default("KRW")
+  transactionId String?  @unique
+  recordedAt    DateTime @default(now())
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([personName, ledgerType])
+  @@index([recordedAt])
+}
+
+model PartnerMonthlyFinancial {
+  id            String   @id @default(cuid())
+  year          Int
+  month         Int
+  revenueKrw    Decimal  @default(0) @db.Decimal(14, 2)
+  investmentKrw Decimal  @default(0) @db.Decimal(14, 2)
+  expenseKrw    Decimal  @default(0) @db.Decimal(14, 2)
+  updatedAt     DateTime @updatedAt
+
+  @@unique([year, month])
 }
 
 model MFactoryInquiry {

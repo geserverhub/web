@@ -1,20 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signIn, signOut, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { NEXTAUTH_PORTAL_ROLES } from "@/lib/login-portals";
+import { credentialsPortalLogin, hardRedirect, portalLoginErrorMessage, waitForAuthSession } from "@/lib/portal-login";
 
-async function loadSession(maxAttempts = 4) {
-  for (let i = 0; i < maxAttempts; i += 1) {
-    const session = await getSession();
-    if (session?.user) return session;
-    await new Promise((resolve) => setTimeout(resolve, 120));
-  }
-  return null;
-}
+const ADMIN_HOME = "/admin/clients";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,13 +14,13 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    loadSession().then((session) => {
+    waitForAuthSession(6, 100).then((session) => {
       const role = session?.user?.role;
-      if (role === "SUPER_ADMIN" || role === "ADMIN") {
-        router.replace("/admin/clients");
+      if (role && NEXTAUTH_PORTAL_ROLES.admin.includes(role)) {
+        hardRedirect(ADMIN_HOME);
       }
     });
-  }, [router]);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,29 +28,19 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await signIn("credentials", {
-        email: email.trim(),
+      const result = await credentialsPortalLogin({
+        email,
         password,
         portal: "admin",
-        redirect: false,
+        callbackPath: ADMIN_HOME,
       });
 
-      if (!res?.ok || res?.error) {
-        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      if (!result.ok) {
+        setError(portalLoginErrorMessage(result.error, 'th'));
         return;
       }
 
-      router.refresh();
-      const session = await loadSession();
-      const role = session?.user?.role;
-
-      if (role === "SUPER_ADMIN" || role === "ADMIN") {
-        router.push("/admin/clients");
-        return;
-      }
-
-      await signOut({ redirect: false });
-      setError("บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบผู้ดูแล");
+      hardRedirect(ADMIN_HOME);
     } catch {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     } finally {
@@ -110,7 +92,6 @@ export default function AdminLoginPage() {
       outline: "none",
       boxSizing: "border-box",
     },
-    inputFocus: { borderColor: "#7c3aed" },
     error: {
       background: "#3b0000",
       border: "1px solid #7f1d1d",
@@ -141,7 +122,6 @@ export default function AdminLoginPage() {
   return (
     <div style={S.page}>
       <div style={S.card}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 8 }}>
           <div style={{ fontSize: 36, marginBottom: 8 }}>⚙️</div>
           <div style={{ ...S.badge, margin: "0 auto 16px" }}>
@@ -198,7 +178,7 @@ export default function AdminLoginPage() {
             style={{ ...S.btn, ...(loading ? S.btnDisabled : {}) }}
             disabled={loading}
           >
-            {loading ? "กำลังตรวจสอบ..." : "เข้าสู่ระบบ"}
+            {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </button>
         </form>
 

@@ -1,5 +1,13 @@
 // ISO 14064-2 Greenhouse Gas Accounting Methodology
 
+/** Official Gold Standard URLs (do not use legacy /our-work/innovations-consultations/gs4gg). */
+export const GOLD_STANDARD_URLS = {
+  standard: 'https://www.goldstandard.org/gold-standard-for-the-global-goals',
+  registry: 'https://registry.goldstandard.org/',
+  registryHost: 'registry.goldstandard.org',
+  standardHost: 'www.goldstandard.org',
+} as const;
+
 interface ISO14064Step {
   step: number;
   titleTh: string;
@@ -131,8 +139,8 @@ export const ISO14064MethodologySteps: ISO14064Step[] = [
     reference: "UNFCCC CDM Methodology; Gold Standard for the Global Goals; T-VER (Thailand Voluntary Emission Reduction) Program — TGO",
     certifications: [
       { body: "UNFCCC", standard: "CDM Methodology — AMS-II.C / AMS-II.E (Energy Efficiency)", url: "https://cdm.unfccc.int/methodologies/SSCmethodologies/approved" },
-      { body: "Gold Standard", standard: "Gold Standard for the Global Goals (GS4GG)", url: "https://www.goldstandard.org/gold-standard-for-the-global-goals" },
-      { body: "Gold Standard Registry", standard: "Impact Registry — verified GS credits", url: "https://registry.goldstandard.org/" },
+      { body: "Gold Standard", standard: "Gold Standard for the Global Goals (GS4GG)", url: GOLD_STANDARD_URLS.standard },
+      { body: "Gold Standard Registry", standard: "Impact Registry — verified GS credits", url: GOLD_STANDARD_URLS.registry },
       { body: "TGO (Thailand)", standard: "T-VER Standard v3.0", url: "https://www.tgo.or.th/2020/index.php/th/tver-standard" },
     ],
   },
@@ -154,6 +162,8 @@ export const ISO14064MethodologySteps: ISO14064Step[] = [
       { body: "TGO — Thailand Carbon Market", standard: "T-VER Market Price 2024 (฿250–400/tCO₂e)", url: "https://carbonmarket.tgo.or.th" },
       { body: "KRX — Korea Exchange", standard: "Korea ETS (K-ETS) Carbon Market 2024", url: "https://ets.krx.co.kr" },
       { body: "World Bank", standard: "Carbon Pricing Dashboard", url: "https://carbonpricingdashboard.worldbank.org" },
+      { body: "Gold Standard Registry", standard: "Verified GS credits (USD market ref.)", url: GOLD_STANDARD_URLS.registry },
+      { body: "Gold Standard", standard: "GS4GG standard documentation", url: GOLD_STANDARD_URLS.standard },
     ],
   },
 ];

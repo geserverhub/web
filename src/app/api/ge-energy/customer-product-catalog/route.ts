@@ -1,8 +1,92 @@
 import { NextResponse } from 'next/server';
 import { queryGeserverhub as query } from '@/lib/geserverhub-db';
+import prisma from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+export type CatalogProduct = {
+  id: string | number;
+  sku: string;
+  name: string;
+  description: string;
+  capacity: string;
+  mcb: string;
+  size: string;
+  weight: string;
+  price: number;
+  priceWithVat: number;
+  unit: string;
+  category: string;
+  image: string;
+  images?: string[];
+  stockQty: number;
+  source?: 'product_list' | 'partner';
+  currency?: string;
+  brand?: string | null;
+  model?: string | null;
+  categoryId?: string | null;
+};
+
+function mapPartnerProductRow(p: {
+  id: string;
+  name: string;
+  model: string | null;
+  brand: string | null;
+  sellPrice: unknown;
+  currency: string;
+  imageUrls: string | null;
+  category?: { id: string; name: string } | null;
+}) {
+  let images: string[] = [];
+  try {
+    images = JSON.parse(p.imageUrls || '[]');
+    if (!Array.isArray(images)) images = [];
+  } catch {
+    images = [];
+  }
+
+  const sell = p.sellPrice != null ? Number(p.sellPrice) : 0;
+  const parts = [p.brand, p.model].filter(Boolean);
+
+  return {
+    id: `partner-${p.id}`,
+    sku: p.model || `P-${p.id.slice(-6)}`,
+    name: p.name,
+    description: parts.length ? parts.join(' · ') : 'อุปกรณ์ IoT จาก Partner Dashboard',
+    capacity: '',
+    mcb: '',
+    size: '',
+    weight: '',
+    price: sell,
+    priceWithVat: sell,
+    unit: 'unit',
+    category: p.category?.name || 'อุปกรณ์ IoT',
+    categoryId: p.category?.id ?? null,
+    image: images[0] || '/placeholder-product.jpg',
+    images,
+    stockQty: 99,
+    source: 'partner' as const,
+    currency: p.currency || 'KRW',
+    brand: p.brand,
+    model: p.model,
+  };
+}
+
+async function loadPartnerCatalogProducts(): Promise<CatalogProduct[]> {
+  try {
+    const rows = await prisma.partnerProduct.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: { category: { select: { id: true, name: true } } },
+    });
+    return rows
+      .filter((p) => p.name?.trim())
+      .map(mapPartnerProductRow);
+  } catch (err) {
+    console.warn('[customer-product-catalog] PartnerProduct:', err);
+    return [];
+  }
+}
 
 async function ensureProductListSchema() {
   await query(`
@@ -62,6 +146,20 @@ function norm(v: unknown) {
   return String(v || '').trim().toLowerCase();
 }
 
+function isEnergySaverProduct(p: { category?: string; name?: string; capacity?: string }) {
+  const c = norm(p.category);
+  const name = norm(p.name);
+  return (
+    c.includes('energy') ||
+    c.includes('saver') ||
+    c.includes('เครื่องประหยัด') ||
+    c.includes('ประหยัดพลังงาน') ||
+    name.includes('energy saver') ||
+    name.includes('เครื่องประหยัด') ||
+    Boolean(String(p.capacity || '').trim())
+  );
+}
+
 export async function GET() {
   try {
     await ensureProductListSchema();
@@ -93,55 +191,17 @@ export async function GET() {
       stockQty: Number(r.stock_qty || 0),
     }));
 
-    let energySavers = mapped.filter((p) => {
-      const c = norm(p.category);
-      const name = norm(p.name);
-      return c.includes('energy') || c.includes('saver') || name.includes('energy saver');
-    });
-    let iotProducts = mapped.filter((p) => {
-      const c = norm(p.category);
-      const name = norm(p.name);
-      const sku = norm(p.sku);
-      return c.includes('iot') || name.includes('iot') || sku.startsWith('iot-');
-    });
+    const energySavers = mapped.filter(isEnergySaverProduct);
 
-    // Fallback for legacy catalog data with non-standard category naming.
-    if (energySavers.length === 0) {
-      energySavers = mapped.filter((p) => {
-        const c = norm(p.category);
-        const name = norm(p.name);
-        return (
-          c.includes('เครื่องประหยัด') ||
-          c.includes('ประหยัดพลังงาน') ||
-          name.includes('เครื่องประหยัด') ||
-          name.includes('energy') ||
-          name.includes('saver') ||
-          Boolean(String(p.capacity || '').trim())
-        );
-      });
-    }
-
-    if (iotProducts.length === 0) {
-      iotProducts = mapped.filter((p) => {
-        const c = norm(p.category);
-        const name = norm(p.name);
-        const sku = norm(p.sku);
-        return (
-          c.includes('อุปกรณ์') ||
-          c.includes('iot') ||
-          name.includes('sensor') ||
-          name.includes('gateway') ||
-          name.includes('meter') ||
-          sku.includes('iot')
-        );
-      });
-    }
+    // IoT บน Customer Dashboard = สินค้าจาก Partner Dashboard (📦 สินค้า) เท่านั้น
+    const iotProducts = await loadPartnerCatalogProducts();
 
     return NextResponse.json({
       success: true,
       energySavers,
       iotProducts,
-      all: mapped,
+      partnerProducts: iotProducts,
+      all: [...iotProducts, ...mapped],
     });
   } catch (err) {
     console.error('customer-product-catalog error:', err);

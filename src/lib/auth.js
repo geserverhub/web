@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { queryGeserverhub } from "@/lib/geserverhub-db";
 import { getAuthSecret } from "@/lib/auth-secret";
+import authConfig from "@/lib/auth.config";
 import {
   isRoleAllowedForNextAuthPortal,
   NEXTAUTH_PORTAL_ROLES,
@@ -13,6 +14,7 @@ import {
 export { NEXTAUTH_PORTAL_ROLES };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   secret: getAuthSecret(),
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -52,7 +54,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.log("[auth] authorize attempt:", identifier);
 
         try {
-          // Search by email, username, or name
           const user =
             (await prisma.user.findUnique({ where: { email: identifier } })) ??
             (await prisma.user.findUnique({ where: { username: identifier } })) ??
@@ -72,9 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null;
           }
 
-          // Check portal permission (skip for SUPER_ADMIN)
           if (portal && user.role !== 'SUPER_ADMIN') {
-            // Role-based portal gate — block wrong role before hitting user_permissions
             const PORTAL_ROLES = {
               admin: ['ADMIN', 'SUPER_ADMIN'],
               partner: ['PARTNER', 'ADMIN', 'SUPER_ADMIN'],
@@ -96,7 +95,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
             } catch (permErr) {
               console.error("[auth] permission check error:", permErr.message);
-              // Fail open — allow login if permission check fails
             }
           }
 
@@ -115,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -124,7 +123,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.clientId = token.clientId || null;

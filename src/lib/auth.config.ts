@@ -24,6 +24,22 @@ const authConfig: NextAuthConfig = {
   },
   providers: [],
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.clientId = user.clientId ?? null;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string | undefined;
+        session.user.clientId = (token.clientId as string | null) ?? null;
+      }
+      return session;
+    },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const role = auth?.user?.role as string | undefined;

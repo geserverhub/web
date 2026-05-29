@@ -1,22 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
 import { User, Lock, Eye, EyeOff, Package, Layers, Upload, Store } from "lucide-react";
 import { NEXTAUTH_PORTAL_ROLES } from "@/lib/login-portals";
+import { credentialsPortalLogin, hardRedirect, waitForAuthSession } from "@/lib/portal-login";
 import "./client-login.css";
 
 const MCT_PRODUCT_PATH = "/mct-product";
-
-async function loadSession(maxAttempts = 4) {
-  for (let i = 0; i < maxAttempts; i += 1) {
-    const session = await getSession();
-    if (session?.user) return session;
-    await new Promise((resolve) => setTimeout(resolve, 120));
-  }
-  return null;
-}
 
 const copy = {
   th: {
@@ -95,21 +86,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [logoOk, setLogoOk] = useState(true);
-  const [checking, setChecking] = useState(true);
 
   const t = copy[lang] || copy.th;
 
   useEffect(() => {
-    loadSession()
-      .then((session) => {
-        const role = session?.user?.role;
-        if (role && NEXTAUTH_PORTAL_ROLES.client.includes(role)) {
-          window.location.href = MCT_PRODUCT_PATH;
-        } else {
-          setChecking(false);
-        }
-      })
-      .catch(() => setChecking(false));
+    waitForAuthSession().then((session) => {
+      const role = session?.user?.role;
+      if (role && NEXTAUTH_PORTAL_ROLES.client.includes(role)) {
+        hardRedirect(MCT_PRODUCT_PATH);
+      }
+    });
   }, []);
 
   async function handleSubmit(e) {
@@ -118,39 +104,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await signIn("credentials", {
-        email: email.trim(),
+      const result = await credentialsPortalLogin({
+        email,
         password,
         portal: "client",
-        redirect: false,
+        callbackPath: MCT_PRODUCT_PATH,
       });
 
-      if (!res?.ok || res?.error) {
+      if (!result.ok) {
         setError(t.invalid);
         return;
       }
 
-      const session = await loadSession();
-      const role = session?.user?.role;
-      if (role && NEXTAUTH_PORTAL_ROLES.client.includes(role)) {
-        window.location.href = MCT_PRODUCT_PATH;
-        return;
-      }
-
-      setError(t.invalid);
+      hardRedirect(MCT_PRODUCT_PATH);
     } catch {
       setError(t.invalid);
     } finally {
       setLoading(false);
     }
-  }
-
-  if (checking) {
-    return (
-      <div className="hub-login-page" style={{ alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#86efac", fontSize: 14, fontWeight: 600 }}>กำลังตรวจสอบ...</div>
-      </div>
-    );
   }
 
   return (

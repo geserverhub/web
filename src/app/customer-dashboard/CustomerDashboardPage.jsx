@@ -27,6 +27,14 @@ function L(locale, th, ko, en) {
 }
 function fmt(n) { return n.toLocaleString(); }
 
+function formatCatalogPrice(p) {
+  const n = Number(p.priceWithVat ?? p.price ?? 0);
+  const cur = String(p.currency || 'THB').toUpperCase();
+  if (cur === 'KRW') return `₩${n.toLocaleString('ko-KR')}`;
+  if (cur === 'USD') return `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return formatThb(n);
+}
+
 function readStoredCustomerUser() {
   try {
     const raw = localStorage.getItem(GE_ADMIN_USER_KEY);
@@ -889,7 +897,6 @@ export default function CustomersPage() {
   const [catalogError, setCatalogError] = useState(null);
   const [energySaverProducts, setEnergySaverProducts] = useState([]);
   const [iotProducts, setIotProducts] = useState([]);
-  const [allCatalogProducts, setAllCatalogProducts] = useState([]);
   const [historyItems, setHistoryItems] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(null);
@@ -1080,7 +1087,6 @@ export default function CustomersPage() {
 
   useEffect(() => {
     if (activeTab !== 'products') return;
-    if (energySaverProducts.length > 0 || iotProducts.length > 0) return;
 
     let cancelled = false;
     (async () => {
@@ -1095,7 +1101,6 @@ export default function CustomersPage() {
         if (!cancelled) {
           setEnergySaverProducts(Array.isArray(json.energySavers) ? json.energySavers : []);
           setIotProducts(Array.isArray(json.iotProducts) ? json.iotProducts : []);
-          setAllCatalogProducts(Array.isArray(json.all) ? json.all : []);
         }
       } catch (e) {
         if (!cancelled) setCatalogError(e instanceof Error ? e.message : 'Failed to load catalog');
@@ -1107,7 +1112,7 @@ export default function CustomersPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, energySaverProducts.length, iotProducts.length]);
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab !== 'history') return;
@@ -2313,32 +2318,41 @@ export default function CustomersPage() {
                       {L(locale, 'อุปกรณ์ IoT ที่วางขาย', '판매 중 IoT 장비', 'Available IoT devices')}
                     </div>
                     {(iotProducts.length ? iotProducts : []).map((p) => (
-                      <div key={`iot-${p.id}`} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 12 }}>
-                        <p style={{ margin: 0, fontWeight: 700, color: '#1e40af' }}>{p.name}</p>
-                        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
-                          {p.description || '-'}
-                        </p>
-                        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8' }}>
-                          SKU: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatThb(Number(p.priceWithVat || p.price || 0))}
-                        </p>
+                      <div key={`iot-${p.id}`} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 12, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        {p.image && p.image !== '/placeholder-product.jpg' ? (
+                          <img
+                            src={p.image}
+                            alt=""
+                            style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #dbeafe' }}
+                          />
+                        ) : (
+                          <div style={{ width: 72, height: 72, borderRadius: 8, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 28 }}>
+                            📡
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontWeight: 700, color: '#1e40af' }}>{p.name}</p>
+                          {p.category && (
+                            <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, fontWeight: 600, color: '#1d4ed8', background: '#dbeafe', borderRadius: 6, padding: '2px 8px' }}>
+                              {p.category}
+                            </span>
+                          )}
+                          {(p.brand || p.model) && (
+                            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
+                              {[p.brand, p.model].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
+                            {p.description || '-'}
+                          </p>
+                          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8' }}>
+                            SKU: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatCatalogPrice(p)}
+                            {p.source === 'partner' ? ` · ${L(locale, 'จาก Partner', '파트너 등록', 'Partner catalog')}` : ''}
+                          </p>
+                        </div>
                       </div>
                     ))}
-                    {iotProducts.length === 0 && allCatalogProducts.length > 0 && (
-                      <div style={{ display: 'grid', gap: 10 }}>
-                        {allCatalogProducts.slice(0, 4).map((p) => (
-                          <div key={`fallback-iot-${p.id}`} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 12 }}>
-                            <p style={{ margin: 0, fontWeight: 700, color: '#1e40af' }}>{p.name}</p>
-                            <p style={{ margin: '6px 0 0', fontSize: 13, color: '#475569' }}>
-                              {p.description || '-'}
-                            </p>
-                            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8' }}>
-                              SKU: {p.sku || '-'} | {L(locale, 'ราคา', '가격', 'Price')}: {formatThb(Number(p.priceWithVat || p.price || 0))}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {iotProducts.length === 0 && allCatalogProducts.length === 0 && (
+                    {iotProducts.length === 0 && (
                       <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
                         {L(locale, 'ยังไม่มีสินค้าอุปกรณ์ IoT', 'IoT 상품이 아직 없습니다', 'No IoT products found yet')}
                       </p>

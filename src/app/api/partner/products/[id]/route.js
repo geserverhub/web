@@ -23,7 +23,7 @@ export async function PATCH(req, { params }) {
     if (!(await ownsProduct(session, id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
-    const { name, model, brand, costPrice, sellPrice, currency, imageUrls } = body;
+    const { name, model, brand, costPrice, sellPrice, currency, imageUrls, categoryId } = body;
     const toNum = (v) => (v ? Number(String(v).replace(/,/g, "")) : null);
     const data = {};
     if (name !== undefined) data.name = name.trim();
@@ -36,9 +36,28 @@ export async function PATCH(req, { params }) {
       const safeUrls = Array.isArray(imageUrls) ? imageUrls.filter(Boolean).slice(0, 5) : [];
       data.imageUrls = safeUrls.length ? JSON.stringify(safeUrls) : null;
     }
-    const product = await prisma.partnerProduct.update({ where: { id }, data });
+    if (categoryId !== undefined) {
+      const cid = categoryId?.trim() || null;
+      if (!cid) {
+        data.categoryId = null;
+      } else {
+        const cat = await prisma.partnerProductCategory.findUnique({ where: { id: cid } });
+        if (!cat) return NextResponse.json({ error: "หมวดสินค้าไม่พบ" }, { status: 400 });
+        const { role, clientId } = session.user;
+        if (role === "PARTNER" && cat.clientId && cat.clientId !== clientId) {
+          return NextResponse.json({ error: "หมวดสินค้าไม่ถูกต้อง" }, { status: 400 });
+        }
+        data.categoryId = cid;
+      }
+    }
+    const product = await prisma.partnerProduct.update({
+      where: { id },
+      data,
+      include: { category: { select: { id: true, name: true } } },
+    });
     return NextResponse.json({
       ...product,
+      categoryName: product.category?.name ?? null,
       imageUrls: product.imageUrls ? JSON.parse(product.imageUrls) : [],
     });
   } catch (err) {
