@@ -30,7 +30,11 @@
     "mqtt:broker": "node scripts/start-broker.mjs",
     "mqtt:start": "node scripts/start-broker.mjs & sleep 2 && node scripts/mqtt-bridge.mjs",
     "smtp:test": "node scripts/test-contact-email.mjs",
-    "smtp:test:ethereal": "node scripts/test-contact-email.mjs --ethereal"
+    "smtp:test:ethereal": "node scripts/test-contact-email.mjs --ethereal",
+    "mobile:android:install": "cd mobile/momoge-space && npm install",
+    "mobile:android:init": "cd mobile/momoge-space && npx cap add android",
+    "mobile:android:sync": "cd mobile/momoge-space && npm run cap:sync",
+    "mobile:android:open": "cd mobile/momoge-space && npm run cap:open"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

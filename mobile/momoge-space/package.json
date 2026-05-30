@@ -1,0 +1,23 @@
+{
+  "name": "momoge-space-android",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Momoge space — Customer Dashboard Android app (Capacitor shell)",
+  "scripts": {
+    "icons": "node scripts/copy-icons.mjs",
+    "cap:sync": "npm run icons && npx cap sync android",
+    "cap:open": "npx cap open android",
+    "android:debug": "cd android && ./gradlew assembleDebug",
+    "android:release": "cd android && ./gradlew bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.2.0",
+    "@capacitor/core": "^7.2.0",
+    "@capacitor/splash-screen": "^7.0.1",
+    "@capacitor/status-bar": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.2.0",
+    "typescript": "^5.8.2"
+  }
+}
