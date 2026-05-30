@@ -12,14 +12,14 @@ const LANGUAGE_STORAGE_KEY = 'ge-energy-tech-lang';
 
 /** GE ENERGY TECH CO., LTD. — registered office (Ansan, Gyeonggi-do, Korea) */
 const GEET_COMPANY_ADDRESS = {
-  ko: '경기도 안산시 상록구 월피동 445-28',
-  en: '445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Republic of Korea',
-  th: '445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, สาธารณรัฐเกาหลี',
-  zh: '韩国京畿道安山市常绿区月피洞445-28',
-  vi: '445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Hàn Quốc',
-  ja: '韓国 京畿道 安山市 常緑区 月피洞 445-28',
-  'zh-tw': '韓國京畿道安山市常綠區月피洞445-28',
-  ms: '445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Republik Korea',
+  ko: '경기도 안산시 상록구 월피동 445-28 301호',
+  en: 'Unit 301, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Republic of Korea',
+  th: 'ห้อง 301, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, สาธารณรัฐเกาหลี',
+  zh: '韩国京畿道安山市常绿区月피洞445-28 301号',
+  vi: 'Phòng 301, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Hàn Quốc',
+  ja: '韓国 京畿道 安山市 常緑区 月피洞 445-28 301号',
+  'zh-tw': '韓國京畿道安山市常綠區月피洞445-28 301號',
+  ms: 'Unit 301, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Republik Korea',
 };
 
 function geetCompanyAddress(lang) {
