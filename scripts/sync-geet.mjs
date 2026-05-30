@@ -15,6 +15,7 @@ const copies = [
   ['src/lib/meter-order.js', 'lib/meter-order.js'],
   ['src/lib/ge-energy-tech-meter-order-i18n.js', 'lib/ge-energy-tech-meter-order-i18n.js'],
   ['src/lib/ge-energy-tech/customer-tools-i18n.js', 'lib/ge-energy-tech/customer-tools-i18n.js'],
+  ['src/lib/ge-energy-tech/order-status-i18n.js', 'lib/ge-energy-tech/order-status-i18n.js'],
   ['src/lib/ge-energy-tech-api.js', 'lib/ge-energy-tech-api.js'],
   ['src/lib/smtp-config.js', 'lib/smtp-config.js'],
   ['src/components/ge-energy-tech/MeterOrderModal.jsx', 'components/ge-energy-tech/MeterOrderModal.jsx'],
