@@ -20,6 +20,7 @@ import { generateMonthlyEnergyExcel } from '@/lib/excel-export';
 import CurrentExportModal from '@/app/customer-dashboard/CurrentExportModal';
 import { calculateMeterUnitPrice, formatThb, METER_ORDER_BANK } from '@/lib/meter-order';
 import { parseJsonResponse } from '@/lib/parse-json-response';
+import { customerDashboardFetch } from '@/lib/customer-dashboard-fetch';
 import {
   L,
   Lfmt,
@@ -690,7 +691,7 @@ export default function CustomersPage() {
     const user = customerUser || readStoredCustomerUser();
     const query = buildCustomerDashboardQuery(user, selectedMeterDeviceId || undefined);
 
-    fetch(`/api/ge-energy/customer-dashboard?${query}`, { cache: 'no-store' })
+    customerDashboardFetch(`/api/ge-energy/customer-dashboard?${query}`, { cache: 'no-store' })
       .then(async (r) => {
         const j = await parseJsonResponse(r);
         if (!active) return;
@@ -795,7 +796,7 @@ export default function CustomersPage() {
 
     const user = customerUser || readStoredCustomerUser();
     const params = buildCustomerDashboardQuery(user, selectedMeterDeviceId || undefined);
-    fetch(`/api/ge-energy/customer-dashboard?${params}&dateFrom=${from}&dateTo=${to}`, { cache: 'no-store' })
+    customerDashboardFetch(`/api/ge-energy/customer-dashboard?${params}&dateFrom=${from}&dateTo=${to}`, { cache: 'no-store' })
       .then(async (r) => {
         const j = await parseJsonResponse(r);
         if (!active) return;
@@ -821,7 +822,7 @@ export default function CustomersPage() {
     setMonitorLoading(true);
     setMonitorError(null);
     try {
-      const res = await fetch(
+      const res = await customerDashboardFetch(
         `/api/ge-energy/customer-live-monitor?site=${encodeURIComponent(selectedSite)}&deviceId=${encodeURIComponent(selectedDeviceId)}&seconds=${monitorSeconds}`,
         { cache: 'no-store' }
       );
@@ -1115,7 +1116,7 @@ export default function CustomersPage() {
         fd.append('monthlyBills', bill);
       }
 
-      const res = await fetch('/api/ge-energy/customer-energy-saver-order', {
+      const res = await customerDashboardFetch('/api/ge-energy/customer-energy-saver-order', {
         method: 'POST',
         body: fd,
       });
@@ -1166,7 +1167,7 @@ export default function CustomersPage() {
       setCatalogLoading(true);
       setCatalogError(null);
       try {
-        const res = await fetch('/api/ge-energy/customer-product-catalog', { cache: 'no-store' });
+        const res = await customerDashboardFetch('/api/ge-energy/customer-product-catalog', { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok || !json.success) {
           throw new Error(json?.error || 'Failed to load catalog');
@@ -1201,7 +1202,7 @@ export default function CustomersPage() {
         if (u?.userId) q.set('userId', String(u.userId));
         if (u?.email) q.set('email', String(u.email));
         if (u?.phone) q.set('phone', String(u.phone));
-        const res = await fetch(`/api/ge-energy/customer-activity-history?${q.toString()}`, { cache: 'no-store' });
+        const res = await customerDashboardFetch(`/api/ge-energy/customer-activity-history?${q.toString()}`, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json?.error || 'Failed to load history');
         if (!cancelled) setHistoryItems(Array.isArray(json.activities) ? json.activities : []);
@@ -1232,7 +1233,7 @@ export default function CustomersPage() {
     setHistorySaving(true);
     setHistoryError(null);
     try {
-      const res = await fetch('/api/ge-energy/customer-activity-history', {
+      const res = await customerDashboardFetch('/api/ge-energy/customer-activity-history', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: item.type, id: item.id, fields }),

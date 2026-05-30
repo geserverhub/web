@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { queryGe } from '@/lib/mysql-ge';
 import { ensureEnergySaverOrderSchema } from '@/lib/ge-energy/ensure-energy-saver-schema';
+import { requireCustomerDashboardAuth } from '@/lib/customer-dashboard-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,9 @@ async function saveUpload(orderNo: string, subdir: string, file: File) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = requireCustomerDashboardAuth(req);
+    if (auth.ok === false) return auth.response;
+
     await ensureEnergySaverOrderSchema();
     const form = await req.formData();
 

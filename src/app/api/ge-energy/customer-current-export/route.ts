@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
 import * as XLSX from 'xlsx';
+import {
+  assertCustomerDeviceAccess,
+  requireCustomerDashboardAuth,
+} from '@/lib/customer-dashboard-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,11 +72,17 @@ const MIME: Record<string, string> = {
  */
 export async function GET(request: NextRequest) {
   try {
+    const auth = requireCustomerDashboardAuth(request);
+    if (auth.ok === false) return auth.response;
+
     const params = request.nextUrl.searchParams;
     const deviceId = params.get('deviceId');
     if (!deviceId) {
       return NextResponse.json({ success: false, error: 'deviceId required' }, { status: 400 });
     }
+
+    const deviceDenied = await assertCustomerDeviceAccess(auth.scope, deviceId);
+    if (deviceDenied) return deviceDenied;
 
     const now = new Date();
     const defaultFrom = new Date(now.getTime() - 60 * 60 * 1000);

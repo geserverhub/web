@@ -264,3 +264,68 @@
 .cdl-back:hover {
   background: #ecfdf5;
 }
+
+.cdl-install-hint {
+  position: fixed;
+  left: max(0.75rem, env(safe-area-inset-left));
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.875rem;
+  background: #064e3b;
+  color: #ecfdf5;
+  box-shadow: 0 10px 30px rgba(6, 78, 59, 0.35);
+}
+
+.cdl-install-hint__icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.625rem;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cdl-install-hint__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.cdl-install-hint__text strong {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.cdl-install-hint__text span {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.cdl-install-hint__btn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #10b981;
+  color: #022c22;
+  cursor: pointer;
+}
+
+.cdl-install-hint__close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #a7f3d0;
+  cursor: pointer;
+  padding: 0.25rem;
+}

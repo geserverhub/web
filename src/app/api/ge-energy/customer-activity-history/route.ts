@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub as query } from '@/lib/geserverhub-db';
+import { requireCustomerDashboardAuth } from '@/lib/customer-dashboard-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,12 +79,14 @@ async function ensureTables() {
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = requireCustomerDashboardAuth(req);
+    if (auth.ok === false) return auth.response;
+
     await ensureTables();
 
-    const { searchParams } = new URL(req.url);
-    const userId = toStr(searchParams.get('userId'));
-    const email = toStr(searchParams.get('email'));
-    const phone = toStr(searchParams.get('phone'));
+    const email = toStr(auth.scope.email);
+    const phone = toStr(auth.scope.phone);
+    const userId = toStr(auth.scope.userId);
 
     // userId must be a valid positive integer — "NaN", "undefined" etc. are rejected
     const userIdNum = parseInt(userId, 10);
@@ -276,6 +279,9 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = requireCustomerDashboardAuth(req);
+    if (auth.ok === false) return auth.response;
+
     const body = await req.json();
     const type = toStr(body?.type);
     const id = Number(body?.id);

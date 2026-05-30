@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
 import { getPrisma } from '@/lib/prisma';
 import { formatDbConnectError } from '@/lib/db-connect-error';
+import { signCustomerDashboardToken } from '@/lib/customer-dashboard-auth';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import {
   isRoleAllowedForUserLogin,
@@ -73,7 +73,13 @@ export async function POST(request) {
       }
     }
 
-    const token = randomUUID();
+    const token = signCustomerDashboardToken({
+      userId: user.id,
+      clientId: user.clientId ?? null,
+      email: user.email ?? null,
+      username: user.username ?? null,
+      phone: null,
+    });
 
     let name = user.name ?? user.username;
     let role = user.role;

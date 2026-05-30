@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { hardRedirect } from "@/lib/portal-login";
 import { useRouter } from "next/navigation";
 import { computeMonthlyInvestmentBalances } from "@/lib/partner-financial-calc";
 
@@ -1033,7 +1034,14 @@ export default function PartnerDashboard() {
             ))}
           </div>
           <span style={{ fontSize: 13, color: "#8b8fa8" }}>{session?.user?.name || session?.user?.email}</span>
-          <button onClick={() => signOut({ callbackUrl: "/auth/select" })} style={{ background: "#1e2130", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
+          <button
+            type="button"
+            onClick={async () => {
+              await signOut({ redirect: false });
+              hardRedirect("/");
+            }}
+            style={{ background: "#1e2130", border: "1px solid #2a2d3a", color: "#8b8fa8", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}
+          >
             {t.signOut}
           </button>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Download, RefreshCw, X } from 'lucide-react';
 import { L } from '@/lib/customer-dashboard-i18n';
 import { downloadBlob } from '@/lib/excel-export';
+import { customerDashboardFetch } from '@/lib/customer-dashboard-fetch';
 
 function toLocalInputValue(date) {
   const d = new Date(date);
@@ -92,7 +93,7 @@ export default function CurrentExportModal({
         intervalSeconds: String(intervalSeconds),
         format: fileFormat,
       });
-      const res = await fetch(`/api/ge-energy/customer-current-export?${params}`, {
+      const res = await customerDashboardFetch(`/api/ge-energy/customer-current-export?${params}`, {
         cache: 'no-store',
       });
       if (!res.ok) {

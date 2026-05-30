@@ -14,6 +14,10 @@ import {
   listElectricityRateRules,
   resolveRateForDateWithMeta,
 } from '@/lib/ge-energy/electricity-rates'
+import {
+  assertCustomerDeviceAccess,
+  requireCustomerDashboardAuth,
+} from '@/lib/customer-dashboard-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,37 +37,22 @@ const toNumber = (value: number | string | null | undefined) => {
   return Number.isFinite(numericValue) ? numericValue : 0
 }
 
-function parseScope(searchParams: URLSearchParams): CustomerScopeInput {
-  return {
-    userId: searchParams.get('userId'),
-    clientId: searchParams.get('clientId'),
-    email: searchParams.get('email'),
-    phone: searchParams.get('phone'),
-    username: searchParams.get('username'),
-  }
-}
-
-function hasUserScope(scope: CustomerScopeInput) {
-  return Boolean(
-    scope.userId?.trim() ||
-      scope.clientId?.trim() ||
-      scope.email?.trim() ||
-      scope.phone?.trim() ||
-      scope.username?.trim(),
-  )
-}
-
 export async function GET(request: NextRequest) {
   try {
+    const auth = requireCustomerDashboardAuth(request)
+    if (auth.ok === false) return auth.response
+
+    const scope = auth.scope
     const searchParams = request.nextUrl.searchParams
-    const scope = parseScope(searchParams)
-    const userScoped = hasUserScope(scope)
     const deviceIdParam = searchParams.get('deviceId')
     const siteParam = (searchParams.get('site') || '').toLowerCase()
 
-    let meters = userScoped ? await resolveCustomerMeters(scope) : []
+    const deviceDenied = await assertCustomerDeviceAccess(scope, deviceIdParam)
+    if (deviceDenied) return deviceDenied
 
-    if (userScoped && !meters.length) {
+    let meters = await resolveCustomerMeters(scope)
+
+    if (!meters.length) {
       return NextResponse.json({
         success: true,
         data: {
@@ -88,25 +77,10 @@ export async function GET(request: NextRequest) {
 
     let deviceIds: number[] = meters.map((m) => m.deviceId)
 
-    if (!userScoped) {
-      const siteFilterSql =
-        !siteParam || siteParam === 'all' ? '' : "AND LOWER(COALESCE(d.site, d.location, '')) LIKE ?"
-      const siteParams = !siteParam || siteParam === 'all' ? [] : [`%${siteParam}%`]
-      const legacyRows = (await queryGe(
-        `SELECT DISTINCT d.deviceID AS device_id
-         FROM devices d
-         WHERE 1=1 ${siteFilterSql}`,
-        siteParams,
-      )) as Array<{ device_id: number }>
-      deviceIds = legacyRows.map((r) => Number(r.device_id))
-    }
-
     if (deviceIdParam) {
       const pick = Number(deviceIdParam)
       if (Number.isFinite(pick) && pick > 0) {
-        deviceIds = userScoped
-          ? deviceIds.filter((id) => id === pick)
-          : [pick]
+        deviceIds = deviceIds.filter((id) => id === pick)
       }
     }
 

@@ -1,0 +1,25 @@
+{
+  "name": "Momoge space",
+  "short_name": "Momoge space",
+  "description": "Customer energy dashboard — MOMOGE SPACE",
+  "start_url": "/customer-dashboard-login",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#047857",
+  "theme_color": "#047857",
+  "icons": [
+    {
+      "src": "/momoge/Logo-brand.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/momoge/Logo-brand.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

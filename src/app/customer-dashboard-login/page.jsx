@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Lock, User, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { parseJsonResponse } from '@/lib/parse-json-response';
 import { GE_ADMIN_TOKEN_KEY, GE_ADMIN_USER_KEY } from '@/lib/ge-storage-keys';
+import CustomerDashboardInstallHint from '@/components/customer/CustomerDashboardInstallHint';
 import './customer-dashboard-login.css';
 
 const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
@@ -116,6 +117,7 @@ export default function CustomerDashboardLoginPage() {
 
   return (
     <div className="cdl-page">
+      <CustomerDashboardInstallHint locale={lang} />
       <div
         className="cdl-lang"
         style={{

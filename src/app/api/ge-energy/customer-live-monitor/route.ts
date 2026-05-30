@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
+import {
+  assertCustomerDeviceAccess,
+  requireCustomerDashboardAuth,
+} from '@/lib/customer-dashboard-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -73,10 +77,16 @@ function resolveWindowSeconds(searchParams: URLSearchParams) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const auth = requireCustomerDashboardAuth(request);
+    if (auth.ok === false) return auth.response;
+
     const params = request.nextUrl.searchParams;
     const site = (params.get('site') || 'thailand').toLowerCase();
     const deviceId = params.get('deviceId');
     const seconds = resolveWindowSeconds(params);
+
+    const deviceDenied = await assertCustomerDeviceAccess(auth.scope, deviceId);
+    if (deviceDenied) return deviceDenied;
 
     const siteSql =
       site === 'all'
