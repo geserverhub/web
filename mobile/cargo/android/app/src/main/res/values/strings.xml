@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">คาโก้ ไทย-เกาหลี</string>
+    <string name="title_activity_main">คาโก้ ไทย-เกาหลี</string>
+    <string name="package_name">com.cargothaikorea.myapp</string>
+    <string name="custom_url_scheme">com.cargothaikorea.myapp</string>
+</resources>

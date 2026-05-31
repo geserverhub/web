@@ -34,7 +34,11 @@
     "mobile:android:install": "cd mobile/momoge-space && npm install",
     "mobile:android:init": "cd mobile/momoge-space && npx cap add android",
     "mobile:android:sync": "cd mobile/momoge-space && npm run cap:sync",
-    "mobile:android:open": "cd mobile/momoge-space && npm run cap:open"
+    "mobile:android:open": "cd mobile/momoge-space && npm run cap:open",
+    "mobile:cargo:install": "cd mobile/cargo && npm install",
+    "mobile:cargo:init": "cd mobile/cargo && npx cap add android",
+    "mobile:cargo:sync": "cd mobile/cargo && npm run cap:sync",
+    "mobile:cargo:open": "cd mobile/cargo && npm run cap:open"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
