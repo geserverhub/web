@@ -37,7 +37,6 @@ echo "Applying migrations (energy + M-Factory booking)..."
 "${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-energy-geserverhub.sql"
 "${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-mfactory-inquiry.sql"
 "${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-mfactory-booking-v2.sql"
-"${MYSQL[@]}" "$DB_NAME" < "$ROOT/prisma/migrate-ge-energy-erp-face-attendance.sql"
 
 echo "Running prisma generate..."
 npx prisma generate

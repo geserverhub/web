@@ -110,7 +110,7 @@ export async function GET(req) {
         type: { in: ["PROFIT_SHARE", "PARTNER_INVESTMENT"] },
         status: { not: "CANCELLED" },
       },
-      select: { customerName: true, amount: true, currency: true, status: true, type: true },
+      select: { customerName: true, description: true, notes: true, amount: true, currency: true, status: true, type: true },
     });
     const partnerIncomeSummary = buildPartnerIncomeSummary(allPersonRows);
 
