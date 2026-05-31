@@ -77,6 +77,19 @@ const desired = [
     systemUrl: "/momoge-product",
     sortOrder: 6,
   },
+  {
+    slug: "ge-energy-tech",
+    name: "GE ENERGY TECH CO., LTD.",
+    description:
+      "บริษัทเทคโนโลยีพลังงานอัจฉริยะ — มอนิเตอร์พลังงาน IoT การจัดการพลังงาน และโซลูชันเทคโนโลยีสีเขียวในไทยและเอเชีย",
+    status: "ONLINE",
+    contactEmail: "goeunserverhub@gmail.com",
+    contactPhone: "010-8105-0384",
+    contactFax: null,
+    logoUrl: "/ge-energyTech/138568-transparent.png",
+    systemUrl: "https://www.ge-energytech.com",
+    sortOrder: 7,
+  },
 ];
 
 export async function GET() {

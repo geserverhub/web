@@ -196,6 +196,20 @@ export const fallbackClients = [
     thumbnail: "/classroom/137806.jpg",
     system_url: "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
   },
+  {
+    id: 11,
+    name: "GE ENERGY TECH CO., LTD.",
+    slug: "ge-energy-tech",
+    description:
+      "บริษัทเทคโนโลยีพลังงานอัจฉริยะ — มอนิเตอร์พลังงาน IoT การจัดการพลังงาน และโซลูชันเทคโนโลยีสีเขียวในไทยและเอเชีย",
+    status: "online",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010-8105-0384",
+    address: "경기도 안산시 상록구 월피동 445-28 301호",
+    thumbnail: "/ge-energyTech/138568-transparent.png",
+    thumbnail_fit: "contain",
+    system_url: "https://www.ge-energytech.com",
+  },
 ];
 
 export const filterOptions = [
@@ -215,6 +229,7 @@ const PORTAL_URL_OVERRIDES = {
   "m-factory": "https://m-factoryandresort.com/",
   "online-classroom":
     "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
+  "ge-energy-tech": "https://www.ge-energytech.com",
 };
 
 /** Resolve portal URL for API cards when DB systemUrl is empty or invalid. */

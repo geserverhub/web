@@ -40,6 +40,13 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail_fit: "contain",
     thumbnail_style: "photo",
   },
+  "ge-energy-tech": {
+    thumbnail: "/ge-energyTech/138568-transparent.png",
+    thumbnail_fit: "contain",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010-8105-0384",
+    system_url: "https://www.ge-energytech.com",
+  },
 };
 
 export const dynamic = "force-dynamic";

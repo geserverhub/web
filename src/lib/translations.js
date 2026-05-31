@@ -220,6 +220,11 @@ export const translations = {
         name: "ห้องเรียนออนไลน์",
         description: "เรียนออนไลน์ — ห้องเรียนสด วิดีโอบันทึก เอกสาร และตารางเรียน",
       },
+      "ge-energy-tech": {
+        name: "GE ENERGY TECH CO., LTD.",
+        description:
+          "บริษัทเทคโนโลยีพลังงานอัจฉริยะ — มอนิเตอร์พลังงาน IoT การจัดการพลังงาน และโซลูชันเทคโนโลยีสีเขียวในไทยและเอเชีย",
+      },
     },
     pleaseEnterOrderNumber: "กรุณากรอกเลขออเดอร์",
     orderStatusCheckFailed: "ตรวจสอบสถานะไม่สำเร็จ",
@@ -492,6 +497,11 @@ export const translations = {
         name: "Online Classroom",
         description: "E-learning — live classes, recorded videos, materials and schedule",
       },
+      "ge-energy-tech": {
+        name: "GE ENERGY TECH CO., LTD.",
+        description:
+          "Smart energy technology — IoT power monitoring, energy management, and green technology solutions in Thailand and Asia.",
+      },
     },
     pleaseEnterOrderNumber: "Please enter order number",
     orderStatusCheckFailed: "Failed to check order status",
@@ -748,6 +758,10 @@ export const translations = {
       "online-classroom": {
         name: "在线课堂",
         description: "在线学习 — 直播课、录播、资料与课程表",
+      },
+      "ge-energy-tech": {
+        name: "GE ENERGY TECH CO., LTD.",
+        description: "智能能源技术 — IoT 电力监控、能源管理与绿色科技解决方案，服务泰国及亚洲市场。",
       },
     },
     pleaseEnterOrderNumber: "请输入订单号",
@@ -1009,6 +1023,11 @@ export const translations = {
       "online-classroom": {
         name: "온라인 강의실",
         description: "온라인 학습 — 라이브 수업, 녹화 영상, 자료 및 시간표",
+      },
+      "ge-energy-tech": {
+        name: "GE ENERGY TECH CO., LTD.",
+        description:
+          "스마트 에너지 기술 — IoT 전력 모니터링, 에너지 관리 및 태국·아시아 그린 기술 솔루션",
       },
     },
     pleaseEnterOrderNumber: "주문번호를 입력해 주세요",
