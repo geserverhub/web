@@ -168,6 +168,7 @@ export const translations = {
     footerSubtitle: "ลิขสิทธิ์ © 2026 GOEUN SERVER HUB",
     footerFrontend: "สงวนลิขสิทธิ์",
     footerBackend: "GOEUN SERVER HUB",
+    footerPolicy: "นโยบายความเป็นส่วนตัว",
     researchStatus: "กำลังพัฒนา",
     loadError: "โหลดข้อมูลจาก Python backend ไม่สำเร็จ จึงแสดงข้อมูลตัวอย่างแทนชั่วคราว",
     statusLabels: {
@@ -445,6 +446,7 @@ export const translations = {
     footerSubtitle: "Copyright © 2026 GOEUN SERVER HUB",
     footerFrontend: "All rights reserved",
     footerBackend: "GOEUN SERVER HUB",
+    footerPolicy: "Privacy Policy",
     researchStatus: "In Development",
     loadError: "Could not load data from the Python backend, so fallback content is shown for now.",
     statusLabels: {
@@ -972,6 +974,7 @@ export const translations = {
     footerSubtitle: "저작권 © 2026 GOEUN SERVER HUB",
     footerFrontend: "판권 소유",
     footerBackend: "GOEUN SERVER HUB",
+    footerPolicy: "개인정보 처리방침",
     researchStatus: "개발 중",
     loadError: "Python backend에서 데이터를 불러오지 못해 현재는 예시 데이터를 표시합니다.",
     statusLabels: {

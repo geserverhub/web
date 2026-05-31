@@ -19,6 +19,9 @@ export default function Footer({ ui, profile }) {
           <div className="agency-footer-meta">
             <span>{ui.footerFrontend}</span>
             <span>{ui.footerBackend}</span>
+            <a href="/policy" className="agency-footer-link">
+              {ui.footerPolicy || "Privacy Policy"}
+            </a>
           </div>
         </div>
       </div>

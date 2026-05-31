@@ -2116,6 +2116,22 @@ img {
   font-weight: 500;
 }
 
+.agency-footer-link {
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--agency-radius-pill);
+  color: var(--agency-primary);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: #eef4ff;
+  font-size: 0.85rem;
+  font-family: var(--agency-font-body);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.agency-footer-link:hover {
+  background: #dbeafe;
+}
+
 @media (max-width: 1199.98px) {
   .masthead-signals {
     grid-template-columns: minmax(0, 1fr);
@@ -2441,4 +2457,120 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
     transition-duration:      0.01ms !important;
     transition-delay:         0s     !important;
   }
+}
+
+/* ── GE SERVER HUB policy page (/policy) ── */
+.hub-policy-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--agency-bg) 0%, var(--agency-bg-soft) 100%);
+  color: var(--agency-ink);
+}
+
+.hub-policy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--agency-line);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.hub-policy-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--agency-ink);
+}
+
+.hub-policy-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 3rem;
+}
+
+.hub-policy-meta {
+  font-size: 0.875rem;
+  color: var(--agency-muted);
+  margin: 0 0 0.75rem;
+}
+
+.hub-policy-main h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.15;
+}
+
+.hub-policy-subtitle {
+  margin: 0 0 1.25rem;
+  font-size: 1.05rem;
+  color: var(--agency-primary);
+  font-weight: 700;
+}
+
+.hub-policy-intro {
+  margin: 0 0 2rem;
+  line-height: 1.7;
+  color: var(--agency-muted);
+}
+
+.hub-policy-section {
+  margin-bottom: 1.75rem;
+}
+
+.hub-policy-section h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+}
+
+.hub-policy-section p {
+  margin: 0 0 0.75rem;
+  line-height: 1.7;
+  color: var(--agency-muted);
+}
+
+.hub-policy-section ul {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+  color: var(--agency-muted);
+}
+
+.hub-policy-section li {
+  margin-bottom: 0.45rem;
+  line-height: 1.65;
+}
+
+.hub-policy-contact {
+  font-style: normal;
+  line-height: 1.8;
+  color: var(--agency-muted);
+}
+
+.hub-policy-contact a {
+  color: var(--agency-primary);
+  text-decoration: underline;
+}
+
+.hub-policy-back {
+  margin-top: 2.5rem;
+}
+
+.hub-policy-back a {
+  color: var(--agency-primary);
+  font-weight: 600;
+}
+
+.hub-policy-footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--agency-muted);
+  border-top: 1px solid var(--agency-line);
 }

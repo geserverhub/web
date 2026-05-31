@@ -62,7 +62,7 @@ Output: `android/app/build/outputs/bundle/release/app-release.aab`
 | App name | Momoge space |
 | Package | `com.momogespace.myapp` |
 | Category | Business / Productivity |
-| Privacy policy URL | `https://ge-energytech.com/privacy` |
+| Privacy policy URL | `https://www.ge-serverhub.com/policy` |
 | Screenshots | Phone — login + dashboard tabs |
 | Icon | 512×512 PNG (`public/momoge/Logo-brand.png`) |
 

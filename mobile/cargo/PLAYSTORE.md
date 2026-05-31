@@ -62,7 +62,7 @@ Output: `android/app/build/outputs/bundle/release/app-release.aab`
 | App name | ไทย-เกาหลี คaโก้ |
 | Package | `cargo.myapp` |
 | Category | Business / Travel & Local |
-| Privacy policy URL | `https://ge-energytech.com/privacy` |
+| Privacy policy URL | `https://www.ge-serverhub.com/policy` |
 | Screenshots | Phone — track, request shipment, profile |
 | Icon | 512×512 PNG (`public/cargo/cargo-logo.png`, transparent) |
 
