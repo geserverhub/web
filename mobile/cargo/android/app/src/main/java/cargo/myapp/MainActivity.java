@@ -1,4 +1,4 @@
-package com.cargothaikorea.myapp;
+package cargo.myapp;
 
 import com.getcapacitor.BridgeActivity;
 

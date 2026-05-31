@@ -14,7 +14,7 @@ const baseUrl = useBundled
   : (process.env.CAPACITOR_SERVER_URL ?? DEFAULT_SERVER_URL).replace(/\/$/, '');
 
 const config: CapacitorConfig = {
-  appId: 'com.cargothaikorea.myapp',
+  appId: 'cargo.myapp',
   appName: 'ไทย-เกาหลี คาโก้',
   webDir: 'www',
   ...(baseUrl
