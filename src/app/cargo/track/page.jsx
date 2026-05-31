@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CARGO_HUB_NAME, CARGO_MOBILE_APP_NAME, isCargoMobileApp } from "@/lib/cargo-mobile";
+import { CARGO_APP_NAME } from "@/lib/cargo-mobile";
 
 const STATUS_STEPS = [
   { key: "รอดำเนินการ", label: "รอดำเนินการ", sub: "처리 대기", icon: "⏳" },
@@ -41,13 +41,7 @@ const cardStyle = {
 
 export default function CargoTrackPage() {
   const [tab, setTab] = useState("track");
-  const [isMobileApp, setIsMobileApp] = useState(false);
-
-  useEffect(() => {
-    setIsMobileApp(isCargoMobileApp());
-  }, []);
-
-  const brandName = isMobileApp ? CARGO_MOBILE_APP_NAME : CARGO_HUB_NAME;
+  const brandName = CARGO_APP_NAME;
 
   const [trackPhone, setTrackPhone] = useState("");
   const [trackType, setTrackType] = useState("");
@@ -289,15 +283,11 @@ export default function CargoTrackPage() {
       )}
 
       <div style={{ marginBottom: 24, textAlign: "center" }}>
-        {isMobileApp ? (
-          <img
-            src="/uploads/logos/cargo.jpg"
-            alt={brandName}
-            style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover", marginBottom: 10 }}
-          />
-        ) : (
-          <div style={{ fontSize: 32, marginBottom: 4 }}>✈️</div>
-        )}
+        <img
+          src="/uploads/logos/cargo.jpg"
+          alt={brandName}
+          style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover", marginBottom: 10 }}
+        />
         <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>{brandName}</div>
         <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>บริการคาโก้ไทย-เกาหลี · 항공 화물 서비스</div>
       </div>
