@@ -19,8 +19,11 @@ const copies = [
   ['src/lib/ge-energy-tech-api.js', 'lib/ge-energy-tech-api.js'],
   ['src/lib/smtp-config.js', 'lib/smtp-config.js'],
   ['src/components/ge-energy-tech/MeterOrderModal.jsx', 'components/ge-energy-tech/MeterOrderModal.jsx'],
+  ['src/components/ge-energy-tech/PrivacyPolicyPage.jsx', 'components/ge-energy-tech/PrivacyPolicyPage.jsx'],
+  ['src/lib/ge-energy-tech/privacy-policy-content.js', 'lib/ge-energy-tech/privacy-policy-content.js'],
   ['src/app/ge-energy-tech/shipping-tracking/page.jsx', 'app/shipping-tracking/page.jsx'],
   ['src/app/ge-energy-tech/after-sales-chat/page.jsx', 'app/after-sales-chat/page.jsx'],
+  ['src/app/ge-energy-tech/privacy/page.jsx', 'app/privacy/page.jsx'],
 ];
 
 for (const [from, to] of copies) {
@@ -40,6 +43,7 @@ for (const [from, to] of copies) {
       "import { geEnergyTechApiUrl, portalHubHref } from '@/lib/ge-energy-tech-api';",
       "import { geEnergyTechApiUrl, portalHref } from '@/lib/ge-energy-tech-api';"
     );
+    text = text.replace('homeHref="/ge-energy-tech"', 'homeHref="/"');
   }
   text = text.replaceAll('href="/ge-energy-tech"', 'href="/"');
   text = text.replaceAll("Link href=\"/ge-energy-tech\"", 'Link href="/"');
@@ -77,6 +81,7 @@ s = s.replaceAll(
   'href="/after-sales-chat"',
   `href={portalHref('/ge-energy-tech/after-sales-chat')}`
 );
+s = s.replaceAll('href="/ge-energy-tech/privacy"', 'href="/privacy"');
 s = s.replace(
   'export default function GeEnergyTechClientPage()',
   'export default function GePage()'

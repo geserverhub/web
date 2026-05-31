@@ -6,3 +6,5 @@ android/local.properties
 .env
 *.jks
 *.keystore
+android/keystore.properties
+KEYSTORE-CREDENTIALS.local.txt

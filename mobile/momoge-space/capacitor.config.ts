@@ -1,16 +1,20 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+/** Permanent GEserverhub public hub (ngrok → port 3005 on GE-SERVER). */
+const DEFAULT_SERVER_URL = 'https://strong-dory-enabled.ngrok-free.app';
+
 /**
- * Production Play Store build — set before `npm run cap:sync`:
- *   CAPACITOR_SERVER_URL=https://YOUR-PUBLIC-HOST
- * (no trailing slash; app opens /customer-dashboard-login)
- *
- * Omit CAPACITOR_SERVER_URL to use bundled www/ (offline placeholder only).
+ * Play Store build loads live Customer Dashboard from the hub.
+ * Override: CAPACITOR_SERVER_URL=https://other-host
+ * Bundled offline placeholder: CAPACITOR_USE_BUNDLED=1
  */
-const baseUrl = process.env.CAPACITOR_SERVER_URL?.replace(/\/$/, '');
+const useBundled = process.env.CAPACITOR_USE_BUNDLED === '1';
+const baseUrl = useBundled
+  ? undefined
+  : (process.env.CAPACITOR_SERVER_URL ?? DEFAULT_SERVER_URL).replace(/\/$/, '');
 
 const config: CapacitorConfig = {
-  appId: 'com.geserverhub.momogespace',
+  appId: 'com.momogespace.myapp',
   appName: 'Momoge space',
   webDir: 'www',
   ...(baseUrl
@@ -19,6 +23,9 @@ const config: CapacitorConfig = {
           url: `${baseUrl}/customer-dashboard-login`,
           cleartext: baseUrl.startsWith('http://'),
           androidScheme: baseUrl.startsWith('https') ? 'https' : 'http',
+          ...(baseUrl.includes('ngrok')
+            ? { headers: { 'ngrok-skip-browser-warning': '1' } }
+            : {}),
         },
       }
     : {}),

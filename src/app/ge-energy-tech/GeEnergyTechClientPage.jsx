@@ -143,7 +143,9 @@ const TRANSLATIONS = {
       privacyBody: [
         'เราให้ความสำคัญกับความเป็นส่วนตัวของคุณ',
         'ข้อมูลที่คุณส่งผ่านแบบฟอร์ม (เช่น อีเมล/ชื่อ/ข้อความ/เอกสารแนบ) ใช้เพื่อการติดต่อกลับและให้บริการเท่านั้น',
+        'แอป Momoge space และ Customer Dashboard เก็บข้อมูลบัญชีและการใช้พลังงานเพื่อให้บริการมอนิเตอร์พลังงาน',
         'เราไม่ขายข้อมูลส่วนบุคคลให้บุคคลที่สาม',
+        'อ่านฉบับเต็มที่หน้านโยบายความเป็นส่วนตัว (/privacy)',
       ],
       termsTitle: 'ข้อกำหนดและเงื่อนไข',
       termsBody: [
@@ -267,7 +269,9 @@ const TRANSLATIONS = {
       privacyBody: [
         'We take your privacy seriously.',
         'Information you submit (email/name/message/attachments) is used only to respond and provide our services.',
+        'The Momoge space app and Customer Dashboard process account and energy usage data to deliver monitoring services.',
         'We do not sell personal data to third parties.',
+        'Read the full policy at /privacy.',
       ],
       termsTitle: 'Terms & Conditions',
       termsBody: [
@@ -1491,9 +1495,9 @@ export default function GeEnergyTechClientPage() {
           <div className="get-footer-bottom">
             <p>© {new Date().getFullYear()} GE Energy Tech Co., Ltd. {t.footer.rights}</p>
             <div className="get-footer-bottom-links">
-              <button type="button" className="get-footer-link" onClick={() => setLegalOpen('privacy')}>
+              <a href="/ge-energy-tech/privacy" className="get-footer-link">
                 {t.footer.privacy}
-              </button>
+              </a>
               <button type="button" className="get-footer-link" onClick={() => setLegalOpen('terms')}>
                 {t.footer.terms}
               </button>

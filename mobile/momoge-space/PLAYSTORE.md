@@ -4,7 +4,7 @@ Android app wraps the live **Customer Dashboard** (`/customer-dashboard-login`) 
 
 ## Prerequisites
 
-1. **Public HTTPS URL** for GEserverhub (Play Store requires HTTPS, not `http://127.0.0.1:3005`).
+1. **Public HTTPS URL** for GEserverhub — default hub: `https://strong-dory-enabled.ngrok-free.app` (ngrok → GE-SERVER :3005).
 2. [Android Studio](https://developer.android.com/studio) + JDK 17.
 3. [Google Play Console](https://play.google.com/console) developer account ($25 one-time).
 
@@ -12,17 +12,14 @@ Android app wraps the live **Customer Dashboard** (`/customer-dashboard-login`) 
 
 ```bash
 cd mobile/momoge-space
-cp .env.example .env
-# Edit .env — set CAPACITOR_SERVER_URL to your production host, e.g.:
-# CAPACITOR_SERVER_URL=https://your-domain.com
+npm install
+npm run cap:sync
 ```
 
-Load env on Windows PowerShell before sync:
+Default server URL is already set in `capacitor.config.ts`. To override:
 
 ```powershell
-$env:CAPACITOR_SERVER_URL="https://your-domain.com"
-npm install
-npx cap add android
+$env:CAPACITOR_SERVER_URL="https://strong-dory-enabled.ngrok-free.app"
 npm run cap:sync
 ```
 
@@ -47,10 +44,13 @@ Store the `.jks` file safely. Set paths in `.env` (never commit the keystore or 
 
 In Android Studio: **Build → Generate Signed Bundle / APK → Android App Bundle (AAB)**.
 
-Or CLI (after setting keystore env vars):
+Or CLI (after `android/keystore.properties` exists — see step 3):
 
-```bash
-npm run android:release
+```powershell
+cd mobile/momoge-space/android
+$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+$env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"
+.\gradlew.bat bundleRelease
 ```
 
 Output: `android/app/build/outputs/bundle/release/app-release.aab`
@@ -60,9 +60,9 @@ Output: `android/app/build/outputs/bundle/release/app-release.aab`
 | Item | Value |
 |------|--------|
 | App name | Momoge space |
-| Package | `com.geserverhub.momogespace` |
+| Package | `com.momogespace.myapp` |
 | Category | Business / Productivity |
-| Privacy policy URL | Required — host a page describing data collected (energy usage, login email) |
+| Privacy policy URL | `https://ge-energytech.com/privacy` |
 | Screenshots | Phone — login + dashboard tabs |
 | Icon | 512×512 PNG (`public/momoge/Logo-brand.png`) |
 
