@@ -13,3 +13,4 @@ dist
 # Local backups and logs
 backups/
 *.log
+scripts/_*.tmp
