@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { CARGO_HUB_NAME, CARGO_MOBILE_APP_NAME, isCargoMobileApp } from "@/lib/cargo-mobile";
 
 const STATUS_STEPS = [
   { key: "รอดำเนินการ", label: "รอดำเนินการ", sub: "처리 대기", icon: "⏳" },
@@ -40,6 +41,13 @@ const cardStyle = {
 
 export default function CargoTrackPage() {
   const [tab, setTab] = useState("track");
+  const [isMobileApp, setIsMobileApp] = useState(false);
+
+  useEffect(() => {
+    setIsMobileApp(isCargoMobileApp());
+  }, []);
+
+  const brandName = isMobileApp ? CARGO_MOBILE_APP_NAME : CARGO_HUB_NAME;
 
   const [trackPhone, setTrackPhone] = useState("");
   const [trackType, setTrackType] = useState("");
@@ -281,8 +289,16 @@ export default function CargoTrackPage() {
       )}
 
       <div style={{ marginBottom: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 4 }}>✈️</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>GE SERVER HUB</div>
+        {isMobileApp ? (
+          <img
+            src="/uploads/logos/cargo.jpg"
+            alt={brandName}
+            style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover", marginBottom: 10 }}
+          />
+        ) : (
+          <div style={{ fontSize: 32, marginBottom: 4 }}>✈️</div>
+        )}
+        <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>{brandName}</div>
         <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>บริการคาโก้ไทย-เกาหลี · 항공 화물 서비스</div>
       </div>
 
@@ -395,7 +411,7 @@ export default function CargoTrackPage() {
                                 <div style={{ textAlign: "center", padding: "12px 0" }}>
                                   <div style={{ fontSize: 22, marginBottom: 6 }}>📞</div>
                                   <div style={{ fontSize: 13, color: "#4ade80", fontWeight: 700 }}>ติดต่อสอบถามราคา</div>
-                                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>GE SERVER HUB · 010-8811-5565</div>
+                                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{brandName} · 010-8811-5565</div>
                                 </div>
                               );
                               return (
@@ -538,7 +554,7 @@ export default function CargoTrackPage() {
                 )}
               </div>
               <div style={{ marginTop: 20, padding: "12px 14px", background: "#facc1510", border: "1px solid #facc1530", borderRadius: 8, textAlign: "center", fontSize: 12, color: "#facc15" }}>
-                📞 มีคำถาม? ติดต่อ GE SERVER HUB
+                📞 มีคำถาม? ติดต่อ {brandName}
               </div>
             </div>
           )}
@@ -978,7 +994,7 @@ export default function CargoTrackPage() {
       )}
 
       <div style={{ marginTop: 40, fontSize: 11, color: "#3a3d4a", textAlign: "center" }}>
-        © GE SERVER HUB · บริการคาโก้ไทย-เกาหลี
+        © {brandName} · บริการคาโก้ไทย-เกาหลี
       </div>
     </div>
   );

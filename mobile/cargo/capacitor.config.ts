@@ -15,12 +15,12 @@ const baseUrl = useBundled
 
 const config: CapacitorConfig = {
   appId: 'com.cargothaikorea.myapp',
-  appName: 'Cargo Thai Korea',
+  appName: 'ไทย-เกาหลี คาโก้',
   webDir: 'www',
   ...(baseUrl
     ? {
         server: {
-          url: `${baseUrl}/cargo/track`,
+          url: `${baseUrl}/cargo/track?mobileApp=1`,
           cleartext: baseUrl.startsWith('http://'),
           androidScheme: baseUrl.startsWith('https') ? 'https' : 'http',
           ...(baseUrl.includes('ngrok')
