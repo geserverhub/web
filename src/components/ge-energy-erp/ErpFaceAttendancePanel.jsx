@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { erpApiHeaders } from '@/lib/erp-api-auth';
 
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model';
+const MODEL_URL = '/face-api-models';
 
 const COPY = {
   th: {
