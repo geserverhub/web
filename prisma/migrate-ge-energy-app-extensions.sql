@@ -268,6 +268,10 @@ DEALLOCATE PREPARE stmt_reg_dev;
 ALTER TABLE user_feedback
   ADD COLUMN IF NOT EXISTS branch VARCHAR(50) DEFAULT NULL;
 
+-- User.id is VARCHAR (Prisma cuid); legacy energy schema used INT.
+ALTER TABLE user_feedback
+  MODIFY COLUMN user_id VARCHAR(191) NULL;
+
 ALTER TABLE ai_settings
   ADD COLUMN IF NOT EXISTS anthropic_api_key VARCHAR(512) DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS anthropic_model VARCHAR(64) NOT NULL DEFAULT 'claude-haiku-4-5-20251001';

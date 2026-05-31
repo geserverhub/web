@@ -137,6 +137,7 @@ export const ERP_PAGE_UI = {
       { key: 'reason', input: 'textarea' },
     ],
   },
+  'face-attendance-scan': { type: 'face-attendance' },
   'attendance-log': {
     type: 'table',
     columnKeys: ['date', 'employeeId', 'employeeName', 'checkIn', 'checkOut', 'status'],

@@ -11,6 +11,7 @@ const UI_TYPE_ALIASES = {
   'after-sales-chat-live': 'chat-live',
   'dept-daily-report': 'dept-daily',
   'dept-monthly-summary': 'dept-monthly',
+  'face-attendance-scan': 'face-attendance',
 };
 
 function normalizeUiType(type) {

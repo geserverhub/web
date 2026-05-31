@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `power_records_preinstall` (
 
 CREATE TABLE IF NOT EXISTS `user_feedback` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int DEFAULT NULL,
+  `user_id` varchar(191) DEFAULT NULL,
   `category` varchar(100) NOT NULL,
   `subject` varchar(255) NOT NULL,
   `message` text NOT NULL,

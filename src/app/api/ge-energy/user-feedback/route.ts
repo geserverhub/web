@@ -27,13 +27,39 @@ async function ensureFeedbackBranchColumn() {
   }
 }
 
+/** User.id is a Prisma cuid string — legacy schemas used INT for user_id. */
+async function ensureFeedbackUserIdColumn() {
+  const rows = await queryGe(
+    `SELECT DATA_TYPE AS dataType
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'user_feedback'
+       AND COLUMN_NAME = 'user_id'`
+  )
+
+  const dataType = String((rows as Array<{ dataType: string }>)[0]?.dataType || '').toLowerCase()
+  if (!dataType) return
+
+  const isIntegerType = ['int', 'bigint', 'mediumint', 'smallint', 'tinyint'].includes(dataType)
+  if (!isIntegerType) return
+
+  await queryGe(`ALTER TABLE user_feedback MODIFY COLUMN user_id VARCHAR(191) NULL`)
+}
+
+async function ensureFeedbackSchema() {
+  await ensureFeedbackBranchColumn()
+  await ensureFeedbackUserIdColumn()
+}
+
 /** POST /api/ge-energy/user-feedback */
 export async function POST(req: NextRequest) {
   try {
-    await ensureFeedbackBranchColumn()
+    await ensureFeedbackSchema()
 
     const body = await req.json()
     const { userId, category, subject, message, rating, branch } = body
+    const normalizedUserId =
+      userId != null && String(userId).trim() ? String(userId).trim() : null
 
     if (!category || !subject || !message) {
       return NextResponse.json({
@@ -62,13 +88,13 @@ export async function POST(req: NextRequest) {
       `INSERT INTO user_feedback (user_id, category, subject, message, rating, branch, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        userId || null,
+        normalizedUserId,
         category,
         subject,
         message,
         numRating,
         branch || null,
-        userId ? `user_${userId}` : 'anonymous',
+        normalizedUserId ? `user_${normalizedUserId}` : 'anonymous',
       ]
     )
 
@@ -87,7 +113,7 @@ export async function POST(req: NextRequest) {
 /** GET /api/ge-energy/user-feedback */
 export async function GET(req: NextRequest) {
   try {
-    await ensureFeedbackBranchColumn()
+    await ensureFeedbackSchema()
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')

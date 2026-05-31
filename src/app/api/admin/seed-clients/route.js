@@ -86,7 +86,7 @@ const desired = [
     contactEmail: "goeunserverhub@gmail.com",
     contactPhone: "010-8105-0384",
     contactFax: null,
-    logoUrl: "/ge-energyTech/138568-transparent.png",
+    logoUrl: "/ge-energyTech/138568.jpg",
     systemUrl: "https://www.ge-energytech.com",
     sortOrder: 7,
   },

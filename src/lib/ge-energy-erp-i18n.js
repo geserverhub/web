@@ -136,6 +136,7 @@ export const ERP_NAV_STRUCTURE = [
     id: 'hr',
     pages: [
       'create-leave',
+      'face-attendance-scan',
       'attendance-log',
       'payroll-record',
       'employee-profile',
@@ -343,6 +344,11 @@ const ERP_NAV_LABELS = {
     th: 'สร้างใบลา',
     en: 'Create leave request',
     ko: '휴가 신청',
+  },
+  'face-attendance-scan': {
+    th: 'สแกนใบหน้า เข้า-ออกงาน',
+    en: 'Face scan attendance',
+    ko: '얼굴 인식 출퇴근',
   },
   'attendance-log': {
     th: 'บันทึกการเข้า-ออกงาน',
@@ -702,6 +708,11 @@ const ERP_PAGE_DESC = {
     th: 'ยื่นใบลาพักงาน ลาป่วย ลากิจ หรือลาพักร้อน',
     en: 'Submit sick leave, personal leave, or annual leave requests.',
     ko: '병가, 개인 휴가, 연차 휴가를 신청합니다.',
+  },
+  'face-attendance-scan': {
+    th: 'สแกนใบหน้าเพื่อบันทึกเวลาเข้า-ออกงาน เก็บภาพและจับคู่พนักงานอัตโนมัติ',
+    en: 'Scan face to check in/out, store photos, and match the correct employee.',
+    ko: '얼굴 스캔으로 출퇴근을 기록하고 사진과 직원을 자동 매칭합니다.',
   },
   'attendance-log': {
     th: 'บันทึกเวลาเข้า-ออกงานของพนักงาน',

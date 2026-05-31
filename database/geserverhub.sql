@@ -1233,7 +1233,7 @@ DROP TABLE IF EXISTS `user_feedback`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_feedback` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int DEFAULT NULL,
+  `user_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `message` text COLLATE utf8mb4_unicode_ci NOT NULL,

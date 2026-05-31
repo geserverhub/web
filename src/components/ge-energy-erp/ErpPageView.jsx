@@ -16,6 +16,7 @@ import ErpExecutivePanel from './ErpExecutivePanel';
 import ErpWorkCalendar from './ErpWorkCalendar';
 import ErpAfterSalesChatPanel from './ErpAfterSalesChatPanel';
 import ErpDeptDailyReport from './ErpDeptDailyReport';
+import ErpFaceAttendancePanel from './ErpFaceAttendancePanel';
 
 const CHART_BAR_HEIGHTS = [58, 42, 72, 51, 68, 38, 64, 55, 76, 47, 61, 53];
 
@@ -73,6 +74,7 @@ export default function ErpPageView({
   const isAfterSalesChatPage = pageId === 'after-sales-chat-live';
   const isDeptDailyReport = pageId === 'dept-daily-report';
   const isDeptMonthlySummary = pageId === 'dept-monthly-summary';
+  const isFaceAttendancePage = pageId === 'face-attendance-scan';
   const devAllowed = canManageErpAccess(erpUser);
 
   const [loading, setLoading] = useState(false);
@@ -97,6 +99,7 @@ export default function ErpPageView({
       isAfterSalesChatPage ||
       isDeptDailyReport ||
       isDeptMonthlySummary ||
+      isFaceAttendancePage ||
       accessDenied
     ) {
       return;
@@ -245,6 +248,10 @@ export default function ErpPageView({
         />
       ) : null}
 
+      {!accessDenied && isFaceAttendancePage && ui ? (
+        <ErpFaceAttendancePanel lang={lang} />
+      ) : null}
+
       {!accessDenied && isExecPage && !isCalendarPage && ui ? (
         <ErpExecutivePanel lang={lang} pageId={pageId} />
       ) : null}
@@ -256,6 +263,7 @@ export default function ErpPageView({
       !isAfterSalesChatPage &&
       !isDeptDailyReport &&
       !isDeptMonthlySummary &&
+      !isFaceAttendancePage &&
       ui ? (
       <>
       {error ? <div className="geerp-dev-alert geerp-dev-alert--error">{error}</div> : null}

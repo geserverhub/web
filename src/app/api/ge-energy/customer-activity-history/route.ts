@@ -87,10 +87,7 @@ export async function GET(req: NextRequest) {
     const email = toStr(auth.scope.email);
     const phone = toStr(auth.scope.phone);
     const userId = toStr(auth.scope.userId);
-
-    // userId must be a valid positive integer — "NaN", "undefined" etc. are rejected
-    const userIdNum = parseInt(userId, 10);
-    const validUserId = Number.isFinite(userIdNum) && userIdNum > 0 ? userIdNum : null;
+    const validUserId = userId.length > 0 ? userId : null;
 
     const whereOrders: string[] = [];
     const orderParams: unknown[] = [];
