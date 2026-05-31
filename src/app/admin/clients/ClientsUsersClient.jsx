@@ -186,8 +186,6 @@ export default function ClientsUsersClient({ session }) {
   const [expenseFileInputs, setExpenseFileInputs] = useState([]); // File objects array
   const [savingExpense, setSavingExpense] = useState(false);
 
-  // partner transactions (for ledger)
-  const [partnerTxns, setPartnerTxns] = useState([]);
 
   // momo tab
   const [partnerProducts, setPartnerProducts] = useState([]);
@@ -423,10 +421,6 @@ export default function ClientsUsersClient({ session }) {
     setExpenses(d.expenses || []);
   }, []);
 
-  const loadPartnerTxns = useCallback(async () => {
-    const d = await readJsonResponse(await fetch("/api/admin/partner-transactions"));
-    setPartnerTxns(d.transactions || []);
-  }, []);
 
   const loadCustomers = useCallback(async () => {
     const url = filterCustomerClientId ? `/api/admin/customers?clientId=${filterCustomerClientId}` : "/api/admin/customers";
@@ -451,7 +445,7 @@ export default function ClientsUsersClient({ session }) {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    Promise.allSettled([loadClients(), loadUsers(), loadInvoices(), loadReceipts(), loadServices(), loadExpenses(), loadCustomers(), loadCargo(), loadCargoCustomers(), loadPartnerTxns()])
+    Promise.allSettled([loadClients(), loadUsers(), loadInvoices(), loadReceipts(), loadServices(), loadExpenses(), loadCustomers(), loadCargo(), loadCargoCustomers()])
       .then((results) => {
         if (!active) return;
         const failed = results.filter((result) => result.status === "rejected");
@@ -467,7 +461,7 @@ export default function ClientsUsersClient({ session }) {
     return () => {
       active = false;
     };
-  }, [loadClients, loadUsers, loadInvoices, loadReceipts, loadServices, loadExpenses, loadCustomers, loadCargo, loadCargoCustomers, loadPartnerTxns]);
+  }, [loadClients, loadUsers, loadInvoices, loadReceipts, loadServices, loadExpenses, loadCustomers, loadCargo, loadCargoCustomers]);
 
   // ── Client Modal ──
   const openAddClient = () => {
@@ -3578,8 +3572,6 @@ export default function ClientsUsersClient({ session }) {
               {[
                 { icon: "📦", label: "สินค้า / Products", val: partnerProducts.length, color: "#a78bfa" },
                 { icon: "📋", label: "งาน / Tasks", val: partnerTasks.length, color: "#60a5fa" },
-                { icon: "💸", label: "Transactions", val: partnerTxns.length, color: "#fbbf24" },
-                { icon: "💰", label: "รายรับ KRW", val: `₩${partnerTxns.filter(t => t.currency === "KRW" && ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(t.type)).reduce((s, t) => s + Number(t.amount), 0).toLocaleString("ko-KR")}`, color: "#4ade80" },
               ].map(k => (
                 <div key={k.label} style={{ background: "#1a1d27", borderRadius: 10, padding: "14px 16px", border: "1px solid #2a2d3a" }}>
                   <div style={{ fontSize: 22 }}>{k.icon}</div>
@@ -3666,36 +3658,6 @@ export default function ClientsUsersClient({ session }) {
               )}
             </div>
 
-            {/* Partner Transactions section */}
-            <div>
-              <div style={{ fontWeight: 700, color: "#fbbf24", fontSize: 15, marginBottom: 12 }}>💸 Partner Transactions</div>
-              {partnerTxns.length === 0 ? (
-                <div style={{ padding: 24, textAlign: "center", color: "#4a5070", background: "#1a1d27", borderRadius: 8 }}>ยังไม่มีรายการ</div>
-              ) : (
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                    <thead>
-                      <tr>{["เลขที่", "Brand", "ประเภท", "ยอดเงิน", "สกุลเงิน", "สถานะ", "วันที่"].map(h => (
-                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#8b8fa8", fontWeight: 600, borderBottom: "1px solid #2a2d3a", whiteSpace: "nowrap" }}>{h}</th>
-                      ))}</tr>
-                    </thead>
-                    <tbody>
-                      {partnerTxns.map(t => (
-                        <tr key={t.id} style={{ borderBottom: "1px solid #1e2130" }}>
-                          <td style={{ padding: "8px 10px", color: "#7eb8f7", fontWeight: 600 }}>{t.number}</td>
-                          <td style={{ padding: "8px 10px", color: "#a78bfa" }}>{t.brand || "—"}</td>
-                          <td style={{ padding: "8px 10px", color: "#e8eaf0" }}>{t.type}</td>
-                          <td style={{ padding: "8px 10px", color: ["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"].includes(t.type) ? "#4ade80" : "#f87171", fontWeight: 700 }}>{Number(t.amount).toLocaleString()}</td>
-                          <td style={{ padding: "8px 10px" }}><span style={{ background: "#1e1b4b", color: "#a78bfa", borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{t.currency}</span></td>
-                          <td style={{ padding: "8px 10px", color: t.status === "COMPLETED" ? "#4ade80" : "#fbbf24" }}>{t.status}</td>
-                          <td style={{ padding: "8px 10px", color: "#8b8fa8" }}>{t.date ? new Date(t.date).toLocaleDateString("th-TH") : "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
           </div>
         )}
 
@@ -4032,14 +3994,8 @@ export default function ClientsUsersClient({ session }) {
 
         const PAID_STATUSES_INV = ["PAID"];
         const PAID_STATUSES_EXP = ["แนบใบเสร็จแล้ว", "PAID"];
-        const PARTNER_INCOME_TYPES = new Set(["SALE", "PROFIT_SHARE", "PARTNER_INVESTMENT"]);
         const curInvoices = invoices.filter(i => (i.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_INV.includes(i.status)));
         const curExpenses = expenses.filter(e => (e.currency || "THB") === ledgerCurrency && (!ledgerPaidOnly || PAID_STATUSES_EXP.includes(e.status)));
-        const curPartnerIncome = partnerTxns.filter(t =>
-          (t.currency || "KRW") === ledgerCurrency &&
-          PARTNER_INCOME_TYPES.has(t.type) &&
-          (!ledgerPaidOnly || t.status === "COMPLETED")
-        );
         const goeunClientId = clients.find(c => c.name === "GOEUN SERVER HUB")?.id;
         const curReceipts = receipts.filter(r => (r.currency || "THB") === ledgerCurrency && r.clientId === goeunClientId);
 
@@ -4056,12 +4012,6 @@ export default function ClientsUsersClient({ session }) {
             ref: e.number, desc: e.category,
             detail: e.status || "รอชำระ",
             income: 0, vat: 0, expense: Number(e.amount),
-          })),
-          ...curPartnerIncome.map(t => ({
-            id: `pt-${t.id}`, date: new Date(t.date), type: "income",
-            ref: t.number, desc: t.customerName || t.brand || "—",
-            detail: { SALE: "ขาย", PROFIT_SHARE: "แบ่งกำไร", PARTNER_INVESTMENT: "การลงทุน" }[t.type] || t.type,
-            income: Number(t.amount), vat: 0, expense: 0,
           })),
           ...curReceipts.map(r => {
             const vr = r.vatRate ? Number(r.vatRate) : 0;
@@ -4084,7 +4034,6 @@ export default function ClientsUsersClient({ session }) {
         });
 
         const totalIncome = curInvoices.reduce((s, i) => s + Number(i.amount), 0)
-          + curPartnerIncome.reduce((s, t) => s + Number(t.amount), 0)
           + curReceipts.reduce((s, r) => s + Number(r.total), 0);
         const totalExpense = curExpenses.reduce((s, e) => s + Number(e.amount), 0);
         const netProfit = totalIncome - totalExpense;
@@ -4494,7 +4443,7 @@ export default function ClientsUsersClient({ session }) {
                   ))}
                 </div>
                 <div style={{ marginTop: 10, background: "#1a1d27", borderRadius: 8, padding: "10px 14px", border: "1px solid #2a2d3a", fontSize: 13, color: "#8b8fa8" }}>
-                  {(() => { const PTYPES = new Set(["SALE","PROFIT_SHARE","PARTNER_INVESTMENT"]); const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency).length + partnerTxns.filter(t => (t.currency||"KRW") === ledgerCurrency && PTYPES.has(t.type) && t.status !== "CANCELLED").length; const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency).length; const ti = invoices.filter(i=>(i.currency||"THB")===ledgerCurrency).reduce((s,i)=>s+Number(i.amount),0) + partnerTxns.filter(t=>(t.currency||"KRW")===ledgerCurrency && PTYPES.has(t.type) && t.status!=="CANCELLED").reduce((s,t)=>s+Number(t.amount),0); const te = expenses.filter(e=>(e.currency||"THB")===ledgerCurrency).reduce((s,e)=>s+Number(e.amount),0); const sym={THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||""; return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{ci} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce} รายการ</span> · {ti-te >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{(ti-te).toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(ti-te).toLocaleString("th-TH")}</span>}</>; })()}
+                  {(() => { const ci = invoices.filter(i => (i.currency||"THB") === ledgerCurrency).length; const ce = expenses.filter(e => (e.currency||"THB") === ledgerCurrency).length; const ti = invoices.filter(i=>(i.currency||"THB")===ledgerCurrency).reduce((s,i)=>s+Number(i.amount),0); const te = expenses.filter(e=>(e.currency||"THB")===ledgerCurrency).reduce((s,e)=>s+Number(e.amount),0); const sym={THB:"฿",KRW:"₩",USD:"$"}[ledgerCurrency]||""; return <>รายรับ <span style={{color:"#4ade80",fontWeight:700}}>{ci} รายการ</span> · รายจ่าย <span style={{color:"#f87171",fontWeight:700}}>{ce} รายการ</span> · {ti-te >= 0 ? <span style={{color:"#4ade80"}}>📈 กำไร {sym}{(ti-te).toLocaleString("th-TH")}</span> : <span style={{color:"#f87171"}}>📉 ขาดทุน {sym}{Math.abs(ti-te).toLocaleString("th-TH")}</span>}</>; })()}
                 </div>
                 {/* Ledger search filter */}
                 <div style={{ marginTop: 12 }}>
