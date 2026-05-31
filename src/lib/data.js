@@ -134,7 +134,8 @@ export const fallbackClients = [
     status: "online",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "+66 095-241-1833",
-    thumbnail: "/cargo/cargo-logo.jpg",
+    thumbnail: "/cargo/cargo-logo.png",
+    thumbnail_fit: "contain",
     system_url: "/cargo/track",
   },
   {

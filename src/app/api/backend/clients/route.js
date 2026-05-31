@@ -47,6 +47,13 @@ const CLIENT_CARD_OVERRIDES = {
     contact_phone: "010-8105-0384",
     system_url: "https://www.ge-energytech.com",
   },
+  cargo: {
+    thumbnail: "/cargo/cargo-logo.png",
+    thumbnail_fit: "contain",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "+66 095-241-1833",
+    system_url: "/cargo/track",
+  },
 };
 
 export const dynamic = "force-dynamic";

@@ -61,7 +61,7 @@ const desired = [
     contactEmail: "goeunserverhub@gmail.com",
     contactPhone: "+66 095-241-1833",
     contactFax: null,
-    logoUrl: "/cargo/cargo-logo.jpg",
+    logoUrl: "/cargo/cargo-logo.png",
     systemUrl: "/cargo/track",
     sortOrder: 5,
   },

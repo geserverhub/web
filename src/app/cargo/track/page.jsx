@@ -284,9 +284,9 @@ export default function CargoTrackPage() {
 
       <div style={{ marginBottom: 24, textAlign: "center" }}>
         <img
-          src="/cargo/cargo-logo.jpg"
+          src="/cargo/cargo-logo.png"
           alt={brandName}
-          style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover", marginBottom: 10 }}
+          style={{ width: 120, height: 72, objectFit: "contain", marginBottom: 10 }}
         />
         <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>{brandName}</div>
         <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>บริการคาโก้ไทย-เกาหลี · 항공 화물 서비스</div>

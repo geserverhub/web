@@ -9,7 +9,7 @@ import sharp from 'sharp';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const repoRoot = path.resolve(root, '../..');
-const srcLogo = path.join(repoRoot, 'public', 'cargo', 'cargo-logo.jpg');
+const srcLogo = path.join(repoRoot, 'public', 'cargo', 'cargo-logo.png');
 
 /** Cargo portal dark background */
 const BRAND_BG = { r: 22, g: 24, b: 31, alpha: 1 };

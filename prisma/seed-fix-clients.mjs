@@ -41,7 +41,7 @@ const updates = [
       name: "คาโก้ ไทย-เกาหลี",
       contactEmail: "goeunserverhub@gmail.com",
       contactPhone: "+66 095-241-1833",
-      logoUrl: "/cargo/cargo-logo.jpg",
+      logoUrl: "/cargo/cargo-logo.png",
       systemUrl: "/cargo/track",
     },
   },
