@@ -284,7 +284,7 @@ export default function CargoTrackPage() {
 
       <div style={{ marginBottom: 24, textAlign: "center" }}>
         <img
-          src="/uploads/logos/cargo.jpg"
+          src="/cargo/cargo-logo.jpg"
           alt={brandName}
           style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover", marginBottom: 10 }}
         />

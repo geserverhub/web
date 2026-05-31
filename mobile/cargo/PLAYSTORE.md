@@ -64,7 +64,7 @@ Output: `android/app/build/outputs/bundle/release/app-release.aab`
 | Category | Business / Travel & Local |
 | Privacy policy URL | `https://ge-energytech.com/privacy` |
 | Screenshots | Phone — track, request shipment, profile |
-| Icon | 512×512 PNG (`public/uploads/logos/cargo.jpg`) |
+| Icon | 512×512 JPG (`public/cargo/cargo-logo.jpg`) |
 
 Upload the **AAB** to **Internal testing** first, then Production.
 
