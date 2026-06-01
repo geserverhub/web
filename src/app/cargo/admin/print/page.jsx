@@ -229,7 +229,7 @@ export default function CargoPrintPage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
         <div className="print-header" style={{ textAlign: "center", marginBottom: "40px" }}>
           <h1 style={{ margin: "0 0 4px", fontSize: 28, fontWeight: 900 }}>🖨️ รายการส่งขนส่ง</h1>
-          <p style={{ margin: "4px 0", color: "#64748b", fontSize: 14 }}>บริการคาโก้ไทย-เกาหลี | GE Server Hub</p>
+          <p style={{ margin: "4px 0", color: "#64748b", fontSize: 14 }}>บริการคาโก้ ไทย-เกาหลี | GE Server Hub</p>
           <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>พิมพ์เมื่อ {new Date().toLocaleString('th-TH')}</p>
         </div>
 
@@ -339,7 +339,7 @@ export default function CargoPrintPage() {
 
             {/* Print Footer */}
             <div style={{ marginTop: 40, paddingTop: 20, borderTop: "2px solid #e2e8f0", textAlign: "center", fontSize: 11, color: "#94a3b8" }}>
-              <p style={{ margin: 0 }}>© {new Date().getFullYear()} GE Server Hub · บริการคาโก้ไทย-เกาหลี</p>
+              <p style={{ margin: 0 }}>© {new Date().getFullYear()} GE Server Hub · บริการคาโก้ ไทย-เกาหลี</p>
               <p style={{ margin: "4px 0 0" }}>Document printed: {new Date().toLocaleString('th-TH')}</p>
             </div>
           </>

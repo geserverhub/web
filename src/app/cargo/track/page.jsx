@@ -289,7 +289,7 @@ export default function CargoTrackPage() {
           style={{ width: 120, height: 72, objectFit: "contain", marginBottom: 10 }}
         />
         <div style={{ fontSize: 22, fontWeight: 900, color: "#facc15", letterSpacing: 1 }}>{brandName}</div>
-        <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>บริการคาโก้ไทย-เกาหลี · 항공 화물 서비스</div>
+        <div style={{ fontSize: 13, color: "#8b8fa8", marginTop: 2 }}>บริการคาโก้ ไทย-เกาหลี · 항공 화물 서비스</div>
       </div>
 
       {/* Login modal */}
@@ -984,7 +984,7 @@ export default function CargoTrackPage() {
       )}
 
       <div style={{ marginTop: 40, fontSize: 11, color: "#3a3d4a", textAlign: "center" }}>
-        © {brandName} · บริการคาโก้ไทย-เกาหลี
+        © {brandName} · บริการคาโก้ ไทย-เกาหลี
       </div>
     </div>
   );

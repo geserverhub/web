@@ -1,6 +1,6 @@
 # คาโก้ ไทย-เกาหลี — Google Play Store
 
-Android app wraps the live **Cargo customer portal** (`/cargo/track?mobileApp=1`) in a Capacitor WebView. Branding shows **ไทย-เกาหลี คaโก้** (not GE SERVER HUB). UI updates ship from the server; Play Store updates are only needed for native shell changes.
+Android app wraps the live **Cargo customer portal** (`/cargo/track?mobileApp=1`) in a Capacitor WebView. Branding shows **ไทย-เกาหลี คาโก้** (not GE SERVER HUB). UI updates ship from the server; Play Store updates are only needed for native shell changes.
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ Output: `android/app/build/outputs/bundle/release/app-release.aab`
 
 | Item | Value |
 |------|--------|
-| App name | ไทย-เกาหลี คaโก้ |
+| App name | ไทย-เกาหลี คาโก้ |
 | Package | `cargo.myapp` |
 | Category | Business / Travel & Local |
 | Privacy policy URL | `https://www.ge-serverhub.com/policy` |

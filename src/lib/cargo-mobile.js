@@ -11,6 +11,6 @@ export function isCargoMobileApp() {
   }
 }
 
-export const CARGO_APP_NAME = 'ไทย-เกาหลี คaโก้';
+export const CARGO_APP_NAME = 'ไทย-เกาหลี คาโก้';
 export const CARGO_MOBILE_APP_NAME = CARGO_APP_NAME;
 export const CARGO_HUB_NAME = 'GE SERVER HUB';
