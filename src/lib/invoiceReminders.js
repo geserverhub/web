@@ -117,7 +117,6 @@ export async function sendInvoiceReminders({ invoiceIds, sendAll = false }) {
           body,
           sent: true,
           sentAt: new Date(),
-          userId: inv.user?.id || null,
         },
       });
       pushSent++;
@@ -150,7 +149,6 @@ export async function sendInvoiceReminders({ invoiceIds, sendAll = false }) {
           body,
           sent: true,
           sentAt: new Date(),
-          userId: inv.user?.id || null,
         },
       });
     } else {
@@ -164,7 +162,6 @@ export async function sendInvoiceReminders({ invoiceIds, sendAll = false }) {
           body,
           sent: false,
           error: String(result.reason || "line_send_failed"),
-          userId: inv.user?.id || null,
         },
       });
     }
