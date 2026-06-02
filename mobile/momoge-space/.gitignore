@@ -8,3 +8,14 @@ android/local.properties
 *.keystore
 android/keystore.properties
 KEYSTORE-CREDENTIALS.local.txt
+upload_certificate.pem
+.jdk8/
+.jdk11/
+jdk8.local.ps1
+momoge-j11.jks
+momoge-legacy-jks.jks
+momoge.keystore
+test-out.zip
+.pepk-pass.tmp
+encrypted_private_key.zip
+momoge-space-release-jks.jks

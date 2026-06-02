@@ -469,3 +469,52 @@ model CargoOrder {
   @@index([direction])
   @@index([createdAt])
 }
+
+model FileConversionJob {
+  id           String                 @id @default(cuid())
+  platform     ConversionPlatform
+  sourceName   String
+  sourcePath   String                 @db.Text
+  sourceMime   String
+  sourceSize   Int
+  status       ConversionStatus       @default(SUCCESS)
+  errorMessage String?                @db.Text
+  createdById  String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  results      FileConversionResult[]
+
+  @@index([platform, createdAt])
+  @@index([createdById])
+}
+
+model FileConversionResult {
+  id         String            @id @default(cuid())
+  jobId      String
+  fileName   String
+  filePath   String            @db.Text
+  mimeType   String
+  fileSize   Int
+  width      Int
+  height     Int
+  target     ConversionTarget
+  createdAt  DateTime          @default(now())
+  job        FileConversionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([target])
+}
+
+enum ConversionPlatform {
+  ANDROID
+  IOS
+}
+
+enum ConversionStatus {
+  SUCCESS
+  FAILED
+}
+
+enum ConversionTarget {
+  APP_ICON
+}
