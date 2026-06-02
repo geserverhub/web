@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import StoreAssetPreviewPanel from "./StoreAssetPreviewPanel";
 
 function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return "-";
@@ -204,6 +205,8 @@ export default function FileConverterClient() {
           </div>
         </div>
       </div>
+
+      <StoreAssetPreviewPanel platform={platform} />
 
       <div className="card shadow-sm mb-3">
         <div className="card-body">

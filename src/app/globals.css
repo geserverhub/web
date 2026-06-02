@@ -230,6 +230,16 @@ img {
   flex-shrink: 0;
 }
 
+.agency-sidebar-tools-label {
+  padding: 0.35rem 1.1rem 0.15rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(100, 116, 139, 0.9);
+  flex-shrink: 0;
+}
+
 .agency-sidebar-bottom {
   padding: 0.6rem 0.6rem 1rem;
   flex-shrink: 0;
@@ -2573,4 +2583,105 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
   font-size: 0.85rem;
   color: var(--agency-muted);
   border-top: 1px solid var(--agency-line);
+}
+
+/* Admin file-converter — store asset preview mocks */
+.fc-preview-mock {
+  background: var(--agency-surface-2);
+  border: 1px solid var(--agency-line);
+  border-radius: var(--agency-radius-xl);
+  padding: 1rem;
+}
+
+.fc-preview-mock__label {
+  font-size: 0.75rem;
+  color: var(--agency-muted);
+  margin-bottom: 0.75rem;
+}
+
+.fc-preview-mock__listing-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: var(--agency-shadow-soft);
+}
+
+.fc-preview-mock__listing-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e2e8f0;
+}
+
+.fc-preview-mock__listing-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fc-preview-mock__app-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.fc-preview-mock__app-sub {
+  font-size: 0.75rem;
+  color: var(--agency-muted);
+  margin: 0.15rem 0 0.5rem;
+}
+
+.fc-preview-mock__app-cta {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--agency-primary);
+}
+
+.fc-preview-mock__banner-frame {
+  aspect-ratio: 1024 / 500;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--agency-shadow-soft);
+}
+
+.fc-preview-mock__banner-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fc-preview-mock__phone {
+  width: min(220px, 100%);
+  margin: 0 auto;
+  background: #111827;
+  border-radius: 1.5rem;
+  padding: 0.5rem;
+  box-shadow: var(--agency-shadow);
+}
+
+.fc-preview-mock__phone-notch {
+  width: 36%;
+  height: 6px;
+  background: #374151;
+  border-radius: 999px;
+  margin: 0.15rem auto 0.45rem;
+}
+
+.fc-preview-mock__phone-screen {
+  border-radius: 1.1rem;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 9 / 19.5;
+}
+
+.fc-preview-mock__phone-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

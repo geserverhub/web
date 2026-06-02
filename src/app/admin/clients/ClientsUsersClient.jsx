@@ -2106,6 +2106,9 @@ export default function ClientsUsersClient({ session }) {
           <Link href="/admin/file-converter" style={{ color: "#8b8fa8", fontSize: 13, textDecoration: "none" }}>
             แปลงไฟล์มือถือ
           </Link>
+          <Link href="/phone-remote" style={{ color: "#8b8fa8", fontSize: 13, textDecoration: "none" }}>
+            รีโมทหน้าจอ
+          </Link>
           <span style={{ color: "#7eb8f7", fontSize: 13, fontWeight: 600 }}>ลูกค้า &amp; Users</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -2119,6 +2122,10 @@ export default function ClientsUsersClient({ session }) {
           <Link href="/admin/file-converter"
             style={{ ...S.btn("#1e2336", "#7eb8f7"), textDecoration: "none", padding: "5px 11px", fontSize: 12, border: "1px solid #2a2d3a" }}>
             🖼️ แปลงไฟล์
+          </Link>
+          <Link href="/phone-remote"
+            style={{ ...S.btn("#1a2336", "#67e8f9"), textDecoration: "none", padding: "5px 11px", fontSize: 12, border: "1px solid #2a2d3a" }}>
+            📱 รีโมทหน้าจอ
           </Link>
 
           {/* Payment notification */}
@@ -2197,6 +2204,8 @@ export default function ClientsUsersClient({ session }) {
               onClick: () => { setTab("invoices"); setFilterInvoiceStatus("OVERDUE"); } },
             { label: "แปลงไฟล์มือถือ", value: "🖼️", color: "#38bdf8",
               onClick: () => { window.location.href = "/admin/file-converter"; } },
+            { label: "รีโมทหน้าจอ", value: "📱", color: "#67e8f9",
+              onClick: () => { window.location.href = "/phone-remote"; } },
           ].map(s => (
             <div key={s.label} onClick={s.onClick} style={{ ...S.card, textAlign: "center", cursor: "pointer", transition: "border-color .15s",
               borderColor: "#2a2d3a" }}

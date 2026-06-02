@@ -62,6 +62,32 @@ const NAV_ITEMS = [
   },
 ];
 
+const TOOL_ITEMS = [
+  {
+    labelKey: "navPhoneRemote",
+    defaultLabel: "รีโมทหน้าจอ",
+    href: "/phone-remote",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" />
+        <line x1="12" y1="18" x2="12" y2="18" />
+      </svg>
+    ),
+  },
+  {
+    labelKey: "navFileConverter",
+    defaultLabel: "แปลงไฟล์มือถือ",
+    href: "/admin/file-converter",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="M21 15l-5-5L5 21" />
+      </svg>
+    ),
+  },
+];
+
 export default function Sidebar({ ui, profile }) {
   return (
     <aside className="agency-sidebar">
@@ -75,6 +101,18 @@ export default function Sidebar({ ui, profile }) {
 
       <nav className="agency-sidebar-nav" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => (
+          <a key={item.href} href={item.href} className="agency-sidebar-item">
+            <span className="agency-sidebar-icon">{item.icon}</span>
+            <span className="btn-path-label">{(ui && ui[item.labelKey]) || item.defaultLabel}</span>
+          </a>
+        ))}
+      </nav>
+
+      <div className="agency-sidebar-divider" />
+
+      <div className="agency-sidebar-tools-label">{(ui && ui.navTools) || "เครื่องมือ"}</div>
+      <nav className="agency-sidebar-nav" aria-label="Tools">
+        {TOOL_ITEMS.map((item) => (
           <a key={item.href} href={item.href} className="agency-sidebar-item">
             <span className="agency-sidebar-icon">{item.icon}</span>
             <span className="btn-path-label">{(ui && ui[item.labelKey]) || item.defaultLabel}</span>

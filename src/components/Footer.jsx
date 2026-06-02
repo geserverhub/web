@@ -22,6 +22,9 @@ export default function Footer({ ui, profile }) {
             <a href="/policy" className="agency-footer-link">
               {ui.footerPolicy || "Privacy Policy"}
             </a>
+            <a href="/phone-remote" className="agency-footer-link">
+              {ui.navPhoneRemote || "Phone Remote"}
+            </a>
           </div>
         </div>
       </div>

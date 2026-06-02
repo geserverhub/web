@@ -79,3 +79,77 @@ export function storeExtensionsForPlatform(platform) {
 export function listingIconSize(platform) {
   return platform === "android" ? 512 : 1024;
 }
+
+/** Store assets admins can preview before uploading to Play / App Store Connect. */
+export const STORE_PREVIEW_ASSETS = {
+  android: [
+    {
+      id: "listing-icon",
+      label: "ไอคอน Play Store",
+      usage: "512×512 px (.png, ไม่โปร่งใส)",
+      width: 512,
+      height: 512,
+      kind: "icon",
+      accept: ".png,.jpg,.jpeg,.webp",
+    },
+    {
+      id: "phone-screenshot",
+      label: "ภาพหน้าจอมือถือ",
+      usage: "1080×1920 px ขึ้นไป (สัดส่วน 9:16 แนวตั้ง)",
+      width: 1080,
+      height: 1920,
+      kind: "screenshot",
+      minWidth: 320,
+      minHeight: 320,
+      maxWidth: 3840,
+      maxHeight: 3840,
+      accept: ".png,.jpg,.jpeg,.webp",
+    },
+    {
+      id: "feature-graphic",
+      label: "Feature Graphic (โปรโมต)",
+      usage: "1024×500 px (.png หรือ .jpg)",
+      width: 1024,
+      height: 500,
+      kind: "banner",
+      accept: ".png,.jpg,.jpeg,.webp",
+    },
+  ],
+  ios: [
+    {
+      id: "listing-icon",
+      label: "ไอคอน App Store",
+      usage: "1024×1024 px (.png, ไม่โปร่งใส)",
+      width: 1024,
+      height: 1024,
+      kind: "icon",
+      accept: ".png,.jpg,.jpeg,.webp",
+    },
+    {
+      id: "iphone-screenshot",
+      label: "ภาพหน้าจอ iPhone (6.7\")",
+      usage: "1290×2796 px แนวตั้ง",
+      width: 1290,
+      height: 2796,
+      kind: "screenshot",
+      minWidth: 1242,
+      minHeight: 2208,
+      accept: ".png,.jpg,.jpeg,.webp",
+    },
+    {
+      id: "ipad-screenshot",
+      label: "ภาพหน้าจอ iPad (ถ้ามี)",
+      usage: "2048×2732 px แนวตั้ง",
+      width: 2048,
+      height: 2732,
+      kind: "screenshot",
+      minWidth: 1536,
+      minHeight: 2048,
+      accept: ".png,.jpg,.jpeg,.webp",
+    },
+  ],
+};
+
+export function previewAssetsForPlatform(platform) {
+  return STORE_PREVIEW_ASSETS[platform] || [];
+}
