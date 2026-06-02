@@ -471,38 +471,54 @@ model CargoOrder {
 }
 
 model FileConversionJob {
-  id           String                 @id @default(cuid())
-  platform     ConversionPlatform
-  sourceName   String
-  sourcePath   String                 @db.Text
-  sourceMime   String
-  sourceSize   Int
-  status       ConversionStatus       @default(SUCCESS)
-  errorMessage String?                @db.Text
-  createdById  String?
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  results      FileConversionResult[]
+  id                    String                 @id @default(cuid())
+  platform              ConversionPlatform
+  sourceName            String
+  sourcePath            String                 @db.Text
+  sourceMime            String
+  sourceSize            Int
+  sourceExtension       String                 @default(".png")
+  sourceSha1            String?
+  bundleName            String?
+  bundlePath            String?                @db.Text
+  bundleMime            String?
+  bundleSize            Int?
+  bundleExtension       String?
+  bundleSha1            String?
+  bundleSigningSha1     String?
+  storeUploadExtensions String?                @db.Text
+  status                ConversionStatus       @default(SUCCESS)
+  errorMessage          String?                @db.Text
+  createdById           String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  results               FileConversionResult[]
 
   @@index([platform, createdAt])
   @@index([createdById])
 }
 
 model FileConversionResult {
-  id         String            @id @default(cuid())
-  jobId      String
-  fileName   String
-  filePath   String            @db.Text
-  mimeType   String
-  fileSize   Int
-  width      Int
-  height     Int
-  target     ConversionTarget
-  createdAt  DateTime          @default(now())
-  job        FileConversionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  id            String            @id @default(cuid())
+  jobId         String
+  fileName      String
+  filePath      String            @db.Text
+  mimeType      String
+  fileExtension String            @default(".png")
+  sha1          String?
+  signingSha1   String?
+  fileSize      Int
+  width         Int
+  height        Int
+  target        ConversionTarget
+  storeEligible Boolean           @default(true)
+  usageNote     String?
+  createdAt     DateTime          @default(now())
+  job           FileConversionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([target])
+  @@index([fileExtension])
 }
 
 enum ConversionPlatform {
@@ -517,4 +533,6 @@ enum ConversionStatus {
 
 enum ConversionTarget {
   APP_ICON
+  STORE_LISTING
+  APP_BUNDLE
 }
