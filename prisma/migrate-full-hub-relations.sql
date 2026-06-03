@@ -173,6 +173,33 @@ CREATE TABLE IF NOT EXISTS `SoftwareDownloadProduct` (
   KEY `SoftwareDownloadProduct_sortOrder_idx` (`sortOrder`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `SoftwareDownloadOrder` (
+  `id` VARCHAR(191) NOT NULL,
+  `orderCode` VARCHAR(191) NOT NULL,
+  `email` VARCHAR(191) NOT NULL,
+  `productId` VARCHAR(191) NULL,
+  `productSlug` VARCHAR(191) NOT NULL,
+  `productTitle` VARCHAR(191) NOT NULL,
+  `amount` DECIMAL(10, 2) NOT NULL,
+  `currency` VARCHAR(191) NOT NULL DEFAULT 'THB',
+  `status` ENUM('PENDING', 'AWAITING_REVIEW', 'PAID', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+  `stripeCheckoutSessionId` VARCHAR(191) NULL,
+  `stripePaymentIntentId` VARCHAR(191) NULL,
+  `paymentGateway` VARCHAR(191) NULL,
+  `receiptFile` VARCHAR(191) NULL,
+  `notes` TEXT NULL,
+  `paidAt` DATETIME(3) NULL,
+  `downloadCount` INT NOT NULL DEFAULT 0,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `SoftwareDownloadOrder_orderCode_key` (`orderCode`),
+  KEY `SoftwareDownloadOrder_email_idx` (`email`),
+  KEY `SoftwareDownloadOrder_status_idx` (`status`),
+  KEY `SoftwareDownloadOrder_productSlug_idx` (`productSlug`),
+  KEY `SoftwareDownloadOrder_productId_idx` (`productId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ─── Columns on existing tables ─────────────────────────────────────────────
 SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'CargoOrder' AND COLUMN_NAME = 'clientId');
 SET @sql := IF(@c = 0, 'ALTER TABLE `CargoOrder` ADD COLUMN `clientId` VARCHAR(191) NULL', 'SELECT 1');

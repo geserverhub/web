@@ -63,7 +63,7 @@ export async function POST(req) {
     const msg = err?.message || "";
     if (msg.includes("SoftwareDownloadOrder") || msg.includes("does not exist")) {
       return NextResponse.json(
-        { error: "ฐานข้อมูลยังไม่พร้อม — รัน scripts/db-migrate-software-downloads.sql" },
+        { error: "ฐานข้อมูลยังไม่พร้อม — รัน npm run db:migrate-software-downloads" },
         { status: 503 }
       );
     }

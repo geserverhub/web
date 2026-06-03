@@ -89,7 +89,7 @@ export async function GET(req) {
     const msg = err?.message || "";
     if (msg.includes("SoftwareDownloadOrder") || msg.includes("does not exist")) {
       return NextResponse.json(
-        { error: "ตาราง SoftwareDownloadOrder ยังไม่มี — รัน scripts/db-migrate-software-downloads.sql" },
+        { error: "ตาราง SoftwareDownloadOrder ยังไม่มี — รัน npm run db:migrate-software-downloads" },
         { status: 503 }
       );
     }
