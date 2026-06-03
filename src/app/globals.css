@@ -2622,12 +2622,31 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
   overflow: hidden;
   flex-shrink: 0;
   background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fc-preview-mock__listing-icon img {
   width: 100%;
   height: 100%;
+  display: block;
+}
+
+.fc-preview-mock__listing-icon--fit img {
   object-fit: cover;
+}
+
+.fc-preview-mock__listing-icon--misfit {
+  background: #f8fafc;
+  outline: 2px dashed rgba(239, 68, 68, 0.55);
+  outline-offset: -2px;
+}
+
+.fc-preview-mock__listing-icon--misfit img {
+  object-fit: contain;
+  padding: 5px;
+  box-sizing: border-box;
 }
 
 .fc-preview-mock__app-name {

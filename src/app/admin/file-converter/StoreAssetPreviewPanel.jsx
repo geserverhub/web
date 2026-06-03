@@ -24,32 +24,32 @@ function evaluateAsset(spec, width, height) {
   if (spec.kind === "icon") {
     const exact = width === spec.width && height === spec.height;
     const square = width === height;
-    const bigEnough = width >= spec.width && height >= spec.height;
 
     if (exact) {
       messages.push({
         level: "ok",
-        text: `ขนาดตรง ${spec.width}×${spec.height} px — ตรงตามที่ Store ต้องการ`,
+        text: `ขนาดตรง ${spec.width}×${spec.height} px — พร้อมอัปโหลด Store`,
       });
-    } else if (square && bigEnough) {
-      messages.push({
-        level: "warn",
-        text: `ขนาด ${width}×${height} px — ใหญ่กว่าที่แนะนำ อัปโหลด ${spec.width}×${spec.height} ตรงๆ จะคมที่สุด`,
-      });
-      score -= 12;
-    } else if (square) {
+    } else if (!square) {
       messages.push({
         level: "bad",
-        text: `ขนาด ${width}×${height} px — เล็กกว่า ${spec.width}×${spec.height} อาจเบลอหลังอัปโหลดจริง`,
+        text: `ขนาด ${width}×${height} px — ไม่เป็นสี่เหลี่ยมจัตุรัส ต้องเป็น ${spec.width}×${spec.height} px`,
       });
-      score -= 45;
+      score -= 55;
+    } else if (width > spec.width) {
+      messages.push({
+        level: "bad",
+        text: `ขนาด ${width}×${height} px — ใหญ่เกินไป ต้องเป็น ${spec.width}×${spec.height} px เท่านั้น`,
+      });
+      score = 50;
     } else {
       messages.push({
         level: "bad",
-        text: `ไม่เป็นสี่เหลี่ยมจัตุรัส (${width}×${height}) — ไอคอน Store ต้องเป็นสี่เหลี่ยมจัตุรัส`,
+        text: `ขนาด ${width}×${height} px — เล็กเกินไป ต้องเป็น ${spec.width}×${spec.height} px`,
       });
-      score -= 55;
+      score = 45;
     }
+    if (!exact) score = Math.min(score, 59);
   } else if (spec.kind === "banner") {
     const exact = width === spec.width && height === spec.height;
     const ratio = width / height;
@@ -130,12 +130,20 @@ function evaluateAsset(spec, width, height) {
   return { messages, verdict, verdictText, score };
 }
 
-function PlayStoreIconMock({ previewUrl }) {
+/** cover = exact store size; contain = wrong dimensions (show full image honestly) */
+function iconPreviewMode(width, height, spec, isFixed) {
+  if (isFixed) return "fit";
+  return width === spec.width && height === spec.height ? "fit" : "misfit";
+}
+
+function PlayStoreIconMock({ previewUrl, iconMode = "fit" }) {
   return (
     <div className="fc-preview-mock fc-preview-mock--listing">
       <div className="fc-preview-mock__label">ตัวอย่างบน Google Play</div>
       <div className="fc-preview-mock__listing-row">
-        <div className="fc-preview-mock__listing-icon fc-preview-mock__listing-icon--play">
+        <div
+          className={`fc-preview-mock__listing-icon fc-preview-mock__listing-icon--play fc-preview-mock__listing-icon--${iconMode}`}
+        >
           <img src={previewUrl} alt="" />
         </div>
         <div className="fc-preview-mock__listing-meta">
@@ -148,12 +156,14 @@ function PlayStoreIconMock({ previewUrl }) {
   );
 }
 
-function AppStoreIconMock({ previewUrl }) {
+function AppStoreIconMock({ previewUrl, iconMode = "fit" }) {
   return (
     <div className="fc-preview-mock fc-preview-mock--listing fc-preview-mock--ios">
       <div className="fc-preview-mock__label">ตัวอย่างบน App Store (iPhone)</div>
       <div className="fc-preview-mock__listing-row fc-preview-mock__listing-row--ios">
-        <div className="fc-preview-mock__listing-icon fc-preview-mock__listing-icon--ios">
+        <div
+          className={`fc-preview-mock__listing-icon fc-preview-mock__listing-icon--ios fc-preview-mock__listing-icon--${iconMode}`}
+        >
           <img src={previewUrl} alt="" />
         </div>
         <div className="fc-preview-mock__listing-meta">
@@ -230,16 +240,17 @@ function PlayStoreBannerMock({ previewUrl }) {
   );
 }
 
-function PreviewMockGroup({ spec, previewUrl }) {
+function PreviewMockGroup({ spec, previewUrl, imageWidth, imageHeight, isFixed }) {
   if (spec.kind === "banner") {
     return <PlayStoreBannerMock previewUrl={previewUrl} />;
   }
 
   if (spec.kind === "icon") {
+    const iconMode = iconPreviewMode(imageWidth, imageHeight, spec, isFixed);
     return (
       <div className="fc-preview-mock-grid">
-        <PlayStoreIconMock previewUrl={previewUrl} />
-        <AppStoreIconMock previewUrl={previewUrl} />
+        <PlayStoreIconMock previewUrl={previewUrl} iconMode={iconMode} />
+        <AppStoreIconMock previewUrl={previewUrl} iconMode={iconMode} />
       </div>
     );
   }
@@ -317,7 +328,7 @@ function AssetPreviewRow({ spec, platform }) {
           ...analysis,
         });
 
-        if (autoFix || analysis.verdict !== "ok") {
+        if (autoFix) {
           setFixing(true);
           const resized = await resizeImageForStoreAsset(meta.url, spec, file.name);
           applyFixed(resized);
@@ -403,10 +414,16 @@ function AssetPreviewRow({ spec, platform }) {
         <div className="fc-preview-result">
           <div className={`alert alert-${verdictClass} py-2 mb-3`} role="status">
             <strong>{displayVerdictText}</strong>
-            <div className="small mt-1 mb-0">
-              หลังอัปโหลดจริงใน {platform === "android" ? "Play Console" : "App Store Connect"} จะแสดงใกล้เคียงตัวอย่างด้านล่าง
-              — ถ้าดูสวย/โอเคที่นี่ แปลว่าขึ้น Store แล้วน่าจะใช้ได้
-            </div>
+            {displayVerdict === "ok" || fixed ? (
+              <div className="small mt-1 mb-0">
+                หลังอัปโหลดจริงใน {platform === "android" ? "Play Console" : "App Store Connect"} จะแสดงใกล้เคียงตัวอย่างด้านล่าง
+                — ถ้าดูสวย/โอเคที่นี่ แปลว่าขึ้น Store แล้วน่าจะใช้ได้
+              </div>
+            ) : (
+              <div className="small mt-1 mb-0">
+                ตัวอย่างด้านล่างแสดงไฟล์จริงที่อัปโหลด — ไอคอนที่ไม่เป็นสี่เหลี่ยมจัตุรัสจะไม่เต็มกรอบและไม่เหมาะกับ Store
+              </div>
+            )}
 
             {needsFix ? (
               <div className="d-flex flex-wrap gap-2 mt-3">
@@ -451,7 +468,13 @@ function AssetPreviewRow({ spec, platform }) {
 
           <div className="row g-3 align-items-start">
             <div className="col-lg-7">
-              <PreviewMockGroup spec={spec} previewUrl={displayUrl} />
+              <PreviewMockGroup
+                spec={spec}
+                previewUrl={displayUrl}
+                imageWidth={displayPreview.width}
+                imageHeight={displayPreview.height}
+                isFixed={!!fixed}
+              />
             </div>
             <div className="col-lg-5">
               <ul className="list-unstyled small mb-2">
