@@ -1,4 +1,7 @@
 import path from "path";
+import { createReadStream } from "fs";
+import { stat } from "fs/promises";
+import { Readable } from "stream";
 import { publicHubBaseUrl } from "@/lib/data";
 import { getSoftwareProduct } from "@/lib/software-downloads-catalog";
 
@@ -40,6 +43,52 @@ export function canDownloadOrder(order, product) {
   if (!order || !product) return false;
   if (!isOrderPaid(order)) return false;
   return order.productSlug === product.slug;
+}
+
+export function isFreeSoftwareProduct(product) {
+  return Boolean(product && (product.free || Number(product.price) <= 0));
+}
+
+export async function buildProductFileResponse(product) {
+  const filePath = resolveProductFilePath(product);
+  if (!filePath) {
+    return { error: "ไฟล์ไม่ถูกต้อง", status: 500 };
+  }
+
+  let fileStat;
+  try {
+    fileStat = await stat(filePath);
+  } catch {
+    return { error: "ไฟล์ยังไม่พร้อมบนเซิร์ฟเวอร์ — ติดต่อผู้ดูแลระบบ", status: 404 };
+  }
+
+  if (!fileStat.isFile()) {
+    return { error: "ไม่พบไฟล์ดาวน์โหลด", status: 404 };
+  }
+
+  const ext = path.extname(product.fileName || filePath).toLowerCase();
+  const mime =
+    ext === ".apk"
+      ? "application/vnd.android.package-archive"
+      : ext === ".zip"
+        ? "application/zip"
+        : ext === ".pdf"
+          ? "application/pdf"
+          : "application/octet-stream";
+
+  const nodeStream = createReadStream(filePath);
+  const webStream = Readable.toWeb(nodeStream);
+
+  return {
+    response: new Response(webStream, {
+      headers: {
+        "Content-Type": mime,
+        "Content-Length": String(fileStat.size),
+        "Content-Disposition": `attachment; filename="${encodeURIComponent(product.fileName || "download")}"`,
+        "Cache-Control": "private, no-store",
+      },
+    }),
+  };
 }
 
 export function orderToPublicJson(order, { includeDownload = false } = {}) {

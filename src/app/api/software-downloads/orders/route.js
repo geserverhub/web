@@ -48,6 +48,7 @@ export async function POST(req) {
         currency: product.currency || "THB",
         status: isFree ? "PAID" : "PENDING",
         paidAt: isFree ? new Date() : null,
+        paymentGateway: isFree ? null : "BANK_TRANSFER",
         notes: isFree
           ? mergeNotesJson(null, { freeDownload: true, confirmedAt: new Date().toISOString() })
           : null,

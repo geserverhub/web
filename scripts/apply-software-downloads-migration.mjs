@@ -7,8 +7,8 @@ import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { spawnSync } from 'child_process';
 import mysql from 'mysql2/promise';
+import { printWindowsDbHelp, runInWsl, shouldFallbackToWsl } from './lib/wsl-db-fallback.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -59,16 +59,10 @@ async function applyMigration(cfg) {
 }
 
 function runViaWsl() {
-  const wslPath = process.env.WSL_PROJECT_DIR || '/mnt/c/web/web';
-  console.log('[db:migrate-software-downloads] Windows MySQL unavailable — running in WSL…');
-  const result = spawnSync(
-    'wsl',
-    ['-e', 'bash', '-lc', `cd ${wslPath} 2>/dev/null || cd ~/web; node scripts/apply-software-downloads-migration.mjs --no-wsl-fallback`],
-    { stdio: 'inherit', cwd: ROOT },
-  );
-  if (result.status !== 0) {
-    process.exit(result.status || 1);
-  }
+  runInWsl('node scripts/apply-software-downloads-migration.mjs --no-wsl-fallback', {
+    cwd: ROOT,
+    label: 'db:migrate-software-downloads',
+  });
 }
 
 const cfg = getConfig();
@@ -79,23 +73,14 @@ try {
 } catch (err) {
   if (
     !noWslFallback &&
-    process.platform === 'win32' &&
-    (err.code === 'ER_ACCESS_DENIED_ERROR' || err.code === 'ECONNREFUSED')
+    shouldFallbackToWsl(err, false)
   ) {
     runViaWsl();
     process.exit(0);
   }
   console.error('\nMigration failed:', err.message || err);
   if (process.platform === 'win32' && err.code === 'ER_ACCESS_DENIED_ERROR') {
-    console.error(`
-Windows MySQL ไม่มี user geserverhub หรือรหัสผ่านไม่ตรงกับ .env.local
-เลือกอย่างใดอย่างหนึ่ง:
-  1) รันใน WSL:  wsl -e bash -lc "cd /mnt/c/web/web && npm run db:migrate-software-downloads"
-  2) สร้าง user บน Windows MySQL:
-       $env:MYSQL_ROOT_PASSWORD="รหัส-root"
-       node scripts/setup-windows-db-user.mjs
-  3) รัน dev ผ่าน WSL:  npm run dev  (ไม่ใช้ dev:fast)
-`);
+    printWindowsDbHelp();
   }
   process.exit(1);
 }

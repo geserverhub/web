@@ -1,12 +1,13 @@
 /**
  * Apply hub tables + PK/FK relations (idempotent SQL).
- * Usage: node scripts/apply-full-hub-relations.mjs
+ * On Windows, falls back to WSL MySQL when local access is denied.
  */
 import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import mysql from 'mysql2/promise';
+import { printWindowsDbHelp, runInWsl, shouldFallbackToWsl } from './lib/wsl-db-fallback.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -34,14 +35,32 @@ function getConfig() {
   };
 }
 
-const sql = readFileSync(resolve(ROOT, 'prisma/migrate-full-hub-relations.sql'), 'utf8');
-const cfg = getConfig();
+async function applyMigration(cfg) {
+  const sql = readFileSync(resolve(ROOT, 'prisma/migrate-full-hub-relations.sql'), 'utf8');
+  const conn = await mysql.createConnection({ ...cfg, multipleStatements: true });
+  try {
+    console.log(`Applying hub relations → ${cfg.database} @ ${cfg.host}:${cfg.port}`);
+    await conn.query(sql);
+    console.log('Done: migrate-full-hub-relations.sql');
+  } finally {
+    await conn.end();
+  }
+}
 
-const conn = await mysql.createConnection({ ...cfg, multipleStatements: true });
+const cfg = getConfig();
+const noWslFallback = process.argv.includes('--no-wsl-fallback');
+
 try {
-  console.log(`Applying hub relations → ${cfg.database} @ ${cfg.host}:${cfg.port}`);
-  await conn.query(sql);
-  console.log('Done: migrate-full-hub-relations.sql');
-} finally {
-  await conn.end();
+  await applyMigration(cfg);
+} catch (err) {
+  if (shouldFallbackToWsl(err, noWslFallback)) {
+    runInWsl('node scripts/apply-full-hub-relations.mjs --no-wsl-fallback', {
+      cwd: ROOT,
+      label: 'hub relations',
+    });
+    process.exit(0);
+  }
+  console.error('\nMigration failed:', err.message || err);
+  if (process.platform === 'win32' && err.code === 'ER_ACCESS_DENIED_ERROR') printWindowsDbHelp();
+  process.exit(1);
 }

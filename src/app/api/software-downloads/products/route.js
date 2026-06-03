@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getActiveSoftwareProducts, productToPublicJson } from "@/lib/software-downloads-catalog";
+import { bankToPublicJson } from "@/lib/software-download-bank";
 import { publicHubBaseUrl } from "@/lib/data";
 
 export async function GET() {
@@ -8,5 +9,6 @@ export async function GET() {
   return NextResponse.json({
     products,
     hubUrl,
+    bank: bankToPublicJson(),
   });
 }

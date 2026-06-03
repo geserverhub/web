@@ -311,12 +311,14 @@ SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONST
 SET @sql := IF(@c = 0, 'ALTER TABLE `PartnerPersonFinancial` ADD CONSTRAINT `PartnerPersonFinancial_transactionId_fkey` FOREIGN KEY (`transactionId`) REFERENCES `PartnerTransaction`(`id`) ON DELETE SET NULL ON UPDATE CASCADE', 'SELECT 1');
 PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
 
+SET @t := (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'FileConversionJob');
 SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'FileConversionJob' AND CONSTRAINT_NAME = 'FileConversionJob_createdById_fkey');
-SET @sql := IF(@c = 0, 'ALTER TABLE `FileConversionJob` ADD CONSTRAINT `FileConversionJob_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE', 'SELECT 1');
+SET @sql := IF(@t > 0 AND @c = 0, 'ALTER TABLE `FileConversionJob` ADD CONSTRAINT `FileConversionJob_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE', 'SELECT 1');
 PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
 
+SET @t := (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'FileAppArchiveRecord');
 SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'FileAppArchiveRecord' AND CONSTRAINT_NAME = 'FileAppArchiveRecord_createdById_fkey');
-SET @sql := IF(@c = 0, 'ALTER TABLE `FileAppArchiveRecord` ADD CONSTRAINT `FileAppArchiveRecord_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE', 'SELECT 1');
+SET @sql := IF(@t > 0 AND @c = 0, 'ALTER TABLE `FileAppArchiveRecord` ADD CONSTRAINT `FileAppArchiveRecord_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE', 'SELECT 1');
 PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
 
 SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'SoftwareDownloadOrder' AND CONSTRAINT_NAME = 'SoftwareDownloadOrder_productId_fkey');
