@@ -93,8 +93,18 @@ export async function POST(req) {
 
     return NextResponse.json({ record });
   } catch (err) {
+    const msg = err?.message || "";
+    if (err?.code === "P2021" || msg.includes("FileAppArchiveRecord") && msg.includes("does not exist")) {
+      return NextResponse.json(
+        {
+          error:
+            "ตาราง FileAppArchiveRecord ยังไม่มีในฐานข้อมูล — รันบนเซิร์ฟเวอร์: npm run db:migrate-file-converter",
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { error: `Database error: ${err?.message || "cannot save app archive record"}` },
+      { error: `Database error: ${msg || "cannot save app archive record"}` },
       { status: 500 }
     );
   }

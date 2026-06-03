@@ -22,6 +22,7 @@
     "db:copy-wsl-name": "bash scripts/wsl-copy-geserverhub-to-goeunserverhub.sh",
     "db:seed-partner": "node scripts/seed-partner-products.mjs",
     "db:migrate": "node scripts/migrate-client-columns.mjs && node scripts/migrate-partner-product.mjs && node scripts/migrate-partner-person-financial.mjs",
+    "db:migrate-file-converter": "node scripts/migrate-file-app-archive.mjs",
     "db:setup-energy": "node scripts/setup-ge-energy.mjs",
     "db:setup-full": "node scripts/setup-full-database.mjs",
     "db:setup-geet-orders": "node scripts/apply-ge-energy-tech-orders-schema.mjs",
