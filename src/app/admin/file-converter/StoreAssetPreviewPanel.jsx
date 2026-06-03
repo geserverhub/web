@@ -61,7 +61,7 @@ function evaluateAsset(spec, width, height) {
     } else if (ratioOk && width >= spec.width && height >= spec.height) {
       messages.push({
         level: "warn",
-        text: `สัดส่วนใกล้เคียง 1024:500 แต่ขนาด ${width}×${height} — แนะนำย่อ/ครอปเป็น ${spec.width}×${spec.height}`,
+        text: `สัดส่วนใกล้เคียง 1024:500 แต่ขนาด ${width}×${height} — แนะนำย่อเป็น ${spec.width}×${spec.height}`,
       });
       score -= 18;
     } else {
@@ -462,7 +462,7 @@ function AssetPreviewRow({ spec, platform }) {
 
           {fixed ? (
             <div className="alert alert-success py-2 small mb-3">
-              ปรับขนาดเป็น {fixed.width}×{fixed.height} px แล้ว — ดูตัวอย่างด้านล่าง แล้วกด 「เซฟไฟล์ที่ถูกต้อง」 เพื่อดาวน์โหลดไปอัปโหลด Play/App Store
+              ปรับขนาดเป็น {fixed.width}×{fixed.height} px แล้ว (ย่อสัดส่วน ไม่ครอป) — ดูตัวอย่างด้านล่าง แล้วกด 「เซฟไฟล์ที่ถูกต้อง」 เพื่อดาวน์โหลดไปอัปโหลด Play/App Store
             </div>
           ) : null}
 

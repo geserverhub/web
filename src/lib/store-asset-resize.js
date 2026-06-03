@@ -17,32 +17,18 @@ function canvasToBlob(canvas, type, quality) {
   });
 }
 
-/** Center-crop source rect to target aspect, then draw into destination. */
-function drawCover(ctx, img, dx, dy, dw, dh) {
-  const targetRatio = dw / dh;
-  const sourceRatio = img.width / img.height;
-  let sx;
-  let sy;
-  let sw;
-  let sh;
-
-  if (sourceRatio > targetRatio) {
-    sh = img.height;
-    sw = sh * targetRatio;
-    sx = (img.width - sw) / 2;
-    sy = 0;
-  } else {
-    sw = img.width;
-    sh = sw / targetRatio;
-    sx = 0;
-    sy = (img.height - sh) / 2;
-  }
-
-  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+/** Scale image down to fit inside target box — no cropping. */
+function drawContain(ctx, img, dx, dy, dw, dh) {
+  const scale = Math.min(dw / img.width, dh / img.height, 1);
+  const w = img.width * scale;
+  const h = img.height * scale;
+  const x = dx + (dw - w) / 2;
+  const y = dy + (dh - h) / 2;
+  ctx.drawImage(img, x, y, w, h);
 }
 
 /**
- * Resize/crop an image to store asset dimensions (client-side canvas).
+ * Resize an image to store asset dimensions without cropping (scale to fit).
  * @returns {{ blob: Blob, url: string, width: number, height: number, fileName: string, mimeType: string }}
  */
 export async function resizeImageForStoreAsset(imageUrl, spec, sourceFileName = "asset") {
@@ -56,12 +42,12 @@ export async function resizeImageForStoreAsset(imageUrl, spec, sourceFileName = 
   const useJpeg = spec.kind === "banner";
   const mimeType = useJpeg ? "image/jpeg" : "image/png";
 
-  if (spec.kind === "icon") {
+  if (spec.kind === "icon" || spec.kind === "banner") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  drawCover(ctx, img, 0, 0, spec.width, spec.height);
+  drawContain(ctx, img, 0, 0, spec.width, spec.height);
 
   const blob = await canvasToBlob(canvas, mimeType, useJpeg ? 0.92 : undefined);
   const ext = useJpeg ? ".jpg" : ".png";
