@@ -638,6 +638,7 @@ model SoftwareDownloadOrder {
   stripePaymentIntentId   String?
   paymentGateway          String?
   receiptFile             String?
+  accessPassword          String?
   notes                   String?                     @db.Text
   paidAt                  DateTime?
   downloadCount           Int                         @default(0)

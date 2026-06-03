@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSoftwareProduct } from "@/lib/software-downloads-catalog";
-import { generateOrderCode, orderToPublicJson } from "@/lib/software-downloads";
+import { generateOrderCode, generateAccessPassword, orderToPublicJson } from "@/lib/software-downloads";
 import { mergeNotesJson } from "@/lib/stripe-server";
 
 export async function POST(req) {
@@ -49,6 +49,7 @@ export async function POST(req) {
         status: isFree ? "PAID" : "PENDING",
         paidAt: isFree ? new Date() : null,
         paymentGateway: isFree ? null : "BANK_TRANSFER",
+        accessPassword: generateAccessPassword(),
         notes: isFree
           ? mergeNotesJson(null, { freeDownload: true, confirmedAt: new Date().toISOString() })
           : null,

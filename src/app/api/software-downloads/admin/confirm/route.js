@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { mergeNotesJson } from "@/lib/stripe-server";
+import { generateAccessPassword } from "@/lib/software-downloads";
 
 function isAdmin(session) {
   return session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
@@ -30,6 +31,7 @@ export async function POST(req) {
       data: {
         status: "PAID",
         paidAt: new Date(),
+        accessPassword: order.accessPassword || generateAccessPassword(),
         notes: mergeNotesJson(order.notes, {
           manualConfirmed: true,
           confirmedBy: session.user.email || session.user.id,

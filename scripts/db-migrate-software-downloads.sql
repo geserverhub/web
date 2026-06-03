@@ -64,6 +64,10 @@ SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONST
 SET @sql := IF(@c = 0, 'ALTER TABLE `SoftwareDownloadOrder` ADD CONSTRAINT `SoftwareDownloadOrder_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `SoftwareDownloadProduct`(`id`) ON DELETE SET NULL ON UPDATE CASCADE', 'SELECT 1');
 PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
 
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'SoftwareDownloadOrder' AND COLUMN_NAME = 'accessPassword');
+SET @sql := IF(@c = 0, 'ALTER TABLE `SoftwareDownloadOrder` ADD COLUMN `accessPassword` VARCHAR(191) NULL', 'SELECT 1');
+PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
+
 INSERT INTO `SoftwareDownloadProduct` (`id`, `slug`, `title`, `titleTh`, `description`, `platform`, `version`, `price`, `currency`, `filePath`, `fileName`, `icon`, `sortOrder`, `active`, `free`, `updatedAt`)
 SELECT 'sd_phone_remote', 'phone-remote-android', 'Phone Remote (Android)', 'Phone Remote — แอป Android',
   'แอปรีโมทและแชร์หน้าจอ พร้อมควบคุมจาก Viewer หลังเปิด Accessibility',

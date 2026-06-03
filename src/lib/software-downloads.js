@@ -3,7 +3,7 @@ import { createReadStream } from "fs";
 import { stat } from "fs/promises";
 import { Readable } from "stream";
 import { publicHubBaseUrl } from "@/lib/data";
-import { getSoftwareProduct } from "@/lib/software-downloads-catalog";
+import { getProductLoginPath, getSoftwareProduct } from "@/lib/software-downloads-catalog";
 
 export const SOFTWARE_STORAGE_ROOT = path.join(process.cwd(), "storage", "software-downloads");
 
@@ -24,6 +24,22 @@ export function generateOrderCode() {
   let code = "";
   for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
+}
+
+export function generateAccessPassword(length = 10) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let pwd = "";
+  for (let i = 0; i < length; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  return pwd;
+}
+
+export async function ensureOrderAccessPassword(prisma, order) {
+  if (!order || order.accessPassword) return order;
+  const accessPassword = generateAccessPassword();
+  return prisma.softwareDownloadOrder.update({
+    where: { id: order.id },
+    data: { accessPassword },
+  });
 }
 
 export function resolveProductFilePath(product) {
@@ -91,10 +107,12 @@ export async function buildProductFileResponse(product) {
   };
 }
 
-export function orderToPublicJson(order, { includeDownload = false } = {}) {
+export function orderToPublicJson(order, { includeDownload = false, includeAccess = false } = {}) {
   if (!order) return null;
   const product = getSoftwareProduct(order.productSlug);
-  return {
+  const paid = isOrderPaid(order);
+  const loginPath = getProductLoginPath(order.productSlug);
+  const result = {
     orderCode: order.orderCode,
     email: order.email,
     productSlug: order.productSlug,
@@ -102,10 +120,10 @@ export function orderToPublicJson(order, { includeDownload = false } = {}) {
     amount: Number(order.amount),
     currency: order.currency,
     status: order.status,
-    paid: isOrderPaid(order),
+    paid,
     paidAt: order.paidAt,
     downloadCount: order.downloadCount,
-    canDownload: includeDownload && isOrderPaid(order) && Boolean(product),
+    canDownload: includeDownload && paid && Boolean(product),
     product: product
       ? {
           slug: product.slug,
@@ -115,4 +133,11 @@ export function orderToPublicJson(order, { includeDownload = false } = {}) {
         }
       : null,
   };
+
+  if (includeAccess && paid) {
+    result.loginPath = loginPath;
+    result.accessPassword = order.accessPassword || null;
+  }
+
+  return result;
 }

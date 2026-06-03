@@ -217,6 +217,58 @@ export default function DownloadsClient() {
     return t.status[status] || status;
   }
 
+  function renderLookupPanel(panelOrder) {
+    if (!panelOrder) return null;
+
+    return (
+      <div className="border rounded p-3 bg-light">
+        <p className="mb-1">
+          <strong>{panelOrder.productTitle}</strong> — {t.orderCodePrefix}{" "}
+          <code>{panelOrder.orderCode}</code>
+        </p>
+        <p className="mb-3 small">
+          {t.statusLabel}:{" "}
+          <span className="badge text-bg-dark">{statusLabel(panelOrder.status)}</span>
+        </p>
+
+        {panelOrder.paid && panelOrder.accessPassword ? (
+          <div className="small">
+            <p className="text-muted mb-2">{t.loginEmailHint}</p>
+            <div className="mb-2">
+              <span className="text-muted">{t.emailLabel}: </span>
+              <strong>{panelOrder.email}</strong>
+            </div>
+            <div className="mb-3">
+              <span className="text-muted">{t.passwordLabel}: </span>
+              <code className="user-select-all fs-6">{panelOrder.accessPassword}</code>
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(panelOrder.accessPassword);
+                    setMessage(t.copiedPassword);
+                  } catch {
+                    setMessage(t.copyPassword);
+                  }
+                }}
+              >
+                {t.copyPassword}
+              </button>
+            </div>
+            {panelOrder.loginPath ? (
+              <a href={panelOrder.loginPath} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                {t.loginLinkLabel}
+              </a>
+            ) : null}
+          </div>
+        ) : (
+          <p className="small text-muted mb-0">{t.lookupWaitingPayment}</p>
+        )}
+      </div>
+    );
+  }
+
   function renderOrderPanel(panelOrder) {
     if (!panelOrder) return null;
 
@@ -431,8 +483,12 @@ export default function DownloadsClient() {
                     setBusy(true);
                     setMessage("");
                     try {
-                      await refreshOrder(lookupCode, lookupEmail, { fromLookup: true });
-                      setMessage(t.statusUpdated);
+                      const loaded = await refreshOrder(lookupCode, lookupEmail, { fromLookup: true });
+                      if (loaded?.paid && loaded?.accessPassword) {
+                        setMessage(t.credentialsReady);
+                      } else if (loaded && !loaded.paid) {
+                        setMessage(t.lookupWaitingPayment);
+                      }
                     } catch (err) {
                       setMessage(err.message);
                       setOrder(null);
@@ -446,7 +502,7 @@ export default function DownloadsClient() {
               </div>
             </div>
 
-            {order && !formOrder ? renderOrderPanel(order) : null}
+            {order && !formOrder ? renderLookupPanel(order) : null}
           </div>
         </section>
       </main>

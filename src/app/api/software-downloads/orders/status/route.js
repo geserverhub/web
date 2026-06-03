@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { orderToPublicJson } from "@/lib/software-downloads";
+import { ensureOrderAccessPassword, isOrderPaid, orderToPublicJson } from "@/lib/software-downloads";
 
 export async function GET(req) {
   try {
@@ -12,13 +12,17 @@ export async function GET(req) {
       return NextResponse.json({ error: "ต้องระบุ orderCode และ email" }, { status: 400 });
     }
 
-    const order = await prisma.softwareDownloadOrder.findUnique({ where: { orderCode } });
+    let order = await prisma.softwareDownloadOrder.findUnique({ where: { orderCode } });
     if (!order || order.email.toLowerCase() !== email) {
       return NextResponse.json({ error: "ไม่พบคำสั่งซื้อ" }, { status: 404 });
     }
 
+    if (isOrderPaid(order)) {
+      order = await ensureOrderAccessPassword(prisma, order);
+    }
+
     return NextResponse.json({
-      order: orderToPublicJson(order, { includeDownload: true }),
+      order: orderToPublicJson(order, { includeAccess: true }),
     });
   } catch (err) {
     return NextResponse.json({ error: err.message || "ตรวจสอบสถานะไม่สำเร็จ" }, { status: 500 });

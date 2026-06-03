@@ -15,6 +15,7 @@ export const softwareDownloadProducts = [
     sortOrder: 1,
     active: true,
     free: false,
+    loginPath: "/phone-remote",
   },
   {
     slug: "momoge-space-android",
@@ -31,6 +32,7 @@ export const softwareDownloadProducts = [
     sortOrder: 2,
     active: true,
     free: true,
+    loginPath: "/customer-dashboard-login",
   },
   {
     slug: "cargo-android",
@@ -47,8 +49,14 @@ export const softwareDownloadProducts = [
     sortOrder: 3,
     active: true,
     free: true,
+    loginPath: "/cargo/track",
   },
 ];
+
+export function getProductLoginPath(slug) {
+  const product = getSoftwareProduct(slug);
+  return product?.loginPath || "/";
+}
 
 export function getActiveSoftwareProducts() {
   return [...softwareDownloadProducts]
