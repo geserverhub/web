@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { applyWebControl, parseControlMessage } from "@/lib/phone-remote-control";
@@ -9,19 +9,11 @@ import { webControlChannelName } from "@/lib/phone-remote-web-bridge";
 export default function WebTargetClient() {
   const searchParams = useSearchParams();
   const roomId = (searchParams.get("room") || "").toUpperCase();
-  const embedPath = searchParams.get("embed") || "";
 
-  const iframeRef = useRef(null);
   const [linked, setLinked] = useState(false);
   const [lastAction, setLastAction] = useState("");
 
-  const getControlRoot = useCallback(() => {
-    const iframe = iframeRef.current;
-    if (embedPath && iframe?.contentDocument) {
-      return iframe.contentDocument;
-    }
-    return document;
-  }, [embedPath]);
+  const getControlRoot = useCallback(() => document, []);
 
   useEffect(() => {
     if (!roomId) return;
@@ -55,8 +47,7 @@ export default function WebTargetClient() {
       if (data.type === "control" && data.msg) {
         const msg = typeof data.msg === "string" ? parseControlMessage(data.msg) : data.msg;
         if (!msg) return;
-        const root = getControlRoot();
-        applyWebControl(msg, { rootDocument: root });
+        applyWebControl(msg, { rootDocument: getControlRoot() });
         setLastAction(msg.t);
         setLinked(true);
       }
@@ -74,9 +65,6 @@ export default function WebTargetClient() {
       }
     };
   }, [roomId, getControlRoot]);
-
-  const embedSrc =
-    embedPath && embedPath.startsWith("/") && !embedPath.startsWith("//") ? embedPath : "";
 
   if (!roomId) {
     return (
@@ -96,7 +84,7 @@ export default function WebTargetClient() {
         margin: 0,
         display: "flex",
         flexDirection: "column",
-        background: embedSrc ? "#fff" : "#0f172a",
+        background: "#0f172a",
       }}
     >
       <div
@@ -119,34 +107,21 @@ export default function WebTargetClient() {
         {lastAction ? ` · ${lastAction}` : ""}
       </div>
 
-      {embedSrc ? (
-        <iframe
-          ref={iframeRef}
-          title="หน้าเว็บที่ควบคุม"
-          src={embedSrc}
-          style={{ flex: 1, width: "100%", border: "none", minHeight: "100vh" }}
-          onLoad={() => setLinked(true)}
-        />
-      ) : (
-        <main
-          className="container py-5 text-center"
-          style={{ color: "#e2e8f0", maxWidth: 560, margin: "0 auto" }}
-        >
-          <h1 className="h4 mb-3">แท็บรับการควบคุมจาก Viewer</h1>
-          <p className="small mb-4">
-            เมื่อแชร์หน้าจอ ให้เลือก <strong>แท็บนี้</strong> ในหน้าต่างแชร์ของเบราว์เซอร์
-            Viewer จะแตะ/เลื่อน/พิมพ์บนหน้านี้ได้
-          </p>
-          <ol className="text-start small text-white-50 mb-4">
-            <li>เปิดเว็บที่ต้องการให้ควบคุมในแท็บอื่น หรือใช้ลิงก์ฝังด้านล่าง</li>
-            <li>Host กด 「เริ่มแชร์หน้าจอ」 แล้วเลือก <strong>แท็บนี้</strong></li>
-            <li>Viewer รอ 「โหมดควบคุม (พร้อม)」 แล้วแตะบนภาพ</li>
-          </ol>
-          <p className="small text-white-50 mb-0">
-            ฝังหน้าในระบบ (ทดสอบ): เพิ่ม <code>?embed=/phone-remote</code> ใน URL
-          </p>
-        </main>
-      )}
+      <main
+        className="container py-5 text-center"
+        style={{ color: "#e2e8f0", maxWidth: 560, margin: "0 auto" }}
+      >
+        <h1 className="h4 mb-3">แท็บรับการควบคุมจาก Viewer</h1>
+        <p className="small mb-4">
+          เมื่อแชร์หน้าจอ ให้เลือก <strong>แท็บนี้</strong> ในหน้าต่างแชร์ของเบราว์เซอร์
+          Viewer จะแตะ/เลื่อน/พิมพ์บนหน้านี้ได้
+        </p>
+        <ol className="text-start small text-white-50 mb-0">
+          <li>เปิดเว็บที่ต้องการให้ควบคุมในแท็บอื่น แล้วสลับมาแท็บนี้ก่อนแชร์</li>
+          <li>Host กด 「เริ่มแชร์หน้าจอ」 แล้วเลือก <strong>แท็บนี้</strong></li>
+          <li>Viewer รอ 「โหมดควบคุม (พร้อม)」 แล้วแตะบนภาพ</li>
+        </ol>
+      </main>
     </div>
   );
 }

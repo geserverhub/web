@@ -46,21 +46,16 @@ export default function PhoneRemoteHomePage() {
       <div className="card shadow-sm mt-4 border-0" style={{ background: "#1e3a5f", color: "#e2e8f0" }}>
         <div className="card-body">
           <h2 className="h6 mb-2">📲 แอป Android — Phone Remote</h2>
-          <p className="small mb-2">
+          <p className="small mb-0">
             ระบบรีโมทแยกจาก Momoge space เป็นแอปต่างหาก — โหลด UI จากเซิร์ฟเวอร์และมีสิทธิ์ Accessibility
             สำหรับให้ Viewer ควบคุมหน้าจอ Host บน Android ได้เต็มรูปแบบ
-          </p>
-          <p className="small mb-0 text-white-50">
-            Package: <code>phoneremote.myapp</code> · Build: <code>mobile/phone-remote</code> (
-            <code>npm run cap:sync</code>)
           </p>
         </div>
       </div>
 
       <div className="alert alert-info mt-4 mb-0 small">
         <strong>ควบคุมผ่านเว็บ:</strong> Host กด 「เปิดแท็บควบคุมเว็บ」 แล้วแชร์ <strong>แท็บนั้น</strong> —
-        Viewer แตะบนภาพเพื่อคลิก/เลื่อนบนหน้าเว็บได้ · ฝังหน้าในระบบ:{" "}
-        <code>/phone-remote/web-target?room=รหัส&embed=/path</code>
+        Viewer แตะบนภาพเพื่อคลิก/เลื่อนบนหน้าเว็บได้
         <br />
         <strong>Android เต็มรูปแบบ:</strong> แอป <strong>Phone Remote</strong> + Accessibility · ใช้ HTTPS หรือ localhost
       </div>

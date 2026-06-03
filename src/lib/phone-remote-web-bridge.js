@@ -109,10 +109,9 @@ export function createWebControlBridge(roomId, { onTargetReady, onTargetLost } =
   };
 }
 
-export function openWebControlTarget(roomId, { embedPath } = {}) {
+export function openWebControlTarget(roomId) {
   if (typeof window === "undefined" || !roomId) return null;
   const q = new URLSearchParams({ room: String(roomId).toUpperCase() });
-  if (embedPath) q.set("embed", embedPath);
   const url = `${window.location.origin}/phone-remote/web-target?${q}`;
   const name = `phone-remote-target-${q.get("room")}`;
   return window.open(url, name, "noopener,noreferrer");

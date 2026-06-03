@@ -11,6 +11,7 @@ import {
 } from "@/lib/downloads-translations";
 import DownloadsLangSwitcher from "./DownloadsLangSwitcher";
 import { hubFetchHeaders, hubJsonFetch, readJsonResponse } from "@/lib/hub-fetch";
+import { buildDownloadsLoginUrl } from "@/lib/software-download-session";
 
 function downloadButtonLabel(product, t) {
   if (!product) return t.downloadBtn;
@@ -230,38 +231,42 @@ export default function DownloadsClient() {
           <span className="badge text-bg-dark">{statusLabel(panelOrder.status)}</span>
         </p>
 
-        {panelOrder.paid && panelOrder.accessPassword ? (
-          <div className="small">
-            <p className="text-muted mb-2">{t.loginEmailHint}</p>
-            <div className="mb-2">
-              <span className="text-muted">{t.emailLabel}: </span>
-              <strong>{panelOrder.email}</strong>
-            </div>
-            <div className="mb-3">
-              <span className="text-muted">{t.passwordLabel}: </span>
-              <code className="user-select-all fs-6">{panelOrder.accessPassword}</code>
-              <button
-                type="button"
-                className="btn btn-link btn-sm p-0 ms-2 align-baseline"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(panelOrder.accessPassword);
-                    setMessage(t.copiedPassword);
-                  } catch {
-                    setMessage(t.copyPassword);
-                  }
-                }}
-              >
-                {t.copyPassword}
-              </button>
-            </div>
-            {panelOrder.loginPath ? (
-              <a href={panelOrder.loginPath} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
-                {t.loginLinkLabel}
-              </a>
-            ) : null}
-          </div>
-        ) : (
+            {panelOrder.paid && panelOrder.accessPassword ? (
+              <div className="small">
+                <p className="text-muted mb-2">{t.loginEmailHint}</p>
+                <div className="mb-2">
+                  <span className="text-muted">{t.emailLabel}: </span>
+                  <strong>{panelOrder.email}</strong>
+                </div>
+                <div className="mb-3">
+                  <span className="text-muted">{t.passwordLabel}: </span>
+                  <code className="user-select-all fs-6">{panelOrder.accessPassword}</code>
+                  <button
+                    type="button"
+                    className="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(panelOrder.accessPassword);
+                        setMessage(t.copiedPassword);
+                      } catch {
+                        setMessage(t.copyPassword);
+                      }
+                    }}
+                  >
+                    {t.copyPassword}
+                  </button>
+                </div>
+                <Link
+                  href={buildDownloadsLoginUrl({
+                    order: panelOrder.orderCode,
+                    email: panelOrder.email,
+                  })}
+                  className="btn btn-primary"
+                >
+                  {t.loginLinkLabel}
+                </Link>
+              </div>
+            ) : (
           <p className="small text-muted mb-0">{t.lookupWaitingPayment}</p>
         )}
       </div>
