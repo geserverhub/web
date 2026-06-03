@@ -392,21 +392,6 @@ export default function DownloadsClient() {
             ) : null}
           </div>
         </section>
-
-        <div className="alert alert-dark border-secondary small text-white-50 mt-4">
-          <strong className="text-white">ตั้งค่า ngrok / Stripe</strong>
-          <ul className="mb-0 mt-2">
-            <li>
-              ตั้ง <code>NEXT_PUBLIC_PUBLIC_HUB_URL</code> เป็น URL ngrok (เช่น {publicHubBaseUrl})
-            </li>
-            <li>
-              Webhook Stripe: <code>{hubUrl}/api/software-downloads/webhook/stripe</code>
-            </li>
-            <li>
-              วางไฟล์จริงใน <code>storage/software-downloads/</code> และแก้ <code>filePath</code> ใน catalog
-            </li>
-          </ul>
-        </div>
       </main>
     </div>
   );

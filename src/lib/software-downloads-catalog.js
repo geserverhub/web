@@ -1,7 +1,4 @@
-/**
- * Software / file catalog for the downloads portal.
- * Place files under storage/software-downloads/<filePath>
- */
+/** Software / file catalog — binaries live in storage/software-downloads/<filePath> */
 export const softwareDownloadProducts = [
   {
     slug: "phone-remote-android",
@@ -13,7 +10,7 @@ export const softwareDownloadProducts = [
     version: "1.0.0",
     price: 0,
     currency: "THB",
-    filePath: "phone-remote/PLACEHOLDER.txt",
+    filePath: "phone-remote/PhoneRemote-android.apk",
     fileName: "PhoneRemote-android.apk",
     icon: "/logo-mark.svg",
     sortOrder: 1,
@@ -29,7 +26,7 @@ export const softwareDownloadProducts = [
     version: "1.0.1",
     price: 0,
     currency: "THB",
-    filePath: "momoge-space/PLACEHOLDER.txt",
+    filePath: "momoge-space/MomogeSpace-android.apk",
     fileName: "MomogeSpace-android.apk",
     icon: "/momoge/Logo-brand.png",
     sortOrder: 2,
@@ -45,7 +42,7 @@ export const softwareDownloadProducts = [
     version: "1.0.0",
     price: 299,
     currency: "THB",
-    filePath: "cargo/PLACEHOLDER.txt",
+    filePath: "cargo/CargoThaiKorea-android.apk",
     fileName: "CargoThaiKorea-android.apk",
     icon: "/cargo/cargo-logo.png",
     sortOrder: 3,
