@@ -61,9 +61,16 @@ export async function POST(req) {
     });
   } catch (err) {
     const msg = err?.message || "";
-    if (msg.includes("SoftwareDownloadOrder") || msg.includes("does not exist")) {
+    const missingTable =
+      err?.code === "P2021" ||
+      /SoftwareDownload(Order|Product)/i.test(msg) ||
+      /does not exist/i.test(msg);
+    if (missingTable) {
       return NextResponse.json(
-        { error: "ฐานข้อมูลยังไม่พร้อม — รัน npm run db:migrate-software-downloads" },
+        {
+          error:
+            "ฐานข้อมูลยังไม่พร้อม — รัน npm run db:migrate-software-downloads (Windows จะ fallback ไป WSL อัตโนมัติ)",
+        },
         { status: 503 }
       );
     }
