@@ -111,6 +111,7 @@ function AppArchivesTable({ records }) {
             <th>ประเภท</th>
             <th>Package name</th>
             <th>ไฟล์</th>
+            <th>ดาวน์โหลด</th>
             <th>ขนาด</th>
             <th>SHA-1 (ไฟล์)</th>
             <th>SHA-1 (Signing)</th>
@@ -129,9 +130,14 @@ function AppArchivesTable({ records }) {
               <td className="small">
                 {row.packageName ? <code>{row.packageName}</code> : <span className="text-muted">—</span>}
               </td>
-              <td>
-                <a href={row.filePath} target="_blank" rel="noreferrer" className="small">
-                  {row.fileName}
+              <td className="small text-break">{row.fileName}</td>
+              <td className="text-nowrap">
+                <a
+                  href={`/api/admin/file-converter/app-archives/${row.id}/download`}
+                  className="btn btn-outline-primary btn-sm py-0 px-2"
+                  download={row.fileName}
+                >
+                  ดาวน์โหลด
                 </a>
               </td>
               <td className="small">{formatBytes(row.fileSize)}</td>
@@ -517,6 +523,7 @@ export default function FileConverterClient() {
           </div>
           <p className="text-muted small mb-3">
             บันทึกจากปุ่ม 「บันทึก SHA-1 จากไฟล์แอปลงฐานข้อมูล」 — ดึง SHA-1 และ Package name (เช่น momogespace.myapp) จาก .aab / .apk
+            และเก็บไฟล์ต้นฉบับไว้ดาวน์โหลดภายหลังได้จากคอลัมน์ 「ดาวน์โหลด」
           </p>
           {appArchivesLoading && !appArchives.length ? (
             <p className="text-muted mb-0">กำลังโหลด...</p>
