@@ -1,4 +1,4 @@
-package momogespace.myapp;
+package momogespace1.myapp;
 
 import com.getcapacitor.BridgeActivity;
 

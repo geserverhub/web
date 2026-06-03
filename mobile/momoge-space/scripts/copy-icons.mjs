@@ -33,8 +33,10 @@ const MIPMAP_SIZES = {
 async function writeIcon(logoPath, destPath, size, { transparentBg = false } = {}) {
   const meta = await sharp(logoPath).metadata();
   const aspect = (meta.width || 1) / (meta.height || 1);
-  const maxW = Math.round(size * LOGO_MAX_FRACTION);
-  const maxH = Math.round(size * LOGO_MAX_FRACTION);
+  /** Square store-style artwork can fill more of the adaptive icon safe zone. */
+  const maxFraction = aspect >= 0.9 && aspect <= 1.1 ? 0.88 : LOGO_MAX_FRACTION;
+  const maxW = Math.round(size * maxFraction);
+  const maxH = Math.round(size * maxFraction);
   let targetW;
   let targetH;
   if (aspect >= 1) {

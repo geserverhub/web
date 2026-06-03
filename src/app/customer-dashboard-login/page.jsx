@@ -9,6 +9,7 @@ import CustomerDashboardInstallHint from '@/components/customer/CustomerDashboar
 import './customer-dashboard-login.css';
 
 const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
+const MAIN_MENU_URL = 'https://www.ge-energytech.com';
 
 const companyNames = {
   th: 'บริษัท จีอี อีเนอร์จี่ เทค จำกัด',
@@ -242,7 +243,7 @@ export default function CustomerDashboardLoginPage() {
         </form>
 
         <footer className="cdl-footer">
-          <a href="/auth/select" className="cdl-back">
+          <a href={MAIN_MENU_URL} className="cdl-back">
             {t.back}
           </a>
         </footer>
