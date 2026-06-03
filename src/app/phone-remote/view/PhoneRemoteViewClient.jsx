@@ -93,6 +93,19 @@ export default function PhoneRemoteViewClient() {
     };
   }, [hasVideo, controlEnabled, controlReady]);
 
+  useEffect(() => {
+    if (!hasVideo || !controlEnabled || controlReady) return;
+    setHint("รอช่องควบคุมจาก Host... (Host ต้องเชื่อมต่อ Viewer แล้วรอสักครู่)");
+    const t = setTimeout(() => {
+      if (!controlRef.current?.isOpen?.()) {
+        setHint(
+          "ช่องควบคุมยังไม่เปิด — ลองตัดการเชื่อมต่อแล้วเชื่อมต่อใหม่ หรือให้ Host หยุดแชร์แล้วเริ่มใหม่"
+        );
+      }
+    }, 12000);
+    return () => clearTimeout(t);
+  }, [hasVideo, controlEnabled, controlReady]);
+
   async function manualPlayVideo() {
     const video = remoteVideoRef.current;
     if (!video) return;
@@ -134,7 +147,10 @@ export default function PhoneRemoteViewClient() {
     pcRef.current = pc;
     const iceQueue = createIceQueue(pc);
     controlRef.current = setupControlChannel(pc, "viewer", {
-      onOpen: () => setControlReady(true),
+      onOpen: () => {
+        setControlReady(true);
+        setHint("");
+      },
       onClose: () => setControlReady(false),
     });
     let answered = false;
@@ -199,6 +215,7 @@ export default function PhoneRemoteViewClient() {
           answered = true;
           activeOfferAt = msg.at;
           setHint(renegotiate ? "กำลังเปิดช่องควบคุม..." : "กำลังเชื่อมต่อวิดีโอ...");
+          if (renegotiate) setControlReady(false);
           await pc.setRemoteDescription(toSessionDescription(msg.payload));
           await iceQueue.flush();
           const answer = await pc.createAnswer();
@@ -329,18 +346,32 @@ export default function PhoneRemoteViewClient() {
           muted
         />
         {hasVideo && controlEnabled ? (
-          <div
-            ref={controlOverlayRef}
-            tabIndex={0}
-            className="position-absolute top-0 start-0 w-100 h-100"
-            style={{
-              touchAction: "none",
-              cursor: "crosshair",
-              outline: "none",
-              zIndex: 2,
-            }}
-            aria-label="พื้นที่ควบคุมหน้าจอรีโมท"
-          />
+          <>
+            <div
+              ref={controlOverlayRef}
+              tabIndex={0}
+              className="position-absolute top-0 start-0 w-100 h-100"
+              style={{
+                touchAction: "none",
+                cursor: controlReady ? "crosshair" : "not-allowed",
+                outline: "none",
+                zIndex: 2,
+                pointerEvents: controlReady ? "auto" : "none",
+              }}
+              aria-label="พื้นที่ควบคุมหน้าจอรีโมท"
+              aria-disabled={!controlReady}
+            />
+            {!controlReady ? (
+              <div
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center px-3"
+                style={{ zIndex: 2, pointerEvents: "none" }}
+              >
+                <span className="badge bg-dark bg-opacity-75 text-wrap text-center">
+                  รอช่องควบคุม... แตะได้เมื่อขึ้น 「โหมดควบคุม (พร้อม)」
+                </span>
+              </div>
+            ) : null}
+          </>
         ) : null}
         {needsPlayTap ? (
           <button
@@ -364,7 +395,9 @@ export default function PhoneRemoteViewClient() {
 
       {hasVideo && controlEnabled ? (
         <p className="small text-muted mt-2 mb-0">
-          แตะ/ลากบนภาพเพื่อควบคุมหน้าจอ Host — คลิกพื้นที่วิดีโอแล้วพิมพ์เพื่อส่งข้อความ (Android Host ใช้แอป Phone Remote + เปิด Accessibility)
+          {controlReady
+            ? "แตะ/ลากบนภาพเพื่อควบคุมหน้าจอ Host — คลิกพื้นที่วิดีโอแล้วพิมพ์เพื่อส่งข้อความ (Android Host ใช้แอป Phone Remote + เปิด Accessibility)"
+            : "ยังส่งคำสั่งควบคุมไม่ได้จนกว่า Host จะเปิดช่องควบคุม (ดูสถานะ 「โหมดควบคุม (พร้อม)」)"}
         </p>
       ) : null}
 

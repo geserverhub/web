@@ -60,7 +60,7 @@ public class PhoneRemoteAccessibilityService extends AccessibilityService {
             case "move":
                 return true;
             case "up":
-                return dispatchTap(px, py);
+                return true;
             case "scroll": {
                 float dy = (float) action.optDouble("dy", 1);
                 return dispatchSwipe(px, py, px, py - dy * metrics.heightPixels * 0.15f, 250);

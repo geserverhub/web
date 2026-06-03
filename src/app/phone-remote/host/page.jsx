@@ -104,23 +104,45 @@ export default function PhoneRemoteHostPage() {
       pcRef.current = pc;
       const iceQueue = createIceQueue(pc);
       let controlChannelSetup = false;
+      let controlRenegotiateInFlight = false;
 
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
+      function peerIsLinked() {
+        const ice = pc.iceConnectionState;
+        const conn = pc.connectionState;
+        return (
+          ice === "connected" ||
+          ice === "completed" ||
+          conn === "connected"
+        );
+      }
+
       async function setupControlChannelRenegotiate() {
-        if (controlChannelSetup || pc.connectionState === "closed") return;
-        controlChannelSetup = true;
-        controlRef.current = setupControlChannel(pc, "host", {
-          onOpen: () => setControlReady(true),
-          onClose: () => setControlReady(false),
-          onMessage: (raw) => {
-            const msg = parseControlMessage(raw);
-            if (msg) void applyHostControl(msg);
-          },
-        });
-        const reoffer = await pc.createOffer();
-        await pc.setLocalDescription(reoffer);
-        await sendSignal(id, "host", "offer", offerPayload(reoffer, { renegotiate: true }));
+        if (controlChannelSetup || controlRenegotiateInFlight || pc.connectionState === "closed") {
+          return;
+        }
+        if (!peerIsLinked()) return;
+        controlRenegotiateInFlight = true;
+        try {
+          controlRef.current = setupControlChannel(pc, "host", {
+            onOpen: () => setControlReady(true),
+            onClose: () => setControlReady(false),
+            onMessage: (raw) => {
+              const msg = parseControlMessage(raw);
+              if (msg) void applyHostControl(msg);
+            },
+          });
+          const reoffer = await pc.createOffer();
+          await pc.setLocalDescription(reoffer);
+          await sendSignal(id, "host", "offer", offerPayload(reoffer, { renegotiate: true }));
+          controlChannelSetup = true;
+        } catch {
+          controlChannelSetup = false;
+          setTimeout(() => void setupControlChannelRenegotiate(), 2000);
+        } finally {
+          controlRenegotiateInFlight = false;
+        }
       }
 
       pc.onicecandidate = (ev) => {
@@ -129,13 +151,26 @@ export default function PhoneRemoteHostPage() {
         }
       };
 
-      pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "connected") {
+      const tryOpenControl = () => {
+        if (peerIsLinked()) {
           setViewerConnected(true);
           void setupControlChannelRenegotiate();
         }
+      };
+
+      pc.onconnectionstatechange = () => {
+        tryOpenControl();
         if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
           setViewerConnected(false);
+          setControlReady(false);
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        tryOpenControl();
+        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          setViewerConnected(false);
+          setControlReady(false);
         }
       };
 
@@ -143,6 +178,7 @@ export default function PhoneRemoteHostPage() {
         if (msg.type === "answer" && msg.payload) {
           await pc.setRemoteDescription(toSessionDescription(msg.payload));
           await iceQueue.flush();
+          tryOpenControl();
         }
         if (msg.type === "ice" && msg.payload) {
           await iceQueue.add(msg.payload);

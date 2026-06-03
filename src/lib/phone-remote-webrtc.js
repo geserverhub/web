@@ -147,12 +147,39 @@ const CONTROL_CHANNEL_LABEL = "control";
 /** Host creates the channel; viewer receives it via ondatachannel. */
 export function setupControlChannel(pc, role, { onMessage, onOpen, onClose } = {}) {
   let channel = null;
+  const pending = [];
+
+  function flushPending() {
+    if (channel?.readyState !== "open") return;
+    while (pending.length) {
+      const data = pending.shift();
+      try {
+        channel.send(data);
+      } catch {
+        break;
+      }
+    }
+  }
 
   function wire(ch) {
+    if (channel && channel !== ch) {
+      try {
+        channel.close();
+      } catch {
+        /* ignore */
+      }
+    }
     channel = ch;
-    ch.onopen = () => onOpen?.(ch);
+    ch.onopen = () => {
+      flushPending();
+      onOpen?.(ch);
+    };
     ch.onclose = () => onClose?.(ch);
     ch.onmessage = (ev) => onMessage?.(ev.data, ch);
+    if (ch.readyState === "open") {
+      flushPending();
+      onOpen?.(ch);
+    }
   }
 
   if (role === "host") {
@@ -168,7 +195,12 @@ export function setupControlChannel(pc, role, { onMessage, onOpen, onClose } = {
       return channel;
     },
     send(data) {
-      if (channel?.readyState === "open") channel.send(data);
+      if (channel?.readyState === "open") {
+        channel.send(data);
+        return true;
+      }
+      if (pending.length < 64) pending.push(data);
+      return false;
     },
     isOpen() {
       return channel?.readyState === "open";

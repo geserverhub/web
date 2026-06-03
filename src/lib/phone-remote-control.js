@@ -195,7 +195,15 @@ export async function applyHostControl(msg) {
   const plugin = getCapacitorControlPlugin();
   if (plugin?.dispatch) {
     try {
-      await plugin.dispatch({ action: msg });
+      await plugin.dispatch({
+        t: msg.t,
+        x: msg.x ?? 0.5,
+        y: msg.y ?? 0.5,
+        p: msg.p,
+        dy: msg.dy,
+        k: msg.k,
+        v: msg.v,
+      });
       return "native";
     } catch {
       /* fall through */
@@ -211,44 +219,69 @@ export function bindViewerControlOverlay(containerEl, videoEl, sendFn) {
 
   let activePointer = null;
   let lastMoveAt = 0;
+  let touchActive = false;
 
   function send(msg) {
     sendFn(serializeControlMessage(msg));
   }
 
+  function normFromClient(clientX, clientY) {
+    return clientToNormalized(videoEl, clientX, clientY);
+  }
+
+  function pointerDown(clientX, clientY, pointerId) {
+    const norm = normFromClient(clientX, clientY);
+    if (!norm) return false;
+    activePointer = { id: pointerId, ...norm };
+    send({ t: "down", x: norm.x, y: norm.y, p: pointerId });
+    return true;
+  }
+
+  function pointerMove(clientX, clientY, pointerId) {
+    if (activePointer?.id !== pointerId) return;
+    const now = Date.now();
+    if (now - lastMoveAt < MOVE_THROTTLE_MS) return;
+    lastMoveAt = now;
+    const norm = normFromClient(clientX, clientY);
+    if (!norm) return;
+    activePointer = { id: pointerId, ...norm };
+    send({ t: "move", x: norm.x, y: norm.y, p: pointerId });
+  }
+
+  function pointerUp(clientX, clientY, pointerId) {
+    if (activePointer?.id !== pointerId) return;
+    const norm = normFromClient(clientX, clientY) || activePointer;
+    const start = activePointer;
+    send({ t: "up", x: norm.x, y: norm.y, p: pointerId });
+    if (Math.hypot(norm.x - start.x, norm.y - start.y) < 0.02) {
+      send({ t: "tap", x: norm.x, y: norm.y });
+    }
+    activePointer = null;
+    touchActive = false;
+  }
+
   function onPointerDown(ev) {
     if (ev.button !== 0 && ev.pointerType === "mouse") return;
     ev.preventDefault();
-    containerEl.setPointerCapture(ev.pointerId);
-    const norm = clientToNormalized(videoEl, ev.clientX, ev.clientY);
-    if (!norm) return;
-    activePointer = { id: ev.pointerId, ...norm };
-    send({ t: "down", x: norm.x, y: norm.y, p: ev.pointerId });
+    ev.stopPropagation();
+    try {
+      containerEl.setPointerCapture(ev.pointerId);
+    } catch {
+      /* ignore */
+    }
+    pointerDown(ev.clientX, ev.clientY, ev.pointerId);
   }
 
   function onPointerMove(ev) {
     if (activePointer?.id !== ev.pointerId) return;
     ev.preventDefault();
-    const now = Date.now();
-    if (now - lastMoveAt < MOVE_THROTTLE_MS) return;
-    lastMoveAt = now;
-    const norm = clientToNormalized(videoEl, ev.clientX, ev.clientY);
-    if (!norm) return;
-    activePointer = { id: ev.pointerId, ...norm };
-    send({ t: "move", x: norm.x, y: norm.y, p: ev.pointerId });
+    pointerMove(ev.clientX, ev.clientY, ev.pointerId);
   }
 
   function onPointerUp(ev) {
     if (activePointer?.id !== ev.pointerId) return;
     ev.preventDefault();
-    const norm = clientToNormalized(videoEl, ev.clientX, ev.clientY) || activePointer;
-    send({ t: "up", x: norm.x, y: norm.y, p: ev.pointerId });
-    if (
-      Math.hypot(norm.x - activePointer.x, norm.y - activePointer.y) < 0.02
-    ) {
-      send({ t: "tap", x: norm.x, y: norm.y });
-    }
-    activePointer = null;
+    pointerUp(ev.clientX, ev.clientY, ev.pointerId);
     try {
       containerEl.releasePointerCapture(ev.pointerId);
     } catch {
@@ -256,9 +289,42 @@ export function bindViewerControlOverlay(containerEl, videoEl, sendFn) {
     }
   }
 
+  function onTouchStart(ev) {
+    if (activePointer) return;
+    const t = ev.changedTouches[0];
+    if (!t) return;
+    ev.preventDefault();
+    touchActive = true;
+    pointerDown(t.clientX, t.clientY, t.identifier + 10000);
+  }
+
+  function onTouchMove(ev) {
+    if (!touchActive || !activePointer) return;
+    const t = ev.changedTouches[0];
+    if (!t) return;
+    ev.preventDefault();
+    pointerMove(t.clientX, t.clientY, activePointer.id);
+  }
+
+  function onTouchEnd(ev) {
+    if (!touchActive || !activePointer) return;
+    const t = ev.changedTouches[0];
+    if (!t) return;
+    ev.preventDefault();
+    pointerUp(t.clientX, t.clientY, activePointer.id);
+  }
+
+  function onClick(ev) {
+    if (activePointer) return;
+    ev.preventDefault();
+    const norm = normFromClient(ev.clientX, ev.clientY);
+    if (!norm) return;
+    send({ t: "tap", x: norm.x, y: norm.y });
+  }
+
   function onWheel(ev) {
     ev.preventDefault();
-    const norm = clientToNormalized(videoEl, ev.clientX, ev.clientY);
+    const norm = normFromClient(ev.clientX, ev.clientY);
     if (!norm) return;
     send({ t: "scroll", x: norm.x, y: norm.y, dy: ev.deltaY > 0 ? 1 : -1 });
   }
@@ -273,10 +339,15 @@ export function bindViewerControlOverlay(containerEl, videoEl, sendFn) {
     send({ t: "key", k: ev.key });
   }
 
-  containerEl.addEventListener("pointerdown", onPointerDown);
-  containerEl.addEventListener("pointermove", onPointerMove);
-  containerEl.addEventListener("pointerup", onPointerUp);
-  containerEl.addEventListener("pointercancel", onPointerUp);
+  containerEl.addEventListener("pointerdown", onPointerDown, { passive: false });
+  containerEl.addEventListener("pointermove", onPointerMove, { passive: false });
+  containerEl.addEventListener("pointerup", onPointerUp, { passive: false });
+  containerEl.addEventListener("pointercancel", onPointerUp, { passive: false });
+  containerEl.addEventListener("touchstart", onTouchStart, { passive: false });
+  containerEl.addEventListener("touchmove", onTouchMove, { passive: false });
+  containerEl.addEventListener("touchend", onTouchEnd, { passive: false });
+  containerEl.addEventListener("touchcancel", onTouchEnd, { passive: false });
+  containerEl.addEventListener("click", onClick, { passive: false });
   containerEl.addEventListener("wheel", onWheel, { passive: false });
   containerEl.addEventListener("keydown", onKeyDown);
 
@@ -285,6 +356,11 @@ export function bindViewerControlOverlay(containerEl, videoEl, sendFn) {
     containerEl.removeEventListener("pointermove", onPointerMove);
     containerEl.removeEventListener("pointerup", onPointerUp);
     containerEl.removeEventListener("pointercancel", onPointerUp);
+    containerEl.removeEventListener("touchstart", onTouchStart);
+    containerEl.removeEventListener("touchmove", onTouchMove);
+    containerEl.removeEventListener("touchend", onTouchEnd);
+    containerEl.removeEventListener("touchcancel", onTouchEnd);
+    containerEl.removeEventListener("click", onClick);
     containerEl.removeEventListener("wheel", onWheel);
     containerEl.removeEventListener("keydown", onKeyDown);
   };
