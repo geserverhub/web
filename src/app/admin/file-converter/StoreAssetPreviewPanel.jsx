@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { previewAssetsForPlatform } from "@/lib/mobile-file-converter";
+import { downloadBlob, resizeImageForStoreAsset } from "@/lib/store-asset-resize";
 
 function loadImageMeta(file) {
   return new Promise((resolve, reject) => {
@@ -129,42 +130,47 @@ function evaluateAsset(spec, width, height) {
   return { messages, verdict, verdictText, score };
 }
 
-function PreviewMock({ spec, previewUrl, platform }) {
-  const storeName = platform === "android" ? "Google Play" : "App Store";
-
-  if (spec.kind === "icon") {
-    return (
-      <div className="fc-preview-mock fc-preview-mock--listing">
-        <div className="fc-preview-mock__label">ตัวอย่างบน {storeName}</div>
-        <div className="fc-preview-mock__listing-row">
-          <div className="fc-preview-mock__listing-icon">
-            <img src={previewUrl} alt="" />
-          </div>
-          <div className="fc-preview-mock__listing-meta">
-            <div className="fc-preview-mock__app-name">ชื่อแอปของคุณ</div>
-            <div className="fc-preview-mock__app-sub">Developer · ★ 4.8</div>
-            <div className="fc-preview-mock__app-cta">ติดตั้ง</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (spec.kind === "banner") {
-    return (
-      <div className="fc-preview-mock fc-preview-mock--banner">
-        <div className="fc-preview-mock__label">ตัวอย่าง Feature Graphic บน {storeName}</div>
-        <div className="fc-preview-mock__banner-frame">
+function PlayStoreIconMock({ previewUrl }) {
+  return (
+    <div className="fc-preview-mock fc-preview-mock--listing">
+      <div className="fc-preview-mock__label">ตัวอย่างบน Google Play</div>
+      <div className="fc-preview-mock__listing-row">
+        <div className="fc-preview-mock__listing-icon fc-preview-mock__listing-icon--play">
           <img src={previewUrl} alt="" />
         </div>
+        <div className="fc-preview-mock__listing-meta">
+          <div className="fc-preview-mock__app-name">ชื่อแอปของคุณ</div>
+          <div className="fc-preview-mock__app-sub">Developer · ★ 4.8</div>
+          <div className="fc-preview-mock__app-cta fc-preview-mock__app-cta--play">ติดตั้ง</div>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
+function AppStoreIconMock({ previewUrl }) {
+  return (
+    <div className="fc-preview-mock fc-preview-mock--listing fc-preview-mock--ios">
+      <div className="fc-preview-mock__label">ตัวอย่างบน App Store (iPhone)</div>
+      <div className="fc-preview-mock__listing-row fc-preview-mock__listing-row--ios">
+        <div className="fc-preview-mock__listing-icon fc-preview-mock__listing-icon--ios">
+          <img src={previewUrl} alt="" />
+        </div>
+        <div className="fc-preview-mock__listing-meta">
+          <div className="fc-preview-mock__app-name">ชื่อแอปของคุณ</div>
+          <div className="fc-preview-mock__app-sub">Developer · ★ 4.8 · App</div>
+          <div className="fc-preview-mock__app-cta fc-preview-mock__app-cta--ios">GET</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayStoreScreenshotMock({ previewUrl }) {
   return (
     <div className="fc-preview-mock fc-preview-mock--phone">
-      <div className="fc-preview-mock__label">ตัวอย่างภาพหน้าจอบน {storeName}</div>
-      <div className="fc-preview-mock__phone">
+      <div className="fc-preview-mock__label">ตัวอย่างภาพหน้าจอบน Google Play</div>
+      <div className="fc-preview-mock__phone fc-preview-mock__phone--android">
         <div className="fc-preview-mock__phone-notch" />
         <div className="fc-preview-mock__phone-screen">
           <img src={previewUrl} alt="" />
@@ -174,53 +180,187 @@ function PreviewMock({ spec, previewUrl, platform }) {
   );
 }
 
+function AppStoreIphoneScreenshotMock({ previewUrl, label = "ตัวอย่างภาพหน้าจอบน App Store (iPhone)" }) {
+  return (
+    <div className="fc-preview-mock fc-preview-mock--phone fc-preview-mock--ios">
+      <div className="fc-preview-mock__label">{label}</div>
+      <div className="fc-preview-mock__appstore-page">
+        <div className="fc-preview-mock__appstore-header">
+          <div className="fc-preview-mock__appstore-icon fc-preview-mock__appstore-icon--placeholder" aria-hidden="true" />
+          <div className="fc-preview-mock__appstore-header-meta">
+            <div className="fc-preview-mock__app-name">ชื่อแอปของคุณ</div>
+            <div className="fc-preview-mock__app-sub">Developer · Preview</div>
+          </div>
+        </div>
+        <div className="fc-preview-mock__appstore-screenshots">
+          <div className="fc-preview-mock__phone fc-preview-mock__phone--ios">
+            <div className="fc-preview-mock__phone-island" />
+            <div className="fc-preview-mock__phone-screen">
+              <img src={previewUrl} alt="" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppStoreIpadScreenshotMock({ previewUrl }) {
+  return (
+    <div className="fc-preview-mock fc-preview-mock--phone fc-preview-mock--ios">
+      <div className="fc-preview-mock__label">ตัวอย่างภาพหน้าจอบน App Store (iPad)</div>
+      <div className="fc-preview-mock__tablet fc-preview-mock__tablet--ios">
+        <div className="fc-preview-mock__tablet-camera" />
+        <div className="fc-preview-mock__tablet-screen">
+          <img src={previewUrl} alt="" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayStoreBannerMock({ previewUrl }) {
+  return (
+    <div className="fc-preview-mock fc-preview-mock--banner">
+      <div className="fc-preview-mock__label">ตัวอย่าง Feature Graphic บน Google Play</div>
+      <div className="fc-preview-mock__banner-frame">
+        <img src={previewUrl} alt="" />
+      </div>
+    </div>
+  );
+}
+
+function PreviewMockGroup({ spec, previewUrl }) {
+  if (spec.kind === "banner") {
+    return <PlayStoreBannerMock previewUrl={previewUrl} />;
+  }
+
+  if (spec.kind === "icon") {
+    return (
+      <div className="fc-preview-mock-grid">
+        <PlayStoreIconMock previewUrl={previewUrl} />
+        <AppStoreIconMock previewUrl={previewUrl} />
+      </div>
+    );
+  }
+
+  if (spec.id === "ipad-screenshot") {
+    return (
+      <div className="fc-preview-mock-grid">
+        <AppStoreIpadScreenshotMock previewUrl={previewUrl} />
+        <AppStoreIphoneScreenshotMock
+          previewUrl={previewUrl}
+          label="App Store (iPhone) — ใช้ภาพเดียวกันเปรียบเทียบ"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="fc-preview-mock-grid">
+      <PlayStoreScreenshotMock previewUrl={previewUrl} />
+      <AppStoreIphoneScreenshotMock previewUrl={previewUrl} />
+    </div>
+  );
+}
+
 function AssetPreviewRow({ spec, platform }) {
   const inputRef = useRef(null);
+  const fixInputRef = useRef(null);
   const [preview, setPreview] = useState(null);
+  const [fixed, setFixed] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [fixing, setFixing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     return () => {
       if (preview?.url) URL.revokeObjectURL(preview.url);
+      if (fixed?.url) URL.revokeObjectURL(fixed.url);
     };
-  }, [preview?.url]);
+  }, [preview?.url, fixed?.url]);
+
+  const applyPreview = useCallback((nextPreview) => {
+    setPreview((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return nextPreview;
+    });
+    setFixed((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return null;
+    });
+  }, []);
+
+  const applyFixed = useCallback((result) => {
+    const analysis = evaluateAsset(spec, result.width, result.height);
+    setFixed((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return { ...result, ...analysis };
+    });
+  }, [spec]);
 
   const handleFile = useCallback(
-    async (file) => {
+    async (file, autoFix = false) => {
       if (!file) return;
       setBusy(true);
       setError("");
       try {
         const meta = await loadImageMeta(file);
         const analysis = evaluateAsset(spec, meta.width, meta.height);
-        setPreview((prev) => {
-          if (prev?.url) URL.revokeObjectURL(prev.url);
-          return {
-            url: meta.url,
-            fileName: file.name,
-            width: meta.width,
-            height: meta.height,
-            size: file.size,
-            ...analysis,
-          };
+        applyPreview({
+          url: meta.url,
+          fileName: file.name,
+          width: meta.width,
+          height: meta.height,
+          size: file.size,
+          blob: file,
+          ...analysis,
         });
+
+        if (autoFix || analysis.verdict !== "ok") {
+          setFixing(true);
+          const resized = await resizeImageForStoreAsset(meta.url, spec, file.name);
+          applyFixed(resized);
+        }
       } catch (err) {
         setError(err.message || "อ่านไฟล์ไม่สำเร็จ");
       } finally {
         setBusy(false);
+        setFixing(false);
         if (inputRef.current) inputRef.current.value = "";
+        if (fixInputRef.current) fixInputRef.current.value = "";
       }
     },
-    [spec]
+    [applyFixed, applyPreview, spec]
   );
 
+  const handleAutoFix = useCallback(async () => {
+    if (!preview?.url) return;
+    setFixing(true);
+    setError("");
+    try {
+      const resized = await resizeImageForStoreAsset(preview.url, spec, preview.fileName);
+      applyFixed(resized);
+    } catch (err) {
+      setError(err.message || "ปรับขนาดไม่สำเร็จ");
+    } finally {
+      setFixing(false);
+    }
+  }, [applyFixed, preview, spec]);
+
+  const displayPreview = fixed || preview;
+  const displayVerdict = fixed?.verdict ?? preview?.verdict;
+  const displayVerdictText = fixed?.verdictText ?? preview?.verdictText;
+  const displayMessages = fixed?.messages ?? preview?.messages;
+  const displayUrl = fixed?.url ?? preview?.url;
+  const needsFix = preview && preview.verdict !== "ok" && !fixed;
+
   const verdictClass =
-    preview?.verdict === "ok"
+    displayVerdict === "ok"
       ? "success"
-      : preview?.verdict === "warn"
+      : displayVerdict === "warn"
         ? "warning"
-        : preview
+        : displayPreview
           ? "danger"
           : "";
 
@@ -231,21 +371,28 @@ function AssetPreviewRow({ spec, platform }) {
           <div className="fw-semibold">{spec.label}</div>
           <div className="small text-muted">{spec.usage}</div>
         </div>
-        <div>
+        <div className="d-flex flex-wrap gap-2">
           <input
             ref={inputRef}
             type="file"
             className="d-none"
             accept={spec.accept}
-            onChange={(e) => handleFile(e.target.files?.[0])}
+            onChange={(e) => handleFile(e.target.files?.[0], false)}
+          />
+          <input
+            ref={fixInputRef}
+            type="file"
+            className="d-none"
+            accept={spec.accept}
+            onChange={(e) => handleFile(e.target.files?.[0], true)}
           />
           <button
             type="button"
             className="btn btn-outline-primary btn-sm"
-            disabled={busy}
+            disabled={busy || fixing}
             onClick={() => inputRef.current?.click()}
           >
-            {busy ? "กำลังเช็ค..." : "อัปโหลดไฟล์เพื่อเช็ค"}
+            {busy && !fixing ? "กำลังเช็ค..." : "อัปโหลดไฟล์เพื่อเช็ค"}
           </button>
         </div>
       </div>
@@ -255,31 +402,77 @@ function AssetPreviewRow({ spec, platform }) {
       {preview ? (
         <div className="fc-preview-result">
           <div className={`alert alert-${verdictClass} py-2 mb-3`} role="status">
-            <strong>{preview.verdictText}</strong>
+            <strong>{displayVerdictText}</strong>
             <div className="small mt-1 mb-0">
               หลังอัปโหลดจริงใน {platform === "android" ? "Play Console" : "App Store Connect"} จะแสดงใกล้เคียงตัวอย่างด้านล่าง
               — ถ้าดูสวย/โอเคที่นี่ แปลว่าขึ้น Store แล้วน่าจะใช้ได้
             </div>
+
+            {needsFix ? (
+              <div className="d-flex flex-wrap gap-2 mt-3">
+                <button
+                  type="button"
+                  className="btn btn-warning btn-sm"
+                  disabled={fixing}
+                  onClick={handleAutoFix}
+                >
+                  {fixing ? "กำลังปรับขนาด..." : "ปรับขนาดอัตโนมัติจากไฟล์นี้"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={busy || fixing}
+                  onClick={() => fixInputRef.current?.click()}
+                >
+                  อัปโหลดไฟล์เพื่อปรับขนาด
+                </button>
+              </div>
+            ) : null}
+
+            {fixed ? (
+              <div className="d-flex flex-wrap gap-2 mt-3 align-items-center">
+                <button
+                  type="button"
+                  className="btn btn-success btn-sm"
+                  onClick={() => downloadBlob(fixed.blob, fixed.fileName)}
+                >
+                  เซฟไฟล์ที่ถูกต้อง ({fixed.width}×{fixed.height})
+                </button>
+                <span className="small text-muted">{fixed.fileName}</span>
+              </div>
+            ) : null}
           </div>
 
-          <div className="row g-3 align-items-start">
-            <div className="col-lg-6">
-              <PreviewMock spec={spec} previewUrl={preview.url} platform={platform} />
+          {fixed ? (
+            <div className="alert alert-success py-2 small mb-3">
+              ปรับขนาดเป็น {fixed.width}×{fixed.height} px แล้ว — ดูตัวอย่างด้านล่าง แล้วกด 「เซฟไฟล์ที่ถูกต้อง」 เพื่อดาวน์โหลดไปอัปโหลด Play/App Store
             </div>
-            <div className="col-lg-6">
+          ) : null}
+
+          <div className="row g-3 align-items-start">
+            <div className="col-lg-7">
+              <PreviewMockGroup spec={spec} previewUrl={displayUrl} />
+            </div>
+            <div className="col-lg-5">
               <ul className="list-unstyled small mb-2">
                 <li>
-                  <strong>ไฟล์:</strong> {preview.fileName}
+                  <strong>ไฟล์:</strong> {fixed ? fixed.fileName : preview.fileName}
                 </li>
                 <li>
-                  <strong>ขนาดจริง:</strong> {preview.width}×{preview.height} px
+                  <strong>ขนาด{displayPreview === fixed ? "หลังปรับ" : "จริง"}:</strong>{" "}
+                  {displayPreview.width}×{displayPreview.height} px
                 </li>
+                {preview && fixed ? (
+                  <li className="text-muted">
+                    <strong>ต้นฉบับ:</strong> {preview.width}×{preview.height} px
+                  </li>
+                ) : null}
                 <li>
                   <strong>แนะนำ:</strong> {spec.width}×{spec.height} px
                 </li>
               </ul>
               <ul className="small mb-0 ps-3">
-                {preview.messages.map((msg, i) => (
+                {displayMessages.map((msg, i) => (
                   <li
                     key={i}
                     className={
@@ -299,6 +492,10 @@ function AssetPreviewRow({ spec, platform }) {
                 className="btn btn-link btn-sm px-0 mt-2"
                 onClick={() => {
                   setPreview((prev) => {
+                    if (prev?.url) URL.revokeObjectURL(prev.url);
+                    return null;
+                  });
+                  setFixed((prev) => {
                     if (prev?.url) URL.revokeObjectURL(prev.url);
                     return null;
                   });
@@ -327,7 +524,7 @@ export default function StoreAssetPreviewPanel({ platform }) {
       <div className="card-body">
         <h2 className="h6 mb-1">เช็คไอคอน &amp; ภาพหน้าจอก่อนอัปโหลด {storeLabel}</h2>
         <p className="text-muted small mb-3">
-          อัปโหลดไฟล์เพื่อดูตัวอย่างการแสดงผลและตรวจขนาด/สัดส่วน — ไฟล์จะไม่ถูกบันทึก ใช้ทดสอบความพอดีและความสวยงามก่อนอัปโหลดจริงเท่านั้น
+          อัปโหลดไฟล์เพื่อดูตัวอย่างการแสดงผลและตรวจขนาด/สัดส่วน — ถ้ายังไม่พร้อม สามารถปรับขนาดอัตโนมัติแล้วเซฟไฟล์ที่ถูกต้องไปอัปโหลด Store ได้ (ไม่บันทึกลงเซิร์ฟเวอร์)
         </p>
         {assets.map((spec) => (
           <AssetPreviewRow key={spec.id} spec={spec} platform={platform} />

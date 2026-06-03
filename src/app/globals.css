@@ -2586,6 +2586,12 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
 }
 
 /* Admin file-converter — store asset preview mocks */
+.fc-preview-mock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
 .fc-preview-mock {
   background: var(--agency-surface-2);
   border: 1px solid var(--agency-line);
@@ -2640,6 +2646,131 @@ body.ge-ready [data-reveal][data-delay="6"] { transition-delay: 0.42s; }
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--agency-primary);
+}
+
+.fc-preview-mock__listing-icon--play {
+  border-radius: 18%;
+}
+
+.fc-preview-mock__listing-icon--ios {
+  border-radius: 22%;
+}
+
+.fc-preview-mock__listing-row--ios {
+  align-items: flex-start;
+}
+
+.fc-preview-mock__app-cta--play {
+  color: var(--agency-primary);
+}
+
+.fc-preview-mock__app-cta--ios {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.2rem 0.85rem;
+  border-radius: 999px;
+  background: #007aff;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.fc-preview-mock__phone--android {
+  background: #111827;
+}
+
+.fc-preview-mock__phone--ios {
+  width: min(180px, 100%);
+  background: #1c1c1e;
+  border-radius: 1.75rem;
+  padding: 0.45rem;
+}
+
+.fc-preview-mock__phone-island {
+  width: 28%;
+  height: 8px;
+  background: #000;
+  border-radius: 999px;
+  margin: 0.1rem auto 0.4rem;
+}
+
+.fc-preview-mock__appstore-page {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: var(--agency-shadow-soft);
+}
+
+.fc-preview-mock__appstore-header {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.fc-preview-mock__appstore-icon {
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e2e8f0;
+}
+
+.fc-preview-mock__appstore-icon--placeholder {
+  border-radius: 22%;
+  background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+}
+
+.fc-preview-mock__appstore-icon img,
+.fc-preview-mock__appstore-screenshots .fc-preview-mock__listing-icon--ios img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fc-preview-mock__appstore-header-meta .fc-preview-mock__app-name {
+  font-size: 0.85rem;
+}
+
+.fc-preview-mock__appstore-screenshots {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
+
+.fc-preview-mock__tablet {
+  width: min(260px, 100%);
+  margin: 0 auto;
+  background: #1c1c1e;
+  border-radius: 1rem;
+  padding: 0.55rem;
+  box-shadow: var(--agency-shadow);
+}
+
+.fc-preview-mock__tablet--ios {
+  aspect-ratio: auto;
+}
+
+.fc-preview-mock__tablet-camera {
+  width: 8px;
+  height: 8px;
+  background: #374151;
+  border-radius: 999px;
+  margin: 0 auto 0.45rem;
+}
+
+.fc-preview-mock__tablet-screen {
+  border-radius: 0.55rem;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 3 / 4;
+}
+
+.fc-preview-mock__tablet-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .fc-preview-mock__banner-frame {
