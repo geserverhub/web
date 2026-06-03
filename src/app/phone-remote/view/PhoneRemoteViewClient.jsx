@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  ICE_SERVERS,
   attachRemoteVideo,
+  createIceQueue,
+  createPeerConnection,
+  fetchRoom,
   sendSignal,
   startSignalPoll,
 } from "@/lib/phone-remote-webrtc";
@@ -17,15 +19,21 @@ export default function PhoneRemoteViewClient() {
   const remoteVideoRef = useRef(null);
   const pcRef = useRef(null);
   const stopPollRef = useRef(null);
+  const waitTimerRef = useRef(null);
 
   const [roomInput, setRoomInput] = useState(initialRoom);
   const [activeRoom, setActiveRoom] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [hint, setHint] = useState("");
 
   const cleanup = useCallback(() => {
     stopPollRef.current?.();
     stopPollRef.current = null;
+    if (waitTimerRef.current) {
+      clearInterval(waitTimerRef.current);
+      waitTimerRef.current = null;
+    }
     pcRef.current?.close();
     pcRef.current = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
@@ -47,15 +55,33 @@ export default function PhoneRemoteViewClient() {
 
     cleanup();
     setError("");
+    setHint("");
     setActiveRoom(code);
     setStatus("connecting");
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    let roomInfo;
+    try {
+      roomInfo = await fetchRoom(code);
+    } catch {
+      setError(`ไม่พบห้อง ${code} — ให้ Host สร้างห้องใหม่แล้วลองอีกครั้ง`);
+      setStatus("idle");
+      setActiveRoom("");
+      return;
+    }
+
+    const pc = createPeerConnection();
     pcRef.current = pc;
+    const iceQueue = createIceQueue(pc);
+    let answered = false;
+    let sawOffer = false;
+    let activeOfferAt = 0;
+    const pollSince = roomInfo.latestOfferAt > 0 ? roomInfo.latestOfferAt - 1 : 0;
 
     pc.ontrack = (ev) => {
       attachRemoteVideo(remoteVideoRef.current, ev.streams[0]);
       setStatus("connected");
+      setHint("");
+      setError("");
     };
 
     pc.onicecandidate = (ev) => {
@@ -65,46 +91,86 @@ export default function PhoneRemoteViewClient() {
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "failed") {
-        setError("การเชื่อมต่อล้มเหลว — ลองใหม่");
-        setStatus("idle");
+      if (pc.connectionState === "connected") {
+        setStatus("connected");
+        setError("");
       }
-      if (pc.connectionState === "disconnected") {
+      if (pc.connectionState === "failed") {
+        setError(
+          "การเชื่อมต่อล้มเหลว — ตรวจว่า Host กด 「เริ่มแชร์หน้าจอ」 แล้ว และทั้งสองเครื่องออนไลน์"
+        );
         setStatus("idle");
       }
     };
 
-    let answered = false;
-
-    stopPollRef.current = startSignalPoll(code, "viewer", async (msg) => {
-      if (msg.type === "hangup") {
-        setError("Host หยุดแชร์แล้ว");
-        cleanup();
-        setStatus("idle");
-        return;
-      }
-      if (msg.type === "offer" && msg.payload && !answered) {
-        answered = true;
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        await sendSignal(code, "viewer", "answer", answer);
-      }
-      if (msg.type === "ice" && msg.payload) {
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
-        } catch {
-          /* ignore */
+    waitTimerRef.current = setInterval(async () => {
+      if (sawOffer) return;
+      try {
+        const room = await fetchRoom(code);
+        if (!room.hasOffer) {
+          setHint("รอ Host กด 「เริ่มแชร์หน้าจอ」 ในห้องเดียวกัน...");
+        } else {
+          setHint("พบสัญญาณจาก Host — กำลังเชื่อมต่อ...");
         }
+      } catch {
+        /* ignore */
       }
-    });
+    }, 2500);
+
+    stopPollRef.current = startSignalPoll(
+      code,
+      "viewer",
+      async (msg) => {
+        if (msg.type === "offer" && msg.payload) {
+          if (answered) return;
+          sawOffer = true;
+          answered = true;
+          activeOfferAt = msg.at;
+          setHint("กำลังเชื่อมต่อวิดีโอ...");
+          await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+          await iceQueue.flush();
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          await sendSignal(code, "viewer", "answer", answer);
+          return;
+        }
+        if (msg.type === "hangup") {
+          if (!answered || (activeOfferAt > 0 && msg.at < activeOfferAt)) return;
+          setError("Host หยุดแชร์แล้ว");
+          cleanup();
+          setStatus("idle");
+          return;
+        }
+        if (msg.type === "ice" && msg.payload) {
+          await iceQueue.add(msg.payload);
+        }
+      },
+      {
+        initialSince: pollSince,
+        onError: (err) => {
+          if (err?.status === 404) {
+            setError(`ไม่พบห้อง ${code} — รหัสหมดอายุหรือ Host ปิดแล้ว`);
+            cleanup();
+            setStatus("idle");
+          }
+        },
+      }
+    );
   }
 
   function disconnect() {
     cleanup();
     setActiveRoom("");
     setStatus("idle");
+    setHint("");
   }
+
+  const statusLabel =
+    status === "connected"
+      ? "เชื่อมต่อแล้ว"
+      : status === "connecting"
+        ? "กำลังเชื่อมต่อ..."
+        : status;
 
   return (
     <main className="container py-4" style={{ maxWidth: 960 }}>
@@ -119,7 +185,7 @@ export default function PhoneRemoteViewClient() {
         <div className="col-sm-8">
           <input
             className="form-control"
-            placeholder="รหัสห้อง 6 ตัว เช่น ABC123"
+            placeholder="รหัสห้อง 6 ตัว เช่น RT878T"
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value.toUpperCase())}
             maxLength={6}
@@ -145,11 +211,11 @@ export default function PhoneRemoteViewClient() {
 
       {activeRoom ? (
         <p className="small text-muted">
-          ห้อง: <code>{activeRoom}</code> — สถานะ:{" "}
-          {status === "connected" ? "เชื่อมต่อแล้ว" : status === "connecting" ? "กำลังเชื่อมต่อ..." : status}
+          ห้อง: <code>{activeRoom}</code> — สถานะ: {statusLabel}
         </p>
       ) : null}
 
+      {hint && !error ? <div className="alert alert-info py-2 small">{hint}</div> : null}
       {error ? <div className="alert alert-danger">{error}</div> : null}
 
       <div className="ratio ratio-16x9 bg-dark rounded overflow-hidden">
@@ -157,9 +223,13 @@ export default function PhoneRemoteViewClient() {
       </div>
 
       {status !== "connected" ? (
-        <p className="small text-muted mt-2 mb-0">
-          รอ Host เริ่มแชร์หน้าจอในห้องเดียวกัน — เปิดได้ทั้งเว็บและมือถือ
-        </p>
+        <div className="small text-muted mt-2 mb-0">
+          <p className="mb-1">
+            <strong>ขั้นตอน:</strong> Host เปิด <code>/phone-remote/host</code> → สร้างห้อง → กด{" "}
+            <strong>เริ่มแชร์หน้าจอ</strong> → Viewer ใส่รหัสห้องเดียวกัน
+          </p>
+          <p className="mb-0">Host และ Viewer ต้องเปิดเว็บบนเซิร์ฟเวอร์เครื่องเดียวกัน (instance เดียวกัน)</p>
+        </div>
       ) : null}
     </main>
   );

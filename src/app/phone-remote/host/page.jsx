@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ICE_SERVERS,
   attachLocalPreview,
+  createIceQueue,
+  createPeerConnection,
   createRoom,
   getDisplayStream,
   sendSignal,
@@ -79,8 +80,9 @@ export default function PhoneRemoteHostPage() {
         cleanup();
       });
 
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      const pc = createPeerConnection();
       pcRef.current = pc;
+      const iceQueue = createIceQueue(pc);
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       pc.onicecandidate = (ev) => {
@@ -99,13 +101,10 @@ export default function PhoneRemoteHostPage() {
       stopPollRef.current = startSignalPoll(id, "host", async (msg) => {
         if (msg.type === "answer" && msg.payload) {
           await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+          await iceQueue.flush();
         }
         if (msg.type === "ice" && msg.payload) {
-          try {
-            await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
-          } catch {
-            /* ignore duplicate */
-          }
+          await iceQueue.add(msg.payload);
         }
       });
 
