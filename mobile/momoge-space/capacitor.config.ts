@@ -14,7 +14,7 @@ const baseUrl = useBundled
   : (process.env.CAPACITOR_SERVER_URL ?? DEFAULT_SERVER_URL).replace(/\/$/, '');
 
 const config: CapacitorConfig = {
-  appId: 'com.momogespace.myapp',
+  appId: 'momogespace.myapp',
   appName: 'Momoge space',
   webDir: 'www',
   ...(baseUrl

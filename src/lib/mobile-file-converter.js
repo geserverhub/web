@@ -9,6 +9,7 @@ export const ICON_SIZE_PRESETS = {
 export const STORE_UPLOAD_EXTENSIONS = {
   android: [
     { ext: ".aab", label: "Android App Bundle", usage: "อัปโหลด Release ใน Google Play Console" },
+    { ext: ".apk", label: "Android APK", usage: "ทดสอบติดตั้ง / ตรวจ SHA-1 signing certificate" },
     { ext: ".png", label: "PNG icon / screenshot", usage: "ไอคอน 512×512 และภาพหน้าจอ" },
     { ext: ".jpg", label: "JPEG screenshot", usage: "ภาพหน้าจอ Play Store" },
     { ext: ".webp", label: "WebP asset", usage: "ภาพโปรโมต (บางส่วน)" },
@@ -25,10 +26,14 @@ export const STORE_UPLOAD_EXTENSIONS = {
 /** Bundle file attached to a conversion job (optional). */
 export const BUNDLE_ACCEPT = {
   android: {
-    extensions: [".aab"],
-    mimeTypes: ["application/octet-stream", "application/vnd.android.package-archive"],
+    extensions: [".aab", ".apk"],
+    mimeTypes: [
+      "application/octet-stream",
+      "application/vnd.android.package-archive",
+      "application/java-archive",
+    ],
     maxBytes: 200 * 1024 * 1024,
-    label: "Android App Bundle (.aab)",
+    label: "Android App Bundle / APK (.aab, .apk)",
   },
   ios: {
     extensions: [".ipa"],
@@ -78,6 +83,27 @@ export function storeExtensionsForPlatform(platform) {
 
 export function listingIconSize(platform) {
   return platform === "android" ? 512 : 1024;
+}
+
+export function isAndroidAppArchive(ext) {
+  return ext === ".aab" || ext === ".apk";
+}
+
+export function androidAppArchiveUsageNote(ext) {
+  if (ext === ".apk") {
+    return "ไฟล์ APK — ทดสอบติดตั้ง / ตรวจ SHA-1 signing certificate";
+  }
+  if (ext === ".aab") {
+    return "อัปโหลด .aab ใน Play Console → Release";
+  }
+  return "ไฟล์แอป Android";
+}
+
+export function androidAppArchiveLabel(ext) {
+  if (ext === ".apk") return "APK";
+  if (ext === ".aab") return "AAB";
+  if (ext === ".ipa") return "IPA";
+  return ext?.replace(/^\./, "").toUpperCase() || "App";
 }
 
 /** Store assets admins can preview before uploading to Play / App Store Connect. */

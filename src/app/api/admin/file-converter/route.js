@@ -8,8 +8,10 @@ import {
   BUNDLE_ACCEPT,
   ICON_SIZE_PRESETS,
   SOURCE_IMAGE_ACCEPT,
+  androidAppArchiveUsageNote,
   getFileExtension,
   isAllowedBundle,
+  isAndroidAppArchive,
   listingIconSize,
   platformToEnum,
   storeExtensionsForPlatform,
@@ -118,7 +120,7 @@ export async function POST(req) {
     bundlePath = `/uploads/file-converter/bundles/${bundleFileName}`;
     bundleSize = bundleMeta.bytes.length;
     const bundleHash = hashMetaForBuffer(bundleMeta.bytes, {
-      isAndroidBundle: platformRaw === "android" && bundleMeta.ext === ".aab",
+      isAndroidSigningArchive: platformRaw === "android" && isAndroidAppArchive(bundleMeta.ext),
     });
     bundleSha1 = bundleHash.sha1;
     bundleSigningSha1 = bundleHash.signingSha1;
@@ -207,7 +209,7 @@ export async function POST(req) {
         storeEligible: true,
         usageNote:
           platformRaw === "android"
-            ? "อัปโหลด .aab ใน Play Console → Release"
+            ? androidAppArchiveUsageNote(bundleMeta.ext)
             : "อัปโหลด .ipa ผ่าน Transporter / App Store Connect",
       });
     }

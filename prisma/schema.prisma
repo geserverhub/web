@@ -521,6 +521,24 @@ model FileConversionResult {
   @@index([fileExtension])
 }
 
+model FileAppArchiveRecord {
+  id            String             @id @default(cuid())
+  platform      ConversionPlatform
+  fileName      String
+  filePath      String             @db.Text
+  fileMime      String?
+  fileSize      Int
+  fileExtension String
+  fileSha1      String
+  signingSha1   String?
+  packageName   String?
+  createdById   String?
+  createdAt     DateTime           @default(now())
+
+  @@index([platform, createdAt])
+  @@index([createdById])
+}
+
 enum ConversionPlatform {
   ANDROID
   IOS

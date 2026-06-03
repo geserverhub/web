@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { androidAppArchiveLabel } from "@/lib/mobile-file-converter";
 import StoreAssetPreviewPanel from "./StoreAssetPreviewPanel";
 
 function formatBytes(bytes) {
@@ -42,6 +43,7 @@ function CopyCodeButton({ value, label = "คัดลอก" }) {
 const DEFAULT_STORE_EXTS = {
   android: [
     { ext: ".aab", label: "Android App Bundle", usage: "อัปโหลด Release ใน Google Play Console" },
+    { ext: ".apk", label: "Android APK", usage: "ทดสอบติดตั้ง / ตรวจ SHA-1 signing certificate" },
     { ext: ".png", label: "PNG icon / screenshot", usage: "ไอคอน 512×512 และภาพหน้าจอ" },
   ],
   ios: [
@@ -94,6 +96,59 @@ function FilesTable({ files, showSigning = true }) {
   );
 }
 
+function AppArchivesTable({ records }) {
+  if (!records?.length) {
+    return <p className="text-muted small mb-0">ยังไม่มีข้อมูล SHA-1 จากไฟล์แอปที่บันทึกแยก</p>;
+  }
+
+  return (
+    <div className="table-responsive">
+      <table className="table table-sm table-striped align-middle mb-0">
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>แพลตฟอร์ม</th>
+            <th>ประเภท</th>
+            <th>Package name</th>
+            <th>ไฟล์</th>
+            <th>ขนาด</th>
+            <th>SHA-1 (ไฟล์)</th>
+            <th>SHA-1 (Signing)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {records.map((row) => (
+            <tr key={row.id}>
+              <td className="small text-nowrap">{formatDate(row.createdAt)}</td>
+              <td>
+                <span className="badge text-bg-secondary">{row.platform}</span>
+              </td>
+              <td>
+                <span className="badge text-bg-info">{androidAppArchiveLabel(row.fileExtension)}</span>
+              </td>
+              <td className="small">
+                {row.packageName ? <code>{row.packageName}</code> : <span className="text-muted">—</span>}
+              </td>
+              <td>
+                <a href={row.filePath} target="_blank" rel="noreferrer" className="small">
+                  {row.fileName}
+                </a>
+              </td>
+              <td className="small">{formatBytes(row.fileSize)}</td>
+              <td style={{ minWidth: 280 }}>
+                <CopyCodeButton value={row.fileSha1} />
+              </td>
+              <td style={{ minWidth: 280 }}>
+                <CopyCodeButton value={row.signingSha1} label="คัดลอก signing" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function FileConverterClient() {
   const [platform, setPlatform] = useState("android");
   const [file, setFile] = useState(null);
@@ -101,6 +156,10 @@ export default function FileConverterClient() {
   const [storeRules, setStoreRules] = useState(DEFAULT_STORE_EXTS);
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [appArchives, setAppArchives] = useState([]);
+  const [appArchivesLoading, setAppArchivesLoading] = useState(true);
+  const [bundleSaving, setBundleSaving] = useState(false);
+  const [bundleSaveOk, setBundleSaveOk] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -118,6 +177,19 @@ export default function FileConverterClient() {
     }
   }, []);
 
+  const loadAppArchives = useCallback(async () => {
+    setAppArchivesLoading(true);
+    try {
+      const res = await fetch("/api/admin/file-converter/app-archives?limit=50");
+      const data = await res.json();
+      if (res.ok) setAppArchives(data.records || []);
+    } catch {
+      /* ignore */
+    } finally {
+      setAppArchivesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetch("/api/admin/file-converter")
       .then((r) => r.json())
@@ -131,16 +203,46 @@ export default function FileConverterClient() {
       })
       .catch(() => {});
     loadHistory();
-  }, [loadHistory]);
+    loadAppArchives();
+  }, [loadHistory, loadAppArchives]);
 
   const sizes = useMemo(
     () => (platform === "android" ? [48, 72, 96, 144, 192, 512] : [60, 76, 120, 152, 167, 180, 1024]),
     [platform]
   );
 
-  const bundleAccept = platform === "android" ? ".aab" : ".ipa";
-  const bundleLabel = platform === "android" ? "Android App Bundle (.aab)" : "iOS App Archive (.ipa)";
+  const bundleAccept = platform === "android" ? ".aab,.apk" : ".ipa";
+  const bundleLabel =
+    platform === "android" ? "Android App Bundle / APK (.aab, .apk)" : "iOS App Archive (.ipa)";
   const storeExts = storeRules[platform] || [];
+
+  async function handleSaveAppArchive() {
+    if (!bundleFile) {
+      setError("กรุณาเลือกไฟล์แอป (.aab / .apk / .ipa) ก่อน");
+      return;
+    }
+    setBundleSaving(true);
+    setError("");
+    setBundleSaveOk("");
+    try {
+      const formData = new FormData();
+      formData.append("platform", platform);
+      formData.append("bundle", bundleFile);
+      const res = await fetch("/api/admin/file-converter/app-archives", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "บันทึกไม่สำเร็จ");
+      const pkg = data.record?.packageName ? ` — Package: ${data.record.packageName}` : "";
+      setBundleSaveOk(`บันทึก SHA-1 จาก ${bundleFile.name} แล้ว${pkg}`);
+      loadAppArchives();
+    } catch (err) {
+      setError(err.message || "เกิดข้อผิดพลาด");
+    } finally {
+      setBundleSaving(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -175,7 +277,7 @@ export default function FileConverterClient() {
     <main className="container py-4">
       <h1 className="mb-3">ระบบแปลงไฟล์สำหรับ Android / iOS</h1>
       <p className="text-muted mb-4">
-        อัปโหลดโลโก้/ไอคอนต้นฉบับ ระบบจะสร้างไฟล์หลังแปลง (.png) แนบ .aab/.ipa บันทึก SHA-1 และแสดงประวัติ
+        อัปโหลดโลโก้/ไอคอนต้นฉบับ ระบบจะสร้างไฟล์หลังแปลง (.png) แนบ .aab/.apk/.ipa บันทึก SHA-1 และแสดงประวัติ
       </p>
 
       <div className="card shadow-sm mb-3">
@@ -245,9 +347,22 @@ export default function FileConverterClient() {
                 onChange={(e) => setBundleFile(e.target.files?.[0] || null)}
                 disabled={busy}
               />
-              <div className="form-text">
-                แนบ {bundleAccept} — ระบบจะดึง SHA-1 signing certificate จาก .aab อัตโนมัติ
+              <div className="form-text mb-2">
+                แนบ {bundleAccept} — ระบบจะดึง SHA-1 signing certificate จาก .aab / .apk อัตโนมัติ
               </div>
+              {bundleFile ? (
+                <div className="d-flex flex-wrap align-items-center gap-2">
+                  <span className="small text-muted">เลือกแล้ว: {bundleFile.name}</span>
+                  <button
+                    type="button"
+                    className="btn btn-outline-success btn-sm"
+                    disabled={busy || bundleSaving}
+                    onClick={handleSaveAppArchive}
+                  >
+                    {bundleSaving ? "กำลังบันทึก..." : "บันทึก SHA-1 จากไฟล์แอปลงฐานข้อมูล"}
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div className="col-12">
               <div className="small text-muted mb-2">ขนาดไอคอนที่จะสร้าง: {sizes.join(", ")} px (.png)</div>
@@ -258,6 +373,12 @@ export default function FileConverterClient() {
           </form>
         </div>
       </div>
+
+      {bundleSaveOk ? (
+        <div className="alert alert-success mb-3" role="status">
+          {bundleSaveOk}
+        </div>
+      ) : null}
 
       {error ? (
         <div className="alert alert-danger mb-3" role="alert">
@@ -277,8 +398,25 @@ export default function FileConverterClient() {
             </p>
             {result.bundle?.signingSha1 ? (
               <p className="mb-2">
-                <strong>SHA-1 Signing (.aab):</strong>{" "}
+                <strong>
+                  SHA-1 Signing ({androidAppArchiveLabel(result.bundle.extension || ".aab")}):
+                </strong>{" "}
                 <CopyCodeButton value={result.bundle.signingSha1} label="คัดลอก signing" />
+              </p>
+            ) : null}
+            {result.bundle ? (
+              <p className="mb-2 small">
+                <strong>ไฟล์แอปที่แนบ:</strong>{" "}
+                <a href={result.bundle.path} target="_blank" rel="noreferrer">
+                  {result.bundle.name}
+                </a>{" "}
+                ({androidAppArchiveLabel(result.bundle.extension || "")})
+                {result.bundle.sha1 ? (
+                  <>
+                    {" "}
+                    — SHA-1: <CopyCodeButton value={result.bundle.sha1} />
+                  </>
+                ) : null}
               </p>
             ) : null}
             <FilesTable files={result.files} />
@@ -286,7 +424,7 @@ export default function FileConverterClient() {
         </div>
       ) : null}
 
-      <div className="card shadow-sm">
+      <div className="card shadow-sm mb-3">
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h2 className="h5 mb-0">ประวัติการแปลงไฟล์</h2>
@@ -311,6 +449,11 @@ export default function FileConverterClient() {
                       data-bs-target={`#job-${job.id}`}
                     >
                       <span className="me-2 badge text-bg-secondary">{job.platform}</span>
+                      {job.bundleExtension ? (
+                        <span className="me-2 badge text-bg-info">
+                          {androidAppArchiveLabel(job.bundleExtension)}
+                        </span>
+                      ) : null}
                       {job.sourceName}
                       <span className="ms-2 small text-muted">{formatDate(job.createdAt)}</span>
                     </button>
@@ -325,19 +468,26 @@ export default function FileConverterClient() {
                       </div>
                       {job.bundleSigningSha1 ? (
                         <div className="mb-2 small">
-                          <strong>SHA-1 Signing แอป:</strong>{" "}
+                          <strong>
+                            SHA-1 Signing ({androidAppArchiveLabel(job.bundleExtension || ".aab")}):
+                          </strong>{" "}
                           <CopyCodeButton value={job.bundleSigningSha1} label="คัดลอก signing" />
                         </div>
                       ) : null}
                       {job.bundleName ? (
                         <div className="mb-3 small">
-                          <strong>แอปที่แนบ:</strong>{" "}
+                          <strong>แอปที่แนบ ({androidAppArchiveLabel(job.bundleExtension || "")}):</strong>{" "}
                           <a href={job.bundlePath} target="_blank" rel="noreferrer">
                             {job.bundleName}
                           </a>{" "}
+                          {job.bundleSize ? (
+                            <span className="text-muted">({formatBytes(job.bundleSize)})</span>
+                          ) : null}
                           {job.bundleSha1 ? (
                             <>
-                              — SHA-1: <CopyCodeButton value={job.bundleSha1} />
+                              <div className="mt-1">
+                                SHA-1 ไฟล์: <CopyCodeButton value={job.bundleSha1} />
+                              </div>
                             </>
                           ) : null}
                         </div>
@@ -348,6 +498,30 @@ export default function FileConverterClient() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      </div>
+
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h2 className="h5 mb-0">ตาราง SHA-1 จากไฟล์แอป (APK / AAB / IPA)</h2>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={loadAppArchives}
+              disabled={appArchivesLoading}
+            >
+              {appArchivesLoading ? "กำลังโหลด..." : "รีเฟรช"}
+            </button>
+          </div>
+          <p className="text-muted small mb-3">
+            บันทึกจากปุ่ม 「บันทึก SHA-1 จากไฟล์แอปลงฐานข้อมูล」 — ดึง SHA-1 และ Package name (เช่น momogespace.myapp) จาก .aab / .apk
+          </p>
+          {appArchivesLoading && !appArchives.length ? (
+            <p className="text-muted mb-0">กำลังโหลด...</p>
+          ) : (
+            <AppArchivesTable records={appArchives} />
           )}
         </div>
       </div>

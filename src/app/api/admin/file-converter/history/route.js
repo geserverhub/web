@@ -52,6 +52,7 @@ export async function GET(req) {
         bundleName: job.bundleName,
         bundlePath: job.bundlePath,
         bundleExtension: job.bundleExtension,
+        bundleSize: job.bundleSize,
         bundleSha1: job.bundleSha1,
         bundleSigningSha1: job.bundleSigningSha1,
         createdAt: job.createdAt,

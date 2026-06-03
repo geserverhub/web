@@ -60,7 +60,7 @@ Output: `android/app/build/outputs/bundle/release/app-release.aab`
 | Item | Value |
 |------|--------|
 | App name | Momoge space |
-| Package | `com.momogespace.myapp` |
+| Package | `momogespace.myapp` |
 | Category | Business / Productivity |
 | Privacy policy URL | `https://www.ge-serverhub.com/policy` |
 | Screenshots | Phone — login + dashboard tabs |
@@ -76,7 +76,7 @@ Run `npm run cap:sync` only when changing app id, icons, splash, or native plugi
 
 ## Upload key lost / wrong signing key
 
-Play expects upload certificate **SHA-1:** `23:5A:07:4D:97:99:43:14:5C:13:12:CA:D6:89:8A:D9:04:11:DB:27` (registered upload key for `com.momogespace.myapp`).
+Play expects upload certificate **SHA-1:** `23:5A:07:4D:97:99:43:14:5C:13:12:CA:D6:89:8A:D9:04:11:DB:27` (registered upload key for `momogespace.myapp`).
 
 Older keys (do **not** upload with these unless Play asks for them):
 

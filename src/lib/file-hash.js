@@ -89,8 +89,75 @@ export function signingSha1FromAndroidBundle(buffer) {
   return cert.fingerprint.toUpperCase();
 }
 
-export function hashMetaForBuffer(buffer, { isAndroidBundle = false } = {}) {
+function findAndroidManifest(entries) {
+  return entries.find(
+    (e) =>
+      e.name === "AndroidManifest.xml" ||
+      e.name === "base/manifest/AndroidManifest.xml" ||
+      e.name.endsWith("/AndroidManifest.xml")
+  );
+}
+
+const PACKAGE_SKIP_PREFIXES = ["android.", "androidx.", "com.android.", "java.", "kotlin.", "http"];
+
+function looksLikePackageName(value) {
+  if (!value || value.length < 3 || value.length > 128) return false;
+  if (!/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i.test(value)) return false;
+  const lower = value.toLowerCase();
+  if (PACKAGE_SKIP_PREFIXES.some((prefix) => lower.startsWith(prefix))) return false;
+  if (lower.includes("manifest") || lower.includes("permission") || lower.includes("intent")) return false;
+  return true;
+}
+
+function packageNameCandidatesFromManifest(manifestBuffer) {
+  const candidates = new Set();
+  for (let i = 0; i < manifestBuffer.length - 4; i++) {
+    const start = manifestBuffer[i];
+    if (start < 0x61 || start > 0x7a) continue;
+    let j = i;
+    while (j < manifestBuffer.length) {
+      const c = manifestBuffer[j];
+      if (
+        (c >= 0x61 && c <= 0x7a) ||
+        (c >= 0x41 && c <= 0x5a) ||
+        (c >= 0x30 && c <= 0x39) ||
+        c === 0x2e ||
+        c === 0x5f
+      ) {
+        j += 1;
+        continue;
+      }
+      break;
+    }
+    if (j - i < 5) continue;
+    const value = manifestBuffer.subarray(i, j).toString("ascii");
+    if (looksLikePackageName(value)) candidates.add(value);
+  }
+  return [...candidates];
+}
+
+/** Read applicationId / package name from .apk or .aab buffer. */
+export function packageNameFromAndroidArchive(buffer) {
+  const entries = readZipStoredEntry(buffer);
+  const manifest = findAndroidManifest(entries);
+  if (!manifest?.data) return null;
+
+  const candidates = packageNameCandidatesFromManifest(manifest.data);
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => {
+    const segA = a.split(".").length;
+    const segB = b.split(".").length;
+    if (segA !== segB) return segA - segB;
+    return a.length - b.length;
+  });
+
+  return candidates[0];
+}
+
+export function hashMetaForBuffer(buffer, { isAndroidSigningArchive = false } = {}) {
   const sha1 = sha1Formatted(buffer);
-  const signingSha1 = isAndroidBundle ? signingSha1FromAndroidBundle(buffer) : null;
-  return { sha1, signingSha1 };
+  const signingSha1 = isAndroidSigningArchive ? signingSha1FromAndroidBundle(buffer) : null;
+  const packageName = isAndroidSigningArchive ? packageNameFromAndroidArchive(buffer) : null;
+  return { sha1, signingSha1, packageName };
 }
