@@ -198,6 +198,19 @@ export const fallbackClients = [
     system_url: "https://strong-dory-enabled.ngrok-free.app/online-classroom-login",
   },
   {
+    id: 12,
+    name: "ดาวน์โหลดซอฟต์แวร์",
+    slug: "software-downloads",
+    description:
+      "ดาวน์โหลดโปรแกรม แอป Android และไฟล์ใช้งาน — ชำระเงินผ่าน Stripe หรือสลิป แล้วดาวน์โหลดเมื่อยืนยันแล้ว",
+    status: "online",
+    contact_email: "goeunserverhub@gmail.com",
+    contact_phone: "010-8105-0384",
+    thumbnail: "/logo-mark.svg",
+    thumbnail_fit: "contain",
+    system_url: `${publicHubBaseUrl}/downloads`,
+  },
+  {
     id: 11,
     name: "GE ENERGY TECH CO., LTD.",
     slug: "ge-energy-tech",

@@ -1,0 +1,25 @@
+-- Software download orders (run against the app MySQL database)
+CREATE TABLE IF NOT EXISTS `SoftwareDownloadOrder` (
+  `id` VARCHAR(191) NOT NULL,
+  `orderCode` VARCHAR(191) NOT NULL,
+  `email` VARCHAR(191) NOT NULL,
+  `productSlug` VARCHAR(191) NOT NULL,
+  `productTitle` VARCHAR(191) NOT NULL,
+  `amount` DECIMAL(10, 2) NOT NULL,
+  `currency` VARCHAR(191) NOT NULL DEFAULT 'THB',
+  `status` ENUM('PENDING', 'AWAITING_REVIEW', 'PAID', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+  `stripeCheckoutSessionId` VARCHAR(191) NULL,
+  `stripePaymentIntentId` VARCHAR(191) NULL,
+  `paymentGateway` VARCHAR(191) NULL,
+  `receiptFile` VARCHAR(191) NULL,
+  `notes` TEXT NULL,
+  `paidAt` DATETIME(3) NULL,
+  `downloadCount` INT NOT NULL DEFAULT 0,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` DATETIME(3) NOT NULL,
+  UNIQUE INDEX `SoftwareDownloadOrder_orderCode_key`(`orderCode`),
+  INDEX `SoftwareDownloadOrder_email_idx`(`email`),
+  INDEX `SoftwareDownloadOrder_status_idx`(`status`),
+  INDEX `SoftwareDownloadOrder_productSlug_idx`(`productSlug`),
+  PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

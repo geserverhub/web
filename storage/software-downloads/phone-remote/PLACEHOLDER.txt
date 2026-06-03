@@ -1,0 +1,1 @@
+Replace this file with the built APK (e.g. app-release.apk) and update filePath in src/lib/software-downloads-catalog.js.

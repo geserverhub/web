@@ -25,6 +25,9 @@ export default function Footer({ ui, profile }) {
             <a href="/phone-remote" className="agency-footer-link">
               {ui.navPhoneRemote || "Phone Remote"}
             </a>
+            <a href="/downloads" className="agency-footer-link">
+              {ui.navSoftwareDownloads || "ดาวน์โหลดซอฟต์แวร์"}
+            </a>
           </div>
         </div>
       </div>

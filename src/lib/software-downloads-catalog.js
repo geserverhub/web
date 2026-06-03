@@ -1,0 +1,83 @@
+/**
+ * Software / file catalog for the downloads portal.
+ * Place files under storage/software-downloads/<filePath>
+ */
+export const softwareDownloadProducts = [
+  {
+    slug: "phone-remote-android",
+    title: "Phone Remote (Android)",
+    titleTh: "Phone Remote — แอป Android",
+    description:
+      "แอปรีโมทและแชร์หน้าจอ (phoneremote.myapp) พร้อมควบคุมจาก Viewer หลังเปิด Accessibility",
+    platform: "Android",
+    version: "1.0.0",
+    price: 0,
+    currency: "THB",
+    filePath: "phone-remote/PLACEHOLDER.txt",
+    fileName: "PhoneRemote-android.apk",
+    icon: "/logo-mark.svg",
+    sortOrder: 1,
+    active: true,
+    free: true,
+  },
+  {
+    slug: "momoge-space-android",
+    title: "Momoge space (Android)",
+    titleTh: "Momoge space — แอป Android",
+    description: "แอป Customer Dashboard สำหรับ Momoge space (momogespace1.myapp)",
+    platform: "Android",
+    version: "1.0.1",
+    price: 0,
+    currency: "THB",
+    filePath: "momoge-space/PLACEHOLDER.txt",
+    fileName: "MomogeSpace-android.apk",
+    icon: "/momoge/Logo-brand.png",
+    sortOrder: 2,
+    active: true,
+    free: true,
+  },
+  {
+    slug: "cargo-android",
+    title: "คาโก้ ไทย-เกาหลี (Android)",
+    titleTh: "คาโก้ ไทย-เกาหลี — แอป Android",
+    description: "แอปติดตามพัสดุ cargo.myapp",
+    platform: "Android",
+    version: "1.0.0",
+    price: 299,
+    currency: "THB",
+    filePath: "cargo/PLACEHOLDER.txt",
+    fileName: "CargoThaiKorea-android.apk",
+    icon: "/cargo/cargo-logo.png",
+    sortOrder: 3,
+    active: true,
+    free: false,
+  },
+];
+
+export function getActiveSoftwareProducts() {
+  return [...softwareDownloadProducts]
+    .filter((p) => p.active)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function getSoftwareProduct(slug) {
+  const key = String(slug || "").trim().toLowerCase();
+  return softwareDownloadProducts.find((p) => p.active && p.slug === key) || null;
+}
+
+export function productToPublicJson(product) {
+  if (!product) return null;
+  return {
+    slug: product.slug,
+    title: product.title,
+    titleTh: product.titleTh || product.title,
+    description: product.description,
+    platform: product.platform,
+    version: product.version,
+    price: Number(product.price),
+    currency: product.currency,
+    fileName: product.fileName,
+    icon: product.icon,
+    free: Boolean(product.free || Number(product.price) <= 0),
+  };
+}
