@@ -29,6 +29,8 @@ const SQL_FILES = [
   'prisma/migrate-energy-geserverhub.sql',
   'prisma/migrate-ge-energy-app-extensions.sql',
   'prisma/migrate-ge-energy-tech-orders.sql',
+  'prisma/migrate-full-hub-relations.sql',
+  'scripts/db-migrate-software-downloads.sql',
 ];
 
 const EXPECTED_TABLES = [

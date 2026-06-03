@@ -2106,6 +2106,9 @@ export default function ClientsUsersClient({ session }) {
           <Link href="/admin/file-converter" style={{ color: "#8b8fa8", fontSize: 13, textDecoration: "none" }}>
             แปลงไฟล์มือถือ
           </Link>
+          <Link href="/admin/software-downloads" style={{ color: "#8b8fa8", fontSize: 13, textDecoration: "none" }}>
+            ดาวน์โหลดซอฟต์แวร์
+          </Link>
           <Link href="/phone-remote" style={{ color: "#8b8fa8", fontSize: 13, textDecoration: "none" }}>
             รีโมทหน้าจอ
           </Link>
@@ -2122,6 +2125,10 @@ export default function ClientsUsersClient({ session }) {
           <Link href="/admin/file-converter"
             style={{ ...S.btn("#1e2336", "#7eb8f7"), textDecoration: "none", padding: "5px 11px", fontSize: 12, border: "1px solid #2a2d3a" }}>
             🖼️ แปลงไฟล์
+          </Link>
+          <Link href="/admin/software-downloads"
+            style={{ ...S.btn("#1a2e2a", "#4ade80"), textDecoration: "none", padding: "5px 11px", fontSize: 12, border: "1px solid #2a2d3a" }}>
+            ⬇️ ดาวน์โหลดซอฟต์แวร์
           </Link>
           <Link href="/phone-remote"
             style={{ ...S.btn("#1a2336", "#67e8f9"), textDecoration: "none", padding: "5px 11px", fontSize: 12, border: "1px solid #2a2d3a" }}>

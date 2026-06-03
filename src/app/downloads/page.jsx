@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function DownloadsPage() {
   return (
-    <Suspense fallback={<main className="container py-5 text-center text-white">กำลังโหลด...</main>}>
+    <Suspense fallback={<main className="container py-5 text-center text-white">Loading…</main>}>
       <DownloadsClient />
     </Suspense>
   );

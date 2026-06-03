@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getStripeServer, mergeNotesJson } from "@/lib/stripe-server";
+import { getStripeServer, mergeNotesJson, toStripeAmount } from "@/lib/stripe-server";
 import { resolveCheckoutOrigin } from "@/lib/software-downloads";
 
 export async function POST(req) {
@@ -29,7 +29,7 @@ export async function POST(req) {
 
     const origin = resolveCheckoutOrigin(req);
     const cur = String(order.currency || "THB").toLowerCase();
-    const unitAmount = Math.max(1, Math.round(amount * 100));
+    const unitAmount = toStripeAmount(cur, amount);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",

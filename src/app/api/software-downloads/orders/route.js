@@ -32,10 +32,16 @@ export async function POST(req) {
       orderCode = generateOrderCode();
     }
 
+    const dbProduct = await prisma.softwareDownloadProduct.findUnique({
+      where: { slug: product.slug },
+      select: { id: true },
+    });
+
     const order = await prisma.softwareDownloadOrder.create({
       data: {
         orderCode,
         email,
+        productId: dbProduct?.id ?? null,
         productSlug: product.slug,
         productTitle: product.titleTh || product.title,
         amount,
