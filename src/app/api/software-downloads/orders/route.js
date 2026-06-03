@@ -65,8 +65,11 @@ export async function POST(req) {
     const msg = err?.message || "";
     const missingTable =
       err?.code === "P2021" ||
+      err?.code === "P2022" ||
       /SoftwareDownload(Order|Product)/i.test(msg) ||
-      /does not exist/i.test(msg);
+      /accessPassword/i.test(msg) ||
+      /does not exist/i.test(msg) ||
+      /Unknown column/i.test(msg);
     if (missingTable) {
       return NextResponse.json(
         {

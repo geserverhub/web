@@ -10,6 +10,7 @@ import {
   normalizeDownloadsLocale,
 } from "@/lib/downloads-translations";
 import DownloadsLangSwitcher from "./DownloadsLangSwitcher";
+import { hubFetchHeaders, hubJsonFetch, readJsonResponse } from "@/lib/hub-fetch";
 
 function downloadButtonLabel(product, t) {
   if (!product) return t.downloadBtn;
@@ -77,9 +78,7 @@ export default function DownloadsClient() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/software-downloads/products");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t.loadProductsFailed);
+      const data = await hubJsonFetch("/api/software-downloads/products");
       setProducts(data.products || []);
       setBank(data.bank || null);
     } catch (err) {
@@ -94,11 +93,10 @@ export default function DownloadsClient() {
       const orderCode = String(code || "").trim().toUpperCase();
       const em = String(mail || "").trim().toLowerCase();
       if (!orderCode || !em) return;
-      const res = await fetch(
+      const data = await hubJsonFetch(
         `/api/software-downloads/orders/status?orderCode=${encodeURIComponent(orderCode)}&email=${encodeURIComponent(em)}`
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t.orderNotFound);
+      if (!data.order) throw new Error(t.orderNotFound);
       setOrder(data.order);
       if (fromLookup) {
         setFormOrder(null);
@@ -154,13 +152,11 @@ export default function DownloadsClient() {
     setBusy(true);
     setMessage("");
     try {
-      const res = await fetch("/api/software-downloads/orders", {
+      const data = await hubJsonFetch("/api/software-downloads/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: hubFetchHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ productSlug, email: em }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t.createOrderFailed);
 
       setLookupCode(data.order.orderCode);
       setLookupEmail(em);
@@ -194,9 +190,12 @@ export default function DownloadsClient() {
       fd.append("orderCode", lookupCode);
       fd.append("email", lookupEmail);
       fd.append("file", file);
-      const res = await fetch("/api/software-downloads/orders/payment", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t.uploadFailed);
+      const res = await fetch("/api/software-downloads/orders/payment", {
+        method: "POST",
+        headers: hubFetchHeaders(),
+        body: fd,
+      });
+      const data = await readJsonResponse(res);
       await refreshOrder(lookupCode, lookupEmail);
       setMessage(t.slipUploaded);
       ev.target.reset();

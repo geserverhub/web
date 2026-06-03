@@ -52,6 +52,23 @@ export async function POST(req) {
 
     return NextResponse.json({ ok: true, receiptFile: filePath, status: "AWAITING_REVIEW" });
   } catch (err) {
-    return NextResponse.json({ error: err.message || "อัปโหลดสลิปไม่สำเร็จ" }, { status: 500 });
+    const msg = err?.message || "";
+    const missingDb =
+      err?.code === "P2021" ||
+      err?.code === "P2022" ||
+      /SoftwareDownloadOrder/i.test(msg) ||
+      /accessPassword/i.test(msg) ||
+      /does not exist/i.test(msg) ||
+      /Unknown column/i.test(msg);
+    if (missingDb) {
+      return NextResponse.json(
+        {
+          error:
+            "ฐานข้อมูลยังไม่พร้อม — รัน npm run db:migrate-software-downloads (Windows จะ fallback ไป WSL อัตโนมัติ)",
+        },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json({ error: msg || "อัปโหลดสลิปไม่สำเร็จ" }, { status: 500 });
   }
 }
