@@ -9,34 +9,45 @@ import {
   createPeerConnection,
   fetchRoom,
   sendSignal,
+  setupControlChannel,
   startSignalPoll,
 } from "@/lib/phone-remote-webrtc";
+import { bindViewerControlOverlay } from "@/lib/phone-remote-control";
 
 export default function PhoneRemoteViewClient() {
   const searchParams = useSearchParams();
   const initialRoom = (searchParams.get("room") || "").toUpperCase();
 
   const remoteVideoRef = useRef(null);
+  const controlOverlayRef = useRef(null);
   const pcRef = useRef(null);
   const stopPollRef = useRef(null);
   const waitTimerRef = useRef(null);
+  const controlRef = useRef(null);
+  const unbindControlRef = useRef(null);
 
   const [roomInput, setRoomInput] = useState(initialRoom);
   const [activeRoom, setActiveRoom] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
+  const [controlEnabled, setControlEnabled] = useState(true);
+  const [controlReady, setControlReady] = useState(false);
 
   const cleanup = useCallback(() => {
+    unbindControlRef.current?.();
+    unbindControlRef.current = null;
     stopPollRef.current?.();
     stopPollRef.current = null;
     if (waitTimerRef.current) {
       clearInterval(waitTimerRef.current);
       waitTimerRef.current = null;
     }
+    controlRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    setControlReady(false);
   }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
@@ -45,6 +56,27 @@ export default function PhoneRemoteViewClient() {
     if (initialRoom) connectViewer(initialRoom);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (status !== "connected" || !controlEnabled || !controlReady) {
+      unbindControlRef.current?.();
+      unbindControlRef.current = null;
+      return;
+    }
+    const overlay = controlOverlayRef.current;
+    const video = remoteVideoRef.current;
+    const control = controlRef.current;
+    if (!overlay || !video || !control) return;
+
+    unbindControlRef.current?.();
+    unbindControlRef.current = bindViewerControlOverlay(overlay, video, (data) => control.send(data));
+    overlay.focus();
+
+    return () => {
+      unbindControlRef.current?.();
+      unbindControlRef.current = null;
+    };
+  }, [status, controlEnabled, controlReady]);
 
   async function connectViewer(roomId) {
     const code = String(roomId || "").trim().toUpperCase();
@@ -72,6 +104,10 @@ export default function PhoneRemoteViewClient() {
     const pc = createPeerConnection();
     pcRef.current = pc;
     const iceQueue = createIceQueue(pc);
+    controlRef.current = setupControlChannel(pc, "viewer", {
+      onOpen: () => setControlReady(true),
+      onClose: () => setControlReady(false),
+    });
     let answered = false;
     let sawOffer = false;
     let activeOfferAt = 0;
@@ -175,7 +211,7 @@ export default function PhoneRemoteViewClient() {
   return (
     <main className="container py-4" style={{ maxWidth: 960 }}>
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h1 className="h4 mb-0">🖥️ ดูหน้าจอ (Viewer)</h1>
+        <h1 className="h4 mb-0">🖥️ ดูและควบคุมหน้าจอ (Viewer)</h1>
         <Link href="/phone-remote" className="btn btn-sm btn-outline-secondary">
           ← กลับ
         </Link>
@@ -210,17 +246,59 @@ export default function PhoneRemoteViewClient() {
       </div>
 
       {activeRoom ? (
-        <p className="small text-muted">
-          ห้อง: <code>{activeRoom}</code> — สถานะ: {statusLabel}
-        </p>
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <p className="small text-muted mb-0">
+            ห้อง: <code>{activeRoom}</code> — สถานะ: {statusLabel}
+          </p>
+          {status === "connected" ? (
+            <div className="form-check form-switch mb-0">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="control-toggle"
+                checked={controlEnabled}
+                onChange={(e) => setControlEnabled(e.target.checked)}
+              />
+              <label className="form-check-label small" htmlFor="control-toggle">
+                โหมดควบคุม {controlReady ? "(พร้อม)" : "(รอช่องสัญญาณ...)"}
+              </label>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       {hint && !error ? <div className="alert alert-info py-2 small">{hint}</div> : null}
       {error ? <div className="alert alert-danger">{error}</div> : null}
 
-      <div className="ratio ratio-16x9 bg-dark rounded overflow-hidden">
-        <video ref={remoteVideoRef} className="w-100 h-100" style={{ objectFit: "contain" }} playsInline autoPlay />
+      <div className="position-relative ratio ratio-16x9 bg-dark rounded overflow-hidden">
+        <video
+          ref={remoteVideoRef}
+          className="w-100 h-100"
+          style={{ objectFit: "contain" }}
+          playsInline
+          autoPlay
+        />
+        {status === "connected" && controlEnabled ? (
+          <div
+            ref={controlOverlayRef}
+            tabIndex={0}
+            className="position-absolute top-0 start-0 w-100 h-100"
+            style={{
+              touchAction: "none",
+              cursor: "crosshair",
+              outline: "none",
+              zIndex: 2,
+            }}
+            aria-label="พื้นที่ควบคุมหน้าจอรีโมท"
+          />
+        ) : null}
       </div>
+
+      {status === "connected" && controlEnabled ? (
+        <p className="small text-muted mt-2 mb-0">
+          แตะ/ลากบนภาพเพื่อควบคุมหน้าจอ Host — คลิกพื้นที่วิดีโอแล้วพิมพ์เพื่อส่งข้อความ (Android Host ใช้แอป Phone Remote + เปิด Accessibility)
+        </p>
+      ) : null}
 
       {status !== "connected" ? (
         <div className="small text-muted mt-2 mb-0">

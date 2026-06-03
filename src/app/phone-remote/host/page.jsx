@@ -9,8 +9,16 @@ import {
   createRoom,
   getDisplayStream,
   sendSignal,
+  setupControlChannel,
   startSignalPoll,
 } from "@/lib/phone-remote-webrtc";
+import {
+  applyHostControl,
+  getNativeControlStatus,
+  isCapacitorAndroidHost,
+  openNativeControlSettings,
+  parseControlMessage,
+} from "@/lib/phone-remote-control";
 
 function CopyBtn({ value }) {
   const [ok, setOk] = useState(false);
@@ -34,11 +42,14 @@ export default function PhoneRemoteHostPage() {
   const pcRef = useRef(null);
   const streamRef = useRef(null);
   const stopPollRef = useRef(null);
+  const controlRef = useRef(null);
 
   const [roomId, setRoomId] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [viewerConnected, setViewerConnected] = useState(false);
+  const [controlReady, setControlReady] = useState(false);
+  const [a11yEnabled, setA11yEnabled] = useState(null);
 
   const cleanup = useCallback(() => {
     stopPollRef.current?.();
@@ -49,6 +60,13 @@ export default function PhoneRemoteHostPage() {
     streamRef.current = null;
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     setViewerConnected(false);
+    setControlReady(false);
+    controlRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!isCapacitorAndroidHost()) return;
+    getNativeControlStatus().then(({ enabled }) => setA11yEnabled(enabled));
   }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
@@ -83,6 +101,14 @@ export default function PhoneRemoteHostPage() {
       const pc = createPeerConnection();
       pcRef.current = pc;
       const iceQueue = createIceQueue(pc);
+      controlRef.current = setupControlChannel(pc, "host", {
+        onOpen: () => setControlReady(true),
+        onClose: () => setControlReady(false),
+        onMessage: (raw) => {
+          const msg = parseControlMessage(raw);
+          if (msg) void applyHostControl(msg);
+        },
+      });
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       pc.onicecandidate = (ev) => {
@@ -175,9 +201,44 @@ export default function PhoneRemoteHostPage() {
       </div>
 
       {viewerConnected ? (
-        <div className="alert alert-success py-2 small">Viewer เชื่อมต่อแล้ว — กำลังส่งภาพ</div>
+        <div className="alert alert-success py-2 small">
+          Viewer เชื่อมต่อแล้ว — กำลังส่งภาพ
+          {controlReady ? " · รับการควบคุมจาก Viewer ได้" : " · รอช่องควบคุม..."}
+        </div>
       ) : status === "sharing" ? (
         <div className="alert alert-warning py-2 small">รอ Viewer เข้ารหัสห้อง {roomId}</div>
+      ) : null}
+
+      {isCapacitorAndroidHost() && status === "sharing" ? (
+        <div className={`alert py-2 small ${a11yEnabled ? "alert-info" : "alert-warning"}`}>
+          {a11yEnabled ? (
+            <>
+              <strong>ควบคุมหน้าจอ Android:</strong> เปิดใช้งานแล้ว — Viewer แตะ/พิมพ์บนหน้าจอที่ดูได้
+            </>
+          ) : (
+            <>
+              <strong>ควบคุมหน้าจอ Android:</strong> เปิดสิทธิ์ Accessibility เพื่อให้ Viewer ควบคุมแอปบนโทรศัพท์ได้{" "}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-dark ms-1"
+                onClick={async () => {
+                  await openNativeControlSettings();
+                  setTimeout(async () => {
+                    const { enabled } = await getNativeControlStatus();
+                    setA11yEnabled(enabled);
+                  }, 1500);
+                }}
+              >
+                เปิดการตั้งค่า
+              </button>
+            </>
+          )}
+        </div>
+      ) : status === "sharing" ? (
+        <div className="alert alert-info py-2 small">
+          <strong>โหมดควบคุม:</strong> Viewer ส่งคำสั่งแตะ/พิมพ์มาที่ Host — บน Desktop ใช้ได้ภายในแท็บเบราว์เซอร์ที่แชร์
+          บน Android ติดตั้งแอป <strong>Phone Remote</strong> (`phoneremote.myapp`) แล้วเปิด Accessibility
+        </div>
       ) : null}
 
       {error ? <div className="alert alert-danger">{error}</div> : null}

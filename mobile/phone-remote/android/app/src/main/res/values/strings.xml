@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Phone Remote</string>
+    <string name="title_activity_main">Phone Remote</string>
+    <string name="package_name">phoneremote.myapp</string>
+    <string name="custom_url_scheme">phoneremote.myapp</string>
+    <string name="phone_remote_a11y_desc">ให้ Phone Remote ส่งการแตะและพิมพ์จาก Viewer ไปยังหน้าจอโทรศัพท์ขณะแชร์หน้าจอ</string>
+</resources>

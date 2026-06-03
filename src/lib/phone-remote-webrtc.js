@@ -125,6 +125,40 @@ export function createPeerConnection() {
   });
 }
 
+const CONTROL_CHANNEL_LABEL = "control";
+
+/** Host creates the channel; viewer receives it via ondatachannel. */
+export function setupControlChannel(pc, role, { onMessage, onOpen, onClose } = {}) {
+  let channel = null;
+
+  function wire(ch) {
+    channel = ch;
+    ch.onopen = () => onOpen?.(ch);
+    ch.onclose = () => onClose?.(ch);
+    ch.onmessage = (ev) => onMessage?.(ev.data, ch);
+  }
+
+  if (role === "host") {
+    wire(pc.createDataChannel(CONTROL_CHANNEL_LABEL, { ordered: true }));
+  } else {
+    pc.ondatachannel = (ev) => {
+      if (ev.channel?.label === CONTROL_CHANNEL_LABEL) wire(ev.channel);
+    };
+  }
+
+  return {
+    get channel() {
+      return channel;
+    },
+    send(data) {
+      if (channel?.readyState === "open") channel.send(data);
+    },
+    isOpen() {
+      return channel?.readyState === "open";
+    },
+  };
+}
+
 export async function getDisplayStream() {
   if (!navigator.mediaDevices?.getDisplayMedia) {
     throw new Error("เบราว์เซอร์นี้ไม่รองรับการแชร์หน้าจอ — ลอง Chrome บน Android หรือ Desktop");
