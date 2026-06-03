@@ -396,7 +396,7 @@ export default function PhoneRemoteViewClient() {
       {hasVideo && controlEnabled ? (
         <p className="small text-muted mt-2 mb-0">
           {controlReady
-            ? "แตะ/ลากบนภาพเพื่อควบคุมหน้าจอ Host — คลิกพื้นที่วิดีโอแล้วพิมพ์เพื่อส่งข้อความ (Android Host ใช้แอป Phone Remote + เปิด Accessibility)"
+            ? "แตะ/ลากบนภาพเพื่อควบคุม — Host แชร์แท็บ「ควบคุมเว็บ」หรือใช้แอป Phone Remote + Accessibility บน Android"
             : "ยังส่งคำสั่งควบคุมไม่ได้จนกว่า Host จะเปิดช่องควบคุม (ดูสถานะ 「โหมดควบคุม (พร้อม)」)"}
         </p>
       ) : null}

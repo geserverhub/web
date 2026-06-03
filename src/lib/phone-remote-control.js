@@ -97,11 +97,11 @@ export async function openNativeControlSettings() {
   return true;
 }
 
-function dispatchDomPointer(target, type, x, y, pointerId = 1) {
+function dispatchDomPointer(target, type, x, y, pointerId = 1, view = window) {
   const opts = {
     bubbles: true,
     cancelable: true,
-    view: window,
+    view,
     clientX: x,
     clientY: y,
     pointerId,
@@ -109,7 +109,9 @@ function dispatchDomPointer(target, type, x, y, pointerId = 1) {
     isPrimary: true,
     buttons: type === "up" ? 0 : 1,
   };
-  target.dispatchEvent(new PointerEvent(`pointer${type}`, opts));
+  if (typeof PointerEvent !== "undefined") {
+    target.dispatchEvent(new PointerEvent(`pointer${type}`, opts));
+  }
   if (type === "down") {
     target.dispatchEvent(new MouseEvent("mousedown", { ...opts, button: 0 }));
   }
@@ -119,8 +121,8 @@ function dispatchDomPointer(target, type, x, y, pointerId = 1) {
   }
 }
 
-function dispatchDomKey(type, key) {
-  const target = document.activeElement || document.body;
+function dispatchDomKey(type, key, doc = document) {
+  const target = doc.activeElement || doc.body;
   const code = key.length === 1 ? `Key${key.toUpperCase()}` : key;
   target.dispatchEvent(
     new KeyboardEvent(type === "down" ? "keydown" : "keyup", {
@@ -137,51 +139,73 @@ function dispatchDomKey(type, key) {
   }
 }
 
-/** Apply control inside the host browser tab (limited — not OS-wide). */
-export function applyWebControl(msg) {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+/** Apply control inside a browser tab (same document only — not OS-wide). */
+export function applyWebControl(msg, { rootDocument } = {}) {
+  const doc = rootDocument || document;
+  const win = doc.defaultView;
+  if (!win) return;
+
+  const w = win.innerWidth || doc.documentElement.clientWidth;
+  const h = win.innerHeight || doc.documentElement.clientHeight;
   const px = Math.round((msg.x ?? 0.5) * w);
   const py = Math.round((msg.y ?? 0.5) * h);
-  const target = document.elementFromPoint(px, py) || document.body;
+  const target = doc.elementFromPoint(px, py) || doc.body;
 
   switch (msg.t) {
-    case "tap":
-      dispatchDomPointer(target, "down", px, py);
-      dispatchDomPointer(target, "up", px, py);
+    case "tap": {
+      if (target instanceof HTMLElement) {
+        target.focus?.({ preventScroll: true });
+        if (typeof target.click === "function") {
+          target.click();
+          break;
+        }
+      }
+      dispatchDomPointer(target, "down", px, py, 1, win);
+      dispatchDomPointer(target, "up", px, py, 1, win);
       break;
+    }
     case "down":
-      dispatchDomPointer(target, "down", px, py, msg.p ?? 1);
+      if (target instanceof HTMLElement) target.focus?.({ preventScroll: true });
+      dispatchDomPointer(target, "down", px, py, msg.p ?? 1, win);
       break;
     case "move":
-      dispatchDomPointer(target, "move", px, py, msg.p ?? 1);
+      dispatchDomPointer(target, "move", px, py, msg.p ?? 1, win);
       break;
     case "up":
-      dispatchDomPointer(target, "up", px, py, msg.p ?? 1);
+      dispatchDomPointer(target, "up", px, py, msg.p ?? 1, win);
       break;
     case "scroll": {
       const dy = Number(msg.dy) || 0;
+      const delta = dy * 120;
       target.dispatchEvent(
         new WheelEvent("wheel", {
           bubbles: true,
           cancelable: true,
           clientX: px,
           clientY: py,
-          deltaY: dy * 120,
+          deltaY: delta,
+          view: win,
         })
       );
+      if (target === doc.body || target === doc.documentElement) {
+        win.scrollBy({ top: delta, behavior: "auto" });
+      } else if (target instanceof HTMLElement) {
+        target.scrollTop += delta;
+      }
       break;
     }
     case "key":
-      if (msg.k) dispatchDomKey("down", msg.k);
+      if (msg.k) dispatchDomKey("down", msg.k, doc);
       break;
     case "text":
       if (msg.v && target instanceof HTMLElement) {
+        target.focus?.({ preventScroll: true });
         if (target.isContentEditable) {
           target.textContent = (target.textContent || "") + msg.v;
         } else if ("value" in target) {
           target.value = `${target.value || ""}${msg.v}`;
           target.dispatchEvent(new Event("input", { bubbles: true }));
+          target.dispatchEvent(new Event("change", { bubbles: true }));
         }
       }
       break;
@@ -190,8 +214,8 @@ export function applyWebControl(msg) {
   }
 }
 
-/** Apply control on the host — native Android (full screen) or web fallback. */
-export async function applyHostControl(msg) {
+/** Apply control on the host — native Android, web target tab, or local fallback. */
+export async function applyHostControl(msg, { webBridge } = {}) {
   const plugin = getCapacitorControlPlugin();
   if (plugin?.dispatch) {
     try {
@@ -209,6 +233,12 @@ export async function applyHostControl(msg) {
       /* fall through */
     }
   }
+
+  if (webBridge?.forward) {
+    webBridge.forward(msg);
+    return webBridge.hasTarget?.() ? "web-target" : "web-pending";
+  }
+
   applyWebControl(msg);
   return "web";
 }

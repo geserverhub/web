@@ -10,7 +10,8 @@ export default function PhoneRemoteHomePage() {
     <main className="container py-5" style={{ maxWidth: 720 }}>
       <h1 className="mb-3">Phone Remote</h1>
       <p className="text-muted mb-4">
-        ระบบรีโมทหน้าจอผ่าน WebRTC — โทรศัพท์แชร์หน้าจอ ฝั่ง Viewer ดูและควบคุมได้ด้วยรหัสห้อง
+        ระบบรีโมทหน้าจอผ่าน WebRTC — Host แชร์หน้าจอ Viewer ดูและควบคุมได้ด้วยรหัสห้อง
+        รองรับทั้งแอป Android (ควบคุมทั้งเครื่อง) และ <strong>ควบคุมผ่านหน้าเว็บ</strong> (แชร์แท็บเบราว์เซอร์)
       </p>
 
       <div className="row g-3">
@@ -57,9 +58,11 @@ export default function PhoneRemoteHomePage() {
       </div>
 
       <div className="alert alert-info mt-4 mb-0 small">
-        <strong>หมายเหตุ:</strong> Android Chrome รองรับแชร์หน้าจอได้ดี iOS Safari จำกัด —
-        ใช้ HTTPS หรือ localhost และอนุญาตสิทธิ์แชร์หน้าจอเมื่อเบราว์เซอร์ถาม · Host บน Android แนะนำใช้แอป{" "}
-        <strong>Phone Remote</strong>
+        <strong>ควบคุมผ่านเว็บ:</strong> Host กด 「เปิดแท็บควบคุมเว็บ」 แล้วแชร์ <strong>แท็บนั้น</strong> —
+        Viewer แตะบนภาพเพื่อคลิก/เลื่อนบนหน้าเว็บได้ · ฝังหน้าในระบบ:{" "}
+        <code>/phone-remote/web-target?room=รหัส&embed=/path</code>
+        <br />
+        <strong>Android เต็มรูปแบบ:</strong> แอป <strong>Phone Remote</strong> + Accessibility · ใช้ HTTPS หรือ localhost
       </div>
     </main>
   );

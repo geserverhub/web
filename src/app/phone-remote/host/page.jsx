@@ -21,6 +21,7 @@ import {
   openNativeControlSettings,
   parseControlMessage,
 } from "@/lib/phone-remote-control";
+import { createWebControlBridge, openWebControlTarget } from "@/lib/phone-remote-web-bridge";
 
 function CopyBtn({ value }) {
   const [ok, setOk] = useState(false);
@@ -45,6 +46,7 @@ export default function PhoneRemoteHostPage() {
   const streamRef = useRef(null);
   const stopPollRef = useRef(null);
   const controlRef = useRef(null);
+  const webBridgeRef = useRef(null);
 
   const [roomId, setRoomId] = useState("");
   const [status, setStatus] = useState("idle");
@@ -52,10 +54,13 @@ export default function PhoneRemoteHostPage() {
   const [viewerConnected, setViewerConnected] = useState(false);
   const [controlReady, setControlReady] = useState(false);
   const [a11yEnabled, setA11yEnabled] = useState(null);
+  const [webTargetLinked, setWebTargetLinked] = useState(false);
 
   const cleanup = useCallback(() => {
     stopPollRef.current?.();
     stopPollRef.current = null;
+    webBridgeRef.current?.close();
+    webBridgeRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -63,8 +68,27 @@ export default function PhoneRemoteHostPage() {
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     setViewerConnected(false);
     setControlReady(false);
+    setWebTargetLinked(false);
     controlRef.current = null;
   }, []);
+
+  useEffect(() => {
+    if (!roomId) {
+      webBridgeRef.current?.close();
+      webBridgeRef.current = null;
+      setWebTargetLinked(false);
+      return;
+    }
+    webBridgeRef.current?.close();
+    webBridgeRef.current = createWebControlBridge(roomId, {
+      onTargetReady: () => setWebTargetLinked(true),
+      onTargetLost: () => setWebTargetLinked(false),
+    });
+    return () => {
+      webBridgeRef.current?.close();
+      webBridgeRef.current = null;
+    };
+  }, [roomId]);
 
   useEffect(() => {
     if (!isCapacitorAndroidHost()) return;
@@ -130,7 +154,7 @@ export default function PhoneRemoteHostPage() {
             onClose: () => setControlReady(false),
             onMessage: (raw) => {
               const msg = parseControlMessage(raw);
-              if (msg) void applyHostControl(msg);
+              if (msg) void applyHostControl(msg, { webBridge: webBridgeRef.current });
             },
           });
           const reoffer = await pc.createOffer();
@@ -206,6 +230,16 @@ export default function PhoneRemoteHostPage() {
       ? `${window.location.origin}/phone-remote/view?room=${roomId}`
       : "";
 
+  const webTargetUrl =
+    typeof window !== "undefined" && roomId
+      ? `${window.location.origin}/phone-remote/web-target?room=${roomId}`
+      : "";
+
+  function openWebTargetTab() {
+    if (!roomId) return;
+    openWebControlTarget(roomId);
+  }
+
   return (
     <main className="container py-4" style={{ maxWidth: 900 }}>
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -230,6 +264,18 @@ export default function PhoneRemoteHostPage() {
                 {viewUrl}
               </a>
               <CopyBtn value={viewUrl} />
+            </div>
+          ) : null}
+          {webTargetUrl ? (
+            <div className="mt-2 small">
+              แท็บควบคุมเว็บ (แชร์แท็บนี้):{" "}
+              <a href={webTargetUrl} target="_blank" rel="noreferrer">
+                {webTargetUrl}
+              </a>
+              <CopyBtn value={webTargetUrl} />
+              <button type="button" className="btn btn-sm btn-outline-primary ms-2" onClick={openWebTargetTab}>
+                เปิดแท็บควบคุมเว็บ
+              </button>
             </div>
           ) : null}
         </div>
@@ -287,8 +333,16 @@ export default function PhoneRemoteHostPage() {
         </div>
       ) : status === "sharing" ? (
         <div className="alert alert-info py-2 small">
-          <strong>โหมดควบคุม:</strong> Viewer ส่งคำสั่งแตะ/พิมพ์มาที่ Host — บน Desktop ใช้ได้ภายในแท็บเบราว์เซอร์ที่แชร์
-          บน Android ติดตั้งแอป <strong>Phone Remote</strong> (`phoneremote.myapp`) แล้วเปิด Accessibility
+          <strong>ควบคุมผ่านเว็บ:</strong> กด 「เปิดแท็บควบคุมเว็บ」 → เมื่อแชร์หน้าจอ เลือก <strong>แท็บนั้น</strong> ในรายการแชร์
+          {webTargetLinked ? (
+            <span className="text-success"> · แท็บควบคุมเว็บเชื่อมแล้ว</span>
+          ) : (
+            <span> · ยังไม่เห็นแท็บควบคุม (เปิดแท็บก่อนแชร์)</span>
+          )}
+          <br />
+          <span className="text-muted">
+            Android แอป <strong>Phone Remote</strong> + Accessibility = ควบคุมทั้งหน้าจอโทรศัพท์
+          </span>
         </div>
       ) : null}
 
