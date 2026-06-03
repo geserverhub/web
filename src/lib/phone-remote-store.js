@@ -73,7 +73,8 @@ export function touchRoom(roomId, role) {
 export function pushSignal(roomId, from, type, payload) {
   const room = rooms.get(String(roomId || "").toUpperCase());
   if (!room) return null;
-  if (from === "host" && type === "offer") {
+  const renegotiate = from === "host" && type === "offer" && payload?.renegotiate === true;
+  if (from === "host" && type === "offer" && !renegotiate) {
     room.signals = [];
     room.shareEpoch = (room.shareEpoch || 0) + 1;
   }

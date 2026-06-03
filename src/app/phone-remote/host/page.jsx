@@ -8,9 +8,11 @@ import {
   createPeerConnection,
   createRoom,
   getDisplayStream,
+  offerPayload,
   sendSignal,
   setupControlChannel,
   startSignalPoll,
+  toSessionDescription,
 } from "@/lib/phone-remote-webrtc";
 import {
   applyHostControl,
@@ -101,15 +103,25 @@ export default function PhoneRemoteHostPage() {
       const pc = createPeerConnection();
       pcRef.current = pc;
       const iceQueue = createIceQueue(pc);
-      controlRef.current = setupControlChannel(pc, "host", {
-        onOpen: () => setControlReady(true),
-        onClose: () => setControlReady(false),
-        onMessage: (raw) => {
-          const msg = parseControlMessage(raw);
-          if (msg) void applyHostControl(msg);
-        },
-      });
+      let controlChannelSetup = false;
+
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+      async function setupControlChannelRenegotiate() {
+        if (controlChannelSetup || pc.connectionState === "closed") return;
+        controlChannelSetup = true;
+        controlRef.current = setupControlChannel(pc, "host", {
+          onOpen: () => setControlReady(true),
+          onClose: () => setControlReady(false),
+          onMessage: (raw) => {
+            const msg = parseControlMessage(raw);
+            if (msg) void applyHostControl(msg);
+          },
+        });
+        const reoffer = await pc.createOffer();
+        await pc.setLocalDescription(reoffer);
+        await sendSignal(id, "host", "offer", offerPayload(reoffer, { renegotiate: true }));
+      }
 
       pc.onicecandidate = (ev) => {
         if (ev.candidate) {
@@ -118,7 +130,10 @@ export default function PhoneRemoteHostPage() {
       };
 
       pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "connected") setViewerConnected(true);
+        if (pc.connectionState === "connected") {
+          setViewerConnected(true);
+          void setupControlChannelRenegotiate();
+        }
         if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
           setViewerConnected(false);
         }
@@ -126,7 +141,7 @@ export default function PhoneRemoteHostPage() {
 
       stopPollRef.current = startSignalPoll(id, "host", async (msg) => {
         if (msg.type === "answer" && msg.payload) {
-          await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+          await pc.setRemoteDescription(toSessionDescription(msg.payload));
           await iceQueue.flush();
         }
         if (msg.type === "ice" && msg.payload) {
@@ -136,7 +151,7 @@ export default function PhoneRemoteHostPage() {
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      await sendSignal(id, "host", "offer", offer);
+      await sendSignal(id, "host", "offer", offerPayload(offer));
     } catch (err) {
       setError(err.message || "ไม่สามารถแชร์หน้าจอได้");
       setStatus(roomId ? "ready" : "idle");

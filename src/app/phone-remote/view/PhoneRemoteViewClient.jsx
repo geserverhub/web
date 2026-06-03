@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  attachRemoteVideo,
+  bindRemoteVideoToPeerConnection,
   createIceQueue,
   createPeerConnection,
   fetchRoom,
   sendSignal,
   setupControlChannel,
   startSignalPoll,
+  toSessionDescription,
 } from "@/lib/phone-remote-webrtc";
 import { bindViewerControlOverlay } from "@/lib/phone-remote-control";
 
@@ -22,6 +23,7 @@ export default function PhoneRemoteViewClient() {
   const controlOverlayRef = useRef(null);
   const pcRef = useRef(null);
   const stopPollRef = useRef(null);
+  const unbindVideoRef = useRef(null);
   const waitTimerRef = useRef(null);
   const controlRef = useRef(null);
   const unbindControlRef = useRef(null);
@@ -29,6 +31,8 @@ export default function PhoneRemoteViewClient() {
   const [roomInput, setRoomInput] = useState(initialRoom);
   const [activeRoom, setActiveRoom] = useState("");
   const [status, setStatus] = useState("idle");
+  const [hasVideo, setHasVideo] = useState(false);
+  const [needsPlayTap, setNeedsPlayTap] = useState(false);
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
   const [controlEnabled, setControlEnabled] = useState(true);
@@ -37,6 +41,8 @@ export default function PhoneRemoteViewClient() {
   const cleanup = useCallback(() => {
     unbindControlRef.current?.();
     unbindControlRef.current = null;
+    unbindVideoRef.current?.();
+    unbindVideoRef.current = null;
     stopPollRef.current?.();
     stopPollRef.current = null;
     if (waitTimerRef.current) {
@@ -48,17 +54,26 @@ export default function PhoneRemoteViewClient() {
     pcRef.current = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     setControlReady(false);
+    setHasVideo(false);
+    setNeedsPlayTap(false);
   }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
 
   useEffect(() => {
-    if (initialRoom) connectViewer(initialRoom);
+    if (!initialRoom) return;
+    let cancelled = false;
+    void connectViewer(initialRoom).then(() => {
+      if (cancelled) cleanup();
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (status !== "connected" || !controlEnabled || !controlReady) {
+    if (!hasVideo || !controlEnabled || !controlReady) {
       unbindControlRef.current?.();
       unbindControlRef.current = null;
       return;
@@ -76,7 +91,20 @@ export default function PhoneRemoteViewClient() {
       unbindControlRef.current?.();
       unbindControlRef.current = null;
     };
-  }, [status, controlEnabled, controlReady]);
+  }, [hasVideo, controlEnabled, controlReady]);
+
+  async function manualPlayVideo() {
+    const video = remoteVideoRef.current;
+    if (!video) return;
+    try {
+      await video.play();
+      setNeedsPlayTap(false);
+      setHasVideo(true);
+      setStatus("connected");
+    } catch {
+      setNeedsPlayTap(true);
+    }
+  }
 
   async function connectViewer(roomId) {
     const code = String(roomId || "").trim().toUpperCase();
@@ -90,6 +118,7 @@ export default function PhoneRemoteViewClient() {
     setHint("");
     setActiveRoom(code);
     setStatus("connecting");
+    setHasVideo(false);
 
     let roomInfo;
     try {
@@ -113,12 +142,18 @@ export default function PhoneRemoteViewClient() {
     let activeOfferAt = 0;
     const pollSince = roomInfo.latestOfferAt > 0 ? roomInfo.latestOfferAt - 1 : 0;
 
-    pc.ontrack = (ev) => {
-      attachRemoteVideo(remoteVideoRef.current, ev.streams[0]);
-      setStatus("connected");
-      setHint("");
-      setError("");
-    };
+    unbindVideoRef.current = bindRemoteVideoToPeerConnection(pc, () => remoteVideoRef.current, {
+      onVideoReady: () => {
+        setHasVideo(true);
+        setStatus("connected");
+        setHint("");
+        setError("");
+        const video = remoteVideoRef.current;
+        if (video) {
+          void video.play().catch(() => setNeedsPlayTap(true));
+        }
+      },
+    });
 
     pc.onicecandidate = (ev) => {
       if (ev.candidate) {
@@ -127,15 +162,15 @@ export default function PhoneRemoteViewClient() {
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "connected") {
-        setStatus("connected");
-        setError("");
-      }
       if (pc.connectionState === "failed") {
         setError(
           "การเชื่อมต่อล้มเหลว — ตรวจว่า Host กด 「เริ่มแชร์หน้าจอ」 แล้ว และทั้งสองเครื่องออนไลน์"
         );
         setStatus("idle");
+        setHasVideo(false);
+      }
+      if (pc.connectionState === "connected") {
+        setHint("เชื่อมต่อแล้ว — กำลังรอภาพจาก Host...");
       }
     };
 
@@ -158,12 +193,13 @@ export default function PhoneRemoteViewClient() {
       "viewer",
       async (msg) => {
         if (msg.type === "offer" && msg.payload) {
-          if (answered) return;
+          const renegotiate = msg.payload.renegotiate === true;
+          if (answered && !renegotiate) return;
           sawOffer = true;
           answered = true;
           activeOfferAt = msg.at;
-          setHint("กำลังเชื่อมต่อวิดีโอ...");
-          await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+          setHint(renegotiate ? "กำลังเปิดช่องควบคุม..." : "กำลังเชื่อมต่อวิดีโอ...");
+          await pc.setRemoteDescription(toSessionDescription(msg.payload));
           await iceQueue.flush();
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
@@ -201,12 +237,15 @@ export default function PhoneRemoteViewClient() {
     setHint("");
   }
 
-  const statusLabel =
-    status === "connected"
-      ? "เชื่อมต่อแล้ว"
-      : status === "connecting"
-        ? "กำลังเชื่อมต่อ..."
+  const statusLabel = hasVideo
+    ? "เชื่อมต่อแล้ว"
+    : status === "connecting"
+      ? "กำลังเชื่อมต่อ..."
+      : status === "connected"
+        ? "รอภาพวิดีโอ..."
         : status;
+
+  const sessionActive = status === "connecting" || status === "connected" || hasVideo;
 
   return (
     <main className="container py-4" style={{ maxWidth: 960 }}>
@@ -225,7 +264,7 @@ export default function PhoneRemoteViewClient() {
             value={roomInput}
             onChange={(e) => setRoomInput(e.target.value.toUpperCase())}
             maxLength={6}
-            disabled={status === "connecting" || status === "connected"}
+            disabled={sessionActive}
           />
         </div>
         <div className="col-sm-4 d-flex gap-2">
@@ -233,7 +272,7 @@ export default function PhoneRemoteViewClient() {
             type="button"
             className="btn btn-primary flex-grow-1"
             onClick={() => connectViewer(roomInput)}
-            disabled={status === "connecting" || status === "connected"}
+            disabled={sessionActive}
           >
             เชื่อมต่อ
           </button>
@@ -250,7 +289,7 @@ export default function PhoneRemoteViewClient() {
           <p className="small text-muted mb-0">
             ห้อง: <code>{activeRoom}</code> — สถานะ: {statusLabel}
           </p>
-          {status === "connected" ? (
+          {hasVideo ? (
             <div className="form-check form-switch mb-0">
               <input
                 className="form-check-input"
@@ -270,15 +309,26 @@ export default function PhoneRemoteViewClient() {
       {hint && !error ? <div className="alert alert-info py-2 small">{hint}</div> : null}
       {error ? <div className="alert alert-danger">{error}</div> : null}
 
-      <div className="position-relative ratio ratio-16x9 bg-dark rounded overflow-hidden">
+      <div
+        className="bg-dark rounded overflow-hidden"
+        style={{ position: "relative", width: "100%", aspectRatio: "16 / 9" }}
+      >
         <video
           ref={remoteVideoRef}
-          className="w-100 h-100"
-          style={{ objectFit: "contain" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            background: "#000",
+            zIndex: 1,
+          }}
           playsInline
           autoPlay
+          muted
         />
-        {status === "connected" && controlEnabled ? (
+        {hasVideo && controlEnabled ? (
           <div
             ref={controlOverlayRef}
             tabIndex={0}
@@ -292,15 +342,33 @@ export default function PhoneRemoteViewClient() {
             aria-label="พื้นที่ควบคุมหน้าจอรีโมท"
           />
         ) : null}
+        {needsPlayTap ? (
+          <button
+            type="button"
+            className="btn btn-light btn-sm position-absolute top-50 start-50 translate-middle"
+            style={{ zIndex: 3 }}
+            onClick={manualPlayVideo}
+          >
+            แตะเพื่อเล่นวิดีโอ
+          </button>
+        ) : null}
+        {sessionActive && !hasVideo && !needsPlayTap ? (
+          <div
+            className="position-absolute top-50 start-50 translate-middle text-white-50 small text-center px-3"
+            style={{ zIndex: 3, pointerEvents: "none" }}
+          >
+            กำลังรอภาพจาก Host...
+          </div>
+        ) : null}
       </div>
 
-      {status === "connected" && controlEnabled ? (
+      {hasVideo && controlEnabled ? (
         <p className="small text-muted mt-2 mb-0">
           แตะ/ลากบนภาพเพื่อควบคุมหน้าจอ Host — คลิกพื้นที่วิดีโอแล้วพิมพ์เพื่อส่งข้อความ (Android Host ใช้แอป Phone Remote + เปิด Accessibility)
         </p>
       ) : null}
 
-      {status !== "connected" ? (
+      {!sessionActive ? (
         <div className="small text-muted mt-2 mb-0">
           <p className="mb-1">
             <strong>ขั้นตอน:</strong> Host เปิด <code>/phone-remote/host</code> → สร้างห้อง → กด{" "}

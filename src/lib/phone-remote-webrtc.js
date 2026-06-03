@@ -55,6 +55,23 @@ export async function sendSignal(roomId, role, type, payload) {
   if (!res.ok) throw new Error(data.error || "Signal send failed");
 }
 
+/** Strip internal fields before passing to RTCSessionDescription. */
+export function toSessionDescription(payload) {
+  if (!payload) return null;
+  return new RTCSessionDescription({
+    type: payload.type,
+    sdp: payload.sdp,
+  });
+}
+
+export function offerPayload(sessionDescription, { renegotiate = false } = {}) {
+  return {
+    type: sessionDescription.type,
+    sdp: sessionDescription.sdp,
+    ...(renegotiate ? { renegotiate: true } : {}),
+  };
+}
+
 export function startSignalPoll(
   roomId,
   role,
@@ -180,8 +197,96 @@ export function attachLocalPreview(videoEl, stream) {
 }
 
 export function attachRemoteVideo(videoEl, stream) {
-  if (!videoEl) return;
+  if (!videoEl || !stream) return false;
   videoEl.srcObject = stream;
+  videoEl.muted = true;
   videoEl.playsInline = true;
-  void videoEl.play().catch(() => {});
+  videoEl.autoplay = true;
+
+  const tryPlay = () => {
+    void videoEl.play().catch(() => {});
+  };
+  tryPlay();
+  videoEl.onloadedmetadata = tryPlay;
+  return true;
+}
+
+/** Pull the first live video track from receivers (Safari / some Android WebViews). */
+export function attachVideoFromReceivers(pc, videoEl) {
+  if (!pc || !videoEl) return false;
+  for (const receiver of pc.getReceivers()) {
+    const track = receiver.track;
+    if (track?.kind === "video" && track.readyState === "live") {
+      return attachRemoteVideo(videoEl, new MediaStream([track]));
+    }
+  }
+  return false;
+}
+
+/**
+ * Wire remote video to a peer connection with ontrack + ICE/receiver fallbacks.
+ * Returns cleanup function.
+ */
+export function bindRemoteVideoToPeerConnection(pc, getVideoEl, { onVideoReady } = {}) {
+  let attached = false;
+
+  function markAttached() {
+    if (attached) return;
+    attached = true;
+    onVideoReady?.();
+  }
+
+  function tryAttachStream(stream) {
+    const videoEl = getVideoEl();
+    if (!stream || !videoEl) return false;
+    if (attachRemoteVideo(videoEl, stream)) {
+      markAttached();
+      return true;
+    }
+    return false;
+  }
+
+  function tryAttachFromEvent(ev) {
+    if (ev.streams?.[0]) return tryAttachStream(ev.streams[0]);
+    if (ev.track?.kind === "video") return tryAttachStream(new MediaStream([ev.track]));
+    return false;
+  }
+
+  function tryAttachFromReceivers() {
+    if (attached) return true;
+    const videoEl = getVideoEl();
+    if (!videoEl) return false;
+    if (attachVideoFromReceivers(pc, videoEl)) {
+      markAttached();
+      return true;
+    }
+    return false;
+  }
+
+  const onTrack = (ev) => {
+    tryAttachFromEvent(ev);
+  };
+
+  const onIceState = () => {
+    const state = pc.iceConnectionState;
+    if (state === "connected" || state === "completed") {
+      tryAttachFromReceivers();
+    }
+  };
+
+  const onConnState = () => {
+    if (pc.connectionState === "connected") {
+      tryAttachFromReceivers();
+    }
+  };
+
+  pc.addEventListener("track", onTrack);
+  pc.addEventListener("iceconnectionstatechange", onIceState);
+  pc.addEventListener("connectionstatechange", onConnState);
+
+  return () => {
+    pc.removeEventListener("track", onTrack);
+    pc.removeEventListener("iceconnectionstatechange", onIceState);
+    pc.removeEventListener("connectionstatechange", onConnState);
+  };
 }
