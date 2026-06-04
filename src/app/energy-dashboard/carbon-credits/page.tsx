@@ -73,7 +73,10 @@ interface MeterRow {
   deviceName: string;
   geID: string;
   site: string;
-  records: number;
+  ch1Before: string;
+  ch2After: string;
+  totalKwhCh1Before: number;
+  totalKwhCh2After: number;
   energySavedKwh: number;
   co2Kg: number;
   carbonCreditsTonnes: number;
@@ -87,7 +90,8 @@ interface MeterTotals {
   carbonCreditsTonnes: number;
   estimatedValueKRW: number;
   estimatedValueTHB: number;
-  records: number;
+  totalKwhCh1Before: number;
+  totalKwhCh2After: number;
 }
 
 interface DeviceOption {
@@ -469,6 +473,10 @@ ${meterTable.meters.length > 0 ? `
     <th>#</th>
     <th>${t('อุปกรณ์','Device','장치')}</th>
     <th>Meter ID</th>
+    <th style="text-align:center">${t('CH1 ก่อน','CH1 Before','CH1 설치 전')}</th>
+    <th style="text-align:center">${t('CH2 หลัง','CH2 After','CH2 설치 후')}</th>
+    <th style="text-align:right">${t('kWh CH1 ก่อน','Total kWh CH1 Before','CH1 설치 전 kWh')}</th>
+    <th style="text-align:right">${t('kWh CH2 หลัง','Total kWh CH2 After','CH2 설치 후 kWh')}</th>
     <th style="text-align:right">${t('ไฟประหยัด','kWh Saved','절감 kWh')}</th>
     <th style="text-align:right">CO₂ (kg)</th>
     <th style="text-align:right">${t('เครดิต','Credits','크레딧')} (tCO₂e)</th>
@@ -482,6 +490,10 @@ ${meterTable.meters.length > 0 ? `
         <td style="color:#000;font-family:monospace">${m.rank}</td>
         <td style="font-weight:600">${m.deviceName}</td>
         <td style="font-family:monospace;font-size:8pt;color:#000">${m.geID}</td>
+        <td style="text-align:center;font-family:monospace;font-size:8pt;color:#c2410c">${m.ch1Before}</td>
+        <td style="text-align:center;font-family:monospace;font-size:8pt;color:#4338ca">${m.ch2After}</td>
+        <td style="text-align:right;color:#ea580c">${fmt(m.totalKwhCh1Before)}</td>
+        <td style="text-align:right;color:#4338ca">${fmt(m.totalKwhCh2After)}</td>
         <td style="text-align:right;color:#1d4ed8">${fmt(m.energySavedKwh)}</td>
         <td style="text-align:right;color:#ea580c">${fmt(m.co2Kg)}</td>
         <td style="text-align:right;font-weight:700;color:#059669">${fmt(m.carbonCreditsTonnes)}</td>
@@ -492,6 +504,10 @@ ${meterTable.meters.length > 0 ? `
   </tbody>
   ${meterTable.totals ? `<tfoot><tr class="tfoot">
     <td colspan="3">✓ ${t('รวมทั้งหมด','Grand Total','합계')}</td>
+    <td style="text-align:center;color:#000">—</td>
+    <td style="text-align:center;color:#000">—</td>
+    <td style="text-align:right;color:#ea580c">${fmt(meterTable.totals.totalKwhCh1Before)}</td>
+    <td style="text-align:right;color:#4338ca">${fmt(meterTable.totals.totalKwhCh2After)}</td>
     <td style="text-align:right;color:#1d4ed8">${fmt(meterTable.totals.energySavedKwh)}</td>
     <td style="text-align:right;color:#ea580c">${fmt(meterTable.totals.co2Kg)}</td>
     <td style="text-align:right;color:#059669">${fmt(meterTable.totals.carbonCreditsTonnes)}</td>
@@ -981,8 +997,17 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                     {L(locale, 'มิเตอร์', 'Meter', '미터')}
                   </th>
                   <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">Meter ID</th>
+                  <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'CH1 ก่อน', 'CH1 Before', 'CH1 설치 전')}
+                  </th>
+                  <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'CH2 หลัง', 'CH2 After', 'CH2 설치 후')}
+                  </th>
                   <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
-                    {L(locale, 'ข้อมูล', 'Records', '레코드')}
+                    {L(locale, 'kWh CH1 ก่อน', 'Total kWh CH1 Before', 'CH1 설치 전 kWh')}
+                  </th>
+                  <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
+                    {L(locale, 'kWh CH2 หลัง', 'Total kWh CH2 After', 'CH2 설치 후 kWh')}
                   </th>
                   <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500 uppercase">
                     {L(locale, 'ไฟประหยัด', 'kWh Saved', '절감 kWh')}
@@ -1024,7 +1049,10 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                           </span>
                         </td>
                         <td className="py-3 px-3 font-mono text-xs text-gray-500">{m.geID}</td>
-                        <td className="py-3 px-3 text-right text-gray-500">{m.records.toLocaleString()}</td>
+                        <td className="py-3 px-3 text-center font-mono text-xs text-orange-700">{m.ch1Before}</td>
+                        <td className="py-3 px-3 text-center font-mono text-xs text-indigo-700">{m.ch2After}</td>
+                        <td className="py-3 px-3 text-right font-medium text-orange-600">{fmt(m.totalKwhCh1Before)}</td>
+                        <td className="py-3 px-3 text-right font-medium text-indigo-600">{fmt(m.totalKwhCh2After)}</td>
                         <td className="py-3 px-3 text-right font-medium text-blue-700">{fmt(m.energySavedKwh)}</td>
                         <td className="py-3 px-3 text-right font-medium text-orange-600">{fmt(m.co2Kg)}</td>
                         <td className="py-3 px-3 text-right font-bold text-emerald-700">{fmt(m.carbonCreditsTonnes)}</td>
@@ -1042,8 +1070,13 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                         {L(locale, '✓ รวมทั้งหมด', '✓ Grand Total', '✓ 합계')}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-gray-600">
-                      {meterTable.totals.records.toLocaleString()}
+                    <td className="py-3 px-3 text-center font-bold text-gray-400">—</td>
+                    <td className="py-3 px-3 text-center font-bold text-gray-400">—</td>
+                    <td className="py-3 px-3 text-right font-bold text-orange-600">
+                      {fmt(meterTable.totals.totalKwhCh1Before)}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-indigo-600">
+                      {fmt(meterTable.totals.totalKwhCh2After)}
                     </td>
                     <td className="py-3 px-3 text-right font-bold text-blue-700">
                       {fmt(meterTable.totals.energySavedKwh)}

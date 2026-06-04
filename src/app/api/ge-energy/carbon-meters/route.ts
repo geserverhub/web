@@ -62,7 +62,10 @@ export async function GET(request: NextRequest) {
         d.ipAddress  AS ip_address,
         SUM(pr.energy_reduction) AS energy_saved,
         SUM(pr.co2_reduction)    AS co2_kg,
-        COUNT(*)                 AS records,
+        SUM(pr.before_kWh)       AS total_kwh_ch1_before,
+        SUM(pr.metrics_kWh)      AS total_kwh_ch2_after,
+        COALESCE(MAX(d.beforeMeterNo), MAX(pr.before_meter_no))   AS ch1_before,
+        COALESCE(MAX(d.metricsMeterNo), MAX(pr.metrics_meter_no)) AS ch2_after,
         MIN(pr.record_time)      AS first_record,
         MAX(pr.record_time)      AS last_record
        FROM power_records pr
@@ -84,7 +87,10 @@ export async function GET(request: NextRequest) {
         geID: String(r.ge_id || ''),
         site: String(r.site || r.location || ''),
         ipAddress: String(r.ip_address || ''),
-        records: Number(r.records) || 0,
+        ch1Before: String(r.ch1_before || '—'),
+        ch2After: String(r.ch2_after || '—'),
+        totalKwhCh1Before: Math.round((Number(r.total_kwh_ch1_before) || 0) * 100) / 100,
+        totalKwhCh2After: Math.round((Number(r.total_kwh_ch2_after) || 0) * 100) / 100,
         firstRecord: r.first_record,
         lastRecord: r.last_record,
         energySavedKwh: Math.round((Number(r.energy_saved) || 0) * 100) / 100,
@@ -102,9 +108,10 @@ export async function GET(request: NextRequest) {
         carbonCreditsTonnes: Math.round((acc.carbonCreditsTonnes + m.carbonCreditsTonnes) * 10000) / 10000,
         estimatedValueKRW: acc.estimatedValueKRW + m.estimatedValueKRW,
         estimatedValueTHB: acc.estimatedValueTHB + m.estimatedValueTHB,
-        records: acc.records + m.records,
+        totalKwhCh1Before: Math.round((acc.totalKwhCh1Before + m.totalKwhCh1Before) * 100) / 100,
+        totalKwhCh2After: Math.round((acc.totalKwhCh2After + m.totalKwhCh2After) * 100) / 100,
       }),
-      { energySavedKwh: 0, co2Kg: 0, carbonCreditsTonnes: 0, estimatedValueKRW: 0, estimatedValueTHB: 0, records: 0 }
+      { energySavedKwh: 0, co2Kg: 0, carbonCreditsTonnes: 0, estimatedValueKRW: 0, estimatedValueTHB: 0, totalKwhCh1Before: 0, totalKwhCh2After: 0 }
     );
 
     return NextResponse.json({ success: true, meters, totals, count: meters.length });
