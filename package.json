@@ -32,6 +32,7 @@
     "db:migrate-energy-quality-report": "node scripts/apply-energy-quality-report-schema.mjs",
     "db:seed-energy-quality-report": "node scripts/seed-energy-quality-report-data.mjs",
     "db:import-meter-export": "node scripts/import-meter-parameter-export.mjs",
+    "db:import-current-csv": "node scripts/import-current-csv.mjs",
     "db:export": "node scripts/export-geserverhub-db.mjs",
     "mqtt:bridge": "node scripts/mqtt-bridge.mjs",
     "mqtt:broker": "node scripts/start-broker.mjs",
