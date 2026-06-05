@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -72,10 +73,12 @@ function normalizeChannel(value: unknown): 'ch1' | 'ch2' {
 export async function GET() {
   try {
     await ensureBindingSchema();
+    const deviceColumns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(deviceColumns);
 
     const [devices, meters, bindings] = await Promise.all([
       queryGeserverhub(
-        `SELECT d.deviceID, d.deviceName, d.GEsaveID, d.location, d.site
+        `SELECT d.deviceID, d.deviceName, ${meterSelect}, d.location, d.site
          FROM devices d
          ORDER BY d.deviceName ASC`
       ),
@@ -86,7 +89,7 @@ export async function GET() {
       ),
       queryGeserverhub(
         `SELECT b.id, b.device_id, b.meter_id, b.meter_channel, b.meter_role, b.created_at, b.updated_at,
-                d.deviceName, d.GEsaveID, d.location,
+                d.deviceName, ${meterSelect}, d.location,
                 cm.meterNo, cm.meterType
          FROM ge_energy_meter_device_binding b
          LEFT JOIN devices d ON d.deviceID = b.device_id

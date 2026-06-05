@@ -11,11 +11,12 @@ const ENERGY_LANGS = [
 
 type EnergyLocale = (typeof ENERGY_LANGS)[number]['value'];
 
-function applyLocale(setLocale: (l: string) => void, code: EnergyLocale) {
+export function applyEnergyLocale(setLocale: (l: string) => void, code: string) {
   setLocale(code);
   try {
     localStorage.setItem('locale', code);
     localStorage.setItem(GE_LANG_KEY, code);
+    localStorage.setItem('ge-energy-tech-lang', code);
     window.dispatchEvent(new CustomEvent('ge-lang-changed', { detail: code }));
     window.dispatchEvent(new CustomEvent('locale-changed', { detail: { locale: code } }));
   } catch {
@@ -37,7 +38,7 @@ export default function EnergyLangSwitcher({ className = '' }: { className?: str
         <button
           key={lang.value}
           type="button"
-          onClick={() => applyLocale(setLocale, lang.value)}
+          onClick={() => applyEnergyLocale(setLocale, lang.value)}
           className={`rounded-full px-2 py-0.5 text-[10px] font-bold leading-tight transition-colors ${
             active === lang.value
               ? 'bg-emerald-600 text-white shadow-sm'

@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 import * as XLSX from 'xlsx';
 import {
   assertCustomerDeviceAccess,
@@ -194,7 +195,7 @@ export async function GET(request: NextRequest) {
     });
 
     const devRows = (await queryGe(
-      `SELECT deviceName, GEsaveID FROM devices WHERE deviceID = ? LIMIT 1`,
+      `SELECT deviceName, ${meterIdSelectSql(await getDevicesColumnSet(), '')} FROM devices WHERE deviceID = ? LIMIT 1`,
       [deviceId]
     )) as { deviceName?: string; GEsaveID?: string }[];
     const devLabel = (devRows[0]?.deviceName || devRows[0]?.GEsaveID || deviceId)

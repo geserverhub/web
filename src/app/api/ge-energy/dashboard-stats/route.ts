@@ -1,5 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
+import { effectiveDeviceSiteSql, normalizeSiteKey } from '@/lib/ge-energy/customer-scope'
+import { getDevicesColumnSet, meterIdSelectSql, resolveMeterIdColumn } from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -67,11 +69,15 @@ export async function GET(request: NextRequest) {
     // Get site parameter from query string
     const { searchParams } = new URL(request.url)
     const site = searchParams.get('site') || 'thailand'
+    const safeSite = normalizeSiteKey(site)
+    const deviceColumns = await getDevicesColumnSet()
+    const meterIdCol = resolveMeterIdColumn(deviceColumns)
+    const siteExpr = effectiveDeviceSiteSql(meterIdCol, 'd')
 
     // 1. Get total devices count for selected site
     const totalDevicesResult = await queryGe(
-      'SELECT COUNT(*) as count FROM devices WHERE site = ?',
-      [site]
+      `SELECT COUNT(*) as count FROM devices d WHERE ${siteExpr} = ?`,
+      [safeSite]
     )
     const totalDevices = totalDevicesResult[0]?.count || 0
 
@@ -82,10 +88,10 @@ export async function GET(request: NextRequest) {
       `SELECT SUM(pr.energy_reduction) as total_energy
        FROM power_records pr
        JOIN devices d ON pr.device_id = d.deviceID
-       WHERE d.site = ?
+       WHERE ${siteExpr} = ?
        AND MONTH(pr.record_time) = MONTH(NOW())
        AND YEAR(pr.record_time) = YEAR(NOW())`,
-      [site]
+      [safeSite]
     )
     const energySaved = Math.round(energySavedResult[0]?.total_energy || 0)
 
@@ -150,7 +156,7 @@ export async function GET(request: NextRequest) {
       )
     }
     // Check optional columns in devices table
-    const optionalDeviceColumns = ['customerNameEn', 'customerPhone', 'customerAddress', 'series_no', 'metricsMeterNo', 'beforeMeterNo', 'location', 'ipAddress', 'GEsaveID', 'record_scope']
+    const optionalDeviceColumns = ['customerNameEn', 'customerPhone', 'customerAddress', 'series_no', 'metricsMeterNo', 'beforeMeterNo', 'location', 'ipAddress', 'GEsaveID', 'geID', 'record_scope']
     const devicePlaceholders = optionalDeviceColumns.map(() => '?').join(', ')
     const availableDeviceColumnsRows = await queryGe(
       `SELECT COLUMN_NAME
@@ -163,6 +169,7 @@ export async function GET(request: NextRequest) {
     const availableDeviceColumns = new Set(
       (availableDeviceColumnsRows as ColumnNameRow[]).map((row) => row.COLUMN_NAME)
     )
+    const meterIdSql = meterIdSelectSql(availableDeviceColumns)
     const selectOptionalDeviceColumn = (columnName: string) => (
       availableDeviceColumns.has(columnName)
         ? `d.${columnName}`
@@ -219,7 +226,7 @@ export async function GET(request: NextRequest) {
         ${selectOptionalDeviceColumn('beforeMeterNo')},
         ${selectOptionalDeviceColumn('location')},
         ${selectOptionalDeviceColumn('ipAddress')},
-        ${selectOptionalDeviceColumn('GEsaveID')},
+        ${meterIdSql},
         ${selectedColumn('record_time')},
         p_inst.record_time AS record_time_installed,
         p_pre.record_time AS record_time_preinstall,
@@ -263,9 +270,9 @@ export async function GET(request: NextRequest) {
          ORDER BY pp.record_time DESC, pp.id DESC
          LIMIT 1
        )` : `LEFT JOIN power_records p_pre ON 1 = 0`}
-       WHERE d.site = ?
+       WHERE ${siteExpr} = ?
        ORDER BY record_time DESC, d.deviceID ASC`,
-      [site]
+      [safeSite]
     )
 
     // 5. Calculate connection status for each device

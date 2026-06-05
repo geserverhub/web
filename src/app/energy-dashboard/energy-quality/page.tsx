@@ -665,11 +665,11 @@ export default function EnergyQualityPage() {
         setLocations([]);
         return;
       }
-      const list: DeviceRow[] = rows.map((d: DeviceRow & { deviceID?: string | number; owner?: string }) => ({
+      const list: DeviceRow[] = rows.map((d: DeviceRow & { deviceID?: string | number; owner?: string; installation_location?: string }) => ({
         deviceID: String(d.deviceID ?? ''),
         deviceName: d.deviceName || String(d.deviceID),
         GEsaveID: d.GEsaveID,
-        location: d.location?.trim() || '',
+        location: String(d.location || d.installation_location || '').trim(),
         beforeMeterNo: d.beforeMeterNo,
         metricsMeterNo: d.metricsMeterNo,
         recordScope: d.recordScope,

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useSite } from '@/lib/SiteContext';
 import { useLocale } from '@/lib/LocaleContext';
+import { applyEnergyLocale } from '@/components/energy/EnergyLangSwitcher';
 import {
   eqT,
   EQ_PRINT_LOCALES,
@@ -85,7 +86,7 @@ function channelHasLiveData(ch: ReportChannel): boolean {
 function EnergyQualityReportInner() {
   const searchParams = useSearchParams();
   const { selectedSite } = useSite();
-  const { locale } = useLocale();
+  const { locale, setLocale } = useLocale();
   const reportRef = useRef<HTMLDivElement>(null);
 
   const initialDevice = searchParams.get('deviceId') || '';
@@ -107,10 +108,10 @@ function EnergyQualityReportInner() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
-  const [printLocale, setPrintLocale] = useState<EqLocale>(
-    (['th', 'ko', 'en', 'cn', 'vn', 'ms'].includes(locale) ? locale : 'en') as EqLocale,
-  );
-  const ui = eqT(printLocale);
+  const reportLocale = (
+    ['th', 'ko', 'en', 'cn', 'vn', 'ms'].includes(locale) ? locale : 'en'
+  ) as EqLocale;
+  const ui = eqT(reportLocale);
   const [dbCustomer, setDbCustomer] = useState<ReportDbCustomer | null>(null);
   const [dbSite, setDbSite] = useState<ReportDbSite | null>(null);
   const [dbTablesReady, setDbTablesReady] = useState<boolean | null>(null);
@@ -122,7 +123,7 @@ function EnergyQualityReportInner() {
   }, [devices, selectedLocation]);
 
   const selectedInfo = filteredDevices.find((d) => d.deviceID === selectedDevice);
-  const rt = reportT(printLocale);
+  const rt = reportT(reportLocale);
   const ch1Only = true;
 
   const hasLiveData = channelHasLiveData(ch1) || (!ch1Only && channelHasLiveData(ch2));
@@ -132,13 +133,13 @@ function EnergyQualityReportInner() {
   const dbAnalysis = useMemo(
     () =>
       analyzeCurrentHistory(chartData, {
-        locale: printLocale,
+        locale: reportLocale,
         ch1Label: rt.ch1Label,
         ch2Label: rt.ch2Label,
         periodLabel: historyPeriod,
         ch1Only,
       }),
-    [chartData, printLocale, rt.ch1Label, rt.ch2Label, historyPeriod, ch1Only],
+    [chartData, reportLocale, rt.ch1Label, rt.ch2Label, historyPeriod, ch1Only],
   );
 
   const report = useMemo(() => {
@@ -155,7 +156,7 @@ function EnergyQualityReportInner() {
       measurementEnd,
       chartData,
       historyPeriod,
-      locale: printLocale,
+      locale: reportLocale,
       livePending,
       noMeter,
     });
@@ -172,7 +173,7 @@ function EnergyQualityReportInner() {
     measurementEnd,
     chartData,
     historyPeriod,
-    printLocale,
+    reportLocale,
     livePending,
     noMeter,
     selectedDevice,
@@ -189,13 +190,14 @@ function EnergyQualityReportInner() {
       const rows = json.devices ?? json.data;
       if (!json.success || !Array.isArray(rows)) {
         setDevices([]);
+        setLocations([]);
         return;
       }
-      const list: DeviceRow[] = rows.map((d: DeviceRow & { deviceID?: string | number }) => ({
+      const list: DeviceRow[] = rows.map((d: DeviceRow & { deviceID?: string | number; installation_location?: string }) => ({
         deviceID: String(d.deviceID ?? ''),
         deviceName: d.deviceName || String(d.deviceID),
         GEsaveID: d.GEsaveID,
-        location: d.location?.trim() || '',
+        location: String(d.location || d.installation_location || '').trim(),
         beforeMeterNo: d.beforeMeterNo,
         metricsMeterNo: d.metricsMeterNo,
         recordScope: d.recordScope,
@@ -209,6 +211,7 @@ function EnergyQualityReportInner() {
       setLocations(Array.from(new Set(list.map((d) => d.location).filter(Boolean) as string[])).sort());
     } catch {
       setDevices([]);
+      setLocations([]);
     }
   }, [selectedSite]);
 
@@ -322,7 +325,7 @@ function EnergyQualityReportInner() {
           body: JSON.stringify({
             deviceId: selectedDevice,
             siteRegion: selectedSite,
-            locale: printLocale,
+            locale: reportLocale,
             report: snapshot,
             ch1,
             measurementStart,
@@ -336,7 +339,7 @@ function EnergyQualityReportInner() {
     [
       selectedDevice,
       selectedSite,
-      printLocale,
+      reportLocale,
       ch1,
       measurementStart,
       measurementEnd,
@@ -397,7 +400,7 @@ function EnergyQualityReportInner() {
     const device = selectedInfo ?? PLACEHOLDER_DEVICE;
     const html = buildReportPrintHtml({
       report,
-      locale: printLocale,
+      locale: reportLocale,
       ch1Label: rt.ch1Label,
       ch2Label: rt.ch2Label,
       ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
@@ -431,7 +434,7 @@ function EnergyQualityReportInner() {
     win.document.close();
   }, [
     report,
-    printLocale,
+    reportLocale,
     rt.ch1Label,
     rt.ch2Label,
     selectedDevice,
@@ -557,7 +560,7 @@ function EnergyQualityReportInner() {
             ch1={selectedDevice ? ch1 : EMPTY_CHANNEL}
             ch2={selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL}
             ch1Only={ch1Only}
-            reportLocale={printLocale}
+            reportLocale={reportLocale}
             historyPeriod={historyPeriod}
             livePending={livePending}
             noMeter={noMeter}
@@ -593,13 +596,13 @@ function EnergyQualityReportInner() {
             <div className="eq-print-langs" role="group" aria-label={ui.printLang}>
               {EQ_PRINT_LOCALES.map((loc) => {
                 const meta = EQ_PRINT_LANG_META[loc];
-                const active = printLocale === loc;
+                const active = reportLocale === loc;
                 return (
                   <button
                     key={loc}
                     type="button"
                     className={`eq-lang-btn eq-lang-btn--${loc}${active ? ' eq-lang-btn-active' : ''}`}
-                    onClick={() => setPrintLocale(loc)}
+                    onClick={() => applyEnergyLocale(setLocale, loc)}
                     aria-pressed={active}
                   >
                     <span className="eq-lang-btn-flag" aria-hidden>

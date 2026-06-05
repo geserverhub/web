@@ -24,12 +24,35 @@ const conn = await mysql.createConnection({
   database: u.pathname.replace(/^\//, ''),
 });
 
-const [cols] = await conn.query(
-  `SELECT COLUMN_NAME FROM information_schema.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices'
-     AND COLUMN_NAME IN ('GEsaveID', 'geID', 'ksaveID')`,
-);
-const idCol = cols[0]?.COLUMN_NAME || 'geID';
+async function columnExists(name) {
+  const [rows] = await conn.query(
+    `SELECT COUNT(*) AS c FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices' AND COLUMN_NAME = ?`,
+    [name],
+  );
+  return Number(rows[0].c) > 0;
+}
+
+if (!(await columnExists('GEsaveID')) && (await columnExists('ksaveID'))) {
+  await conn.query(
+    'ALTER TABLE devices CHANGE COLUMN ksaveID GEsaveID varchar(255) DEFAULT NULL',
+  );
+  console.log('migrated devices.ksaveID → GEsaveID');
+} else if (!(await columnExists('GEsaveID')) && (await columnExists('geID'))) {
+  await conn.query(
+    'ALTER TABLE devices CHANGE COLUMN geID GEsaveID varchar(255) DEFAULT NULL',
+  );
+  console.log('migrated devices.geID → GEsaveID');
+} else if ((await columnExists('GEsaveID')) && (await columnExists('ksaveID'))) {
+  await conn.query('ALTER TABLE devices DROP COLUMN ksaveID');
+  console.log('dropped obsolete devices.ksaveID');
+}
+
+const idCol = (await columnExists('GEsaveID')) ? 'GEsaveID' : (await columnExists('geID') ? 'geID' : null);
+if (!idCol) {
+  console.error('devices table has no GEsaveID column');
+  process.exit(1);
+}
 
 const [res] = await conn.query(
   `UPDATE devices SET customerName = ? WHERE ${idCol} = ? OR deviceName = ?`,

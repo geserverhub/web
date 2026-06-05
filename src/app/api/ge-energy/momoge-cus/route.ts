@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as query } from '@/lib/geserverhub-db'
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,8 @@ export async function GET(req: NextRequest) {
     const deviceId = url.searchParams.get('deviceId')
     const search = url.searchParams.get('search') || ''
     const mmgID = url.searchParams.get('id')
+    const deviceColumns = await getDevicesColumnSet()
+    const meterSelect = meterIdSelectSql(deviceColumns)
 
     let sql = `
       SELECT
@@ -45,7 +48,7 @@ export async function GET(req: NextRequest) {
         cl.longitude   AS locationLng,
         -- devices
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.series_no,
         d.ipAddress,
         d.location     AS deviceLocation

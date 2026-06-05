@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 import * as XLSX from 'xlsx';
 
 export const runtime = 'nodejs';
@@ -35,11 +36,11 @@ function buildWhere(site: string | null, deviceId: string | null, from: string |
   return { where, params };
 }
 
-const SELECT_FIELDS = `
+const buildSelectFields = (meterSelect: string) => `
   pr.id,
   pr.device_id,
   d.deviceName   AS device_name,
-  d.GEsaveID         AS gesave_id,
+  ${meterSelect.replace('AS GEsaveID', 'AS gesave_id')},
   d.site,
   d.location,
   d.series_no,
@@ -71,11 +72,13 @@ export async function GET(req: NextRequest) {
     const offset   = (page - 1) * limit;
 
     const { where, params } = buildWhere(site, deviceId, from, to);
+    const deviceColumns = await getDevicesColumnSet();
+    const selectFields = buildSelectFields(meterIdSelectSql(deviceColumns));
 
     // ── Excel export ────────────────────────────────────────────────
     if (format === 'excel') {
       const rows = (await queryGeserverhub(
-        `SELECT ${SELECT_FIELDS}
+        `SELECT ${selectFields}
          FROM power_records pr
          JOIN devices d ON pr.device_id = d.deviceID
          ${where}
@@ -155,7 +158,7 @@ export async function GET(req: NextRequest) {
 
     // ── Paginated rows ───────────────────────────────────────────────
     const rows = (await queryGeserverhub(
-      `SELECT ${SELECT_FIELDS}
+      `SELECT ${selectFields}
        FROM power_records pr
        JOIN devices d ON pr.device_id = d.deviceID
        ${where}

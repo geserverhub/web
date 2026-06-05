@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSite } from '@/lib/SiteContext';
 import { useLocale } from '@/lib/LocaleContext';
 import { Search, Edit2, Trash2, Settings, Server, Wifi, WifiOff, RefreshCw, X, Save, Phone, MapPin, User, Plus, Eye } from 'lucide-react';
+import GeocodeMapPickerModal from '@/components/energy/GeocodeMapPickerModal';
 
 interface Device {
   deviceID?: number;
@@ -124,8 +125,8 @@ export default function DevicesSettingPage() {
   const [clientReady, setClientReady] = useState(false);
   const [installationType, setInstallationType] = useState<'pre_install' | 'installed'>('installed');
   const [addFormSite, setAddFormSite] = useState<'thailand' | 'korea'>('thailand');
-  const [geocodeLoading, setGeocodeLoading] = useState(false);
-  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [mapPickerTarget, setMapPickerTarget] = useState<'add' | 'edit'>('add');
   const [editingRecordScope, setEditingRecordScope] = useState<number | null>(null);
   const [selectedRecordScope, setSelectedRecordScope] = useState<'pre_install' | 'installed' | null>(null);
   const [updatingRecordScope, setUpdatingRecordScope] = useState(false);
@@ -204,32 +205,34 @@ export default function DevicesSettingPage() {
   const siteDisplayLocation = (site: 'thailand' | 'korea') =>
     site === 'korea' ? (locale === 'ko' ? '대한민국' : 'Korea') : locale === 'th' ? 'ประเทศไทย' : 'Thailand';
 
-  async function geocodeFromAddress(
-    address: string,
-    site: 'thailand' | 'korea',
-    apply: (lat: string, lon: string) => void
-  ) {
-    const country = site === 'korea' ? 'South Korea' : 'Thailand';
-    const query = [address.trim(), country].filter(Boolean).join(', ');
-    if (!address.trim()) {
-      setGeocodeError(locale === 'th' ? 'กรุณากรอกที่อยู่ก่อนค้นหาพิกัด' : 'Enter an address first');
+  function openMapPicker(target: 'add' | 'edit') {
+    setMapPickerTarget(target);
+    setMapPickerOpen(true);
+  }
+
+  function applyMapCoordinates(lat: string, lng: string) {
+    if (mapPickerTarget === 'add') {
+      setAddForm((f) => ({ ...f, latitude: lat, longitude: lng }));
       return;
     }
-    setGeocodeLoading(true);
-    setGeocodeError(null);
-    try {
-      const res = await fetch(`/api/ge-energy/geocode?q=${encodeURIComponent(query)}`);
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body.lat || !body.lon) {
-        throw new Error(body.error || 'Geocode failed');
-      }
-      apply(String(body.lat), String(body.lon));
-    } catch (err: unknown) {
-      setGeocodeError(err instanceof Error ? err.message : 'Geocode failed');
-    } finally {
-      setGeocodeLoading(false);
-    }
+    setEditForm((f) => ({ ...f, latitude: lat, longitude: lng }));
   }
+
+  const mapPickerSite =
+    mapPickerTarget === 'add'
+      ? addFormSite
+      : (editForm.location?.toLowerCase().includes('korea') || editForm.location?.includes('เกาหลี') ? 'korea' : 'thailand');
+
+  const mapPickerAddress =
+    mapPickerTarget === 'add'
+      ? addForm.customerAddress || addForm.location || ''
+      : editForm.customerAddress || editForm.location || '';
+
+  const mapPickerLat =
+    mapPickerTarget === 'add' ? addForm.latitude : editForm.latitude;
+
+  const mapPickerLng =
+    mapPickerTarget === 'add' ? addForm.longitude : editForm.longitude;
 
   // Preload product names for the device selector
   useEffect(() => {
@@ -501,7 +504,6 @@ export default function DevicesSettingPage() {
     setCustomerSearchTerm('');
     setCustomerResults([]);
     setCreateMsg(null);
-    setGeocodeError(null);
     setAddMeterID(''); setAddLocationID(''); setAddSerailID(''); setAddNameKR('');
     setShowAddModal(true);
   }
@@ -681,7 +683,13 @@ export default function DevicesSettingPage() {
           latitudeLabel: 'ละติจูด / Latitude',
           longitudeLabel: 'ลองจิจูด / Longitude',
           geocodeBtn: 'ค้นหาพิกัดจากที่อยู่',
-          geocodeHint: 'ใช้ที่อยู่ลูกค้าเพื่อเติมละติจูดและลองจิจูด',
+          geocodeHint: 'เปิดแผนที่ ค้นหาที่อยู่ และเลือกพิกัดบนแผนที่',
+          mapPickerTitle: 'เลือกพิกัดบนแผนที่',
+          mapPickerSearch: 'ค้นหาที่อยู่...',
+          mapPickerSearchBtn: 'ค้นหา',
+          mapPickerApply: 'ใช้พิกัดนี้',
+          mapPickerClickHint: 'คลิกบนแผนที่หรือลากหมุดเพื่อปรับตำแหน่ง',
+          mapPickerNotFound: 'ไม่พบพิกัดจากที่อยู่นี้',
           devicePhoneLabel: 'เบอร์โทรเครื่องมิเตอร์ / Meter Phone',
           deviceNamePlaceholder: 'ชื่อเครื่อง',
           ownerEmailPlaceholder: 'อีเมลเจ้าของ',
@@ -762,7 +770,13 @@ export default function DevicesSettingPage() {
           latitudeLabel: '위도 / Latitude',
           longitudeLabel: '경도 / Longitude',
           geocodeBtn: '주소로 좌표 검색',
-          geocodeHint: '고객 주소로 위도·경도를 채웁니다',
+          geocodeHint: '지도를 열어 주소를 검색하고 좌표를 선택합니다',
+          mapPickerTitle: '지도에서 좌표 선택',
+          mapPickerSearch: '주소 검색...',
+          mapPickerSearchBtn: '검색',
+          mapPickerApply: '좌표 적용',
+          mapPickerClickHint: '지도를 클릭하거나 마커를 드래그하여 위치를 조정하세요',
+          mapPickerNotFound: '주소로 좌표를 찾을 수 없습니다',
           devicePhoneLabel: '미터 전화번호 / Meter Phone',
           deviceNamePlaceholder: '장치명',
           ownerEmailPlaceholder: '소유자 이메일',
@@ -843,7 +857,13 @@ export default function DevicesSettingPage() {
           latitudeLabel: 'Latitude',
           longitudeLabel: 'Longitude',
           geocodeBtn: 'Find coordinates from address',
-          geocodeHint: 'Uses customer address to fill latitude and longitude',
+          geocodeHint: 'Open map, search address, and pick coordinates on the map',
+          mapPickerTitle: 'Pick coordinates on map',
+          mapPickerSearch: 'Search address...',
+          mapPickerSearchBtn: 'Search',
+          mapPickerApply: 'Use coordinates',
+          mapPickerClickHint: 'Click the map or drag the pin to adjust the location',
+          mapPickerNotFound: 'No coordinates found for this address',
           devicePhoneLabel: 'Meter phone',
           deviceNamePlaceholder: 'Device Name',
           ownerEmailPlaceholder: 'email@example.com',
@@ -1475,6 +1495,16 @@ export default function DevicesSettingPage() {
                   </div>
                 </div>
                 <div>
+                  <button
+                    type="button"
+                    onClick={() => openMapPicker('edit')}
+                    className="w-full px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-semibold transition"
+                  >
+                    {ui.geocodeBtn}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">{ui.geocodeHint}</p>
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{ui.ipAddress}</label>
                   <input value={editForm.ipAddress ?? ''} onChange={e => setEditForm(f => ({...f, ipAddress: e.target.value}))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -1761,20 +1791,12 @@ export default function DevicesSettingPage() {
                 <div>
                   <button
                     type="button"
-                    disabled={geocodeLoading}
-                    onClick={() =>
-                      geocodeFromAddress(
-                        addForm.customerAddress || addForm.location || '',
-                        addFormSite,
-                        (lat, lon) => setAddForm((f) => ({ ...f, latitude: lat, longitude: lon }))
-                      )
-                    }
-                    className="w-full px-3 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white rounded-xl text-sm font-semibold transition"
+                    onClick={() => openMapPicker('add')}
+                    className="w-full px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-semibold transition"
                   >
-                    {geocodeLoading ? ui.loading : ui.geocodeBtn || 'ค้นหาพิกัดจากที่อยู่'}
+                    {ui.geocodeBtn || 'ค้นหาพิกัดจากที่อยู่'}
                   </button>
                   <p className="text-xs text-gray-500 mt-1">{ui.geocodeHint}</p>
-                  {geocodeError && <p className="text-xs text-red-500 mt-1">{geocodeError}</p>}
                 </div>
                 {/* momoge_cus identifiers */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
@@ -1822,6 +1844,28 @@ export default function DevicesSettingPage() {
           </div>
         </div>
       )}
+
+      <GeocodeMapPickerModal
+        open={mapPickerOpen}
+        onClose={() => setMapPickerOpen(false)}
+        onApply={applyMapCoordinates}
+        initialAddress={mapPickerAddress}
+        initialLat={mapPickerLat}
+        initialLng={mapPickerLng}
+        site={mapPickerSite}
+        labels={{
+          title: ui.mapPickerTitle || ui.geocodeBtn,
+          searchPlaceholder: ui.mapPickerSearch || ui.addressPlaceholder,
+          searchBtn: ui.mapPickerSearchBtn || ui.search,
+          apply: ui.mapPickerApply || ui.save,
+          cancel: ui.cancel,
+          clickHint: ui.mapPickerClickHint || ui.geocodeHint,
+          lat: ui.latitudeLabel,
+          lng: ui.longitudeLabel,
+          searching: ui.loading,
+          notFound: ui.mapPickerNotFound || 'Not found',
+        }}
+      />
     </>
   );
 }

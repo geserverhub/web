@@ -3,6 +3,12 @@ import {
   getGeserverhubConnectionConfig,
   queryGeserverhub,
 } from './geserverhub-db';
+import {
+  getDevicesColumnSet,
+  meterIdGroupBySql,
+  meterIdSelectSql,
+  meterIdWhereSql,
+} from '@/lib/ge-energy/devices-schema';
 
 export { GESERVERHUB_DATABASE, getGeserverhubConnectionConfig };
 
@@ -14,15 +20,25 @@ export const queryUser = queryGeserverhub;
 
 export async function getAllDevices(): Promise<unknown[]> {
   try {
+    const columns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(columns);
+    const meterGroup = meterIdGroupBySql(columns);
+    const hasBeforeMeterNo = columns.has('beforeMeterNo');
+    const hasMetricsMeterNo = columns.has('metricsMeterNo');
+    const beforeSelect = hasBeforeMeterNo ? 'd.beforeMeterNo,' : '';
+    const metricsSelect = hasMetricsMeterNo ? 'd.metricsMeterNo,' : '';
+    const beforeGroup = hasBeforeMeterNo ? 'd.beforeMeterNo,' : '';
+    const metricsGroup = hasMetricsMeterNo ? 'd.metricsMeterNo,' : '';
+
     return await queryGeserverhub(
       `SELECT
         d.deviceID,
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.location,
         d.ipAddress,
-        d.beforeMeterNo,
-        d.metricsMeterNo,
+        ${beforeSelect}
+        ${metricsSelect}
         d.phone,
         d.created_at,
         d.updated_at,
@@ -33,24 +49,30 @@ export async function getAllDevices(): Promise<unknown[]> {
         END AS status
        FROM devices d
        LEFT JOIN power_records p ON d.deviceID = p.device_id
-       GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.location, d.ipAddress,
-                d.beforeMeterNo, d.metricsMeterNo, d.phone, d.created_at, d.updated_at
-       ORDER BY d.deviceID ASC`
+       GROUP BY d.deviceID, d.deviceName, ${meterGroup}, d.location, d.ipAddress,
+                ${beforeGroup} ${metricsGroup} d.phone, d.created_at, d.updated_at
+       ORDER BY d.deviceID ASC`,
     );
   } catch (error) {
     console.error('[mysql-ge] getAllDevices:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getDeviceById(deviceID: number): Promise<unknown | null> {
   try {
+    const columns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(columns, '');
+    const hasBeforeMeterNo = columns.has('beforeMeterNo');
+    const hasMetricsMeterNo = columns.has('metricsMeterNo');
     const rows = await queryGeserverhub(
-      `SELECT deviceID, deviceName, GEsaveID, location, status, ipAddress,
-              beforeMeterNo, metricsMeterNo, created_at, updated_at
+      `SELECT deviceID, deviceName, ${meterSelect}, location, status, ipAddress,
+              ${hasBeforeMeterNo ? 'beforeMeterNo,' : ''}
+              ${hasMetricsMeterNo ? 'metricsMeterNo,' : ''}
+              created_at, updated_at
        FROM devices
        WHERE deviceID = ?`,
-      [deviceID]
+      [deviceID],
     );
     return (rows as unknown[])[0] || null;
   } catch (error) {
@@ -61,12 +83,20 @@ export async function getDeviceById(deviceID: number): Promise<unknown | null> {
 
 export async function getDeviceByGEsaveId(GEsaveID: string): Promise<unknown | null> {
   try {
+    const columns = await getDevicesColumnSet();
+    const meterCol = meterIdWhereSql(columns, '');
+    if (meterCol === 'NULL') return null;
+    const meterSelect = meterIdSelectSql(columns, '');
+    const hasBeforeMeterNo = columns.has('beforeMeterNo');
+    const hasMetricsMeterNo = columns.has('metricsMeterNo');
     const rows = await queryGeserverhub(
-      `SELECT deviceID, deviceName, GEsaveID, location, status, ipAddress,
-              beforeMeterNo, metricsMeterNo, created_at, updated_at
+      `SELECT deviceID, deviceName, ${meterSelect}, location, status, ipAddress,
+              ${hasBeforeMeterNo ? 'beforeMeterNo,' : ''}
+              ${hasMetricsMeterNo ? 'metricsMeterNo,' : ''}
+              created_at, updated_at
        FROM devices
-       WHERE GEsaveID = ?`,
-      [GEsaveID]
+       WHERE ${meterCol} = ?`,
+      [GEsaveID],
     );
     return (rows as unknown[])[0] || null;
   } catch (error) {

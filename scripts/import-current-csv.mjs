@@ -60,8 +60,29 @@ async function columnExists(conn, table, column) {
   return Number(rows[0].c) > 0;
 }
 
+async function ensureDevicesMeterIdColumn(conn) {
+  const hasGEsaveID = await columnExists(conn, 'devices', 'GEsaveID');
+  const hasGeID = await columnExists(conn, 'devices', 'geID');
+  const hasKsaveID = await columnExists(conn, 'devices', 'ksaveID');
+  if (!hasGEsaveID && hasKsaveID) {
+    await conn.query(
+      'ALTER TABLE devices CHANGE COLUMN ksaveID GEsaveID varchar(255) DEFAULT NULL',
+    );
+    console.log('  migrated devices.ksaveID → GEsaveID');
+  } else if (!hasGEsaveID && hasGeID) {
+    await conn.query(
+      'ALTER TABLE devices CHANGE COLUMN geID GEsaveID varchar(255) DEFAULT NULL',
+    );
+    console.log('  migrated devices.geID → GEsaveID');
+  } else if (hasKsaveID && hasGEsaveID) {
+    await conn.query('ALTER TABLE devices DROP COLUMN ksaveID');
+    console.log('  dropped obsolete devices.ksaveID');
+  }
+}
+
 async function resolveMeterIdColumn(conn) {
-  for (const name of ['GEsaveID', 'geID', 'ksaveID']) {
+  await ensureDevicesMeterIdColumn(conn);
+  for (const name of ['GEsaveID', 'geID']) {
     if (await columnExists(conn, 'devices', name)) return name;
   }
   return null;
@@ -87,7 +108,7 @@ async function ensurePreinstallColumns(conn) {
 
 async function resolveOrCreateDevice(conn, meterId, opts = {}) {
   const idCol = await resolveMeterIdColumn(conn);
-  if (!idCol) throw new Error('devices table has no GEsaveID / geID / ksaveID column');
+  if (!idCol) throw new Error('devices table has no GEsaveID column');
 
   const [rows] = await conn.query(
     `SELECT deviceID, deviceName, ${idCol} AS meter_id FROM devices

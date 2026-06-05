@@ -6,6 +6,7 @@ import {
   getSiteCreditPricing,
 } from '@/lib/energy/carbon-credits';
 import { callAiText, resolveAiCredentials } from '@/lib/energy/ai-settings';
+import { getDevicesColumnSet, meterIdGroupBySql, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -66,6 +67,10 @@ export async function GET(request: NextRequest) {
       params.push(deviceId);
     }
 
+    const deviceColumns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(deviceColumns);
+    const meterGroup = meterIdGroupBySql(deviceColumns);
+
     const summaryRows = (await queryGeserverhub(
       `SELECT
         SUM(pr.energy_reduction) AS total_energy_saved,
@@ -108,13 +113,13 @@ export async function GET(request: NextRequest) {
       `SELECT
         d.deviceID AS device_id,
         d.deviceName AS device_name,
-        d.GEsaveID AS gesave_id,
+        ${meterSelect.replace('AS GEsaveID', 'AS gesave_id')},
         SUM(pr.energy_reduction) AS energy_saved,
         SUM(pr.co2_reduction) AS co2_kg
        FROM power_records pr
        JOIN devices d ON pr.device_id = d.deviceID
        ${whereClause}
-       GROUP BY d.deviceID, d.deviceName, d.GEsaveID
+       GROUP BY d.deviceID, d.deviceName, ${meterGroup}
        ORDER BY co2_kg DESC
        LIMIT 8`,
       params

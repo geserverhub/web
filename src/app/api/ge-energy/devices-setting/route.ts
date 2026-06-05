@@ -1,19 +1,33 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
-import { formatDeviceLocation, normalizeSiteKey } from '@/lib/ge-energy/customer-scope'
+import {
+  buildInstallationLocationExpr,
+  deviceSiteFilterSql,
+  formatDeviceLocation,
+  inferSiteFromMeterId,
+  normalizeSiteKey,
+  resolveDeviceSite,
+} from '@/lib/ge-energy/customer-scope'
+import {
+  ensureDevicesSchema,
+  getDevicesColumnSet,
+  meterIdGroupBySql,
+  meterIdSelectSql,
+  resolveMeterIdColumn,
+} from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-async function getDevicesColumnSet(): Promise<Set<string>> {
+async function tableExists(tableName: string): Promise<boolean> {
   const rows = await queryGe(
-    `SELECT COLUMN_NAME
-     FROM INFORMATION_SCHEMA.COLUMNS
-     WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'devices'`
+    `SELECT 1 AS ok
+     FROM INFORMATION_SCHEMA.TABLES
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?
+     LIMIT 1`,
+    [tableName],
   )
-
-  return new Set((rows as any[]).map((row) => String(row.COLUMN_NAME)))
+  return rows.length > 0
 }
 
 async function isDeviceIdAutoIncrement(): Promise<boolean> {
@@ -38,6 +52,7 @@ async function isDeviceIdAutoIncrement(): Promise<boolean> {
  */
 export async function GET(req: NextRequest) {
   try {
+    await ensureDevicesSchema()
     const { searchParams } = new URL(req.url)
     const site = searchParams.get('site') || 'thailand'
     const deviceIdParam = searchParams.get('deviceId')
@@ -49,6 +64,36 @@ export async function GET(req: NextRequest) {
     const hasBeforeMeterNo = deviceColumns.has('beforeMeterNo')
     const hasMetricsMeterNo = deviceColumns.has('metricsMeterNo')
     const hasRecordScope = deviceColumns.has('record_scope')
+    const meterIdCol = resolveMeterIdColumn(deviceColumns)
+    const meterIdSelect = meterIdCol ? `d.${meterIdCol} AS GEsaveID` : 'NULL AS GEsaveID'
+    const hasEqSites = await tableExists('eq_device_sites') && await tableExists('eq_sites')
+    const hasMomoge = await tableExists('momoge_cus')
+    const hasCarbonLoc = await tableExists('carbon_locations')
+    const hasPreinstall = await tableExists('power_records_preinstall')
+    const installationLocationExpr = buildInstallationLocationExpr({
+      hasEqSites,
+      hasCarbonLoc,
+      hasMomoge,
+      hasCustomerAddress,
+    })
+    const locationJoins = [
+      hasEqSites
+        ? `LEFT JOIN eq_device_sites ds ON ds.device_id = d.deviceID
+       LEFT JOIN eq_sites es ON es.id = ds.site_id`
+        : '',
+      hasMomoge && hasCarbonLoc
+        ? `LEFT JOIN momoge_cus mc ON mc.device_id = d.deviceID
+       LEFT JOIN carbon_locations cl ON cl.locationID = mc.LocationID`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n      ')
+    const lastUpdateExpr = hasPreinstall
+      ? `GREATEST(COALESCE(MAX(p.record_time), '1970-01-01'), COALESCE(MAX(p_pre.record_time), '1970-01-01'))`
+      : 'MAX(p.record_time)'
+    const preinstallJoin = hasPreinstall
+      ? 'LEFT JOIN power_records_preinstall p_pre ON d.deviceID = p_pre.device_id'
+      : ''
 
     const customerSelectFields = [
       hasCustomerId ? 'd.customer_id,' : '',
@@ -75,55 +120,58 @@ export async function GET(req: NextRequest) {
       .join('\n               ')
 
     const deviceIdFilter = deviceIdParam && /^\d+$/.test(deviceIdParam)
+    const siteFilter = deviceSiteFilterSql(site, meterIdCol)
     const whereClause = deviceIdFilter
       ? 'WHERE d.deviceID = ?'
-      : 'WHERE (LOWER(COALESCE(d.site, d.location, "")) LIKE ? OR ? = \'all\')'
+      : `WHERE (${siteFilter.sql})`
     const whereParams = deviceIdFilter
       ? [Number(deviceIdParam)]
-      : [
-          site === 'thailand' ? '%thailand%'
-            : site === 'korea' ? '%korea%'
-            : site === 'vietnam' ? '%vietnam%'
-            : site === 'malaysia' ? '%malaysia%'
-            : '%',
-          site,
-        ]
+      : siteFilter.params
 
     const devices = await queryGe(`
       SELECT
         d.deviceID,
         d.deviceName,
-        d.GEsaveID,
+        ${meterIdSelect},
         d.U_email as owner,
         ${customerSelectFields}
         d.location,
+        ${installationLocationExpr} AS installation_location,
         d.latitude,
         d.longitude,
         d.ipAddress,
         d.site,
         d.phone,
         d.created_at as registerDate,
-        MAX(p.record_time) as lastUpdate,
-        TIMESTAMPDIFF(SECOND, MAX(p.record_time), NOW()) as secondsSinceUpdate,
+        ${lastUpdateExpr} as lastUpdate,
+        TIMESTAMPDIFF(SECOND, ${lastUpdateExpr}, NOW()) as secondsSinceUpdate,
         CASE
-          WHEN MAX(p.record_time) >= NOW() - INTERVAL 20 MINUTE THEN 'ONLINE'
+          WHEN ${lastUpdateExpr} >= NOW() - INTERVAL 20 MINUTE THEN 'ONLINE'
           ELSE 'OFFLINE'
         END as connection
       FROM devices d
       LEFT JOIN power_records p ON d.deviceID = p.device_id
+      ${preinstallJoin}
+      ${locationJoins}
       ${whereClause}
-      GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.U_email,
+      GROUP BY d.deviceID, d.deviceName, ${meterIdCol ? `d.${meterIdCol},` : ''} d.U_email,
                ${customerGroupByFields}
                d.location, d.latitude, d.longitude, d.ipAddress, d.site, d.phone, d.created_at
+               ${hasCustomerAddress ? ', d.customerAddress' : ''}
       ORDER BY d.deviceName ASC
     `, whereParams)
 
     const formattedDevices = devices.map((d: Record<string, unknown>) => {
-      const meterSite = normalizeSiteKey(d.site as string)
+      const meterSite = resolveDeviceSite(
+        d.site as string,
+        d.GEsaveID as string,
+        String(d.installation_location || d.location || ''),
+      )
+      const rawLocation = String(d.installation_location || d.location || '').trim()
       return {
         ...d,
         site: meterSite,
-        location: formatDeviceLocation(meterSite, d.location as string),
+        location: formatDeviceLocation(meterSite, rawLocation),
         timeSinceUpdate: d.secondsSinceUpdate ? formatTimeSince(Number(d.secondsSinceUpdate)) : 'N/A',
         lastUpdate: d.lastUpdate || null,
         registerDate: d.registerDate
@@ -152,6 +200,7 @@ export async function GET(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
   try {
+    await ensureDevicesSchema()
     const body = await req.json()
     const { deviceId, deviceName, location, owner, ipAddress, latitude, longitude, customerName, customerPhone, customerAddress, customerId } = body
     const deviceColumns = await getDevicesColumnSet()
@@ -217,13 +266,16 @@ export async function PUT(req: NextRequest) {
         missingCustomerColumns.push('customerAddress')
       }
     }
-    if (customerId !== undefined) {
+    if (customerId !== undefined && customerId !== null && customerId !== '') {
       if (hasCustomerId) {
         updates.push('customer_id = ?')
-        params.push(customerId || null)
-      } else {
+        params.push(customerId)
+      } else if (Number(customerId) > 0) {
         missingCustomerColumns.push('customer_id')
       }
+    } else if (hasCustomerId && customerId !== undefined) {
+      updates.push('customer_id = ?')
+      params.push(null)
     }
 
     if (missingCustomerColumns.length > 0) {
@@ -278,6 +330,7 @@ export async function PUT(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    await ensureDevicesSchema()
     const body = await req.json()
     const {
       deviceName,
@@ -323,7 +376,11 @@ export async function POST(req: NextRequest) {
     const missingColumns: string[] = []
     const autoIncrementDeviceId = await isDeviceIdAutoIncrement()
 
-    const normalizedSite = String(site || 'thailand').trim() || 'thailand'
+    const meterIdValue = String(GEsaveID || '').trim() || String(deviceName).trim()
+    const normalizedSite =
+      inferSiteFromMeterId(meterIdValue) ||
+      String(site || 'thailand').trim() ||
+      'thailand'
     const normalizedOwner = String(owner || '').trim() || 'no-reply@ge.local'
     const normalizedPhone = String(phone ?? customerPhone ?? '-').trim() || '-'
     const normalizedPassPhone = String(passPhone ?? normalizedPhone).trim() || normalizedPhone
@@ -351,8 +408,15 @@ export async function POST(req: NextRequest) {
     columns.push('deviceName')
     values.push(String(deviceName).trim())
 
-    columns.push('GEsaveID')
-    values.push(String(GEsaveID || '').trim() || String(deviceName).trim())
+    const meterIdCol = resolveMeterIdColumn(deviceColumns)
+    if (!meterIdCol) {
+      return NextResponse.json({
+        success: false,
+        error: 'devices table has no GEsaveID column (run ensureDevicesSchema or migrate-rename-gesave-id.sql)',
+      }, { status: 500 })
+    }
+    columns.push(meterIdCol)
+    values.push(meterIdValue)
 
     if (hasSeriesNo && seriesNo !== undefined) {
       columns.push('series_no')
@@ -434,7 +498,13 @@ export async function POST(req: NextRequest) {
     if (hasCustomerId && customerId !== undefined) {
       columns.push('customer_id')
       values.push(customerId || null)
-    } else if (customerId !== undefined && !hasCustomerId) {
+    } else if (
+      customerId !== undefined &&
+      customerId !== null &&
+      customerId !== '' &&
+      Number(customerId) > 0 &&
+      !hasCustomerId
+    ) {
       missingColumns.push('customer_id')
     }
 

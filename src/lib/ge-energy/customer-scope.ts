@@ -50,7 +50,7 @@ function mapDeviceRowToCustomerMeter(row: {
   before_meter_no?: string | null
   metrics_meter_no?: string | null
 }): CustomerMeter {
-  const site = normalizeSiteKey(row.meter_site)
+  const site = resolveDeviceSite(row.meter_site, row.gesave_id, row.location_name)
   const ch1 = row.before_meter_no ? String(row.before_meter_no).trim() : null
   const ch2 = row.metrics_meter_no ? String(row.metrics_meter_no).trim() : null
   const locationName = formatDeviceLocation(
@@ -84,6 +84,20 @@ const SITE_RATES: Record<string, number> = {
   malaysia: Number(process.env.MALAYSIA_ELECTRICITY_RATE || 0.45),
 }
 
+/** GE-KR-0001 → korea, GE-TH-0001 → thailand (meter ID prefix = site). */
+const METER_PREFIX_TO_SITE: Record<string, string> = {
+  KR: 'korea',
+  TH: 'thailand',
+  VN: 'vietnam',
+  MY: 'malaysia',
+}
+
+export function inferSiteFromMeterId(meterId: string | null | undefined): string | null {
+  const match = String(meterId || '').trim().toUpperCase().match(/^GE-([A-Z]{2})-/)
+  if (!match) return null
+  return METER_PREFIX_TO_SITE[match[1]] ?? null
+}
+
 export function normalizeSiteKey(raw: string | null | undefined): string {
   const s = String(raw || '').trim().toLowerCase()
   if (s.includes('korea') || s.includes('kr') || s === 'ko') return 'korea'
@@ -92,6 +106,48 @@ export function normalizeSiteKey(raw: string | null | undefined): string {
   if (s.includes('malay') || s === 'ms') return 'malaysia'
   if (s === 'korea' || s === 'thailand' || s === 'vietnam' || s === 'malaysia') return s
   return 'thailand'
+}
+
+/** Prefer site encoded in GEsaveID (GE-KR / GE-TH), then devices.site, then location. */
+export function resolveDeviceSite(
+  site: string | null | undefined,
+  meterId?: string | null | undefined,
+  location?: string | null | undefined,
+): string {
+  const fromMeter = inferSiteFromMeterId(meterId)
+  if (fromMeter) return fromMeter
+  if (String(site || '').trim()) return normalizeSiteKey(site)
+  return normalizeSiteKey(location)
+}
+
+/** SQL expression: effective site from meter ID prefix or devices.site/location. */
+export function effectiveDeviceSiteSql(meterIdColumn: string | null, deviceAlias = 'd'): string {
+  if (!meterIdColumn) {
+    return `LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand'))`
+  }
+  const col = `UPPER(COALESCE(${deviceAlias}.${meterIdColumn}, ''))`
+  return `COALESCE(
+    NULLIF(CASE
+      WHEN ${col} LIKE 'GE-KR-%' THEN 'korea'
+      WHEN ${col} LIKE 'GE-TH-%' THEN 'thailand'
+      WHEN ${col} LIKE 'GE-VN-%' THEN 'vietnam'
+      WHEN ${col} LIKE 'GE-MY-%' THEN 'malaysia'
+      ELSE NULL
+    END, NULL),
+    LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand'))
+  )`
+}
+
+export function deviceSiteFilterSql(
+  site: string,
+  meterIdColumn: string | null,
+  deviceAlias = 'd',
+): { sql: string; params: string[] } {
+  if (site === 'all') return { sql: '1=1', params: [] }
+  return {
+    sql: `${effectiveDeviceSiteSql(meterIdColumn, deviceAlias)} = ?`,
+    params: [normalizeSiteKey(site)],
+  }
 }
 
 /** Display name for device / meter location (Korea site → KOREA). */
@@ -112,6 +168,23 @@ export function formatDeviceLocation(
     }
   }
   return raw || null
+}
+
+export { resolveMeterIdColumn } from '@/lib/ge-energy/devices-schema'
+
+/** Best available installation/site label for a device row. */
+export function buildInstallationLocationExpr(opts: {
+  hasEqSites: boolean
+  hasCarbonLoc: boolean
+  hasMomoge: boolean
+  hasCustomerAddress: boolean
+}): string {
+  const parts: string[] = []
+  if (opts.hasEqSites) parts.push("MAX(NULLIF(TRIM(es.location), ''))")
+  if (opts.hasCarbonLoc && opts.hasMomoge) parts.push("MAX(NULLIF(TRIM(cl.locationName), ''))")
+  parts.push("NULLIF(TRIM(d.location), '')")
+  if (opts.hasCustomerAddress) parts.push("NULLIF(TRIM(d.customerAddress), '')")
+  return `COALESCE(${parts.join(', ')})`
 }
 
 export function resolveRate(site: string, override?: string | null) {
@@ -371,15 +444,20 @@ export async function loadDeviceSitesByIds(deviceIds: number[]) {
   const rows = (await queryGe(
     `SELECT
       d.deviceID AS device_id,
-      COALESCE(NULLIF(LOWER(TRIM(d.site)), ''), NULLIF(LOWER(TRIM(d.location)), ''), 'thailand') AS meter_site
+      d.site,
+      d.location,
+      NULLIF(TRIM(d.GEsaveID), '') AS gesave_id
      FROM devices d
      WHERE d.deviceID IN (${placeholders})`,
     deviceIds,
-  )) as Array<{ device_id: number; meter_site: string | null }>
+  )) as Array<{ device_id: number; site: string | null; location: string | null; gesave_id: string | null }>
 
   const map = new Map<number, string>()
   for (const row of rows) {
-    map.set(Number(row.device_id), normalizeSiteKey(row.meter_site))
+    map.set(
+      Number(row.device_id),
+      resolveDeviceSite(row.site, row.gesave_id, row.location),
+    )
   }
   return map
 }

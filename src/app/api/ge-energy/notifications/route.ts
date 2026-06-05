@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -53,6 +54,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
     const unreadOnly = searchParams.get('unread_only') === 'true'
 
+    const deviceColumns = await getDevicesColumnSet()
+    const meterSelect = meterIdSelectSql(deviceColumns, 'd')
+
     let query = `
       SELECT
         n.id,
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
         n.created_at,
         n.read_at,
         d.deviceName,
-        d.GEsaveID
+        ${meterSelect}
       FROM notifications n
       LEFT JOIN devices d ON n.device_id = d.deviceID
       WHERE 1=1

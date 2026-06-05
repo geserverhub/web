@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,12 +15,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const site = searchParams.get('site') || 'thailand'
+    const deviceColumns = await getDevicesColumnSet()
+    const meterSelect = meterIdSelectSql(deviceColumns)
 
     const notifications = await queryGe(`
       SELECT
         d.deviceID,
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.U_email as owner,
         d.location,
         COALESCE(dn.alarm_enabled, 1) as alarm_enabled,

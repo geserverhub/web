@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 import {
   assertCustomerDeviceAccess,
   requireCustomerDashboardAuth,
@@ -93,12 +94,14 @@ export async function GET(request: NextRequest) {
         ? ''
         : "AND LOWER(COALESCE(d.site, '')) = ?";
     const siteBinds = site === 'all' ? [] : [site];
+    const deviceColumns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(deviceColumns);
 
     const deviceRows = (await queryGe(
       `SELECT
         d.deviceID,
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.site,
         d.customerName,
         d.status,

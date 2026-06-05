@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
+import { getDevicesColumnSet, meterIdGroupBySql, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 import {
   DEFAULT_CREDIT_PRICE_KRW_PER_TONNE,
   DEFAULT_CREDIT_PRICE_THB_PER_TONNE,
@@ -20,10 +21,15 @@ export async function GET(request: NextRequest) {
     const deviceIdsParam = searchParams.get('deviceIds'); // comma-separated e.g. "4,7,12"
     const allDevices = searchParams.get('all') === 'true';
 
+    const deviceColumns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(deviceColumns);
+    const meterSelectBare = meterIdSelectSql(deviceColumns, '');
+    const meterGroup = meterIdGroupBySql(deviceColumns);
+
     // --- All-devices list (no power_records join) for the picker ---
     if (searchParams.get('list') === 'true') {
       const listRows = (await queryGeserverhub(
-        `SELECT deviceID, deviceName, GEsaveID, site, location, ipAddress
+        `SELECT deviceID, deviceName, ${meterSelectBare}, site, location, ipAddress
          FROM devices ORDER BY deviceName ASC`
       )) as Row[];
       return NextResponse.json({
@@ -56,7 +62,7 @@ export async function GET(request: NextRequest) {
       `SELECT
         d.deviceID   AS device_id,
         d.deviceName AS device_name,
-        d.GEsaveID       AS gesave_id,
+        ${meterSelect.replace('AS GEsaveID', 'AS gesave_id')},
         d.site,
         d.location,
         d.ipAddress  AS ip_address,
@@ -72,7 +78,7 @@ export async function GET(request: NextRequest) {
        JOIN devices d ON pr.device_id = d.deviceID
        WHERE pr.record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
          ${whereExtra}
-       GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.site, d.location, d.ipAddress
+       GROUP BY d.deviceID, d.deviceName, ${meterGroup}, d.site, d.location, d.ipAddress
        ORDER BY co2_kg DESC`,
       params
     )) as Row[];

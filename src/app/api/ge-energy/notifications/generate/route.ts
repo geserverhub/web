@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
+import { getDevicesColumnSet, meterIdGroupBySql, meterIdSelectSql } from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,18 +40,22 @@ export async function POST(request: NextRequest) {
     await ensureNotificationsSchema()
     const generatedNotifications: string[] = []
 
+    const deviceColumns = await getDevicesColumnSet()
+    const meterSelect = meterIdSelectSql(deviceColumns)
+    const meterGroup = meterIdGroupBySql(deviceColumns)
+
     // 1. Check for offline devices
     const offlineDevices = await queryGe(`
       SELECT
         d.deviceID,
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.location,
         d.site,
         MAX(p.record_time) as last_record
       FROM devices d
       LEFT JOIN power_records p ON d.deviceID = p.device_id
-      GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.location, d.site
+      GROUP BY d.deviceID, d.deviceName, ${meterGroup}, d.location, d.site
       HAVING last_record < NOW() - INTERVAL 20 MINUTE
          OR last_record IS NULL
     `)

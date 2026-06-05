@@ -217,11 +217,15 @@ export async function resolveDeviceIdFromPayload(raw: Record<string, unknown>): 
     return Number(direct);
   }
 
-  const GEsaveID =
-    raw.GEsaveID ?? raw.geID ?? raw.geId ?? raw.gesave_id ?? raw.ksaveID ?? raw.ksave;
+  const GEsaveID = raw.GEsaveID ?? raw.geID ?? raw.geId ?? raw.gesave_id;
   if (GEsaveID == null || String(GEsaveID).trim() === '') return null;
 
-  const rows = await queryGeserverhub('SELECT deviceID FROM devices WHERE GEsaveID = ? LIMIT 1', [
+  const { getDevicesColumnSet, meterIdWhereSql } = await import('@/lib/ge-energy/devices-schema');
+  const columns = await getDevicesColumnSet();
+  const meterCol = meterIdWhereSql(columns, '');
+  if (meterCol === 'NULL') return null;
+
+  const rows = await queryGeserverhub(`SELECT deviceID FROM devices WHERE ${meterCol} = ? LIMIT 1`, [
     String(GEsaveID).trim(),
   ]);
   if (!rows.length) return null;

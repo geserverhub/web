@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as query } from '@/lib/geserverhub-db'
 import { ensureCarbonSchema } from '@/lib/ge-energy/ensure-carbon-schema'
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -10,6 +11,8 @@ export async function GET(req: NextRequest) {
   try {
     await ensureCarbonSchema();
     const site = new URL(req.url).searchParams.get('site') || 'all'
+    const deviceColumns = await getDevicesColumnSet()
+    const meterSelect = meterIdSelectSql(deviceColumns)
 
     const rows = await query(`
       SELECT
@@ -38,7 +41,7 @@ export async function GET(req: NextRequest) {
         cm.meterNo,
         -- devices
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.series_no,
         d.location     AS deviceLocation,
         d.ipAddress,

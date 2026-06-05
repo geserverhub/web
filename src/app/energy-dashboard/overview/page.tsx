@@ -78,10 +78,10 @@ export default function OverviewPage() {
         <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-              <Server className="w-3.5 h-3.5" /> GE Energy
+              <Server className="w-3.5 h-3.5" /> {t('overviewCompanyBadge') || 'GE ENERGY TECH CO.,LTD'}
             </div>
-            <h1 className="text-3xl font-black text-white mb-1">{t('devicesOverview') || 'Devices Overview'}</h1>
-            <p className="text-emerald-100 text-sm">All registered devices across your sites</p>
+            <h1 className="text-3xl font-black text-white mb-1">{t('devicesOverview') || 'METER WORKING LIVE'}</h1>
+            <p className="text-emerald-100 text-sm">{t('overviewSubtitle') || 'All registered devices across your sites'}</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {[
@@ -102,7 +102,7 @@ export default function OverviewPage() {
               </button>
               <button onClick={() => router.push('/devices-setting')}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 font-bold text-sm rounded-xl hover:bg-emerald-50 transition-all shadow-md">
-                <Plus className="w-4 h-4" /> {t('addDevice') || 'Add Device'}
+                <Plus className="w-4 h-4" /> {t('addDevice') || 'ADD METER'}
               </button>
             </div>
           </div>

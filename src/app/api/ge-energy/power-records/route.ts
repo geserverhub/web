@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 
 export { POST } from '../power-record/route';
 
@@ -84,6 +85,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10) || 100, 1), 500);
     const site = searchParams.get('site');
+    const deviceColumns = await getDevicesColumnSet();
+    const meterSelect = meterIdSelectSql(deviceColumns);
 
     let sql = `
       SELECT
@@ -96,7 +99,7 @@ export async function GET(req: NextRequest) {
         pr.metrics_P, pr.metrics_Q, pr.metrics_S, pr.metrics_PF, pr.metrics_THD, pr.metrics_F,
         pr.before_kWh, pr.metrics_kWh,
         d.deviceName,
-        d.GEsaveID,
+        ${meterSelect},
         d.series_no,
         d.ipAddress,
         d.location,

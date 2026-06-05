@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 import {
   energyQualityTablesReady,
   loadCustomerSiteForDevice,
@@ -27,8 +28,10 @@ type DeviceRow = {
 };
 
 async function loadDeviceRow(deviceId: string): Promise<DeviceRow | null> {
+  const columns = await getDevicesColumnSet();
+  const meterSelect = meterIdSelectSql(columns, '');
   const rows = await queryGe(
-    `SELECT deviceID, deviceName, GEsaveID, location, site, ipAddress,
+    `SELECT deviceID, deviceName, ${meterSelect}, location, site, ipAddress,
             customerName, customerPhone, customerAddress, client_id
      FROM devices WHERE deviceID = ? LIMIT 1`,
     [Number(deviceId)],
