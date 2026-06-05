@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as query } from '@/lib/geserverhub-db'
 
 export const runtime = 'nodejs'
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         cl.longitude   AS locationLng,
         -- devices
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.series_no,
         d.ipAddress,
         d.location     AS deviceLocation

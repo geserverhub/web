@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSite } from '@/lib/SiteContext';
@@ -35,7 +35,7 @@ type InsightsData = {
   topDevices: {
     deviceId: number;
     deviceName?: string;
-    geID?: string;
+    GEsaveID?: string;
     co2Kg: number;
     carbonCreditsTonnes: number;
   }[];
@@ -298,7 +298,7 @@ export default function AiCarbonInsightsPanel({ periodDays = 30 }: { periodDays?
                       {data?.topDevices.map((d) => (
                         <tr key={d.deviceId} className="border-b border-gray-50">
                           <td className="py-2 pr-4 font-medium">{d.deviceName || `#${d.deviceId}`}</td>
-                          <td className="py-2 pr-4 font-mono text-xs text-emerald-700">{d.geID || '—'}</td>
+                          <td className="py-2 pr-4 font-mono text-xs text-emerald-700">{d.GEsaveID || '—'}</td>
                           <td className="py-2 pr-4">{d.co2Kg.toLocaleString()}</td>
                           <td className="py-2">{d.carbonCreditsTonnes.toLocaleString()}</td>
                         </tr>

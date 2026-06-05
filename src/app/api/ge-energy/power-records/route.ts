@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
 
 export { POST } from '../power-record/route';
@@ -21,7 +21,7 @@ function avgVoltage(l1: unknown, l2: unknown, l3: unknown): number | null {
 }
 
 function mapRow(row: DbRow) {
-  const deviceKey = String(row.geID ?? row.deviceName ?? row.device_id ?? '');
+  const deviceKey = String(row.GEsaveID ?? row.deviceName ?? row.device_id ?? '');
   const status = String(row.device_status ?? '').toUpperCase();
   const ok = status === 'ON' || status === 'OK';
 
@@ -49,7 +49,7 @@ function mapRow(row: DbRow) {
 
   return {
     device: deviceKey,
-    ksave: row.geID ?? deviceKey,
+    GEsaveID: row.GEsaveID ?? deviceKey,
     time: row.record_time,
     location: row.location ?? row.site,
     site: row.site,
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
         pr.metrics_P, pr.metrics_Q, pr.metrics_S, pr.metrics_PF, pr.metrics_THD, pr.metrics_F,
         pr.before_kWh, pr.metrics_kWh,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.series_no,
         d.ipAddress,
         d.location,

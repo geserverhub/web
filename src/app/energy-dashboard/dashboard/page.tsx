@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -30,7 +30,7 @@ interface RecentDevice {
   customerPhone?: string
   customerAddress?: string
   seriesNo?: string
-  ksaveID?: string
+  GEsaveID?: string
   metricsMeterNo?: string
   beforeMeterNo?: string
   ipAddress?: string
@@ -95,12 +95,14 @@ const companyNameFallbackMap: Record<string, string> = {
   'บริษัท คาลเท็กซ์ (ไทยแลนด์) จำกัด': 'Caltex (Thailand) Co., Ltd.'
 }
 
+const stripDemoSuffix = (name: string) => name.replace(/\s+Demo$/i, '').trim() || name
+
 const getLocalizedCustomerName = (
   device: Pick<RecentDevice, 'customerName' | 'customerNameEn' | 'deviceName'>,
   locale: string
 ) => {
-  const customerName = (device.customerName || '').trim()
-  const customerNameEn = (device.customerNameEn || '').trim()
+  const customerName = stripDemoSuffix((device.customerName || '').trim())
+  const customerNameEn = stripDemoSuffix((device.customerNameEn || '').trim())
 
   if (locale === 'th') {
     return customerName || device.deviceName || '-'
@@ -123,9 +125,11 @@ export default function DashboardPage() {
   const [showAllDevices, setShowAllDevices] = useState(false)
   const [showAllCurrentAnalysis, setShowAllCurrentAnalysis] = useState(false)
   const focusedDeviceParam = normalizeLookupValue(searchParams?.get('device'))
-  const focusedKsaveParam = normalizeLookupValue(searchParams?.get('ksave'))
+  const focusedGEsaveParam = normalizeLookupValue(
+    searchParams?.get('gesave') || searchParams?.get('ksave'),
+  )
   const requestedSiteParam = String(searchParams?.get('site') || '').trim().toLowerCase()
-  const hasFocusedDevice = Boolean(focusedDeviceParam || focusedKsaveParam)
+  const hasFocusedDevice = Boolean(focusedDeviceParam || focusedGEsaveParam)
 
   useEffect(() => {
     if (!requestedSiteParam) return
@@ -749,10 +753,10 @@ export default function DashboardPage() {
     const matchesDevice = focusedDeviceParam
       ? normalizeLookupValue(device.deviceID) === focusedDeviceParam || normalizeLookupValue(device.deviceName) === focusedDeviceParam
       : false
-    const matchesKsave = focusedKsaveParam
-      ? normalizeLookupValue(device.ksaveID) === focusedKsaveParam
+    const matchesGEsave = focusedGEsaveParam
+      ? normalizeLookupValue(device.GEsaveID) === focusedGEsaveParam
       : false
-    return matchesDevice || matchesKsave
+    return matchesDevice || matchesGEsave
   }
 
   const matchesSearch = (device: RecentDevice) => {
@@ -808,7 +812,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm font-semibold text-sky-800">Focused Device View</p>
             <p className="text-xs text-sky-700 mt-1">
-              Showing dashboard cards for {searchParams.get('ksave') || searchParams.get('device') || 'selected device'} only.
+              Showing dashboard cards for {searchParams.get('gesave') || searchParams.get('ksave') || searchParams.get('device') || 'selected device'} only.
             </p>
           </div>
           <button
@@ -1166,7 +1170,7 @@ export default function DashboardPage() {
                     {/* ── Two Meters Side by Side ── */}
                     <div className="grid grid-cols-2 divide-x divide-gray-100">
 
-                      {/* Meter 1 — Before K-Save */}
+                      {/* Meter 1 — Before install */}
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border-b border-red-100">
                           <div className="w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0" />
@@ -1199,7 +1203,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
                               <span className="text-[10px] text-gray-400 font-medium">GE ID</span>
-                              <span className="text-[10px] font-bold text-emerald-600">{device.ksaveID || '–'}</span>
+                              <span className="text-[10px] font-bold text-emerald-600">{device.GEsaveID || '–'}</span>
                             </div>
                             <div className="flex justify-between items-center px-2.5 py-1.5">
                               <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.telLabel}</span>
@@ -1284,7 +1288,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Meter 2 — After K-Save */}
+                      {/* Meter 2 — After install */}
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border-b border-emerald-100">
                           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
@@ -1309,7 +1313,7 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex justify-between items-center px-2.5 py-1.5">
                                 <span className="text-[10px] text-gray-400 font-medium">GE ID</span>
-                                <span className="text-[10px] font-bold text-emerald-600">{device.ksaveID || '–'}</span>
+                                <span className="text-[10px] font-bold text-emerald-600">{device.GEsaveID || '–'}</span>
                               </div>
                               <div className="flex justify-between items-start px-2.5 py-1.5 gap-2">
                                 <span className="text-[10px] text-gray-400 font-medium shrink-0">S/N</span>
@@ -1514,7 +1518,7 @@ export default function DashboardPage() {
 
                     <div className="p-4 space-y-4">
 
-                    {/* ── Before K-Save Baseline ── */}
+                    {/* ── Before install baseline ── */}
                       <div className="rounded-xl bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 overflow-hidden">
                         <div className="flex items-center justify-between px-3 py-2 border-b border-red-100">
                           <div className="flex items-center gap-2">

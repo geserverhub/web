@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Seed rich demo data for Energy Quality reports:
  * - eq_customers / eq_sites / eq_device_sites (backfill)
  * - power_records: 24h history @ 5 min with full CH1/CH2 metrics
@@ -130,7 +130,7 @@ async function ensureEqSchema(conn) {
 
 async function backfillEqLinks(conn) {
   const [devices] = await conn.query(
-    `SELECT deviceID, deviceName, geID, location, site, ipAddress,
+    `SELECT deviceID, deviceName, GEsaveID, location, site, ipAddress,
             customerName, customerPhone, customerAddress, client_id
      FROM devices`,
   );
@@ -171,7 +171,7 @@ async function backfillEqLinks(conn) {
           d.customerAddress || d.location || `${d.location || 'Site'}, ${siteRegion}`,
           name,
           d.customerPhone || d.phone || '02-000-0000',
-          `contact@${String(d.geID || d.deviceName).toLowerCase().replace(/[^a-z0-9]/g, '')}.local`,
+          `contact@${String(d.GEsaveID || d.deviceName).toLowerCase().replace(/[^a-z0-9]/g, '')}.local`,
           row.customer_id,
         ],
       );
@@ -195,7 +195,7 @@ async function backfillEqLinks(conn) {
         d.customerAddress || d.location || null,
         name,
         d.customerPhone || null,
-        `contact@${String(d.geID || d.deviceName).toLowerCase().replace(/[^a-z0-9]/g, '')}.local`,
+        `contact@${String(d.GEsaveID || d.deviceName).toLowerCase().replace(/[^a-z0-9]/g, '')}.local`,
         d.client_id || null,
       ],
     );
@@ -211,7 +211,7 @@ async function backfillEqLinks(conn) {
     await conn.query(
       `INSERT INTO eq_device_sites (device_id, site_id, measurement_point, gateway_id)
        VALUES (?, ?, ?, ?)`,
-      [d.deviceID, siteId, d.deviceName || null, d.geID || d.ipAddress || null],
+      [d.deviceID, siteId, d.deviceName || null, d.GEsaveID || d.ipAddress || null],
     );
     linked += 1;
   }
@@ -440,10 +440,10 @@ async function runSeed(cfg) {
     await backfillMissingCurrent(conn, 'power_records_preinstall');
     await backfillEqLinks(conn);
 
-    let deviceSql = `SELECT deviceID, deviceName, geID, site FROM devices`;
+    let deviceSql = `SELECT deviceID, deviceName, GEsaveID, site FROM devices`;
     const params = [];
     if (DEVICE_FILTER) {
-      deviceSql += ` WHERE deviceName = ? OR geID = ? OR deviceID = ?`;
+      deviceSql += ` WHERE deviceName = ? OR GEsaveID = ? OR deviceID = ?`;
       const idNum = Number(DEVICE_FILTER);
       params.push(DEVICE_FILTER, DEVICE_FILTER, Number.isFinite(idNum) ? idNum : -1);
     }

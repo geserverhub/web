@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Create Energy Quality report tables (eq_customers, eq_sites, eq_energy_data, …)
  * Usage: npm run db:migrate-energy-quality-report
  */
@@ -37,7 +37,7 @@ function getConfig() {
 
 async function backfillFromDevices(conn) {
   const [devices] = await conn.query(
-    `SELECT deviceID, deviceName, geID, location, site, ipAddress,
+    `SELECT deviceID, deviceName, GEsaveID, location, site, ipAddress,
             customerName, customerPhone, customerAddress, client_id
      FROM devices`,
   );
@@ -78,7 +78,7 @@ async function backfillFromDevices(conn) {
     await conn.query(
       `INSERT INTO eq_device_sites (device_id, site_id, measurement_point, gateway_id)
        VALUES (?, ?, ?, ?)`,
-      [d.deviceID, siteId, d.deviceName || null, d.geID || d.ipAddress || null],
+      [d.deviceID, siteId, d.deviceName || null, d.GEsaveID || d.ipAddress || null],
     );
     linked += 1;
   }

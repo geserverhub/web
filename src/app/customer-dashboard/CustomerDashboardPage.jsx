@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
@@ -1614,7 +1614,7 @@ export default function CustomersPage() {
               <div className="cd-select-wrap">
                 <select value={selectedDeviceId} onChange={e => setSelectedDeviceId(e.target.value)} className="cd-select">
                   {devices.map(d => (
-                    <option key={d.deviceID} value={String(d.deviceID)}>{d.deviceName || d.geID || d.deviceID}</option>
+                    <option key={d.deviceID} value={String(d.deviceID)}>{d.deviceName || d.GEsaveID || d.deviceID}</option>
                   ))}
                 </select>
                 <ChevronDown className="cd-select-chevron" />
@@ -2012,7 +2012,7 @@ export default function CustomersPage() {
                         color: isActive ? '#065f46' : '#64748b',
                       }}>
                         <span>{isActive ? '🟢' : '⚪'}</span>
-                        {L(locale,'มิเตอร์','미터','Meter')} {i + 1}: {m.seriesNo || m.geId || m.deviceName || `ID ${m.deviceId}`}
+                        {L(locale,'มิเตอร์','미터','Meter')} {i + 1}: {m.seriesNo || m.GEsaveID || m.deviceName || `ID ${m.deviceId}`}
                       </div>
                     );
                   })}
@@ -2084,7 +2084,7 @@ export default function CustomersPage() {
                           <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
                             Device ID: {meter.deviceId}
                             {meter.seriesNo ? ` · ${L(locale, 'Serial', '시리얼', 'Serial')}: ${meter.seriesNo}` : ''}
-                            {meter.geId && meter.geId !== meter.deviceName ? ` · GE: ${meter.geId}` : ''}
+                            {meter.GEsaveID && meter.GEsaveID !== meter.deviceName ? ` · GE: ${meter.GEsaveID}` : ''}
                           </p>
                         </div>
                       </div>
@@ -2113,7 +2113,7 @@ export default function CustomersPage() {
                       {[
                         [L(locale,'ชื่อเครื่อง','장치명','Device Name'), meter.deviceName || '—'],
                         [L(locale,'Serial No.','시리얼 번호','Serial No.'), meter.seriesNo || '—'],
-                        [L(locale,'GE ID','GE ID','GE ID'), meter.geId || meter.deviceName || '—'],
+                        [L(locale,'GE ID','GE ID','GE ID'), meter.GEsaveID || meter.deviceName || '—'],
                         [L(locale,'มิเตอร์ CH1 (INPUT)','미터 CH1 (INPUT)','Meter CH1 (INPUT)'), meter.ch1MeterNo || '—'],
                         [L(locale,'มิเตอร์ CH2 (OUTPUT)','미터 CH2 (OUTPUT)','Meter CH2 (OUTPUT)'), meter.ch2MeterNo || '—'],
                         [L(locale,'หมายเลขมิเตอร์ (ระบบ)','미터 번호 (시스템)','Meter No. (system)'), meter.meterNo || '—'],

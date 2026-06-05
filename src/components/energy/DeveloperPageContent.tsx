@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
@@ -33,7 +33,7 @@ function L(locale: string, th: string, en: string, ko: string) {
 interface PowerRecord {
   id: number;
   device_name: string;
-  ge_id: string;
+  gesave_id: string;
   site: string;
   series_no: string;
   record_time: string;
@@ -65,7 +65,7 @@ interface BackupFile {
 interface DeviceOption {
   deviceId: number;
   deviceName: string;
-  geID: string;
+  GEsaveID: string;
 }
 
 function fmt2(n: number | null | undefined): string {
@@ -347,7 +347,7 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
                 <option value="">{L(locale, 'ทั้งหมด', 'All Devices', '전체')}</option>
                 {devices.map((d) => (
                   <option key={d.deviceId} value={String(d.deviceId)}>
-                    {d.deviceName} ({d.geID})
+                    {d.deviceName} ({d.GEsaveID})
                   </option>
                 ))}
               </select>
@@ -473,7 +473,7 @@ export default function DeveloperPageContent({ embedded = false }: { embedded?: 
                         <td className="px-3 py-2.5 font-mono text-xs text-gray-400">{r.id}</td>
                         <td className="px-3 py-2.5">
                           <div className="font-semibold text-gray-800 text-xs">{r.device_name}</div>
-                          <div className="text-gray-400 font-mono text-xs">{r.ge_id}</div>
+                          <div className="text-gray-400 font-mono text-xs">{r.gesave_id}</div>
                         </td>
                         <td className="px-3 py-2.5 text-xs text-gray-500">{r.site || '—'}</td>
                         <td className="px-3 py-2.5 text-xs text-gray-600 whitespace-nowrap">{fmtDate(r.record_time)}</td>

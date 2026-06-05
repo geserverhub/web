@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
 import { formatDeviceLocation, normalizeSiteKey } from '@/lib/ge-energy/customer-scope'
 
@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
       SELECT
         d.deviceID,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.U_email as owner,
         ${customerSelectFields}
         d.location,
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
       FROM devices d
       LEFT JOIN power_records p ON d.deviceID = p.device_id
       ${whereClause}
-      GROUP BY d.deviceID, d.deviceName, d.geID, d.U_email,
+      GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.U_email,
                ${customerGroupByFields}
                d.location, d.latitude, d.longitude, d.ipAddress, d.site, d.phone, d.created_at
       ORDER BY d.deviceName ASC
@@ -258,7 +258,7 @@ export async function PUT(req: NextRequest) {
     console.error('Update device error:', err)
 
     // Handle duplicate GE ID error
-    if (err.code === 'ER_DUP_ENTRY' && err.message?.includes('unique_geID')) {
+    if (err.code === 'ER_DUP_ENTRY' && err.message?.includes('unique_GEsaveID')) {
       return NextResponse.json({
         success: false,
         error: 'GE ID already exists. Please use a unique GE ID.'
@@ -274,14 +274,14 @@ export async function PUT(req: NextRequest) {
 
 /**
  * POST /api/ge-energy/devices-setting
- * ??????????????????? * Body: { deviceName, geID?, location?, site?, owner?, ipAddress?, customerName?, customerPhone?, customerAddress? }
+ * ??????????????????? * Body: { deviceName, GEsaveID?, location?, site?, owner?, ipAddress?, customerName?, customerPhone?, customerAddress? }
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const {
       deviceName,
-      geID,
+      GEsaveID,
       location,
       site,
       owner,
@@ -351,8 +351,8 @@ export async function POST(req: NextRequest) {
     columns.push('deviceName')
     values.push(String(deviceName).trim())
 
-    columns.push('geID')
-    values.push(String(geID || '').trim() || String(deviceName).trim())
+    columns.push('GEsaveID')
+    values.push(String(GEsaveID || '').trim() || String(deviceName).trim())
 
     if (hasSeriesNo && seriesNo !== undefined) {
       columns.push('series_no')
@@ -468,7 +468,7 @@ export async function POST(req: NextRequest) {
       `SELECT
         deviceID,
         deviceName,
-        geID,
+        GEsaveID,
         U_email as owner,
         ${customerSelectFields}
         location,
@@ -491,7 +491,7 @@ export async function POST(req: NextRequest) {
     console.error('Create device error:', err)
 
     // Handle duplicate GE ID error
-    if (err.code === 'ER_DUP_ENTRY' && err.message?.includes('unique_geID')) {
+    if (err.code === 'ER_DUP_ENTRY' && err.message?.includes('unique_GEsaveID')) {
       return NextResponse.json({
         success: false,
         error: 'GE ID already exists. Please use a unique GE ID.'

@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
         if (!meta) return m
         return {
           ...m,
-          geId: m.geId ?? meta.geId,
+          GEsaveID: m.GEsaveID ?? meta.GEsaveID,
           seriesNo: m.seriesNo ?? meta.seriesNo,
           ch1MeterNo: m.ch1MeterNo ?? meta.ch1MeterNo,
           ch2MeterNo: m.ch2MeterNo ?? meta.ch2MeterNo,
@@ -435,7 +435,7 @@ export async function GET(request: NextRequest) {
         meters: meters.map((m) => ({
           deviceId: m.deviceId,
           deviceName: m.deviceName,
-          geId: m.geId,
+          GEsaveID: m.GEsaveID,
           seriesNo: m.seriesNo,
           meterId: m.meterId,
           meterNo: m.meterNo,

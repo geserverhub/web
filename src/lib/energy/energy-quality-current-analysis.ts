@@ -1,5 +1,9 @@
 import { fmtA, fmtNum, type EqLocale } from './energy-quality-i18n';
 import { reportT } from './energy-quality-report-i18n';
+import {
+  computePeakTimeAnalysis,
+  type PeakTimeAnalysis,
+} from './energy-quality-peak-time-analysis';
 
 export type DbChartPoint = {
   time: string;
@@ -8,6 +12,10 @@ export type DbChartPoint = {
   beforeL2?: number | null;
   beforeL3?: number | null;
   beforeAvg?: number | null;
+  beforeKw?: number | null;
+  beforePf?: number | null;
+  beforeThd?: number | null;
+  currentImbalancePct?: number | null;
   afterL1?: number | null;
   afterL2?: number | null;
   afterL3?: number | null;
@@ -30,6 +38,7 @@ export type CurrentHistoryStats = {
   avgCh2: number | null;
   maxImbalancePct: number | null;
   loadFactor: number | null;
+  peakTimeAnalysis: PeakTimeAnalysis | null;
 };
 
 function avg(vals: (number | null | undefined)[]): number | null {
@@ -97,6 +106,8 @@ export function computeCurrentHistoryStats(
   const loadFactor =
     avgCh1 != null && peakCh1 != null && peakCh1 > 0 ? (avgCh1 / peakCh1) * 100 : null;
 
+  const peakTimeAnalysis = points.length >= 2 ? computePeakTimeAnalysis(points) : null;
+
   return {
     dataPoints: points.length,
     periodLabel,
@@ -107,6 +118,7 @@ export function computeCurrentHistoryStats(
     avgCh2,
     maxImbalancePct: points.length ? maxImb : null,
     loadFactor,
+    peakTimeAnalysis,
   };
 }
 
@@ -151,6 +163,28 @@ export function analyzeCurrentHistory(
       title: t.insightPeakLoad,
       detail: `${fmtA(stats.peakCh1)} A @ ${stats.peakCh1Time ?? '—'} · ${t.insightAvg} ${fmtA(stats.avgCh1)} A`,
     });
+    const pt = stats.peakTimeAnalysis;
+    if (pt?.peakPeriod) {
+      insights.push({
+        severity: 'info',
+        title: t.insightPeakPeriod,
+        detail: pt.peakPeriod,
+      });
+    }
+    if (pt?.dominantWindows) {
+      insights.push({
+        severity: pt.dominantWindows.includes(',') ? 'warning' : 'info',
+        title: t.insightPeakWindows,
+        detail: pt.dominantWindows,
+      });
+    }
+    if (pt?.onPeakAvgA != null && pt.offPeakAvgA != null) {
+      insights.push({
+        severity: pt.onPeakAvgA > pt.offPeakAvgA * 1.15 ? 'warning' : 'info',
+        title: t.insightOnPeakLoad,
+        detail: `On-peak ${fmtA(pt.onPeakAvgA)} A · Off-peak ${fmtA(pt.offPeakAvgA)} A`,
+      });
+    }
     if (stats.peakCh1 > stats.avgCh1 * 1.5) {
       insights.push({
         severity: 'warning',

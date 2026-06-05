@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import {
   buildRuleBasedInsights,
@@ -108,13 +108,13 @@ export async function GET(request: NextRequest) {
       `SELECT
         d.deviceID AS device_id,
         d.deviceName AS device_name,
-        d.geID AS ge_id,
+        d.GEsaveID AS gesave_id,
         SUM(pr.energy_reduction) AS energy_saved,
         SUM(pr.co2_reduction) AS co2_kg
        FROM power_records pr
        JOIN devices d ON pr.device_id = d.deviceID
        ${whereClause}
-       GROUP BY d.deviceID, d.deviceName, d.geID
+       GROUP BY d.deviceID, d.deviceName, d.GEsaveID
        ORDER BY co2_kg DESC
        LIMIT 8`,
       params
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     );
 
     const topForAi = topDevices.map((r) => ({
-      deviceName: String(r.device_name || r.ge_id || r.device_id),
+      deviceName: String(r.device_name || r.gesave_id || r.device_id),
       co2Kg: Math.round((Number(r.co2_kg) || 0) * 100) / 100,
       creditsTonnes: Math.round(((Number(r.co2_kg) || 0) / 1000) * 10000) / 10000,
     }));
@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
           return {
             deviceId: r.device_id,
             deviceName: r.device_name,
-            geID: r.ge_id,
+            GEsaveID: r.gesave_id,
             energySavedKwh: Math.round((Number(r.energy_saved) || 0) * 100) / 100,
             co2Kg: Math.round(co2Kg * 100) / 100,
             carbonCreditsTonnes: Math.round((co2Kg / 1000) * 10000) / 10000,

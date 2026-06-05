@@ -1,4 +1,4 @@
-const translationData = {
+﻿const translationData = {
   ko: {
     // Header
     companyName: 'Zera co.,ltd',
@@ -918,7 +918,7 @@ const translationData = {
     port: '포트',
     interval: '인터벌 (ms)',
     connection: '연결',
-    geID: 'GE 기기 ID',
+    GEsaveID: 'GE 기기 ID',
     saving: '저장 중...',
     myAPIKeys: '내 API 키',
     apiKeyCreated: 'API 키 생성됨',
@@ -1950,7 +1950,7 @@ const translationData = {
     port: 'Port',
     interval: 'Interval (ms)',
     connection: 'Connection',
-    geID: 'GE Device ID',
+    GEsaveID: 'GE Device ID',
     saving: 'Saving...',
     myAPIKeys: 'My API Keys',
     apiKeyCreated: 'API Key Created',
@@ -2203,7 +2203,7 @@ const translationData = {
     connection: '连接',
     username: '用户名',
     password: '密码',
-    geID: 'GE 设备 ID',
+    GEsaveID: 'GE 设备 ID',
     saving: '保存中...',
     myAPIKeys: '我的 API 密钥',
     apiKeyCreated: 'API 密钥已创建',
@@ -2470,7 +2470,7 @@ const translationData = {
     connection: 'Kết Nối',
     username: 'Tên Người Dùng',
     password: 'Mật Khẩu',
-    geID: 'ID Thiết Bị GE',
+    GEsaveID: 'ID Thiết Bị GE',
     saving: 'Đang lưu...',
     myAPIKeys: 'Khóa API Của Tôi',
     apiKeyCreated: 'Khóa API Đã Tạo',
@@ -2740,7 +2740,7 @@ const translationData = {
     connection: 'การเชื่อมต่อ',
     username: 'ชื่อผู้ใช้',
     password: 'รหัสผ่าน',
-    geID: 'GE Device ID',
+    GEsaveID: 'GE Device ID',
     saving: 'กำลังบันทึก...',
     myAPIKeys: 'API Keys ของฉัน',
     apiKeyCreated: 'สร้าง API Key แล้ว',

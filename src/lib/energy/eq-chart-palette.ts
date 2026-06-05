@@ -5,12 +5,12 @@ export type EqChartLineSpec = {
   width: number;
 };
 
-/** Darker phase colors — thin strokes read better with deeper hues. */
+/** L1 red · L2 green · L3 yellow — standard 3-phase line colors. */
 export const EQ_CH1_STROKE = {
-  l1: '#7c2d12',
-  l2: '#9a3412',
-  l3: '#c2410c',
-  avg: '#7c2d12',
+  l1: '#dc2626',
+  l2: '#16a34a',
+  l3: '#ca8a04',
+  avg: '#64748b',
 } as const;
 
 export const EQ_CH2_STROKE = {

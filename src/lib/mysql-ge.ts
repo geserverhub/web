@@ -18,7 +18,7 @@ export async function getAllDevices(): Promise<unknown[]> {
       `SELECT
         d.deviceID,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.location,
         d.ipAddress,
         d.beforeMeterNo,
@@ -33,7 +33,7 @@ export async function getAllDevices(): Promise<unknown[]> {
         END AS status
        FROM devices d
        LEFT JOIN power_records p ON d.deviceID = p.device_id
-       GROUP BY d.deviceID, d.deviceName, d.geID, d.location, d.ipAddress,
+       GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.location, d.ipAddress,
                 d.beforeMeterNo, d.metricsMeterNo, d.phone, d.created_at, d.updated_at
        ORDER BY d.deviceID ASC`
     );
@@ -46,7 +46,7 @@ export async function getAllDevices(): Promise<unknown[]> {
 export async function getDeviceById(deviceID: number): Promise<unknown | null> {
   try {
     const rows = await queryGeserverhub(
-      `SELECT deviceID, deviceName, geID, location, status, ipAddress,
+      `SELECT deviceID, deviceName, GEsaveID, location, status, ipAddress,
               beforeMeterNo, metricsMeterNo, created_at, updated_at
        FROM devices
        WHERE deviceID = ?`,
@@ -59,18 +59,21 @@ export async function getDeviceById(deviceID: number): Promise<unknown | null> {
   }
 }
 
-export async function getDeviceByGeId(geID: string): Promise<unknown | null> {
+export async function getDeviceByGEsaveId(GEsaveID: string): Promise<unknown | null> {
   try {
     const rows = await queryGeserverhub(
-      `SELECT deviceID, deviceName, geID, location, status, ipAddress,
+      `SELECT deviceID, deviceName, GEsaveID, location, status, ipAddress,
               beforeMeterNo, metricsMeterNo, created_at, updated_at
        FROM devices
-       WHERE geID = ?`,
-      [geID]
+       WHERE GEsaveID = ?`,
+      [GEsaveID]
     );
     return (rows as unknown[])[0] || null;
   } catch (error) {
-    console.error('[mysql-ge] getDeviceByGeId:', error);
+    console.error('[mysql-ge] getDeviceByGEsaveId:', error);
     return null;
   }
 }
+
+/** @deprecated Use getDeviceByGEsaveId */
+export const getDeviceByGeId = getDeviceByGEsaveId;

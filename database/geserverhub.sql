@@ -1,4 +1,4 @@
--- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
+﻿-- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
 --
 -- Host: localhost    Database: geserverhub
 -- ------------------------------------------------------
@@ -873,7 +873,7 @@ DROP TABLE IF EXISTS `devices`;
 CREATE TABLE `devices` (
   `deviceID` int NOT NULL AUTO_INCREMENT,
   `deviceName` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `geID` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `GEsaveID` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `series_no` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `ipAddress` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `location` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
@@ -895,7 +895,7 @@ CREATE TABLE `devices` (
   `customerAddress` text COLLATE utf8mb4_general_ci,
   `client_id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`deviceID`),
-  UNIQUE KEY `unique_geID` (`geID`),
+  UNIQUE KEY `unique_GEsaveID` (`GEsaveID`),
   KEY `idx_devices_site` (`site`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -906,7 +906,7 @@ CREATE TABLE `devices` (
 
 LOCK TABLES `devices` WRITE;
 /*!40000 ALTER TABLE `devices` DISABLE KEYS */;
-INSERT INTO `devices` VALUES (1,'GE01','GE01','GE2024010001','192.168.1.46','KOREA','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-29 16:27:28.271763','administrator',NULL,NULL,'GE Energy Demo','010-8105-0384',NULL,'cmo6viuen0003qhga32hwcu3n'),(2,'GE02','GE02','GE2024010002','192.168.1.2','KOREA','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-29 16:27:28.271763','administrator',NULL,NULL,'Green Retail Demo','010-8105-0384',NULL,'cmo6viuen0003qhga32hwcu3n'),(3,'GE-TH01','GE-TH01','GE2024010007','192.168.1.3','Bangkok','thailand','OFF','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','02-555-1199','0000','2026-05-23 13:56:56.475955','2026-05-29 09:28:25.295982','administrator',NULL,NULL,'Thailand Demo','02-555-1199',NULL,'cmo6viuen0003qhga32hwcu3n');
+INSERT INTO `devices` VALUES (1,'GE01','GE01','GE2024010001','192.168.1.46','KOREA','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-29 16:27:28.271763','administrator',NULL,NULL,'GE Energy Demo','010-8105-0384',NULL,'cmo6viuen0003qhga32hwcu3n'),(2,'GE02','GE02','GE2024010002','192.168.1.2','KOREA','korea','ON','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','010-8105-0384','0000','2026-05-23 13:56:56.475955','2026-05-29 16:27:28.271763','administrator',NULL,NULL,'Green Retail Demo','010-8105-0384',NULL,'cmo6viuen0003qhga32hwcu3n'),(3,'GE-TH01','GE-TH01','GE2024010007','192.168.1.3','Bangkok','thailand','OFF','1','2','demo@ge-serverhub.com','demo@ge-serverhub.com','02-555-1199','0000','2026-05-23 13:56:56.475955','2026-05-29 09:28:25.295982','administrator',NULL,NULL,'Thailand','02-555-1199',NULL,'cmo6viuen0003qhga32hwcu3n');
 /*!40000 ALTER TABLE `devices` ENABLE KEYS */;
 UNLOCK TABLES;
 

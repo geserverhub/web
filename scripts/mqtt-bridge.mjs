@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GE Energy MQTT bridge — subscribe MQTT telemetry and write to goeunserverhub.power_records.
  *
  * Usage:
@@ -218,11 +218,11 @@ async function resolveDeviceId(pool, raw) {
   const direct = raw.device_id ?? raw.deviceId ?? raw.deviceID ?? raw.id;
   if (direct != null && !Number.isNaN(Number(direct))) return Number(direct);
 
-  const geId = raw.geID ?? raw.geId ?? raw.ge_id;
-  if (!geId) return null;
+  const GEsaveID = raw.GEsaveID ?? raw.GEsaveID ?? raw.ge_id;
+  if (!GEsaveID) return null;
 
-  const [rows] = await pool.query('SELECT deviceID FROM devices WHERE geID = ? LIMIT 1', [
-    String(geId).trim(),
+  const [rows] = await pool.query('SELECT deviceID FROM devices WHERE GEsaveID = ? LIMIT 1', [
+    String(GEsaveID).trim(),
   ]);
   if (!rows.length) return null;
   return Number(rows[0].deviceID);
@@ -394,7 +394,7 @@ async function main() {
       try {
         const deviceId = await resolveDeviceId(pool, raw);
         if (!deviceId) {
-          log('warn', 'Unknown device', { topic, geID: raw.geID });
+          log('warn', 'Unknown device', { topic, GEsaveID: raw.GEsaveID });
           return;
         }
 

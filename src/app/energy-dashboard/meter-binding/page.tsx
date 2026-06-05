@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link2, RefreshCw, Save, Trash2 } from 'lucide-react';
@@ -7,7 +7,7 @@ import { useLocale } from '@/lib/LocaleContext';
 type Device = {
   deviceID: number;
   deviceName: string;
-  geID?: string | null;
+  GEsaveID?: string | null;
   location?: string | null;
 };
 
@@ -24,7 +24,7 @@ type Binding = {
   meter_channel: 'ch1' | 'ch2';
   meter_role: 'input' | 'output';
   deviceName?: string | null;
-  geID?: string | null;
+  GEsaveID?: string | null;
   location?: string | null;
   meterNo?: string | null;
   meterType?: string | null;
@@ -285,7 +285,7 @@ export default function MeterBindingPage() {
             <option value="">{t.device}</option>
             {devices.map((d) => (
               <option key={d.deviceID} value={d.deviceID}>
-                {d.deviceName} ({d.geID || d.deviceID})
+                {d.deviceName} ({d.GEsaveID || d.deviceID})
               </option>
             ))}
           </select>
@@ -325,7 +325,7 @@ export default function MeterBindingPage() {
           <ul className="space-y-2 max-h-64 overflow-auto">
             {devices.length ? devices.map((d) => (
               <li key={d.deviceID} className="text-sm text-gray-700 border border-gray-100 rounded-lg px-3 py-2">
-                <strong>{d.deviceName}</strong> <span className="text-gray-500">({d.geID || d.deviceID})</span>
+                <strong>{d.deviceName}</strong> <span className="text-gray-500">({d.GEsaveID || d.deviceID})</span>
               </li>
             )) : <li className="text-sm text-gray-400">{t.noData}</li>}
           </ul>
@@ -386,7 +386,7 @@ export default function MeterBindingPage() {
                     >
                       {devices.map((d) => (
                         <option key={d.deviceID} value={d.deviceID}>
-                          {d.deviceName} ({d.geID || d.deviceID})
+                          {d.deviceName} ({d.GEsaveID || d.deviceID})
                         </option>
                       ))}
                     </select>

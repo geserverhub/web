@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Import meter parameter export (Date Time | Meter | Parameter | Phase | Value) into power_records.
  *
  * Usage:
@@ -46,10 +46,10 @@ function getConfig() {
 }
 
 async function resolveDeviceId(conn, filter) {
-  if (!filter) throw new Error('--device=<id|geID|deviceName> is required');
+  if (!filter) throw new Error('--device=<id|GEsaveID|deviceName> is required');
   const idNum = Number(filter);
   const [rows] = await conn.query(
-    `SELECT deviceID FROM devices WHERE deviceID = ? OR geID = ? OR deviceName = ? LIMIT 1`,
+    `SELECT deviceID FROM devices WHERE deviceID = ? OR GEsaveID = ? OR deviceName = ? LIMIT 1`,
     [Number.isFinite(idNum) ? idNum : -1, filter, filter],
   );
   if (!rows.length) throw new Error(`Device not found: ${filter}`);

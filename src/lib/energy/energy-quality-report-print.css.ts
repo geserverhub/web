@@ -17,7 +17,7 @@ export function buildEnergyQualityPrintCss(rt: ReportStrings): string {
     content: "${prefix}" counter(page) "${middle}" counter(pages) "${suffix}";
     font-family: 'Sarabun', 'Noto Sans Thai', 'Segoe UI', sans-serif;
     font-size: 8pt;
-    color: #64748b;
+    color: var(--print-ink-soft);
   }
 }
 ${ENERGY_QUALITY_PRINT_BASE_CSS}`;
@@ -26,6 +26,17 @@ ${ENERGY_QUALITY_PRINT_BASE_CSS}`;
 /** Inline CSS for A4 print window (energy quality report). */
 const ENERGY_QUALITY_PRINT_BASE_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+
+:root {
+  --print-ink: #020617;
+  --print-ink-muted: #1e293b;
+  --print-ink-soft: #334155;
+  --print-brand: #064e3b;
+  --print-brand-dark: #022c22;
+  --print-brand-mid: #065f46;
+  --print-border: #94a3b8;
+  --print-surface: #f1f5f9;
+}
 
 * {
   box-sizing: border-box;
@@ -42,7 +53,7 @@ body {
   font-family: 'Sarabun', 'Noto Sans Thai', 'Segoe UI', sans-serif;
   font-size: 9.5pt;
   line-height: 1.45;
-  color: #0f172a;
+  color: var(--print-ink);
   background: #fff;
 }
 
@@ -51,32 +62,67 @@ body {
   margin: 0 auto;
 }
 
+.print-logo {
+  display: block;
+  height: 14mm;
+  width: auto;
+  max-width: 42mm;
+  object-fit: contain;
+}
+
+.print-logo--sm {
+  height: 8mm;
+  max-width: 28mm;
+  margin: 0 auto 2mm;
+}
+
 .cover {
   page-break-after: always;
-  border: 2px solid #047857;
+  border: 2px solid var(--print-brand);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 0;
 }
 
 .cover-head {
-  background: linear-gradient(135deg, #064e3b 0%, #047857 55%, #059669 100%);
+  background: linear-gradient(135deg, var(--print-brand-dark) 0%, var(--print-brand) 55%, var(--print-brand-mid) 100%);
   color: #fff;
-  padding: 10mm 8mm 8mm;
+  padding: 8mm 8mm 7mm;
+}
+
+.cover-brand {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+}
+
+.cover-brand .print-logo {
+  height: 16mm;
+  max-width: 38mm;
+  padding: 1.5mm 2mm;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(2, 44, 34, 0.35);
+}
+
+.cover-brand-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .cover-head h1 {
   margin: 0 0 2mm;
-  font-size: 17pt;
+  font-size: 16pt;
   font-weight: 800;
   letter-spacing: 0.02em;
+  color: #fff;
 }
 
 .cover-head .platform {
   margin: 0;
-  font-size: 11pt;
-  font-weight: 600;
-  opacity: 0.95;
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: #ecfdf5;
 }
 
 .cover-meta {
@@ -84,14 +130,14 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 3mm 6mm;
   padding: 6mm 8mm;
-  background: #f8fafc;
+  background: var(--print-surface);
   font-size: 8.5pt;
 }
 
 .cover-meta dt {
   margin: 0;
-  font-weight: 700;
-  color: #64748b;
+  font-weight: 800;
+  color: var(--print-ink-soft);
   font-size: 7.5pt;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -99,15 +145,15 @@ body {
 
 .cover-meta dd {
   margin: 0 0 2mm;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 800;
+  color: var(--print-ink);
 }
 
 .evidence {
   margin: 0 0 5mm;
   padding: 4mm 5mm;
   border: 1px solid #cbd5e1;
-  border-left: 4px solid #047857;
+  border-left: 4px solid var(--print-brand);
   background: #f8fafc;
   font-size: 8pt;
   page-break-inside: avoid;
@@ -117,7 +163,7 @@ body {
   margin: 0 0 2mm;
   font-size: 9pt;
   font-weight: 800;
-  color: #047857;
+  color: var(--print-brand);
 }
 
 .evidence ul {
@@ -136,8 +182,8 @@ body {
 
 .toc h2 {
   font-size: 11pt;
-  color: #047857;
-  border-bottom: 2px solid #10b981;
+  color: var(--print-brand);
+  border-bottom: 2px solid var(--print-brand-mid);
   padding-bottom: 2mm;
   margin: 0 0 3mm;
 }
@@ -175,14 +221,14 @@ body {
   display: block;
   font-size: 6.5pt;
   font-weight: 700;
-  color: #64748b;
+  color: var(--print-ink-soft);
   text-transform: uppercase;
   margin-bottom: 1mm;
 }
 
 .status-cell strong {
   font-size: 9pt;
-  color: #0f172a;
+  color: var(--print-ink);
 }
 
 .print-sec {
@@ -199,7 +245,7 @@ body {
   font-size: 10.5pt;
   font-weight: 800;
   color: #fff;
-  background: #047857;
+  background: var(--print-brand);
   border-radius: 2px;
 }
 
@@ -210,7 +256,7 @@ body {
   min-width: 7mm;
   height: 7mm;
   background: #fff;
-  color: #047857;
+  color: var(--print-brand);
   border-radius: 2px;
   font-size: 9pt;
 }
@@ -219,7 +265,7 @@ body {
   margin: 3mm 0 1.5mm;
   font-size: 8.5pt;
   font-weight: 800;
-  color: #065f46;
+  color: var(--print-brand-mid);
 }
 
 .grid {
@@ -245,7 +291,7 @@ body {
   display: block;
   font-size: 6.5pt;
   font-weight: 700;
-  color: #64748b;
+  color: var(--print-ink-soft);
   margin-bottom: 0.5mm;
   line-height: 1.2;
 }
@@ -254,7 +300,7 @@ body {
   display: block;
   font-size: 9pt;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--print-ink);
   word-break: break-word;
 }
 
@@ -276,17 +322,68 @@ body {
 }
 
 .chart-data th {
-  background: #ecfdf5;
-  color: #047857;
+  background: #d1fae5;
+  color: var(--print-brand-dark);
   font-weight: 800;
   padding: 1.5mm 2mm;
-  border: 1px solid #d1fae5;
+  border: 1px solid #86efac;
   text-align: left;
 }
 
 .chart-data td {
   padding: 1.5mm 2mm;
   border: 1px solid #e2e8f0;
+}
+
+.print-chart-title {
+  margin: 3mm 0 1.5mm;
+  font-size: 9.5pt;
+  font-weight: 800;
+  color: var(--print-brand);
+}
+
+.print-chart-wrap {
+  width: 100%;
+  margin: 0 0 4mm;
+  page-break-inside: avoid;
+  break-inside: avoid-page;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  padding: 2mm;
+  background: #fff;
+}
+
+.print-chart-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 52mm;
+}
+
+.print-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3mm 5mm;
+  margin-top: 1.5mm;
+  padding-top: 1.5mm;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 7.5pt;
+  color: var(--print-ink-muted);
+}
+
+.print-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5mm;
+  font-weight: 600;
+}
+
+.print-chart-legend-item i {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  font-style: normal;
 }
 
 .insights {
@@ -316,12 +413,12 @@ body {
 .insights li strong {
   display: block;
   font-size: 8.5pt;
-  color: #0f172a;
+  color: var(--print-ink);
 }
 
 .insights li p {
   margin: 0.5mm 0 0;
-  color: #475569;
+  color: var(--print-ink-muted);
   font-size: 8pt;
 }
 
@@ -334,15 +431,15 @@ body {
 .recs li {
   margin-bottom: 1.5mm;
   padding: 2mm 2.5mm;
-  border: 1px solid #d1fae5;
+  border: 1px solid #86efac;
   border-radius: 2px;
-  background: #f0fdf4;
+  background: #ecfdf5;
   font-size: 8.5pt;
 }
 
 .recs li strong {
   display: block;
-  color: #047857;
+  color: var(--print-brand);
   margin-bottom: 0.5mm;
 }
 
@@ -354,7 +451,7 @@ body {
 }
 
 .data-table th {
-  background: #047857;
+  background: var(--print-brand);
   color: #fff;
   padding: 2mm;
   text-align: left;
@@ -386,7 +483,7 @@ body {
 .ai-rec .pri {
   font-size: 7pt;
   font-weight: 800;
-  color: #047857;
+  color: var(--print-brand);
   text-transform: uppercase;
 }
 
@@ -408,7 +505,7 @@ body {
 .act-card h4 {
   margin: 0 0 1mm;
   font-size: 8.5pt;
-  color: #047857;
+  color: var(--print-brand);
 }
 
 .act-card ul {
@@ -419,16 +516,16 @@ body {
 .doc-footer {
   margin-top: 6mm;
   padding-top: 3mm;
-  border-top: 2px solid #047857;
+  border-top: 2px solid var(--print-brand);
   text-align: center;
   font-size: 7.5pt;
-  color: #64748b;
+  color: var(--print-ink-soft);
   page-break-inside: avoid;
 }
 
 .note {
   font-size: 7.5pt;
-  color: #64748b;
+  color: var(--print-ink-soft);
   font-style: italic;
   margin: 2mm 0 4mm;
 }
@@ -436,7 +533,7 @@ body {
 .standards-block {
   margin: 0 0 5mm;
   padding: 4mm 5mm;
-  border: 1px solid #a7f3d0;
+  border: 1px solid #86efac;
   background: #ecfdf5;
   page-break-inside: avoid;
 }
@@ -445,14 +542,14 @@ body {
   margin: 0 0 2mm;
   font-size: 10pt;
   font-weight: 800;
-  color: #047857;
+  color: var(--print-brand);
 }
 
 .country-tag {
   font-size: 8pt;
-  font-weight: 700;
-  color: #065f46;
-  background: #d1fae5;
+  font-weight: 800;
+  color: var(--print-brand-dark);
+  background: #bbf7d0;
   padding: 0.5mm 2mm;
   border-radius: 2px;
   margin-left: 2mm;
@@ -466,7 +563,7 @@ body {
   margin: 2.5mm 0 1mm;
   font-size: 8.5pt;
   font-weight: 800;
-  color: #065f46;
+  color: var(--print-brand-mid);
 }
 
 .std-list, .std-research {
@@ -487,7 +584,7 @@ body {
 }
 
 .criteria-table th {
-  background: #047857;
+  background: var(--print-brand);
   color: #fff;
   padding: 1.5mm 2mm;
   text-align: left;
@@ -517,13 +614,13 @@ body {
   display: block;
   font-size: 6.5pt;
   font-weight: 700;
-  color: #64748b;
+  color: var(--print-ink-soft);
 }
 
 .snap-cell strong {
   display: block;
   font-size: 10pt;
-  color: #0f172a;
+  color: var(--print-ink);
 }
 
 .snap-cell .unit {
@@ -538,7 +635,7 @@ body {
 
 .status-panel h2 {
   font-size: 9pt;
-  color: #047857;
+  color: var(--print-brand);
   margin: 0 0 2mm;
 }
 
@@ -552,7 +649,7 @@ body {
 }
 
 .status-harmonic {
-  color: #475569;
+  color: var(--print-ink-muted);
 }
 
 .risk-badge {
@@ -564,13 +661,13 @@ body {
 }
 
 .risk-badge--good {
-  background: #dcfce7;
-  color: #166534;
+  background: #bbf7d0;
+  color: #14532d;
 }
 
 .risk-badge--warning {
-  background: #fef3c7;
-  color: #92400e;
+  background: #fde68a;
+  color: #78350f;
 }
 
 .risk-badge--critical {
@@ -599,7 +696,7 @@ body {
 
 .technical-block h2 {
   font-size: 9pt;
-  color: #047857;
+  color: var(--print-brand);
   margin: 0 0 2mm;
 }
 
@@ -620,14 +717,14 @@ body {
 
 .stat-cell label {
   display: block;
-  color: #64748b;
+  color: var(--print-ink-soft);
   font-weight: 700;
   margin-bottom: 0.5mm;
 }
 
 .stat-cell strong {
   font-size: 8.5pt;
-  color: #0f172a;
+  color: var(--print-ink);
 }
 
 .sec-ref {

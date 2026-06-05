@@ -1,4 +1,4 @@
--- Energy monitoring tables for ksystem database (GE Energy / K-Save)
+﻿-- Energy monitoring tables for ksystem database (GE Energy / K-Save)
 -- Run: mysql -u root -p ksystem < prisma/migrate-energy-ksystem.sql
 
 CREATE DATABASE IF NOT EXISTS ksystem
@@ -10,7 +10,7 @@ USE ksystem;
 CREATE TABLE IF NOT EXISTS `devices` (
   `deviceID` int NOT NULL AUTO_INCREMENT,
   `deviceName` varchar(255) NOT NULL,
-  `ksaveID` varchar(255) DEFAULT NULL,
+  `GEsaveID` varchar(255) DEFAULT NULL,
   `series_no` varchar(50) DEFAULT NULL,
   `ipAddress` varchar(45) DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,

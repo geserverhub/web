@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { useLocale } from '@/lib/LocaleContext'
@@ -28,7 +28,7 @@ interface CarbonRecord {
   locationName: string | null
   site: string | null
   deviceName: string | null
-  geID: string | null
+  GEsaveID: string | null
   meterType: string | null
   meterNo: string | null
   powerRecordTime: string | null
@@ -210,7 +210,7 @@ export default function CarbonPage() {
       || (r.locationName ?? '').toLowerCase().includes(q)
       || (r.LocationID ?? '').toLowerCase().includes(q)
       || (r.deviceName ?? '').toLowerCase().includes(q)
-      || (r.geID ?? '').toLowerCase().includes(q)
+      || (r.GEsaveID ?? '').toLowerCase().includes(q)
       || (r.meterID ?? '').toLowerCase().includes(q)
   })
 
@@ -384,7 +384,7 @@ export default function CarbonPage() {
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-gray-700">{r.deviceName || '—'}</p>
-                    <p className="text-xs text-gray-400 font-mono">{r.geID || r.serailID || '—'}</p>
+                    <p className="text-xs text-gray-400 font-mono">{r.GEsaveID || r.serailID || '—'}</p>
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-xs font-mono text-gray-700">{r.meterID}</p>

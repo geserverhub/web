@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSite } from '@/lib/SiteContext';
@@ -9,7 +9,7 @@ interface Device {
   deviceID?: number;
   deviceName?: string;
   name?: string;
-  ksaveID?: string;
+  GEsaveID?: string;
   seriesNo?: string;
   type?: string;
   owner?: string;
@@ -103,7 +103,7 @@ export default function DevicesSettingPage() {
   const [productNames, setProductNames] = useState<string[]>([]);
   const [addForm, setAddForm] = useState<DeviceForm>({
     deviceName: '',
-    ksaveID: '',
+    GEsaveID: '',
     seriesNo: '',
     ipAddress: '',
     phone: '',
@@ -160,13 +160,13 @@ export default function DevicesSettingPage() {
     return `${y}${m}${day}`;
   };
 
-  const nextKsaveId = (site: string | undefined) => {
+  const nextGEsaveId = (site: string | undefined) => {
     const code = siteCode(site);
     const regex = new RegExp(`^GE-${code}-(\\d{6})$`);
     const current = devices
       .filter(d => (d.site || '').toLowerCase() === (site || '').toLowerCase())
       .map(d => {
-        const match = (d.ksaveID || '').toUpperCase().match(regex);
+        const match = (d.GEsaveID || '').toUpperCase().match(regex);
         return match ? Number(match[1]) : 0;
       })
       .reduce((max, n) => Math.max(max, n), 0);
@@ -370,7 +370,7 @@ export default function DevicesSettingPage() {
   async function handleDelete(device: Device) {
     if (!device.deviceID) return;
 
-    const deviceName = device.deviceName || device.name || device.ksaveID || 'this device';
+    const deviceName = device.deviceName || device.name || device.GEsaveID || 'this device';
     const confirmMsg = locale === 'ko'
       ? `정말 "${deviceName}"을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`
       : locale === 'th'
@@ -485,7 +485,7 @@ export default function DevicesSettingPage() {
     setAddFormSite(site);
     setAddForm({
       deviceName: '',
-      ksaveID: '',
+      GEsaveID: '',
       seriesNo: '',
       ipAddress: '',
       phone: '',
@@ -991,7 +991,7 @@ export default function DevicesSettingPage() {
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">
                           {device.deviceName || device.name || '-'}
                         </span>
-                        <p className="text-xs text-gray-400 font-mono mt-1">{device.ksaveID || '-'}</p>
+                        <p className="text-xs text-gray-400 font-mono mt-1">{device.GEsaveID || '-'}</p>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold ${
@@ -1093,7 +1093,7 @@ export default function DevicesSettingPage() {
                             {device.deviceName || device.name || '-'}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-xs text-gray-500 font-mono">{device.ksaveID || '-'}</td>
+                        <td className="px-4 py-3.5 text-xs text-gray-500 font-mono">{device.GEsaveID || '-'}</td>
                         <td className="px-4 py-3.5">
                           {device.customerName
                             ? <span className="flex items-center gap-1.5 font-semibold text-gray-800"><User className="w-3.5 h-3.5 text-blue-400 flex-shrink-0"/>{device.customerName}</span>
@@ -1280,7 +1280,7 @@ export default function DevicesSettingPage() {
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">{ui.meterCodeLabel || 'รหัสมิเตอร์'}</label>
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 font-mono">
-                      {viewingDevice.ksaveID || '-'}
+                      {viewingDevice.GEsaveID || '-'}
                     </div>
                   </div>
                   <div>
@@ -1584,8 +1584,8 @@ export default function DevicesSettingPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{ui.meterCodeLabel || 'รหัสมิเตอร์'}</label>
                   <input
-                    value={addForm.ksaveID ?? ''}
-                    onChange={e => setAddForm(f => ({ ...f, ksaveID: e.target.value }))}
+                    value={addForm.GEsaveID ?? ''}
+                    onChange={e => setAddForm(f => ({ ...f, GEsaveID: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder={ui.meterCodePlaceholder || 'กรอกเอง'}
                   />

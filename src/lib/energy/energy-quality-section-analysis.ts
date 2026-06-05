@@ -6,6 +6,7 @@ import {
   type DbChartPoint,
   type TechnicalInsight,
 } from './energy-quality-current-analysis';
+import { hourlyProfileChartData } from './energy-quality-peak-time-analysis';
 import type { ReportChannel, ReportField, EnergyQualityReport } from './energy-quality-report-model';
 import { reportT, type ReportStrings } from './energy-quality-report-i18n';
 import {
@@ -211,6 +212,28 @@ export function buildReportSectionPacks(input: {
       title: t.insightPeakLoad,
       detail: `${fmtA(stats.peakCh1)} A @ ${stats.peakCh1Time ?? '—'} · ${t.insightAvg} ${fmtA(stats.avgCh1)} A`,
     });
+    const pt = stats.peakTimeAnalysis;
+    if (pt?.peakPeriod) {
+      peakInsights.push({
+        severity: 'info',
+        title: t.insightPeakPeriod,
+        detail: pt.peakPeriod,
+      });
+    }
+    if (pt?.dominantWindows) {
+      peakInsights.push({
+        severity: pt.dominantWindows.includes(',') ? 'warning' : 'info',
+        title: t.insightPeakWindows,
+        detail: pt.dominantWindows,
+      });
+    }
+    if (pt?.onPeakAvgA != null && pt.offPeakAvgA != null) {
+      peakInsights.push({
+        severity: pt.onPeakAvgA > pt.offPeakAvgA * 1.15 ? 'warning' : 'info',
+        title: t.insightOnPeakLoad,
+        detail: `On-peak ${fmtA(pt.onPeakAvgA)} A · Off-peak ${fmtA(pt.offPeakAvgA)} A`,
+      });
+    }
     if (stats.loadFactor != null) {
       peakInsights.push({
         severity: stats.loadFactor < 40 ? 'warning' : 'info',
@@ -225,9 +248,11 @@ export function buildReportSectionPacks(input: {
     {
       title: t.recPeakTitle,
       description:
-        stats?.peakCh1Time != null
-          ? t.recPeakDesc.replace('{time}', stats.peakCh1Time)
-          : t.recPeakDesc.replace('{time}', '—'),
+        stats?.peakTimeAnalysis?.peakPeriod != null
+          ? t.recPeakDesc.replace('{time}', stats.peakTimeAnalysis.peakPeriod)
+          : stats?.peakCh1Time != null
+            ? t.recPeakDesc.replace('{time}', stats.peakCh1Time)
+            : t.recPeakDesc.replace('{time}', '—'),
     },
     { title: t.actReviewPeak, description: t.insightPeakSpikeAction },
   ];
@@ -315,6 +340,12 @@ export function buildReportSectionPacks(input: {
         { dataKey: 'afterAvg', name: `${t.ch2Label} avg`, stroke: EQ_CH2_STROKE.avg, width: EQ_LINE_WIDTH.l2 },
       ];
 
+  const peakHourlyBar =
+    stats?.peakTimeAnalysis?.hourlyProfile.length &&
+    stats.peakTimeAnalysis.hourlyProfile.length >= 2
+      ? hourlyProfileChartData(stats.peakTimeAnalysis.hourlyProfile)
+      : [];
+
   const geMetrics: GeSolutionMetrics = {
     locale,
     pf: pfVal,
@@ -371,10 +402,14 @@ export function buildReportSectionPacks(input: {
       fields: peakFields,
       insights: peakInsights,
       recommendations: peakRecs,
-      chartKind: 'line',
-      chartCaption: t.secPeakChartCaption,
-      chartData: chartData,
-      chartLines: peakLines,
+      chartKind: peakHourlyBar.length ? 'bar' : 'line',
+      chartCaption: peakHourlyBar.length ? t.secPeakHourlyChartCaption : t.secPeakChartCaption,
+      chartData: peakHourlyBar.length ? peakHourlyBar : chartData,
+      chartLines: peakHourlyBar.length
+        ? [{ dataKey: 'value', name: t.f_avgLoad, stroke: '#b45309', width: 1.75 }]
+        : peakLines,
+      chartUnit: ' A',
+      chartIntegerAxis: false,
     },
     pf: {
       fields: pfFields,
@@ -823,6 +858,11 @@ function patchPeakFields(
     next = patchField(next, t.f_peakDemand, `${fmtA(stats.peakCh1)} A`);
     next = patchField(next, t.f_peakTime, stats.peakCh1Time ?? '—');
   }
+  const pt = stats.peakTimeAnalysis;
+  if (pt?.peakPeriod) next = patchField(next, t.f_peakPeriod, pt.peakPeriod);
+  if (pt?.dominantWindows) next = patchField(next, t.f_peakWindows, pt.dominantWindows);
+  if (pt?.onPeakAvgA != null) next = patchField(next, t.f_onPeakAvg, `${fmtA(pt.onPeakAvgA)} A`);
+  if (pt?.offPeakAvgA != null) next = patchField(next, t.f_offPeakAvg, `${fmtA(pt.offPeakAvgA)} A`);
   if (stats.avgCh1 != null) {
     next = patchField(next, t.f_avgLoad, `${fmtA(stats.avgCh1)} A`);
   }

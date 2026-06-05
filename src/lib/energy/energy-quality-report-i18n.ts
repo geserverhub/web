@@ -64,6 +64,10 @@ export type ReportStrings = {
   f_harmonicRisk: string;
   f_peakDemand: string;
   f_peakTime: string;
+  f_peakPeriod: string;
+  f_peakWindows: string;
+  f_onPeakAvg: string;
+  f_offPeakAvg: string;
   f_peakRatio: string;
   f_monthlyCost: string;
   f_penaltyCost: string;
@@ -127,6 +131,9 @@ export type ReportStrings = {
   insightDbRecords: string;
   insightRecordsUnit: string;
   insightPeakLoad: string;
+  insightPeakPeriod: string;
+  insightPeakWindows: string;
+  insightOnPeakLoad: string;
   insightAvg: string;
   insightPeakSpike: string;
   insightPeakRatio: string;
@@ -225,6 +232,7 @@ export type ReportStrings = {
   secRecommendTitle: string;
   secEnergyChartCaption: string;
   secPeakChartCaption: string;
+  secPeakHourlyChartCaption: string;
   secPfChartCaption: string;
   secBalanceChartCaption: string;
   secHarmonicChartCaption: string;
@@ -332,6 +340,73 @@ export type ReportStrings = {
   printTableItem: string;
   printTableValue: string;
   printColTime: string;
+  assessExcellent: string;
+  assessAcceptable: string;
+  assessCaution: string;
+  assessWarning: string;
+  assessNeutral: string;
+  stdLoadFactor: string;
+  stdPf: string;
+  stdVoltImb: string;
+  stdCurImb: string;
+  stdThdi: string;
+  stdThdv: string;
+  stdSiteSpecific: string;
+  pfLagging: string;
+  exceedWarn10: string;
+  exceedHigh20: string;
+  exceedSevere50: string;
+  proReportSubtitle: string;
+  proKeyFindingsIntro: string;
+  proKeyFindingsTableTitle: string;
+  proTableParameter: string;
+  proTableMeasured: string;
+  proTableStandard: string;
+  proTableAssessment: string;
+  proNarrativeIntro: string;
+  proNarrativePfThd: string;
+  proNarrativeImbalance: string;
+  proNarrativePeak: string;
+  proNarrativeVoltage: string;
+  proInterpretationTitle: string;
+  proInterpPeakDelta: string;
+  proInterpImbalance: string;
+  proInterpPfRoi: string;
+  proInterpApfcSafe: string;
+  proInterpVoltageOk: string;
+  proInterpStable: string;
+  proPhasedTitle: string;
+  proPhase1: string;
+  proPhase2: string;
+  proPhase3: string;
+  proPhase4: string;
+  proPriorityHighest: string;
+  proPriorityHigh: string;
+  proPriorityMedium: string;
+  proPhaseApfcTitle: string;
+  proPhaseApfcBullet1: string;
+  proPhaseApfcBullet2: string;
+  proPhaseApfcOutcome: string;
+  proPhaseBalanceTitle: string;
+  proPhaseBalanceBullet1: string;
+  proPhaseBalanceBullet2: string;
+  proPhaseBalanceOutcome: string;
+  proPhaseDemandTitle: string;
+  proPhaseDemandBullet1: string;
+  proPhaseDemandBullet2: string;
+  proPhaseDemandOutcome: string;
+  proPhaseMonitorTitle: string;
+  proPhaseMonitorBullet1: string;
+  proPhaseMonitorBullet2: string;
+  proPhaseMonitorOutcome: string;
+  proPeakPercentileCaption: string;
+  proImbalanceExceedCaption: string;
+  proLoadProfileNarrative: string;
+  overallRiskCritical: string;
+  overallRiskCaution: string;
+  overallRiskGood: string;
+  proRecommendedModel: string;
+  proExpectedOutcome: string;
 };
 
 const th: ReportStrings = {
@@ -342,7 +417,7 @@ const th: ReportStrings = {
   statusDraft: 'Draft · วิเคราะห์สด',
   sec1: 'ข้อมูลลูกค้า',
   sec2: 'ข้อมูลการตรวจวัด',
-  sec3: 'สรุปผู้บริหาร + ตาราง CH1/CH2 รายเฟส',
+  sec3: 'สรุปผู้บริหาร',
   sec4: 'การใช้พลังงาน',
   sec5: 'Peak Demand',
   sec6: 'Power Factor',
@@ -397,6 +472,10 @@ const th: ReportStrings = {
   f_harmonicRisk: 'ระดับความเสี่ยง Harmonic',
   f_peakDemand: 'Peak Demand 15 นาที',
   f_peakTime: 'เวลา Peak',
+  f_peakPeriod: 'ช่วงเวลา Peak',
+  f_peakWindows: 'ช่วงโหลดสูง',
+  f_onPeakAvg: 'On-peak เฉลี่ย',
+  f_offPeakAvg: 'Off-peak เฉลี่ย',
   f_peakRatio: 'Peak / Average',
   f_monthlyCost: 'ค่าไฟโดยประมาณ/เดือน',
   f_penaltyCost: 'ค่าปรับ PF (ประมาณ)',
@@ -431,9 +510,9 @@ const th: ReportStrings = {
   aiNote: 'วิเคราะห์อัตโนมัติจากข้อมูลมิเตอร์เรียลไทม์ — ค่าบางรายการเป็นการประมาณเมื่อไม่มีข้อมูลครบ',
   noData: '—',
   ch1Label: 'CH1 (ก่อนติดตั้ง)',
-  ch2Label: 'CH2 (หลังติดตั้ง)',
+  ch2Label: '—',
   threePhase400V: '3-Phase 400V',
-  realtimeResolution: 'เรียลไทม์ / 5 นาที',
+  realtimeResolution: 'เรียลไทม์ / 1 นาที',
   reportTocTitle: 'สารบัญรายงาน (14 หมวด)',
   statusPanelTitle: 'สถานะระบบ — คำนวณจาก PF · THD · ความไม่สมดุลเฟส',
   statusOverall: 'สถานะรวม',
@@ -449,7 +528,7 @@ const th: ReportStrings = {
   secCharts: 'กราฟกระแสไฟจากฐานข้อมูล',
   secChartsSource: 'ข้อมูลจากระบบบันทึกมิเตอร์ — อัปเดตตามช่วงเวลาที่เลือก',
   secTechnical: 'คำแนะนำวิเคราะห์ทางเทคนิค (จากข้อมูลกระแสจริง)',
-  chartCaption: 'แนวโน้มกระแส CH1 (ก่อน) / CH2 (หลัง) รายเฟส',
+  chartCaption: 'แนวโน้มกระแส CH1 รายเฟส',
   chartStatRecords: 'จำนวนบันทึก',
   chartStatPeriod: 'ช่วงข้อมูล',
   chartStatPeak: 'Peak CH1',
@@ -460,6 +539,9 @@ const th: ReportStrings = {
   insightDbRecords: 'ข้อมูลจากฐานข้อมูล',
   insightRecordsUnit: 'จุดบันทึก',
   insightPeakLoad: 'Peak Demand จากประวัติ',
+  insightPeakPeriod: 'ช่วงเวลา Peak',
+  insightPeakWindows: 'ช่วงที่โหลดสูงกว่าค่าเฉลี่ย',
+  insightOnPeakLoad: 'On-peak vs Off-peak (จ–ศ 09:00–22:00)',
   insightAvg: 'เฉลี่ย',
   insightPeakSpike: 'จุด Peak สูงกว่าค่าเฉลี่ยมาก',
   insightPeakRatio: 'อัตราส่วน Peak/Avg',
@@ -471,7 +553,7 @@ const th: ReportStrings = {
   insightPhaseImbalanceAction: 'แนะนำกระจายโหลด L1/L2/L3',
   insightSinglePhase: 'โหลดอยู่เฟสเดียว',
   insightSinglePhaseDetail: 'L2/L3 ต่ำมาก — เสี่ยงโอเวอร์โหลดเฟสที่มีกระแส',
-  insightChCompare: 'เปรียบเทียบ CH1 / CH2',
+  insightChCompare: 'แนวโน้มกระแส CH1',
   insightL23Idle: 'L2/L3 ไม่มีโหลดต่อเนื่อง',
   insightL23IdleDetail: 'ตรวจสอบการต่อสาย 3 เฟสและการกระจายโหลด',
   insightStable: 'แนวโน้มกระแสค่อนข้างสม่ำเสมอ',
@@ -555,8 +637,8 @@ const th: ReportStrings = {
   phaseL3: 'L3',
   phaseAvg: 'เฉลี่ย',
   execSummaryTitle: 'สรุปผู้บริหาร',
-  execChartTitle: 'กราฟกระแสรายเฟส (CH1 / CH2)',
-  execPhaseTableTitle: 'ตารางกระแส CH1 / CH2 รายเฟส',
+  execChartTitle: 'กราฟกระแสรายเฟส (CH1)',
+  execPhaseTableTitle: 'ตารางกระแส CH1 รายเฟส',
   execLineEnergy: 'พลังงานสะสม {value} จากมิเตอร์',
   execLineAvgCurrent: 'กระแสเฉลี่ย CH1: {value}',
   execLinePeakDemand: 'Peak Demand สูงสุด: {value}',
@@ -571,6 +653,7 @@ const th: ReportStrings = {
   secRecommendTitle: 'คำแนะนำ',
   secEnergyChartCaption: 'กราฟการใช้พลังงาน (ประมาณการ)',
   secPeakChartCaption: 'กราฟ Peak Demand จากประวัติกระแส',
+  secPeakHourlyChartCaption: 'โปรไฟล์กระแสเฉลี่ยรายชั่วโมง — วิเคราะห์ช่วงเวลา Peak',
   secPfChartCaption: 'กราฟ Power Factor เทียบเป้าหมาย',
   secBalanceChartCaption: 'กราฟกระแสรายเฟส L1 / L2 / L3',
   secHarmonicChartCaption: 'กราฟ THDI รายเฟส',
@@ -681,6 +764,84 @@ const th: ReportStrings = {
   printTableItem: 'รายการ',
   printTableValue: 'ค่า',
   printColTime: 'เวลา',
+  assessExcellent: '✓ ดีเยี่ยม',
+  assessAcceptable: '✓ ยอมรับได้',
+  assessCaution: '△ ควรระวัง',
+  assessWarning: '⚠ เตือน',
+  assessNeutral: '—',
+  stdLoadFactor: '≥ 60% แนะนำ',
+  stdPf: '≥ 0.95',
+  stdVoltImb: '< 2% IEC',
+  stdCurImb: '< 5% IEC',
+  stdThdi: '< 5% IEC 61000',
+  stdThdv: '< 5% IEC',
+  stdSiteSpecific: 'ตามไซต์',
+  pfLagging: 'Lagging',
+  exceedWarn10: '> 10% (เตือน)',
+  exceedHigh20: '> 20% (เสี่ยงสูง)',
+  exceedSevere50: '> 50% (รุนแรง)',
+  proReportSubtitle:
+    'รายงานวิเคราะห์คุณภาพไฟฟ้าและประสิทธิภาพพลังงาน · {period} · {records} บันทึก @ {resolution}',
+  proKeyFindingsIntro:
+    'สรุปผลวิเคราะห์หลัก — ระดับความเสี่ยงทางเทคนิค: {risk} · ประหยัดได้โดยประมาณ {saving}/เดือน',
+  proKeyFindingsTableTitle: 'ตารางสรุปผลวัด (Key Findings Summary)',
+  proTableParameter: 'พารามิเตอร์',
+  proTableMeasured: 'ค่าที่วัดได้',
+  proTableStandard: 'เกณฑ์ / มาตรฐาน',
+  proTableAssessment: 'การประเมิน',
+  proNarrativeIntro:
+    'รายงานนี้วิเคราะห์คุณภาพไฟฟ้าและประสิทธิภาพพลังงานจากข้อมูล {records} บันทึก ({resolution}) ในช่วง {period}',
+  proNarrativePfThd:
+    'Power Factor เฉลี่ย {pf} — {pfPenalty}% ของเวลาอยู่ต่ำกว่าเกณฑ์ค่าปรับ MEA (0.85) · THDI เฉลี่ย {thd}% — เหมาะสำหรับ APFC แบบ de-tuned',
+  proNarrativeImbalance:
+    'Current Imbalance เฉลี่ย {imb}% — สูงกว่าเกณฑ์ IEC · L1 รับโหลด {l1}% (เกินค่า ideal 33.3%)',
+  proNarrativePeak:
+    'Peak Demand 15 นาที {peak} ที่ {time} — สูงกว่าเฉลี่ย ~{ratio}× · ข้อมูลความละเอียด 1 นาทีต่างจาก hourly ~{delta}%',
+  proNarrativeVoltage:
+    'คุณภาพแรงดันไฟฟ้าดี — Voltage Imbalance {vi}% · THDV {thdv}% · ปัญหาหลักอยู่ฝั่ง Demand',
+  proInterpretationTitle: 'การตีความ (Interpretation)',
+  proInterpPeakDelta:
+    'Peak จริงจากข้อมูล 1 นาที ({fine}) สูงกว่า hourly ({coarse}) ~{delta}% — มีผลต่อ Demand Charge · ควรบริหารช่วง {window}',
+  proInterpImbalance:
+    'Current Imbalance {imb}% — L1 รับโหลด {l1}% · ควรกระจายโหลด 3 เฟสเพื่อลดความเครียด thermal',
+  proInterpPfRoi:
+    'PF {pf} ที่สเกลพลังงาน ~{annual} kWh/ปี — ปรับ PF ให้ ≥ 0.95 คืนทุน {payback}',
+  proInterpApfcSafe: 'THDI {thd}% — ติดตั้ง de-tuned APFC (5.7% reactor) ปลอดภัย ไม่เสี่ยง resonance',
+  proInterpVoltageOk: 'Voltage Imbalance {vi}% — คุณภาพแรงดันดี ปัญหาอยู่ที่โหลดและการบริหาร Demand',
+  proInterpStable: 'คุณภาพไฟฟ้าอยู่ในเกณฑ์ที่ยอมรับได้ — ควรติดตามแนวโน้มอย่างต่อเนื่อง',
+  proPhasedTitle: 'คำแนะนำเชิงปฏิบัติ (Phased Recommendations)',
+  proPhase1: 'Phase 1',
+  proPhase2: 'Phase 2',
+  proPhase3: 'Phase 3',
+  proPhase4: 'Phase 4',
+  proPriorityHighest: 'ลำดับความสำคัญสูงสุด',
+  proPriorityHigh: 'ลำดับความสำคัญสูง',
+  proPriorityMedium: 'ลำดับความสำคัญปานกลาง',
+  proPhaseApfcTitle: 'ติดตั้ง De-tuned APFC — ROI สูงสุด',
+  proPhaseApfcBullet1: 'THDI {thd}% — ติดตั้ง APFC + reactor de-tuning 5.7% ปลอดภัย',
+  proPhaseApfcBullet2: 'จัดอ ratings จาก Peak {peak} · กระแสเฉลี่ย L1 {avgI} A',
+  proPhaseApfcOutcome: 'PF {pf} → ≥ 0.95 · ลดค่าปรับ MEA · คืนทุน {payback}',
+  proPhaseBalanceTitle: 'กระจายโหลด 3 เฟส',
+  proPhaseBalanceBullet1: 'ย้ายวงจร AC/ครัวจาก L1 ไป L3 ให้ L1 ≤ 35%, L3 ≥ 32%',
+  proPhaseBalanceBullet2: 'ลด transient imbalance ตอน compressor cycle on',
+  proPhaseBalanceOutcome: 'CI {imb}% → < 10% · ลด thermal stress มอเตอร์และสาย',
+  proPhaseDemandTitle: 'บริหาร Peak ช่วงบริการ',
+  proPhaseDemandBullet1: 'Peak {peak} ที่ {time} — เป็น billing benchmark ของ Demand Charge',
+  proPhaseDemandBullet2: 'Pre-cool ก่อนช่วงบริการ · สลับเปิดเครื่องครัวทีละ 2–3 นาที',
+  proPhaseDemandOutcome: 'ลด Peak ~15–20% · ลด Demand Charge',
+  proPhaseMonitorTitle: 'ตรวจสอบและแจ้งเตือนประจำปี',
+  proPhaseMonitorBullet1: 'Thermographic inspection ที่ main panel L1 เป็นประจำ',
+  proPhaseMonitorBullet2: 'ตั้ง alarm: PF < 0.85 · CI > 15%',
+  proPhaseMonitorOutcome: 'ป้องกันความเสียหายจาก overload และ imbalance สะสม',
+  proPeakPercentileCaption: 'สถิติ Peak Demand (Percentile)',
+  proImbalanceExceedCaption: 'สัดส่วนเวลาที่ Current Imbalance เกินเกณฑ์',
+  proLoadProfileNarrative:
+    'โปรไฟล์โหลดแสดงช่วงโหลดสูงที่ {windows} — ควรเลื่อนโหลดหนักออกจากช่วง Peak billing',
+  overallRiskCritical: 'CRITICAL',
+  overallRiskCaution: 'CAUTION',
+  overallRiskGood: 'GOOD',
+  proRecommendedModel: 'GE Energy Saver ที่แนะนำ',
+  proExpectedOutcome: 'ผลลัพธ์ที่คาดหวัง',
 };
 
 const en: ReportStrings = {
@@ -691,7 +852,7 @@ const en: ReportStrings = {
   statusDraft: 'Draft · Live analysis',
   sec1: 'Customer Information',
   sec2: 'Measurement Overview',
-  sec3: 'Executive Summary + CH1/CH2 Phase Table',
+  sec3: 'Executive Summary',
   sec4: 'Energy Consumption',
   sec5: 'Peak Demand',
   sec6: 'Power Factor',
@@ -746,6 +907,10 @@ const en: ReportStrings = {
   f_harmonicRisk: 'Harmonic Risk Level',
   f_peakDemand: '15-min Peak Demand',
   f_peakTime: 'Peak Time',
+  f_peakPeriod: 'Peak Window',
+  f_peakWindows: 'High-Load Windows',
+  f_onPeakAvg: 'On-peak Average',
+  f_offPeakAvg: 'Off-peak Average',
   f_peakRatio: 'Peak / Average',
   f_monthlyCost: 'Est. Monthly Cost',
   f_penaltyCost: 'Est. PF Penalty',
@@ -774,9 +939,9 @@ const en: ReportStrings = {
   aiNote: 'Auto-analysis from live meter data — some values are estimated when data is incomplete.',
   noData: '—',
   ch1Label: 'CH1 (before install)',
-  ch2Label: 'CH2 (after install)',
+  ch2Label: '—',
   threePhase400V: '3-Phase 400V',
-  realtimeResolution: 'Real-time / 5 min',
+  realtimeResolution: 'Real-time / 1 min',
   reportTocTitle: 'Report contents (14 sections)',
   statusPanelTitle: 'System status — from PF · THD · phase imbalance',
   statusOverall: 'Overall status',
@@ -792,7 +957,7 @@ const en: ReportStrings = {
   secCharts: 'Current trend chart (database)',
   secChartsSource: 'From meter logging for the selected period',
   secTechnical: 'Technical analysis (recorded current data)',
-  chartCaption: 'CH1 (before) / CH2 (after) phase current trend',
+  chartCaption: 'CH1 phase current trend',
   chartStatRecords: 'Records',
   chartStatPeriod: 'Period',
   chartStatPeak: 'CH1 peak',
@@ -803,6 +968,9 @@ const en: ReportStrings = {
   insightDbRecords: 'Database records',
   insightRecordsUnit: 'data points',
   insightPeakLoad: 'Peak demand from history',
+  insightPeakPeriod: 'Peak time window',
+  insightPeakWindows: 'Hours above average load',
+  insightOnPeakLoad: 'On-peak vs off-peak (Mon–Fri 09:00–22:00)',
   insightAvg: 'avg',
   insightPeakSpike: 'Peak spike vs average',
   insightPeakRatio: 'Peak/Avg ratio',
@@ -814,7 +982,7 @@ const en: ReportStrings = {
   insightPhaseImbalanceAction: 'Rebalance loads across L1/L2/L3',
   insightSinglePhase: 'Single-phase dominated load',
   insightSinglePhaseDetail: 'L2/L3 very low — risk on the loaded phase',
-  insightChCompare: 'CH1 vs CH2 comparison',
+  insightChCompare: 'CH1 current trend',
   insightL23Idle: 'L2/L3 idle for most records',
   insightL23IdleDetail: 'Verify 3-phase wiring and load distribution',
   insightStable: 'Current trend relatively stable',
@@ -904,8 +1072,8 @@ const en: ReportStrings = {
   phaseL3: 'L3',
   phaseAvg: 'Avg',
   execSummaryTitle: 'Executive summary',
-  execChartTitle: 'Phase current trend (CH1 / CH2)',
-  execPhaseTableTitle: 'CH1 / CH2 current by phase',
+  execChartTitle: 'Phase current trend (CH1)',
+  execPhaseTableTitle: 'CH1 current by phase',
   execLineEnergy: 'Cumulative energy {value} from meter',
   execLineAvgCurrent: 'CH1 average current: {value}',
   execLinePeakDemand: 'Peak demand: {value}',
@@ -920,6 +1088,7 @@ const en: ReportStrings = {
   secRecommendTitle: 'Recommendations',
   secEnergyChartCaption: 'Energy consumption (estimated)',
   secPeakChartCaption: 'Peak demand from current history',
+  secPeakHourlyChartCaption: 'Hourly average current — peak time analysis',
   secPfChartCaption: 'Power factor vs target',
   secBalanceChartCaption: 'L1 / L2 / L3 phase currents',
   secHarmonicChartCaption: 'THDI by phase',
@@ -1030,6 +1199,84 @@ const en: ReportStrings = {
   printTableItem: 'Item',
   printTableValue: 'Value',
   printColTime: 'Time',
+  assessExcellent: '✓ Excellent',
+  assessAcceptable: '✓ Acceptable',
+  assessCaution: '△ Caution',
+  assessWarning: '⚠ Warning',
+  assessNeutral: '—',
+  stdLoadFactor: '≥ 60% recommended',
+  stdPf: '≥ 0.95',
+  stdVoltImb: '< 2% IEC',
+  stdCurImb: '< 5% IEC',
+  stdThdi: '< 5% IEC 61000',
+  stdThdv: '< 5% IEC',
+  stdSiteSpecific: 'Site-specific',
+  pfLagging: 'Lagging',
+  exceedWarn10: '> 10% (warning)',
+  exceedHigh20: '> 20% (high risk)',
+  exceedSevere50: '> 50% (severe)',
+  proReportSubtitle:
+    'Power Quality & Energy Efficiency Analysis · {period} · {records} records @ {resolution}',
+  proKeyFindingsIntro:
+    'Key findings summary — overall technical risk: {risk} · estimated savings {saving}/month',
+  proKeyFindingsTableTitle: 'Key Findings Summary',
+  proTableParameter: 'Parameter',
+  proTableMeasured: 'Measured Value',
+  proTableStandard: 'Standard / Guideline',
+  proTableAssessment: 'Assessment',
+  proNarrativeIntro:
+    'This report analyzes power quality and energy efficiency from {records} records ({resolution}) over {period}',
+  proNarrativePfThd:
+    'Average PF {pf} — {pfPenalty}% of minutes below MEA penalty threshold (0.85) · average THDI {thd}% — suitable for de-tuned APFC',
+  proNarrativeImbalance:
+    'Average current imbalance {imb}% — above IEC guidance · L1 carries {l1}% (above ideal 33.3%)',
+  proNarrativePeak:
+    '15-min peak demand {peak} at {time} — ~{ratio}× average · 1-min data differs from hourly by ~{delta}%',
+  proNarrativeVoltage:
+    'Voltage quality is strong — VI {vi}% · THDV {thdv}% · issues are demand-side',
+  proInterpretationTitle: 'Interpretation',
+  proInterpPeakDelta:
+    'True 1-min peak ({fine}) is ~{delta}% above hourly ({coarse}) — affects demand charges · target window {window}',
+  proInterpImbalance:
+    'Current imbalance {imb}% — L1 share {l1}% · redistribute loads to reduce thermal stress',
+  proInterpPfRoi:
+    'PF {pf} at ~{annual} kWh/year scale — improving to ≥ 0.95 payback {payback}',
+  proInterpApfcSafe: 'THDI {thd}% — de-tuned APFC (5.7% reactor) is safe without resonance risk',
+  proInterpVoltageOk: 'Voltage imbalance {vi}% — grid-side quality is good; focus on load management',
+  proInterpStable: 'Power quality is within acceptable limits — continue trend monitoring',
+  proPhasedTitle: 'Phased Recommendations',
+  proPhase1: 'Phase 1',
+  proPhase2: 'Phase 2',
+  proPhase3: 'Phase 3',
+  proPhase4: 'Phase 4',
+  proPriorityHighest: 'Highest priority',
+  proPriorityHigh: 'High priority',
+  proPriorityMedium: 'Medium priority',
+  proPhaseApfcTitle: 'Install de-tuned APFC — best ROI',
+  proPhaseApfcBullet1: 'THDI {thd}% — install APFC with 5.7% de-tuning reactor safely',
+  proPhaseApfcBullet2: 'Size from peak {peak} · average L1 current {avgI} A',
+  proPhaseApfcOutcome: 'PF {pf} → ≥ 0.95 · eliminate MEA penalty · payback {payback}',
+  proPhaseBalanceTitle: 'Redistribute three-phase load',
+  proPhaseBalanceBullet1: 'Move 1–2 L1 circuits to L3 — target L1 ≤ 35%, L3 ≥ 32%',
+  proPhaseBalanceBullet2: 'Reduce transient imbalance during compressor cycling',
+  proPhaseBalanceOutcome: 'CI {imb}% → < 10% · lower motor and conductor thermal stress',
+  proPhaseDemandTitle: 'Evening peak demand management',
+  proPhaseDemandBullet1: 'Peak {peak} at {time} — billing benchmark for demand charge',
+  proPhaseDemandBullet2: 'Pre-cool before service · stagger kitchen equipment 2–3 min apart',
+  proPhaseDemandOutcome: 'Reduce peak ~15–20% · lower demand charge',
+  proPhaseMonitorTitle: 'Annual inspection & alarms',
+  proPhaseMonitorBullet1: 'Annual thermographic inspection of main panel L1 connections',
+  proPhaseMonitorBullet2: 'Set alarms: PF < 0.85 · CI > 15%',
+  proPhaseMonitorOutcome: 'Prevent damage from sustained overload and imbalance',
+  proPeakPercentileCaption: 'Peak demand statistics (percentiles)',
+  proImbalanceExceedCaption: 'Time exceeding current imbalance thresholds',
+  proLoadProfileNarrative:
+    'Load profile shows high-load windows at {windows} — shift heavy loads away from billing peaks',
+  overallRiskCritical: 'CRITICAL',
+  overallRiskCaution: 'CAUTION',
+  overallRiskGood: 'GOOD',
+  proRecommendedModel: 'Recommended GE Energy Saver',
+  proExpectedOutcome: 'Expected outcome',
 };
 
 const catalog: Record<EqLocale, ReportStrings> = {

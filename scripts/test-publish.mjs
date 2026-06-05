@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Test MQTT publish → power_records pipeline
  * Usage: node scripts/test-publish.mjs
  */
@@ -8,7 +8,7 @@ const BROKER = 'mqtt://127.0.0.1:1883';
 const TOPIC  = 'ge/GE-TH-001';
 
 const payload = JSON.stringify({
-  geID:         'GE-TH-001',
+  GEsaveID:         'GE-TH-001',
   before_P:     12500,
   metrics_P:    9800,
   before_kWh:   12345.6,

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Create ksystem energy tables and seed demo data when empty.
  * Usage: node scripts/setup-ksystem-energy.mjs
  */
@@ -31,11 +31,11 @@ async function main() {
   const [[{ deviceCount }]] = await db.query('SELECT COUNT(*) AS deviceCount FROM devices');
   if (Number(deviceCount) === 0) {
     await db.query(`
-      INSERT INTO devices (deviceName, ksaveID, series_no, ipAddress, location, site, status, U_email, P_email, phone, pass_phone, customerName, customerPhone)
+      INSERT INTO devices (deviceName, GEsaveID, series_no, ipAddress, location, site, status, U_email, P_email, phone, pass_phone, customerName, customerPhone)
       VALUES
       ('KSAVE01', 'KSAVE01', 'KS2024010001', '192.168.1.46', 'Seongnam Research Institute', 'korea', 'ON', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '010-8105-0384', '0000', 'GE Energy Demo', '010-8105-0384'),
       ('KSAVE02', 'KSAVE02', 'KS2024010002', '192.168.1.2', 'Republic of Korea', 'korea', 'ON', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '010-8105-0384', '0000', 'Green Retail Demo', '010-8105-0384'),
-      ('KSAVE-TH01', 'KSAVE-TH01', 'KS2024010007', '192.168.1.3', 'Bangkok', 'thailand', 'OFF', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '02-555-1199', '0000', 'Thailand Demo', '02-555-1199')
+      ('KSAVE-TH01', 'KSAVE-TH01', 'KS2024010007', '192.168.1.3', 'Bangkok', 'thailand', 'OFF', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '02-555-1199', '0000', 'Thailand', '02-555-1199')
     `);
     console.log('Seeded devices.');
   }

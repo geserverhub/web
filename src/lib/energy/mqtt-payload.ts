@@ -1,7 +1,7 @@
-/** Canonical MQTT telemetry JSON for T310 / GE Energy gateways. */
+﻿/** Canonical MQTT telemetry JSON for T310 / GE Energy gateways. */
 export const GE_MQTT_PAYLOAD_EXAMPLE = {
   device_id: 5,
-  geID: 'GE-TH-001',
+  GEsaveID: 'GE-TH-001',
   record_time: '2026-05-22T14:30:00',
   before_L1: 230.1,
   before_L2: 229.8,

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
 
 export const runtime = 'nodejs'
@@ -17,7 +17,7 @@ type RawRecentDevice = {
   beforeMeterNo: string | null
   location: string | null
   ipAddress: string | null
-  geID: string | null
+  GEsaveID: string | null
   record_time: string | Date | null
   before_L1: number | string | null
   before_L2: number | string | null
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       )
     }
     // Check optional columns in devices table
-    const optionalDeviceColumns = ['customerNameEn', 'customerPhone', 'customerAddress', 'series_no', 'metricsMeterNo', 'beforeMeterNo', 'location', 'ipAddress', 'geID', 'record_scope']
+    const optionalDeviceColumns = ['customerNameEn', 'customerPhone', 'customerAddress', 'series_no', 'metricsMeterNo', 'beforeMeterNo', 'location', 'ipAddress', 'GEsaveID', 'record_scope']
     const devicePlaceholders = optionalDeviceColumns.map(() => '?').join(', ')
     const availableDeviceColumnsRows = await queryGe(
       `SELECT COLUMN_NAME
@@ -219,7 +219,7 @@ export async function GET(request: NextRequest) {
         ${selectOptionalDeviceColumn('beforeMeterNo')},
         ${selectOptionalDeviceColumn('location')},
         ${selectOptionalDeviceColumn('ipAddress')},
-        ${selectOptionalDeviceColumn('geID')},
+        ${selectOptionalDeviceColumn('GEsaveID')},
         ${selectedColumn('record_time')},
         p_inst.record_time AS record_time_installed,
         p_pre.record_time AS record_time_preinstall,
@@ -326,7 +326,7 @@ export async function GET(request: NextRequest) {
         beforeMeterNo: device.beforeMeterNo,
         location: device.location,
         ipAddress: device.ipAddress,
-        geID: device.geID,
+        GEsaveID: device.GEsaveID,
         isOnline,
         lastUpdate: device.record_time,
         beforeLastUpdate: beforeLastUpdate,

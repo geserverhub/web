@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -36,7 +36,7 @@ import './energy-quality.css';
 interface DeviceRow {
   deviceID: string;
   deviceName: string;
-  geID?: string;
+  GEsaveID?: string;
   location?: string;
   beforeMeterNo?: string;
   metricsMeterNo?: string;
@@ -668,7 +668,7 @@ export default function EnergyQualityPage() {
       const list: DeviceRow[] = rows.map((d: DeviceRow & { deviceID?: string | number; owner?: string }) => ({
         deviceID: String(d.deviceID ?? ''),
         deviceName: d.deviceName || String(d.deviceID),
-        geID: d.geID,
+        GEsaveID: d.GEsaveID,
         location: d.location?.trim() || '',
         beforeMeterNo: d.beforeMeterNo,
         metricsMeterNo: d.metricsMeterNo,
@@ -911,7 +911,7 @@ export default function EnergyQualityPage() {
                     >
                       {d.deviceName}
                       <span className="eq-sub">
-                        {d.geID || d.deviceID}
+                        {d.GEsaveID || d.deviceID}
                         {d.beforeMeterNo || d.metricsMeterNo
                           ? ` · CH1:${d.beforeMeterNo || '—'} CH2:${d.metricsMeterNo || '—'}`
                           : ''}
@@ -953,7 +953,7 @@ export default function EnergyQualityPage() {
                 </div>
                 <div>
                   <dt>{ui.device} / {ui.meterId}</dt>
-                  <dd>{selectedInfo.deviceName} · <span className="font-mono text-xs">{selectedInfo.geID || selectedInfo.deviceID}</span></dd>
+                  <dd>{selectedInfo.deviceName} · <span className="font-mono text-xs">{selectedInfo.GEsaveID || selectedInfo.deviceID}</span></dd>
                 </div>
                 <div>
                   <dt>{ui.connection}</dt>
@@ -988,7 +988,7 @@ export default function EnergyQualityPage() {
               </div>
               <div className="eq-device-strip-item">
                 <label>{ui.meterId}</label>
-                <span className="mono">{selectedInfo?.geID || selectedInfo?.deviceID}</span>
+                <span className="mono">{selectedInfo?.GEsaveID || selectedInfo?.deviceID}</span>
               </div>
               <div className="eq-device-strip-item">
                 <label>{ui.lastUpdate}</label>

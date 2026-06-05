@@ -17,10 +17,12 @@ import {
   type ReportStandardsPack,
 } from './energy-quality-report-standards';
 import { buildEnergyQualityPrintCss } from './energy-quality-report-print.css';
+import type { ProfessionalReportContent } from './energy-quality-professional-analysis';
 import {
   buildCh1Ch2PhaseLines,
   buildCh1PhaseLines,
 } from './eq-chart-palette';
+import { svgBarChart, svgHistoryChart, svgMultiLineChart } from './energy-quality-print-charts';
 
 export type PrintSnapshotLabels = {
   lastUpdate: string;
@@ -52,7 +54,21 @@ export type PrintReportInput = {
   snapshotLabels?: PrintSnapshotLabels;
   /** Pre-install: CH1 only — omit CH2 from charts and tables. */
   ch1Only?: boolean;
+  /** Absolute or root-relative logo URL for print header/footer */
+  logoUrl?: string;
 };
+
+/** Company logo used on energy quality print reports (same as energy dashboard sidebar). */
+export const ENERGY_QUALITY_PRINT_LOGO_PATH = '/momoge/Logo-brand.png';
+
+function printLogoUrl(input: PrintReportInput): string {
+  return input.logoUrl ?? ENERGY_QUALITY_PRINT_LOGO_PATH;
+}
+
+function printLogoBlock(logoUrl: string, companyName: string, compact = false): string {
+  const cls = compact ? 'print-logo print-logo--sm' : 'print-logo';
+  return `<img class="${cls}" src="${esc(logoUrl)}" alt="${esc(companyName)}" />`;
+}
 
 type RiskLevel = 'good' | 'warning' | 'critical';
 
@@ -144,6 +160,67 @@ function lineHistoryTableHtml(
     })
     .join('');
   return `<h3>${esc(caption)}</h3><table class="chart-data"><thead><tr><th>${esc(timeCol)}</th><th>${esc(ch1Label)}</th><th>${esc(ch2Label)}</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function chartPrintHtml(
+  pack: SectionAnalysisPack,
+  caption: string,
+  lineOpts?: { ch1Label: string; ch2Label: string; timeCol: string },
+): string {
+  if (!pack.chartData.length || pack.chartKind === 'none') return '';
+
+  const title = `<h3 class="print-chart-title">${esc(caption)}</h3>`;
+
+  if (pack.chartKind === 'bar') {
+    const key = pack.chartLines?.[0]?.dataKey ?? 'value';
+    const bars = pack.chartData
+      .map((row) => ({
+        label: String(row.fullLabel ?? row.label ?? row.time ?? '—'),
+        value: Number(row[key] ?? row.value ?? 0),
+      }))
+      .filter((b) => Number.isFinite(b.value));
+    if (!bars.length) return '';
+    return `${title}${svgBarChart({
+      data: bars,
+      color: pack.chartLines?.[0]?.stroke ?? '#047857',
+      unit: pack.chartUnit ?? '',
+    })}`;
+  }
+
+  const isHistory =
+    pack.chartData.some((row) => row.beforeAvg != null || row.afterAvg != null || row.time != null) &&
+    pack.chartLines?.length;
+
+  if (pack.chartKind === 'line' && isHistory && pack.chartLines) {
+    if (lineOpts && pack.chartData.some((row) => row.beforeAvg != null || row.afterAvg != null)) {
+      const lines = pack.chartLines.filter(
+        (l) => l.dataKey === 'beforeAvg' || l.dataKey === 'afterAvg',
+      );
+      if (lines.length) {
+        return `${title}${svgHistoryChart({
+          data: pack.chartData as DbChartPoint[],
+          lines,
+        })}`;
+      }
+    }
+    return `${title}${svgMultiLineChart({
+      data: pack.chartData,
+      lines: pack.chartLines,
+      xKey: pack.chartData[0]?.time != null ? 'time' : 'label',
+      unit: pack.chartUnit ?? ' A',
+    })}`;
+  }
+
+  if (pack.chartKind === 'line' && pack.chartLines?.length) {
+    return `${title}${svgMultiLineChart({
+      data: pack.chartData,
+      lines: pack.chartLines,
+      xKey: 'label',
+      unit: pack.chartUnit ?? '',
+    })}`;
+  }
+
+  return chartTableHtml(pack, caption, '', '');
 }
 
 function chartTableHtml(
@@ -266,6 +343,12 @@ function chartStatsHtml(stats: CurrentHistoryStats, rt: ReportStrings): string {
     stats.peakCh1 != null
       ? [rt.chartStatPeak, `${fmtA(stats.peakCh1)} A${stats.peakCh1Time ? ` @ ${stats.peakCh1Time}` : ''}`]
       : null,
+    stats.peakTimeAnalysis?.peakPeriod
+      ? [rt.f_peakPeriod, stats.peakTimeAnalysis.peakPeriod]
+      : null,
+    stats.peakTimeAnalysis?.dominantWindows
+      ? [rt.f_peakWindows, stats.peakTimeAnalysis.dominantWindows]
+      : null,
     stats.avgCh1 != null ? [rt.chartStatAvg, `${fmtA(stats.avgCh1)} A`] : null,
     stats.maxImbalancePct != null && stats.maxImbalancePct > 0
       ? [rt.chartStatImbalance, `${fmtNum(stats.maxImbalancePct, 1)}%`]
@@ -275,6 +358,51 @@ function chartStatsHtml(stats: CurrentHistoryStats, rt: ReportStrings): string {
     .map(([lbl, val]) => `<div class="stat-cell"><label>${esc(lbl)}</label><strong>${esc(val)}</strong></div>`)
     .join('');
   return `<div class="chart-stats-row">${items}</div>`;
+}
+
+function professionalExecutiveHtml(pro: ProfessionalReportContent | null, rt: ReportStrings): string {
+  if (!pro) return '';
+  const rows = pro.keyFindings
+    .map(
+      (r) =>
+        `<tr><td>${esc(r.parameter)}</td><td><strong>${esc(r.measured)}</strong></td><td>${esc(r.standard)}</td><td>${esc(r.assessmentLabel)}</td></tr>`,
+    )
+    .join('');
+  const narrative = pro.executiveNarrative.map((p) => `<p class="note">${esc(p)}</p>`).join('');
+  return `
+    <p class="note pro-subtitle">${esc(pro.reportSubtitle)}</p>
+    <h3>${esc(rt.proKeyFindingsTableTitle)}</h3>
+    <p class="note">${esc(pro.keyFindingsIntro)}</p>
+    <table class="data-table">
+      <thead><tr>
+        <th>${esc(rt.proTableParameter)}</th>
+        <th>${esc(rt.proTableMeasured)}</th>
+        <th>${esc(rt.proTableStandard)}</th>
+        <th>${esc(rt.proTableAssessment)}</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="note"><strong>${esc(rt.statusOverall)}:</strong> ${esc(pro.overallTechnicalRisk)}</p>
+    ${narrative}`;
+}
+
+function professionalRecsHtml(pro: ProfessionalReportContent | null, rt: ReportStrings): string {
+  if (!pro) return '';
+  const interpret = pro.interpretationBullets
+    .map((b) => `<li>${esc(b)}</li>`)
+    .join('');
+  const phases = pro.phasedRecommendations
+    .map(
+      (p) =>
+        `<div class="phase-card"><h4>${esc(p.phase)} — ${esc(p.title)}</h4><p class="note">${esc(p.priority)}</p><ul>${p.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul><p><strong>${esc(rt.proExpectedOutcome)}:</strong> ${esc(p.expectedOutcome)}</p></div>`,
+    )
+    .join('');
+  return `
+    <h3>${esc(pro.interpretationTitle)}</h3>
+    <ul class="bullets">${interpret}</ul>
+    <h3>${esc(pro.phasedTitle)}</h3>
+    ${pro.recommendedModel ? `<p class="note">${esc(rt.proRecommendedModel)}: <strong>${esc(pro.recommendedModel)}</strong></p>` : ''}
+    ${phases}`;
 }
 
 function technicalInsightsHtml(
@@ -316,11 +444,9 @@ function richSection(
   sectionRefKey?: ReportSectionRefKey,
 ): string {
   const analysisTitle = rt.secAnalysisTitle;
-  const chartBlock = chartTableHtml(
+  const chartBlock = chartPrintHtml(
     pack,
     pack.chartCaption,
-    rt.printTableItem,
-    rt.printTableValue,
     pack.chartKind === 'line' && lineOpts
       ? { ...lineOpts, timeCol: rt.printColTime }
       : undefined,
@@ -440,7 +566,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
     `${rt.printSourcePeriod}: ${esc(input.measurementStart ?? '—')} – ${esc(input.measurementEnd ?? '—')} (${esc(input.historyPeriod)})`,
     `${rt.printSourceRecords}: ${input.historyPoints} ${rt.insightRecordsUnit}`,
     input.chartStats?.peakCh1 != null
-      ? `${rt.printSourcePeak}: ${input.chartStats.peakCh1.toFixed(2)} A @ ${input.chartStats.peakCh1Time ?? '—'}`
+      ? `${rt.printSourcePeak}: ${input.chartStats.peakCh1.toFixed(2)} A @ ${input.chartStats.peakCh1Time ?? '—'}${input.chartStats.peakTimeAnalysis?.peakPeriod ? ` · ${input.chartStats.peakTimeAnalysis.peakPeriod}` : ''}`
       : '',
   ]
     .filter(Boolean)
@@ -474,11 +600,14 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
   );
 
   const sec3ChartStats = input.chartStats ? chartStatsHtml(input.chartStats, rt) : '';
+  const sec3ChartSvg = chartData.length ? chartPrintHtml(execPack, rt.execChartTitle) : '';
   const sec3Extra = `
+    ${professionalExecutiveHtml(report.professional, rt)}
     <h3>${esc(rt.execSummaryTitle)}</h3>
     <ul class="bullets">${report.executiveBullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
     <p class="note">${esc(rt.secChartsSource)}</p>
     ${sec3ChartStats}
+    ${sec3ChartSvg}
     <h3>${esc(rt.execPhaseTableTitle)}</h3>
     <table class="data-table">
       <thead><tr><th>${esc(rt.phaseCol)}</th><th>${esc(input.ch1Label)}</th>${ch1Only ? '' : `<th>${esc(input.ch2Label)}</th>`}</tr></thead>
@@ -489,8 +618,13 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
 <div class="doc">
   <header class="cover">
     <div class="cover-head">
-      <h1>${esc(rt.companyName)}</h1>
-      <p class="platform">${esc(rt.platformTitle)}</p>
+      <div class="cover-brand">
+        ${printLogoBlock(printLogoUrl(input), rt.companyName)}
+        <div class="cover-brand-text">
+          <h1>${esc(rt.companyName)}</h1>
+          <p class="platform">${esc(rt.platformTitle)}</p>
+        </div>
+      </div>
     </div>
     <dl class="cover-meta">
       <dt>${esc(rt.f_reportId)}</dt><dd>${esc(report.reportId)}</dd>
@@ -537,7 +671,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
 
   ${fieldsOnlySection(1, rt.sec1, report.customer, rt)}
   ${fieldsOnlySection(2, rt.sec2, report.measurement, rt)}
-  ${richSection(3, rt.sec3, execPack, rt, standards, sec3Extra, ch1Only ? undefined : { ch1Label: input.ch1Label, ch2Label: input.ch2Label })}
+  ${richSection(3, rt.sec3, { ...execPack, chartKind: 'none', chartData: [] }, rt, standards, sec3Extra, ch1Only ? undefined : { ch1Label: input.ch1Label, ch2Label: input.ch2Label })}
 
   ${richSection(4, rt.sec4, packs.energy, rt, standards, '', undefined, 'sec4')}
   ${richSection(5, rt.sec5, packs.peak, rt, standards, '', ch1Only ? undefined : { ch1Label: input.ch1Label, ch2Label: input.ch2Label }, 'sec5')}
@@ -550,9 +684,10 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
 
   <section class="print-sec">
     <h2><span class="num">12</span> ${esc(rt.sec12)}</h2>
+    ${professionalRecsHtml(report.professional, rt)}
     ${fieldsGridHtml(packs.ai.fields)}
     <ol class="ai-rec">${aiRecs}</ol>
-    ${chartTableHtml(packs.ai, packs.ai.chartCaption, rt.priority, 'Score')}
+    ${chartPrintHtml(packs.ai, packs.ai.chartCaption)}
     <h3>${esc(rt.secAnalysisTitle)}</h3>
     <ul class="insights">${packs.ai.insights.map((ins) => `<li><strong>${esc(ins.title)}</strong><p>${esc(ins.detail)}</p></li>`).join('')}</ul>
     ${recsHtml(packs.ai, rt)}
@@ -563,7 +698,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
     <h2><span class="num">13</span> ${esc(rt.sec13)}</h2>
     ${fieldsGridHtml(packs.action.fields)}
     <div class="act-grid">${actions}</div>
-    ${chartTableHtml(packs.action, packs.action.chartCaption, rt.secActionFieldHorizons, rt.secActionFieldTasks)}
+    ${chartPrintHtml(packs.action, packs.action.chartCaption)}
     <h3>${esc(rt.secAnalysisTitle)}</h3>
     <ul class="insights">${packs.action.insights.map((ins) => `<li><strong>${esc(ins.title)}</strong><p>${esc(ins.detail)}</p></li>`).join('')}</ul>
     ${recsHtml(packs.action, rt)}
@@ -573,6 +708,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
   ${richSection(14, rt.sec14, packs.conclusion, rt, standards, '', undefined, 'sec14')}
 
   <footer class="doc-footer">
+    ${printLogoBlock(printLogoUrl(input), rt.companyName, true)}
     <p><strong>${esc(rt.companyName)}</strong> — ${esc(rt.platformTitle)}</p>
     <p>${esc(report.reportId)} · ${esc(rt.printFooterLegal)}</p>
   </footer>

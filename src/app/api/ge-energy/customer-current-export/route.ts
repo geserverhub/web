@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
 import * as XLSX from 'xlsx';
 import {
@@ -194,10 +194,10 @@ export async function GET(request: NextRequest) {
     });
 
     const devRows = (await queryGe(
-      `SELECT deviceName, geID FROM devices WHERE deviceID = ? LIMIT 1`,
+      `SELECT deviceName, GEsaveID FROM devices WHERE deviceID = ? LIMIT 1`,
       [deviceId]
-    )) as { deviceName?: string; geID?: string }[];
-    const devLabel = (devRows[0]?.deviceName || devRows[0]?.geID || deviceId)
+    )) as { deviceName?: string; GEsaveID?: string }[];
+    const devLabel = (devRows[0]?.deviceName || devRows[0]?.GEsaveID || deviceId)
       .toString()
       .replace(/[^\w.-]+/g, '_');
 

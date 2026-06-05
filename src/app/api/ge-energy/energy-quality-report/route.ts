@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
 import {
   energyQualityTablesReady,
@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 type DeviceRow = {
   deviceID: number;
   deviceName: string;
-  geID: string | null;
+  GEsaveID: string | null;
   location: string | null;
   site: string | null;
   ipAddress: string | null;
@@ -28,7 +28,7 @@ type DeviceRow = {
 
 async function loadDeviceRow(deviceId: string): Promise<DeviceRow | null> {
   const rows = await queryGe(
-    `SELECT deviceID, deviceName, geID, location, site, ipAddress,
+    `SELECT deviceID, deviceName, GEsaveID, location, site, ipAddress,
             customerName, customerPhone, customerAddress, client_id
      FROM devices WHERE deviceID = ? LIMIT 1`,
     [Number(deviceId)],
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       ? {
           deviceID: String(deviceRow.deviceID),
           deviceName: deviceRow.deviceName,
-          geID: deviceRow.geID ?? undefined,
+          GEsaveID: deviceRow.GEsaveID ?? undefined,
           location: deviceRow.location ?? undefined,
           site: deviceRow.site ?? siteRegion,
           ipAddress: deviceRow.ipAddress ?? undefined,

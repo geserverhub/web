@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
 
 export const runtime = 'nodejs'
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       SELECT
         d.deviceID,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.U_email as owner,
         d.location,
         COALESCE(dn.alarm_enabled, 1) as alarm_enabled,

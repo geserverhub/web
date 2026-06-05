@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale } from '@/lib/LocaleContext';
@@ -48,7 +48,7 @@ interface CarbonData {
   topDevices: Array<{
     deviceId: number;
     deviceName: string;
-    geID: string;
+    GEsaveID: string;
     energySavedKwh: number;
     co2Kg: number;
     carbonCreditsTonnes: number;
@@ -71,7 +71,7 @@ interface MeterRow {
   rank: number;
   deviceId: number;
   deviceName: string;
-  geID: string;
+  GEsaveID: string;
   site: string;
   ch1Before: string;
   ch2After: string;
@@ -97,7 +97,7 @@ interface MeterTotals {
 interface DeviceOption {
   deviceId: number;
   deviceName: string;
-  geID: string;
+  GEsaveID: string;
   site: string;
 }
 
@@ -489,7 +489,7 @@ ${meterTable.meters.length > 0 ? `
       return `<tr>
         <td style="color:#000;font-family:monospace">${m.rank}</td>
         <td style="font-weight:600">${m.deviceName}</td>
-        <td style="font-family:monospace;font-size:8pt;color:#000">${m.geID}</td>
+        <td style="font-family:monospace;font-size:8pt;color:#000">${m.GEsaveID}</td>
         <td style="text-align:center;font-family:monospace;font-size:8pt;color:#c2410c">${m.ch1Before}</td>
         <td style="text-align:center;font-family:monospace;font-size:8pt;color:#4338ca">${m.ch2After}</td>
         <td style="text-align:right;color:#ea580c">${fmt(m.totalKwhCh1Before)}</td>
@@ -721,7 +721,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                     : 'bg-transparent text-white border-white/50 hover:bg-white/20'
                 }`}
               >
-                ⚡ {m.geID || m.deviceName}
+                ⚡ {m.GEsaveID || m.deviceName}
               </button>
             ))}
           </div>
@@ -934,7 +934,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
               {allDevices
                 .filter((d) => {
                   const q = meterSearch.toLowerCase();
-                  return !q || d.deviceName.toLowerCase().includes(q) || d.geID.toLowerCase().includes(q) || d.site.toLowerCase().includes(q);
+                  return !q || d.deviceName.toLowerCase().includes(q) || d.GEsaveID.toLowerCase().includes(q) || d.site.toLowerCase().includes(q);
                 })
                 .map((d) => {
                   const checked = pickedIds.has(d.deviceId);
@@ -960,7 +960,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                         <p className={`text-sm font-semibold leading-tight ${checked ? 'text-emerald-700' : 'text-gray-700'}`}>
                           {d.deviceName}
                         </p>
-                        <p className="text-xs text-gray-400 font-mono">{d.geID} {d.site ? `· ${d.site}` : ''}</p>
+                        <p className="text-xs text-gray-400 font-mono">{d.GEsaveID} {d.site ? `· ${d.site}` : ''}</p>
                       </div>
                     </label>
                   );
@@ -1048,7 +1048,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                             {m.deviceName}
                           </span>
                         </td>
-                        <td className="py-3 px-3 font-mono text-xs text-gray-500">{m.geID}</td>
+                        <td className="py-3 px-3 font-mono text-xs text-gray-500">{m.GEsaveID}</td>
                         <td className="py-3 px-3 text-center font-mono text-xs text-orange-700">{m.ch1Before}</td>
                         <td className="py-3 px-3 text-center font-mono text-xs text-indigo-700">{m.ch2After}</td>
                         <td className="py-3 px-3 text-right font-medium text-orange-600">{fmt(m.totalKwhCh1Before)}</td>
@@ -1234,7 +1234,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                 <div key={device.deviceId} className="cc-device-card">
                   <div className="cc-device-header">
                     <h3>{device.deviceName}</h3>
-                    <p className="cc-device-id">{device.geID}</p>
+                    <p className="cc-device-id">{device.GEsaveID}</p>
                   </div>
                   <div className="cc-device-stats">
                     <div className="cc-stat">

@@ -1,4 +1,4 @@
-import { queryGe } from '@/lib/mysql-ge'
+﻿import { queryGe } from '@/lib/mysql-ge'
 
 export type CustomerScopeInput = {
   userId?: string | null
@@ -18,7 +18,7 @@ export type MeterChannelInfo = {
 export type CustomerMeter = {
   deviceId: number
   deviceName: string
-  geId: string | null
+  GEsaveID: string | null
   seriesNo: string | null
   meterId: string | null
   meterNo: string | null
@@ -40,7 +40,7 @@ function buildMeterChannels(ch1: string | null, ch2: string | null): MeterChanne
 function mapDeviceRowToCustomerMeter(row: {
   device_id: number
   device_name: string
-  ge_id?: string | null
+  gesave_id?: string | null
   series_no?: string | null
   meter_id?: string | null
   meter_no?: string | null
@@ -58,11 +58,11 @@ function mapDeviceRowToCustomerMeter(row: {
     row.location_name ? String(row.location_name) : null,
   )
   const seriesNo = row.series_no ? String(row.series_no).trim() : null
-  const geId = row.ge_id ? String(row.ge_id).trim() : null
+  const GEsaveID = row.gesave_id ? String(row.gesave_id).trim() : null
   return {
     deviceId: Number(row.device_id),
     deviceName: String(row.device_name || ''),
-    geId,
+    GEsaveID,
     seriesNo,
     meterId: row.meter_id ? String(row.meter_id) : null,
     meterNo: row.meter_no ? String(row.meter_no) : null,
@@ -72,7 +72,7 @@ function mapDeviceRowToCustomerMeter(row: {
     site,
     locationName,
     label:
-      [row.display_name, seriesNo, geId, row.meter_no, row.meter_id].filter(Boolean).join(' · ') ||
+      [row.display_name, seriesNo, GEsaveID, row.meter_no, row.meter_id].filter(Boolean).join(' · ') ||
       `Device ${row.device_id}`,
   }
 }
@@ -201,7 +201,7 @@ function pushDeviceIdentityConditions(
 
   if (email) {
     conditions.push(
-      '(LOWER(TRIM(d.U_email)) = ? OR LOWER(TRIM(d.P_email)) = ? OR LOWER(TRIM(d.geID)) = ?)',
+      '(LOWER(TRIM(d.U_email)) = ? OR LOWER(TRIM(d.P_email)) = ? OR LOWER(TRIM(d.GEsaveID)) = ?)',
     )
     params.push(email, email, email)
   }
@@ -213,12 +213,12 @@ function pushDeviceIdentityConditions(
   }
   if (username) {
     conditions.push(
-      '(LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) = LOWER(?) OR LOWER(TRIM(d.U_email)) = LOWER(?))',
+      '(LOWER(TRIM(d.GEsaveID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) = LOWER(?) OR LOWER(TRIM(d.U_email)) = LOWER(?))',
     )
     params.push(username, username, username)
   }
   if (userId) {
-    conditions.push('(LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) LIKE ?)')
+    conditions.push('(LOWER(TRIM(d.GEsaveID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) LIKE ?)')
     params.push(userId, `%${userId}%`)
   }
 }
@@ -268,12 +268,12 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     params.push(phone, phone)
   }
   if (hasMomoge && email) {
-    conditions.push('(LOWER(TRIM(mc.nameEN)) = ? OR LOWER(TRIM(d.geID)) = ?)')
+    conditions.push('(LOWER(TRIM(mc.nameEN)) = ? OR LOWER(TRIM(d.GEsaveID)) = ?)')
     params.push(email, email)
   }
   if (hasMomoge && username) {
     conditions.push(
-      '(LOWER(TRIM(mc.serailID)) = LOWER(?) OR LOWER(TRIM(d.geID)) = LOWER(?) OR LOWER(TRIM(mc.nameEN)) = LOWER(?))',
+      '(LOWER(TRIM(mc.serailID)) = LOWER(?) OR LOWER(TRIM(d.GEsaveID)) = LOWER(?) OR LOWER(TRIM(mc.nameEN)) = LOWER(?))',
     )
     params.push(username, username, username)
   }
@@ -290,7 +290,7 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
     SELECT DISTINCT
       d.deviceID AS device_id,
       d.deviceName AS device_name,
-      NULLIF(TRIM(d.geID), '') AS ge_id,
+      NULLIF(TRIM(d.GEsaveID), '') AS gesave_id,
       ${hasSeriesNo ? 'NULLIF(TRIM(d.series_no), "") AS series_no,' : 'NULL AS series_no,'}
       ${hasMomoge ? 'mc.meterID AS meter_id,' : 'NULL AS meter_id,'}
       ${hasCarbonMeter ? 'cm.meterNo AS meter_no,' : 'NULL AS meter_no,'}
@@ -308,7 +308,7 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
   const rows = (await queryGe(sql, params)) as Array<{
     device_id: number
     device_name: string
-    ge_id?: string | null
+    gesave_id?: string | null
     series_no?: string | null
     meter_id: string | null
     meter_no: string | null
@@ -335,7 +335,7 @@ export async function loadCustomerMetersByDeviceIds(deviceIds: number[]): Promis
     `SELECT
       d.deviceID AS device_id,
       d.deviceName AS device_name,
-      NULLIF(TRIM(d.geID), '') AS ge_id,
+      NULLIF(TRIM(d.GEsaveID), '') AS gesave_id,
       ${hasSeriesNo ? 'NULLIF(TRIM(d.series_no), "") AS series_no,' : 'NULL AS series_no,'}
       NULL AS meter_id,
       NULL AS meter_no,
@@ -351,7 +351,7 @@ export async function loadCustomerMetersByDeviceIds(deviceIds: number[]): Promis
   )) as Array<{
     device_id: number
     device_name: string
-    ge_id?: string | null
+    gesave_id?: string | null
     series_no?: string | null
     meter_id: string | null
     meter_no: string | null

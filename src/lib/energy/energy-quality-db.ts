@@ -1,4 +1,4 @@
-import { queryGe } from '@/lib/mysql-ge';
+﻿import { queryGe } from '@/lib/mysql-ge';
 import type { EnergyQualityReport } from './energy-quality-report-model';
 
 export type EqCustomerRow = {
@@ -30,7 +30,7 @@ export type PersistReportInput = {
     deviceName?: string;
     location?: string;
     site?: string;
-    geID?: string;
+    GEsaveID?: string;
     ipAddress?: string;
     customerName?: string;
     customerPhone?: string;
@@ -81,7 +81,7 @@ export async function ensureCustomerSiteForDevice(device: {
   deviceName?: string;
   location?: string;
   site?: string;
-  geID?: string;
+  GEsaveID?: string;
   ipAddress?: string;
   customerName?: string;
   customerPhone?: string;
@@ -128,7 +128,7 @@ export async function ensureCustomerSiteForDevice(device: {
   await queryGe(
     `INSERT INTO eq_device_sites (device_id, site_id, measurement_point, gateway_id)
      VALUES (?, ?, ?, ?)`,
-    [deviceId, siteId, device.deviceName || null, device.geID || device.ipAddress || null],
+    [deviceId, siteId, device.deviceName || null, device.GEsaveID || device.ipAddress || null],
   );
 
   return { customerId, siteId };

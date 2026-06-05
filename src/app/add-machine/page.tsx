@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -33,7 +33,7 @@ export default function AddMachinePage() {
 
   const [form, setForm] = useState({
     deviceName: '',
-    geID: '',
+    GEsaveID: '',
     series_no: '',
     ipAddress: '',
     location: '',
@@ -154,8 +154,8 @@ export default function AddMachinePage() {
                 />
               </div>
               <div>
-                <label className={LABEL}>{ui.geId}</label>
-                <input className={INPUT} value={form.geID} onChange={set('geID')} placeholder={ui.phGeId} />
+                <label className={LABEL}>{ui.GEsaveID}</label>
+                <input className={INPUT} value={form.GEsaveID} onChange={set('GEsaveID')} placeholder={ui.phGeId} />
               </div>
               <div>
                 <label className={LABEL}>{ui.seriesNo}</label>

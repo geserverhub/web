@@ -1,4 +1,4 @@
-export type AddMachineLocale = 'th' | 'ko' | 'en';
+﻿export type AddMachineLocale = 'th' | 'ko' | 'en';
 
 export function resolveAddMachineLocale(locale: string): AddMachineLocale {
   if (locale === 'th' || locale === 'ko' || locale === 'en') return locale;
@@ -18,7 +18,7 @@ type Copy = {
   sectionCustomer: string;
   sectionCustomerSub: string;
   deviceName: string;
-  geId: string;
+  GEsaveID: string;
   seriesNo: string;
   ipAddress: string;
   beforeMeterNo: string;
@@ -70,7 +70,7 @@ const th: Copy = {
   sectionCustomer: 'ข้อมูลลูกค้า',
   sectionCustomerSub: 'Customer Info (Optional)',
   deviceName: 'ชื่ออุปกรณ์',
-  geId: 'GE ID (geID)',
+  GEsaveID: 'GE ID (GEsaveID)',
   seriesNo: 'Series No.',
   ipAddress: 'IP Address',
   beforeMeterNo: 'Before Meter No. (CH1)',
@@ -122,7 +122,7 @@ const ko: Copy = {
   sectionCustomer: '고객 정보',
   sectionCustomerSub: 'Customer Info (Optional)',
   deviceName: '장치명',
-  geId: 'GE ID (geID)',
+  GEsaveID: 'GE ID (GEsaveID)',
   seriesNo: 'Series No.',
   ipAddress: 'IP Address',
   beforeMeterNo: 'Before Meter No. (CH1)',
@@ -174,7 +174,7 @@ const en: Copy = {
   sectionCustomer: 'Customer Information',
   sectionCustomerSub: 'Customer Info (Optional)',
   deviceName: 'Device Name',
-  geId: 'GE ID (geID)',
+  GEsaveID: 'GE ID (GEsaveID)',
   seriesNo: 'Series No.',
   ipAddress: 'IP Address',
   beforeMeterNo: 'Before Meter No. (CH1)',

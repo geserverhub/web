@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSite } from '@/lib/SiteContext';
@@ -40,7 +40,7 @@ type MqttSettings = {
 type DeviceConnectivity = {
   device_id: number;
   deviceName?: string;
-  geID?: string;
+  GEsaveID?: string;
   site?: string;
   location?: string;
   ipAddress?: string;
@@ -88,7 +88,7 @@ const COPY = {
     stopBits: 'Stop bits',
     saveMqtt: 'บันทึก MQTT / Gateway',
     device: 'อุปกรณ์',
-    geId: 'GE ID',
+    GEsaveID: 'GE ID',
     slaves: 'Slave ก่อน/หลัง',
     topic: 'MQTT Topic',
     status: 'สถานะ',
@@ -144,7 +144,7 @@ const COPY = {
     stopBits: 'Stop bits',
     saveMqtt: 'Save MQTT / gateway',
     device: 'Device',
-    geId: 'GE ID',
+    GEsaveID: 'GE ID',
     slaves: 'Before / after slave',
     topic: 'MQTT topic',
     status: 'Status',
@@ -199,7 +199,7 @@ const COPY = {
     stopBits: 'Stop bits',
     saveMqtt: 'MQTT/게이트웨이 저장',
     device: '장치',
-    geId: 'GE ID',
+    GEsaveID: 'GE ID',
     slaves: 'Before/after slave',
     topic: 'MQTT topic',
     status: '상태',
@@ -260,20 +260,20 @@ function buildTopic(
   prefix: string,
   site: string,
   deviceId: number,
-  geID?: string,
+  GEsaveID?: string,
   custom?: string | null
 ) {
   if (custom?.trim()) return custom.trim();
-  const id = geID || String(deviceId);
+  const id = GEsaveID || String(deviceId);
   return `${prefix}/${site}/${id}/telemetry`;
 }
 
-function buildPayloadPreview(deviceId: number, geID?: string) {
+function buildPayloadPreview(deviceId: number, GEsaveID?: string) {
   return JSON.stringify(
     {
       ...GE_MQTT_PAYLOAD_EXAMPLE,
       device_id: deviceId,
-      geID: geID || GE_MQTT_PAYLOAD_EXAMPLE.geID,
+      GEsaveID: GEsaveID || GE_MQTT_PAYLOAD_EXAMPLE.GEsaveID,
       record_time: new Date().toISOString().slice(0, 19),
     },
     null,
@@ -400,7 +400,7 @@ export default function DeviceConnectivityPage() {
       enabled: device.enabled !== 0 && device.enabled !== false,
       mqtt_topic:
         device.mqtt_topic ??
-        buildTopic(mqtt.topic_prefix, selectedSite, device.device_id, device.geID),
+        buildTopic(mqtt.topic_prefix, selectedSite, device.device_id, device.GEsaveID),
     });
     setModalOpen(true);
   }
@@ -455,13 +455,13 @@ export default function DeviceConnectivityPage() {
         mqtt.topic_prefix,
         selectedSite,
         editing.device_id,
-        editing.geID,
+        editing.GEsaveID,
         editing.mqtt_topic
       )
     : '';
 
   const previewPayload = editing
-    ? buildPayloadPreview(editing.device_id, editing.geID)
+    ? buildPayloadPreview(editing.device_id, editing.GEsaveID)
     : '';
 
   function copyPreview() {
@@ -712,7 +712,7 @@ export default function DeviceConnectivityPage() {
             <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
               <tr>
                 <th className="px-4 py-3">{ui.device}</th>
-                <th className="px-4 py-3">{ui.geId}</th>
+                <th className="px-4 py-3">{ui.GEsaveID}</th>
                 <th className="px-4 py-3">{ui.slaves}</th>
                 <th className="px-4 py-3">{ui.topic}</th>
                 <th className="px-4 py-3">{ui.status}</th>
@@ -738,7 +738,7 @@ export default function DeviceConnectivityPage() {
                     mqtt.topic_prefix,
                     selectedSite,
                     d.device_id,
-                    d.geID,
+                    d.GEsaveID,
                     d.mqtt_topic
                   );
                   const isOn = d.enabled !== 0 && d.enabled !== false;
@@ -747,7 +747,7 @@ export default function DeviceConnectivityPage() {
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {d.deviceName || `#${d.device_id}`}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-emerald-700">{d.geID || '—'}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-emerald-700">{d.GEsaveID || '—'}</td>
                       <td className="px-4 py-3 text-xs">
                         {d.slave_before ?? d.beforeMeterNo ?? 1} / {d.slave_metrics ?? d.metricsMeterNo ?? 2}
                       </td>
@@ -804,7 +804,7 @@ export default function DeviceConnectivityPage() {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-600">
-                <strong>{editing.deviceName}</strong> · GE ID: {editing.geID || '—'} · Device ID:{' '}
+                <strong>{editing.deviceName}</strong> · GE ID: {editing.GEsaveID || '—'} · Device ID:{' '}
                 {editing.device_id}
               </p>
               <div className="grid sm:grid-cols-2 gap-3">

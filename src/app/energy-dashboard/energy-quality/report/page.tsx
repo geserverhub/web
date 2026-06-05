@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
@@ -29,7 +29,7 @@ import {
   chartDataCh1Only,
   type DbChartPoint,
 } from '@/lib/energy/energy-quality-current-analysis';
-import { isCh1OnlyScope, normalizeRecordScope } from '@/lib/energy/energy-quality-scope';
+import { normalizeRecordScope } from '@/lib/energy/energy-quality-scope';
 import {
   RefreshCw,
   Wifi,
@@ -123,7 +123,7 @@ function EnergyQualityReportInner() {
 
   const selectedInfo = filteredDevices.find((d) => d.deviceID === selectedDevice);
   const rt = reportT(printLocale);
-  const ch1Only = isCh1OnlyScope(selectedInfo?.recordScope);
+  const ch1Only = true;
 
   const hasLiveData = channelHasLiveData(ch1) || (!ch1Only && channelHasLiveData(ch2));
   const livePending = Boolean(selectedDevice) && !hasLiveData;
@@ -194,7 +194,7 @@ function EnergyQualityReportInner() {
       const list: DeviceRow[] = rows.map((d: DeviceRow & { deviceID?: string | number }) => ({
         deviceID: String(d.deviceID ?? ''),
         deviceName: d.deviceName || String(d.deviceID),
-        geID: d.geID,
+        GEsaveID: d.GEsaveID,
         location: d.location?.trim() || '',
         beforeMeterNo: d.beforeMeterNo,
         metricsMeterNo: d.metricsMeterNo,
@@ -219,7 +219,6 @@ function EnergyQualityReportInner() {
       else setRefreshing(true);
       setError(null);
       const scope = normalizeRecordScope(selectedInfo.recordScope);
-      const scopeCh1Only = isCh1OnlyScope(selectedInfo.recordScope);
       const scopeQ = `&scope=${scope}`;
       const [monRes, histRes] = await Promise.all([
         fetch(
@@ -227,7 +226,7 @@ function EnergyQualityReportInner() {
           { cache: 'no-store' },
         ),
         fetch(
-          `/api/ge-energy/current-history?deviceId=${encodeURIComponent(selectedDevice)}&hours=24${scopeQ}`,
+          `/api/ge-energy/current-history?deviceId=${encodeURIComponent(selectedDevice)}&hours=336${scopeQ}`,
           { cache: 'no-store' },
         ),
       ]);
@@ -235,9 +234,9 @@ function EnergyQualityReportInner() {
       const histJson = await histRes.json();
 
       if (json.success && json.data?.metrics) {
-        const { ch1: c1, ch2: c2 } = mapChannels(json.data.metrics as Record<string, unknown>, scopeCh1Only);
+        const { ch1: c1 } = mapChannels(json.data.metrics as Record<string, unknown>, ch1Only);
         setCh1(c1);
-        setCh2(scopeCh1Only ? EMPTY_CHANNEL : c2);
+        setCh2(EMPTY_CHANNEL);
         setLastUpdate(
           json.data.lastUpdate
             ? new Date(json.data.lastUpdate).toLocaleString()
@@ -253,7 +252,7 @@ function EnergyQualityReportInner() {
 
       const hist = histJson.data;
       const rawPoints = (hist?.chartData ?? []) as DbChartPoint[];
-      const points = scopeCh1Only ? chartDataCh1Only(rawPoints) : rawPoints;
+      const points = chartDataCh1Only(rawPoints);
       setChartData(points);
       setHistoryPoints(hist?.dataPoints ?? points.length);
       if (hist?.period) setHistoryPeriod(String(hist.period));
@@ -404,13 +403,14 @@ function EnergyQualityReportInner() {
       ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
       ch2: selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL,
       ch1Only,
+      logoUrl: `${window.location.origin}/momoge/Logo-brand.png`,
       chartData: ch1Only ? chartDataCh1Only(chartData) : chartData,
       historyPeriod,
       historyPoints,
       measurementStart,
       measurementEnd,
       deviceName: device.deviceName,
-      meterId: device.geID || device.deviceID,
+      meterId: device.GEsaveID || device.deviceID,
       chartStats: dbAnalysis.stats,
       technicalInsights: dbAnalysis.insights,
       snapshotLabels: {
@@ -530,7 +530,7 @@ function EnergyQualityReportInner() {
                 onClick={() => setSelectedDevice(d.deviceID)}
               >
                 {d.deviceName}
-                <span className="eq-sub">{d.geID || d.deviceID}</span>
+                <span className="eq-sub">{d.GEsaveID || d.deviceID}</span>
               </button>
             ))
           )}
@@ -572,7 +572,7 @@ function EnergyQualityReportInner() {
               powerFactor: ui.powerFactor,
               frequency: ui.frequency,
             }}
-            dbChartData={chartData}
+            dbChartData={chartDataCh1Only(chartData)}
             dbStats={dbAnalysis.stats}
             technicalInsights={dbAnalysis.insights}
             chartUi={{ l1: ui.l1, l2: ui.l2, l3: ui.l3, noChart: ui.noChart }}

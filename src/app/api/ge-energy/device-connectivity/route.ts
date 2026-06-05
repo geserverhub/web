@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import { ensureConnectivitySchema } from '@/lib/energy/ensure-connectivity-schema';
 
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 type ConnectivityRow = {
   device_id: number;
   deviceName?: string;
-  geID?: string;
+  GEsaveID?: string;
   site?: string;
   location?: string;
   ipAddress?: string;
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         `SELECT
           d.deviceID AS device_id,
           d.deviceName,
-          d.geID,
+          d.GEsaveID,
           d.site,
           d.location,
           d.ipAddress,
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
       `SELECT
         d.deviceID AS device_id,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.site,
         d.location,
         d.ipAddress,

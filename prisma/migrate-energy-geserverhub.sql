@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `devices` (
   `deviceID` int NOT NULL AUTO_INCREMENT,
   `client_id` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `deviceName` varchar(255) NOT NULL,
-  `geID` varchar(255) DEFAULT NULL,
+  `GEsaveID` varchar(255) DEFAULT NULL,
   `series_no` varchar(50) DEFAULT NULL,
   `ipAddress` varchar(45) DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `devices` (
   `customerPhone` varchar(50) DEFAULT NULL,
   `customerAddress` text DEFAULT NULL,
   PRIMARY KEY (`deviceID`),
-  UNIQUE KEY `unique_geID` (`geID`),
+  UNIQUE KEY `unique_GEsaveID` (`GEsaveID`),
   KEY `idx_devices_site` (`site`),
   KEY `idx_devices_client_id` (`client_id`),
   CONSTRAINT `fk_devices_client`
@@ -36,18 +36,38 @@ CREATE TABLE IF NOT EXISTS `devices` (
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Legacy: rename old id column to geID when upgrading older installs
-SET @col_exists = (
+-- Legacy: rename ksaveID / geID → GEsaveID when upgrading older installs
+SET @col_ksave = (
   SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices' AND COLUMN_NAME = 'ksaveID'
 );
-SET @sql = IF(@col_exists > 0,
-  'ALTER TABLE devices CHANGE COLUMN ksaveID geID varchar(255) DEFAULT NULL',
+SET @has_gesave = (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices' AND COLUMN_NAME = 'GEsaveID'
+);
+SET @sql_ksave = IF(@col_ksave > 0 AND @has_gesave = 0,
+  'ALTER TABLE devices CHANGE COLUMN ksaveID GEsaveID varchar(255) DEFAULT NULL',
   'SELECT 1'
 );
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+PREPARE stmt_ksave FROM @sql_ksave;
+EXECUTE stmt_ksave;
+DEALLOCATE PREPARE stmt_ksave;
+
+SET @col_ge = (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices' AND COLUMN_NAME = 'geID'
+);
+SET @has_gesave2 = (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices' AND COLUMN_NAME = 'GEsaveID'
+);
+SET @sql_ge = IF(@col_ge > 0 AND @has_gesave2 = 0,
+  'ALTER TABLE devices CHANGE COLUMN geID GEsaveID varchar(255) DEFAULT NULL',
+  'SELECT 1'
+);
+PREPARE stmt_ge FROM @sql_ge;
+EXECUTE stmt_ge;
+DEALLOCATE PREPARE stmt_ge;
 
 CREATE TABLE IF NOT EXISTS `power_records` (
   `id` int NOT NULL AUTO_INCREMENT,

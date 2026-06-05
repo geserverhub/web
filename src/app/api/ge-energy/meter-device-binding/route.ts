@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 
 export const runtime = 'nodejs';
@@ -75,7 +75,7 @@ export async function GET() {
 
     const [devices, meters, bindings] = await Promise.all([
       queryGeserverhub(
-        `SELECT d.deviceID, d.deviceName, d.geID, d.location, d.site
+        `SELECT d.deviceID, d.deviceName, d.GEsaveID, d.location, d.site
          FROM devices d
          ORDER BY d.deviceName ASC`
       ),
@@ -86,7 +86,7 @@ export async function GET() {
       ),
       queryGeserverhub(
         `SELECT b.id, b.device_id, b.meter_id, b.meter_channel, b.meter_role, b.created_at, b.updated_at,
-                d.deviceName, d.geID, d.location,
+                d.deviceName, d.GEsaveID, d.location,
                 cm.meterNo, cm.meterType
          FROM ge_energy_meter_device_binding b
          LEFT JOIN devices d ON d.deviceID = b.device_id

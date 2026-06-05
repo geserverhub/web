@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import {
   DEFAULT_CREDIT_PRICE_KRW_PER_TONNE,
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // --- All-devices list (no power_records join) for the picker ---
     if (searchParams.get('list') === 'true') {
       const listRows = (await queryGeserverhub(
-        `SELECT deviceID, deviceName, geID, site, location, ipAddress
+        `SELECT deviceID, deviceName, GEsaveID, site, location, ipAddress
          FROM devices ORDER BY deviceName ASC`
       )) as Row[];
       return NextResponse.json({
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         devices: listRows.map((r) => ({
           deviceId: Number(r.deviceID),
           deviceName: String(r.deviceName || ''),
-          geID: String(r.geID || ''),
+          GEsaveID: String(r.GEsaveID || ''),
           site: String(r.site || r.location || ''),
         })),
       });
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       `SELECT
         d.deviceID   AS device_id,
         d.deviceName AS device_name,
-        d.geID       AS ge_id,
+        d.GEsaveID       AS gesave_id,
         d.site,
         d.location,
         d.ipAddress  AS ip_address,
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
        JOIN devices d ON pr.device_id = d.deviceID
        WHERE pr.record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
          ${whereExtra}
-       GROUP BY d.deviceID, d.deviceName, d.geID, d.site, d.location, d.ipAddress
+       GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.site, d.location, d.ipAddress
        ORDER BY co2_kg DESC`,
       params
     )) as Row[];
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         rank: idx + 1,
         deviceId: Number(r.device_id),
         deviceName: String(r.device_name || ''),
-        geID: String(r.ge_id || ''),
+        GEsaveID: String(r.gesave_id || ''),
         site: String(r.site || r.location || ''),
         ipAddress: String(r.ip_address || ''),
         ch1Before: String(r.ch1_before || '—'),

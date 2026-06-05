@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
 
 export const runtime = 'nodejs'
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         n.created_at,
         n.read_at,
         d.deviceName,
-        d.geID
+        d.GEsaveID
       FROM notifications n
       LEFT JOIN devices d ON n.device_id = d.deviceID
       WHERE 1=1
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         message: notif.message,
         deviceId: notif.device_id,
         deviceName: notif.deviceName,
-        geID: notif.geID,
+        GEsaveID: notif.GEsaveID,
         site: notif.site,
         metadata: notif.metadata ? JSON.parse(notif.metadata) : null,
         read: notif.is_read === 1,

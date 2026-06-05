@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
 
 export const runtime = 'nodejs'
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const {
-      deviceName, geID, series_no, ipAddress, location,
+      deviceName, GEsaveID, series_no, ipAddress, location,
       site, status, beforeMeterNo, metricsMeterNo,
       U_email, P_email, phone, pass_phone,
       latitude, longitude, customerName, customerPhone, customerAddress,
@@ -42,13 +42,13 @@ export async function POST(req: NextRequest) {
 
     await queryGe(
       `INSERT INTO devices
-        (deviceName, geID, series_no, ipAddress, location, site, status,
+        (deviceName, GEsaveID, series_no, ipAddress, location, site, status,
          beforeMeterNo, metricsMeterNo, U_email, P_email, phone, pass_phone,
          latitude, longitude, customerName, customerPhone, customerAddress)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         deviceName.trim(),
-        geID?.trim() || null,
+        GEsaveID?.trim() || null,
         series_no?.trim() || null,
         ipAddress?.trim() || null,
         location?.trim() || null,

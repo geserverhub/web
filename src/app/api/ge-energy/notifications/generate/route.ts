@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
 
 export const runtime = 'nodejs'
@@ -44,13 +44,13 @@ export async function POST(request: NextRequest) {
       SELECT
         d.deviceID,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.location,
         d.site,
         MAX(p.record_time) as last_record
       FROM devices d
       LEFT JOIN power_records p ON d.deviceID = p.device_id
-      GROUP BY d.deviceID, d.deviceName, d.geID, d.location, d.site
+      GROUP BY d.deviceID, d.deviceName, d.GEsaveID, d.location, d.site
       HAVING last_record < NOW() - INTERVAL 20 MINUTE
          OR last_record IS NULL
     `)
@@ -74,12 +74,12 @@ export async function POST(request: NextRequest) {
             'alert',
             'device_status',
             `Device Offline: ${device.deviceName}`,
-            `${device.deviceName} (${device.geID}) at ${device.location || 'Unknown location'} has gone offline`,
+            `${device.deviceName} (${device.GEsaveID}) at ${device.location || 'Unknown location'} has gone offline`,
             device.deviceID,
             device.site,
             JSON.stringify({
               device_name: device.deviceName,
-              ge_id: device.geID,
+              gesave_id: device.GEsaveID,
               location: device.location,
               last_seen: device.last_record
             }),

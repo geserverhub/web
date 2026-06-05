@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGe } from '@/lib/mysql-ge';
 import {
   assertCustomerDeviceAccess,
@@ -13,7 +13,7 @@ type ColumnRow = { COLUMN_NAME: string };
 type DeviceRow = {
   deviceID: number | string;
   deviceName?: string | null;
-  geID?: string | null;
+  GEsaveID?: string | null;
   site?: string | null;
   customerName?: string | null;
   status?: string | null;
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       `SELECT
         d.deviceID,
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.site,
         d.customerName,
         d.status,
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
       return {
         deviceID: d.deviceID,
         deviceName: d.deviceName,
-        geID: d.geID,
+        GEsaveID: d.GEsaveID,
         site: d.site,
         customerName: d.customerName,
         status: d.status,

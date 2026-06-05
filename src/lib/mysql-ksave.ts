@@ -10,6 +10,7 @@ export {
 export {
   getAllDevices,
   getDeviceById,
-  getDeviceByGeId,
-  getDeviceByGeId as getDeviceByKsaveId,
+  getDeviceByGEsaveId,
+  getDeviceByGEsaveId as getDeviceByGeId,
+  getDeviceByGEsaveId as getDeviceByKsaveId,
 } from './mysql-ge';

@@ -1,4 +1,4 @@
-import { queryGeserverhub } from '@/lib/geserverhub-db';
+﻿import { queryGeserverhub } from '@/lib/geserverhub-db';
 
 export { GE_MQTT_PAYLOAD_EXAMPLE } from './mqtt-payload';
 
@@ -209,7 +209,7 @@ export async function savePowerRecord(body: PowerRecordPayload): Promise<SavePow
   };
 }
 
-/** Resolve device_id from geID / deviceId aliases in MQTT JSON. */
+/** Resolve device_id from GEsaveID / deviceId aliases in MQTT JSON. */
 export async function resolveDeviceIdFromPayload(raw: Record<string, unknown>): Promise<number | null> {
   const direct =
     raw.device_id ?? raw.deviceId ?? raw.deviceID ?? raw.id;
@@ -217,11 +217,12 @@ export async function resolveDeviceIdFromPayload(raw: Record<string, unknown>): 
     return Number(direct);
   }
 
-  const geId = raw.geID ?? raw.geId ?? raw.ge_id;
-  if (geId == null || String(geId).trim() === '') return null;
+  const GEsaveID =
+    raw.GEsaveID ?? raw.geID ?? raw.geId ?? raw.gesave_id ?? raw.ksaveID ?? raw.ksave;
+  if (GEsaveID == null || String(GEsaveID).trim() === '') return null;
 
-  const rows = await queryGeserverhub('SELECT deviceID FROM devices WHERE geID = ? LIMIT 1', [
-    String(geId).trim(),
+  const rows = await queryGeserverhub('SELECT deviceID FROM devices WHERE GEsaveID = ? LIMIT 1', [
+    String(GEsaveID).trim(),
   ]);
   if (!rows.length) return null;
   return Number((rows[0] as { deviceID: number }).deviceID);

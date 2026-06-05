@@ -1,4 +1,4 @@
-import { fmtA, fmtNum, type EqLocale } from './energy-quality-i18n';
+﻿import { fmtA, fmtNum, type EqLocale } from './energy-quality-i18n';
 import {
   computeCurrentHistoryStats,
   getLatestChartPhases,
@@ -19,6 +19,10 @@ import {
   estimatePotentialSaving,
 } from './energy-quality-financial-estimate';
 import { buildActionPlan } from './energy-quality-action-plan';
+import {
+  buildProfessionalReportContent,
+  type ProfessionalReportContent,
+} from './energy-quality-professional-analysis';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
 export type HarmonicRisk = 'acceptable' | 'caution' | 'high';
@@ -38,7 +42,7 @@ export type ReportChannel = {
 export type DeviceReportInput = {
   deviceID: string;
   deviceName: string;
-  geID?: string;
+  GEsaveID?: string;
   location?: string;
   beforeMeterNo?: string;
   metricsMeterNo?: string;
@@ -118,6 +122,8 @@ export type EnergyQualityReport = {
   phaseTable: { phase: string; ch1: string; ch2: string }[];
   executiveBullets: string[];
   executiveKpis: ReportField[];
+  /** ZERA-style professional analysis (key findings table, interpretation, phased recs) */
+  professional: ProfessionalReportContent | null;
 };
 
 function avg(vals: (number | null | undefined)[]): number | null {
@@ -326,6 +332,7 @@ export function buildDisplayEnergyQualityReport(input: BuildDisplayReportInput):
       field(t.f_payback, '—'),
       field(t.f_nextStep, t.selectMeterHint),
     ],
+    professional: null,
   };
 }
 
@@ -437,10 +444,12 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     });
   }
   if (peakVal != null && avgI != null && peakVal > avgI * 1.5) {
+    const peakRecTime =
+      histStats?.peakTimeAnalysis?.peakPeriod ?? (peakTime !== '—' ? peakTime : '—');
     recommendations.push({
       priority: recommendations.length + 1,
       title: t.recPeakTitle,
-      description: t.recPeakDesc.replace('{time}', peakTime),
+      description: t.recPeakDesc.replace('{time}', peakRecTime),
     });
   }
   recommendations.push({
@@ -464,8 +473,11 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     );
   }
   if (peakVal != null) {
+    const pt = histStats?.peakTimeAnalysis;
     const peakLabel =
-      peakTime !== '—' ? `${display(peakVal, 'A')} @ ${peakTime}` : display(peakVal, 'A');
+      peakTime !== '—'
+        ? `${display(peakVal, 'A')} @ ${peakTime}${pt?.peakPeriod ? ` · ${pt.peakPeriod}` : ''}`
+        : display(peakVal, 'A');
     executiveBullets.push(
       fillTpl(t.execLinePeakDemand, {
         value: fmtWithHist(peakLabel, peakFromHistory),
@@ -529,7 +541,7 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       field(t.f_preparedBy, input.preparedBy || t.preparedByDefault),
     ],
     measurement: [
-      field(t.f_meterId, device.geID || device.beforeMeterNo || device.deviceID),
+      field(t.f_meterId, device.GEsaveID || device.beforeMeterNo || device.deviceID),
       field(t.f_gatewayId, device.ipAddress || device.deviceID),
       field(t.f_measurementPoint, `${device.deviceName} · ${t.ch1Label}`),
       field(t.f_voltageSystem, t.threePhase400V),
@@ -562,6 +574,20 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     peak: [
       field(t.f_peakDemand, display(peakVal, 'A')),
       field(t.f_peakTime, peakTime),
+      field(t.f_peakPeriod, histStats?.peakTimeAnalysis?.peakPeriod ?? '—'),
+      field(t.f_peakWindows, histStats?.peakTimeAnalysis?.dominantWindows ?? '—'),
+      field(
+        t.f_onPeakAvg,
+        histStats?.peakTimeAnalysis?.onPeakAvgA != null
+          ? display(histStats.peakTimeAnalysis.onPeakAvgA, 'A')
+          : '—',
+      ),
+      field(
+        t.f_offPeakAvg,
+        histStats?.peakTimeAnalysis?.offPeakAvgA != null
+          ? display(histStats.peakTimeAnalysis.offPeakAvgA, 'A')
+          : '—',
+      ),
       field(t.f_avgLoad, display(avgI, 'A')),
       field(t.f_peakRatio, peakRatio != null ? fmtNum(peakRatio, 2) : '—'),
       field(t.f_demandChargeImpact, peakRatio != null && peakRatio > 1.3 ? t.statusWarning : t.statusGood),
@@ -656,6 +682,32 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       { phase: t.phaseL3, ch1: display(i3, 'A'), ch2: display(j3, 'A') },
        { phase: t.phaseAvg, ch1: display(avg(resolvedCh1), 'A'), ch2: display(avg(resolvedCh2), 'A') },
     ],
+    professional: buildProfessionalReportContent({
+      t,
+      points: histPoints,
+      stats: histStats,
+      ch1,
+      historyPoints: input.historyPoints,
+      historyPeriod: input.historyPeriod ?? '24h',
+      measurementStart: input.measurementStart,
+      measurementEnd: input.measurementEnd,
+      overallRisk: risk.level,
+      estMonthlyKwh,
+      estAnnualKwh: estMonthlyKwh != null ? estMonthlyKwh * 12 : null,
+      potentialSaving,
+      paybackLabel:
+        potentialSaving != null && potentialSaving > 0
+          ? formatPaybackPeriod(potentialSaving, investment, t)
+          : '—',
+      peakVal,
+      peakTime,
+      loadFactor,
+      pf,
+      curImb,
+      voltImb,
+      thd: thdAvg,
+      thdv: null,
+    }),
   };
 }
 

@@ -792,9 +792,9 @@
   border: 1px solid color-mix(in srgb, var(--phase-accent) 25%, #e2e8f0);
 }
 
-.eq-card-icon--l1 { color: #c2410c; }
-.eq-card-icon--l2 { color: #ea580c; }
-.eq-card-icon--l3 { color: #f97316; }
+.eq-card-icon--l1 { color: #dc2626; }
+.eq-card-icon--l2 { color: #16a34a; }
+.eq-card-icon--l3 { color: #ca8a04; }
 .eq-card-icon--sum { color: #059669; }
 
 .eq-phase-label {
@@ -2024,6 +2024,152 @@
 
 .eq-report-rec-list--primary {
   margin: 0 0 0.85rem;
+}
+
+/* Professional PQ report (ZERA-style) */
+.eq-pro-report-subtitle {
+  margin: -0.5rem 0 1rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #334155;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 0.65rem;
+}
+
+.eq-pro-block { margin-bottom: 1.1rem; }
+
+.eq-pro-intro {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.eq-pro-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  box-shadow: var(--eq-shadow-sm);
+}
+
+.eq-pro-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.eq-pro-table th {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  background: linear-gradient(180deg, #065f46 0%, #047857 100%);
+  color: #fff;
+  font-weight: 700;
+}
+
+.eq-pro-table td {
+  padding: 0.5rem 0.65rem;
+  border-top: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.eq-pro-table tbody tr:nth-child(even) { background: #f8fafc; }
+
+.eq-pro-assess {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.eq-pro-assess--good { color: #047857; }
+.eq-pro-assess--caution { color: #b45309; }
+.eq-pro-assess--warn { color: #b91c1c; }
+.eq-pro-assess--neutral { color: #64748b; }
+
+.eq-pro-risk-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.65rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.eq-pro-narrative {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.eq-pro-narrative p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: #334155;
+}
+
+.eq-pro-interpret-list {
+  margin: 0 0 1rem;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.eq-pro-block--interpret {
+  padding: 0.75rem 0.85rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 0.65rem;
+}
+
+.eq-pro-phase-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .eq-pro-phase-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.eq-pro-phase-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  background: #fff;
+}
+
+.eq-pro-phase-card header {
+  display: flex;
+  gap: 0.55rem;
+  margin-bottom: 0.5rem;
+}
+
+.eq-pro-phase-num {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  background: #047857;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+}
+
+.eq-pro-pct-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.eq-pro-pct-cell {
+  text-align: center;
+  padding: 0.4rem 0.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.4rem;
 }
 
 @media print {

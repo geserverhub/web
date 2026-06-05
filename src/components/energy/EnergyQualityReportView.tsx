@@ -12,6 +12,14 @@ import { fmtNum } from '@/lib/energy/energy-quality-i18n';
 import EnergyQualityLiveSnapshot from '@/components/energy/EnergyQualityLiveSnapshot';
 import { ReportCurrentChartPanel } from '@/components/energy/EnergyQualityReportCharts';
 import EnergyQualityReportSectionBlock from '@/components/energy/EnergyQualityReportSectionBlock';
+import {
+  EnergyQualityAnalysisStats,
+  EnergyQualityInterpretationBlock,
+  EnergyQualityKeyFindingsTable,
+  EnergyQualityPhasedRecommendations,
+  EnergyQualityProfessionalNarrative,
+  EnergyQualityReportSubtitle,
+} from '@/components/energy/EnergyQualityProfessionalSections';
 import { buildReportSectionPacks } from '@/lib/energy/energy-quality-section-analysis';
 import { riskLevelFromPaybackValue } from '@/lib/energy/energy-quality-payback';
 import type {
@@ -331,6 +339,10 @@ export default function EnergyQualityReportView({
         </div>
       </header>
 
+      {report.professional ? (
+        <EnergyQualityReportSubtitle text={report.professional.reportSubtitle} />
+      ) : null}
+
       <p className="eq-report-ai-note">{rt.aiNote}</p>
 
       {snapshotUi && ch1 ? (
@@ -419,6 +431,15 @@ export default function EnergyQualityReportView({
         </h3>
 
         <h4 className="eq-report-exec-subtitle">{rt.execSummaryTitle}</h4>
+
+        {report.professional ? (
+          <>
+            <EnergyQualityKeyFindingsTable pro={report.professional} rt={rt} />
+            <EnergyQualityProfessionalNarrative paragraphs={report.professional.executiveNarrative} />
+            <EnergyQualityAnalysisStats pro={report.professional} rt={rt} />
+          </>
+        ) : null}
+
         <ul className="eq-report-exec-bullets">
           {report.executiveBullets.map((line) => (
             <li key={line}>{line}</li>
@@ -565,17 +586,25 @@ export default function EnergyQualityReportView({
         rt={rt}
         pending={pending}
         primaryContent={
-          <ol className="eq-report-rec-list eq-report-rec-list--primary">
-            {report.recommendations.map((rec) => (
-              <li key={rec.priority} className="eq-report-rec-item">
-                <span className="eq-report-rec-priority">
-                  {rt.priority} {rec.priority}
-                </span>
-                <strong>{rec.title}</strong>
-                <p>{rec.description}</p>
-              </li>
-            ))}
-          </ol>
+          <>
+            {report.professional ? (
+              <>
+                <EnergyQualityInterpretationBlock pro={report.professional} rt={rt} />
+                <EnergyQualityPhasedRecommendations pro={report.professional} rt={rt} />
+              </>
+            ) : null}
+            <ol className="eq-report-rec-list eq-report-rec-list--primary">
+              {report.recommendations.map((rec) => (
+                <li key={rec.priority} className="eq-report-rec-item">
+                  <span className="eq-report-rec-priority">
+                    {rt.priority} {rec.priority}
+                  </span>
+                  <strong>{rec.title}</strong>
+                  <p>{rec.description}</p>
+                </li>
+              ))}
+            </ol>
+          </>
         }
       />
       <EnergyQualityReportSectionBlock

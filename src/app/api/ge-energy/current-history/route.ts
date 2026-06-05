@@ -79,6 +79,8 @@ async function loadHistoryRecords(
     'before_L3',
     'before_P',
     'before_PF',
+    'before_THD',
+    'before_kWh',
     'metrics_L1',
     'metrics_L2',
     'metrics_L3',
@@ -160,6 +162,27 @@ export async function GET(request: NextRequest) {
         : readCh2Currents(record, ch2CurrentCols)
       const beforeVals = [b1, b2, b3].filter((v): v is number => v != null)
       const afterVals = [a1, a2, a3].filter((v): v is number => v != null)
+      const beforeKwRaw = record.before_P
+      const beforeKw =
+        beforeKwRaw != null && beforeKwRaw !== '' && Number.isFinite(Number(beforeKwRaw))
+          ? Number(beforeKwRaw)
+          : null
+      const beforePfRaw = record.before_PF
+      const beforePf =
+        beforePfRaw != null && beforePfRaw !== '' && Number.isFinite(Number(beforePfRaw))
+          ? Number(beforePfRaw)
+          : null
+      const beforeThdRaw = record.before_THD
+      const beforeThd =
+        beforeThdRaw != null && beforeThdRaw !== '' && Number.isFinite(Number(beforeThdRaw))
+          ? Number(beforeThdRaw)
+          : null
+      let currentImbalancePct: number | null = null
+      if (beforeVals.length >= 2) {
+        const avgI = beforeVals.reduce((a, b) => a + b, 0) / beforeVals.length
+        const spread = Math.max(...beforeVals) - Math.min(...beforeVals)
+        if (avgI > 0) currentImbalancePct = (spread / avgI) * 100
+      }
       return {
         time: time.toLocaleTimeString('en-US', {
           hour: '2-digit',
@@ -171,6 +194,10 @@ export async function GET(request: NextRequest) {
         beforeL2: b2,
         beforeL3: b3,
         beforeAvg: beforeVals.length ? beforeVals.reduce((a, b) => a + b, 0) / beforeVals.length : null,
+        beforeKw,
+        beforePf,
+        beforeThd,
+        currentImbalancePct,
         afterL1: a1,
         afterL2: a2,
         afterL3: a3,

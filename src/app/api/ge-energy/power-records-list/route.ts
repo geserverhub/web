@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import * as XLSX from 'xlsx';
 
@@ -39,7 +39,7 @@ const SELECT_FIELDS = `
   pr.id,
   pr.device_id,
   d.deviceName   AS device_name,
-  d.geID         AS ge_id,
+  d.GEsaveID         AS gesave_id,
   d.site,
   d.location,
   d.series_no,
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
       const sheetData = rows.map((r) => ({
         ID: r.id,
         'Device Name': r.device_name,
-        'GE ID': r.ge_id,
+        'GE ID': r.gesave_id,
         Site: r.site || r.location,
         'Series No': r.series_no,
         'Record Time': r.record_time,

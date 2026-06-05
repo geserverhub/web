@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as query } from '@/lib/geserverhub-db'
 import { ensureCarbonSchema } from '@/lib/ge-energy/ensure-carbon-schema'
 
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         cm.meterNo,
         -- devices
         d.deviceName,
-        d.geID,
+        d.GEsaveID,
         d.series_no,
         d.location     AS deviceLocation,
         d.ipAddress,

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -27,7 +27,7 @@ interface PowerSnapshot {
 
 interface PowerRecordRow {
   device?: string
-  ksave?: string
+  GEsaveID?: string
   time?: string
   location?: string
   series_no?: string
@@ -90,11 +90,11 @@ export default function CompareMonitoringPage() {
     }
   }, [])
 
-  // group rows by device/ksave for card rendering
+  // group rows by device / GEsaveID for card rendering
   const groups = useMemo(() => {
     const map = new Map<string, PowerRecordRow[]>()
     for (const r of rows) {
-      const key = (r.device || r.ksave || 'Unknown') as string
+      const key = (r.device || r.GEsaveID || 'Unknown') as string
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(r)
     }
@@ -152,8 +152,8 @@ export default function CompareMonitoringPage() {
 
     const location = latest?.location ?? '—'
 
-    // K-Save ID should be the ksaveID from database
-    const ksaveId = latest?.ksave || device || '—'
+    // Device GE ID from database
+    const GEsaveID = latest?.GEsaveID || device || '—'
 
     // Get series_no directly from database (from API response)
     const displaySeriesNo = latest?.series_no || '—'
@@ -280,7 +280,7 @@ export default function CompareMonitoringPage() {
           {/* ── Device IDs ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {[
-              { label: 'GE ID', value: ksaveId, mono: true },
+              { label: 'GE ID', value: GEsaveID, mono: true },
               { label: 'Series No.', value: displaySeriesNo, mono: true },
             ].map(({ label, value, mono }) => (
               <div key={label} style={{
