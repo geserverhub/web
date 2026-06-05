@@ -58,6 +58,24 @@ export type PersistReportInput = {
 
 const TABLE_CHECK = `eq_customers`;
 
+/** Normalize UI/locale date strings to MySQL DATETIME (YYYY-MM-DD HH:MM:SS). */
+function toMysqlDateTime(value: string | undefined | null): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === '—') return null;
+
+  const mysqlMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}:\d{2}))?/);
+  if (mysqlMatch) {
+    return mysqlMatch[2] ? `${mysqlMatch[1]} ${mysqlMatch[2]}` : `${mysqlMatch[1]} 00:00:00`;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}`;
+}
+
 async function insertReturningId(sql: string, values: unknown[]): Promise<number> {
   await queryGe(sql, values);
   const rows = await queryGe('SELECT LAST_INSERT_ID() AS id');
@@ -152,7 +170,7 @@ export async function insertEnergySnapshot(
       thdi_l1, thdi_l2, thdi_l3,
       thdv_l1, thdv_l2, thdv_l3,
       reactive_kvar, apparent_kva, source
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'live')`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'live')`,
     [
       Number(deviceId),
       recordedAt,
@@ -188,6 +206,9 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
 
   await insertEnergySnapshot(input.deviceId, input.ch1);
 
+  const measurementStart = toMysqlDateTime(input.measurementStart);
+  const measurementEnd = toMysqlDateTime(input.measurementEnd);
+
   const reportNumber = input.report.reportId;
   const existing = await queryGe(
     `SELECT id FROM eq_reports WHERE report_number = ? LIMIT 1`,
@@ -204,8 +225,8 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
       [
         customerId,
         siteId,
-        input.measurementStart || null,
-        input.measurementEnd || null,
+        measurementStart,
+        measurementEnd,
         input.preparedBy || 'GE Energy Tech',
         input.locale,
         reportId,
@@ -222,8 +243,8 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
         customerId,
         siteId,
         deviceId,
-        input.measurementStart || null,
-        input.measurementEnd || null,
+        measurementStart,
+        measurementEnd,
         input.preparedBy || 'GE Energy Tech',
         input.locale,
       ],

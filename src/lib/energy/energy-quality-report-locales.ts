@@ -1,5 +1,6 @@
 import type { EqLocale } from './energy-quality-i18n';
 import type { ReportStrings } from './energy-quality-report-i18n';
+import { cnPro, koPro, msPro, vnPro } from './energy-quality-report-pro-locales';
 
 type ReportLocale = Exclude<EqLocale, 'th' | 'en'>;
 
@@ -254,6 +255,7 @@ const ko: Partial<ReportStrings> = {
   execLineImbalance: '전류 불균형: {value}',
   execLineOverallRisk: '종합 위험 수준: {status}',
   execSourceHistory: '24시간 이력 기준',
+  ...koPro,
 };
 
 const cn: Partial<ReportStrings> = {
@@ -468,6 +470,7 @@ const cn: Partial<ReportStrings> = {
   execLineImbalance: '电流不平衡: {value}',
   execLineOverallRisk: '综合风险等级: {status}',
   execSourceHistory: '来自 24 小时历史',
+  ...cnPro,
 };
 
 const vn: Partial<ReportStrings> = {
@@ -683,6 +686,7 @@ const vn: Partial<ReportStrings> = {
   execLineImbalance: 'Mất cân bằng dòng: {value}',
   execLineOverallRisk: 'Mức rủi ro tổng: {status}',
   execSourceHistory: 'từ lịch sử 24 giờ',
+  ...vnPro,
 };
 
 const ms: Partial<ReportStrings> = {
@@ -898,6 +902,7 @@ const ms: Partial<ReportStrings> = {
   execLineImbalance: 'Ketidakseimbangan arus: {value}',
   execLineOverallRisk: 'Tahap risiko keseluruhan: {status}',
   execSourceHistory: 'dari sejarah 24 jam',
+  ...msPro,
 };
 
 const PACKS: Record<ReportLocale, Partial<ReportStrings>> = { ko, cn, vn, ms };

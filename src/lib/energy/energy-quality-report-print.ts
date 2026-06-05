@@ -289,7 +289,7 @@ function sectionRefHtml(standards: ReportStandardsPack, key?: ReportSectionRefKe
   return `<p class="sec-ref"><strong>${esc(standards.titles.sectionRef)}:</strong> ${esc(note)}</p>`;
 }
 
-function standardsBlockHtml(standards: ReportStandardsPack): string {
+function standardsBlockInner(standards: ReportStandardsPack): string {
   const agencies = standards.agencies
     .map((a) => `<li><strong>${esc(a.name)}</strong> — ${esc(a.role)}</li>`)
     .join('');
@@ -302,7 +302,7 @@ function standardsBlockHtml(standards: ReportStandardsPack): string {
         `<tr><td>${esc(c.metric)}</td><td>${esc(c.threshold)}</td><td>${esc(c.standard)}</td></tr>`,
     )
     .join('');
-  return `<section class="standards-block">
+  return `
     <h2>${esc(standards.titles.block)} <span class="country-tag">${esc(standards.countryName)}</span></h2>
     <p class="note standards-intro">${esc(standards.introduction)}</p>
     <h3>${esc(standards.titles.agencies)}</h3>
@@ -313,8 +313,12 @@ function standardsBlockHtml(standards: ReportStandardsPack): string {
     <table class="criteria-table">
       <thead><tr><th>${esc(standards.titles.criteriaMetric)}</th><th>${esc(standards.titles.criteriaThreshold)}</th><th>${esc(standards.titles.criteriaReference)}</th></tr></thead>
       <tbody>${criteria}</tbody>
-    </table>
-  </section>`;
+    </table>`;
+}
+
+function standardsBlockHtml(standards: ReportStandardsPack, extraClass = ''): string {
+  const cls = extraClass ? `standards-block ${extraClass}` : 'standards-block';
+  return `<section class="${cls}">${standardsBlockInner(standards)}</section>`;
 }
 
 function liveSnapshotInner(ch1: ReportChannel, labels: PrintSnapshotLabels, lastUpdate: string): string {
@@ -394,15 +398,26 @@ function professionalRecsHtml(pro: ProfessionalReportContent | null, rt: ReportS
   const phases = pro.phasedRecommendations
     .map(
       (p) =>
-        `<div class="phase-card"><h4>${esc(p.phase)} — ${esc(p.title)}</h4><p class="note">${esc(p.priority)}</p><ul>${p.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul><p><strong>${esc(rt.proExpectedOutcome)}:</strong> ${esc(p.expectedOutcome)}</p></div>`,
+        `<article class="phase-card">
+          <div class="phase-card-head">
+            <h4>${esc(p.phase)} — ${esc(p.title)}</h4>
+            <p class="phase-priority">${esc(p.priority)}</p>
+          </div>
+          <div class="phase-card-body">
+            <ul>${p.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+            <p class="phase-outcome"><strong>${esc(rt.proExpectedOutcome)}</strong> ${esc(p.expectedOutcome)}</p>
+          </div>
+        </article>`,
     )
     .join('');
   return `
-    <h3>${esc(pro.interpretationTitle)}</h3>
-    <ul class="bullets">${interpret}</ul>
+    <div class="pro-block">
+      <h3>${esc(pro.interpretationTitle)}</h3>
+      <ul class="bullets">${interpret}</ul>
+    </div>
     <h3>${esc(pro.phasedTitle)}</h3>
-    ${pro.recommendedModel ? `<p class="note">${esc(rt.proRecommendedModel)}: <strong>${esc(pro.recommendedModel)}</strong></p>` : ''}
-    ${phases}`;
+    ${pro.recommendedModel ? `<p class="pro-model-line">${esc(rt.proRecommendedModel)}: <strong>${esc(pro.recommendedModel)}</strong></p>` : ''}
+    <div class="phase-grid">${phases}</div>`;
 }
 
 function technicalInsightsHtml(
@@ -508,7 +523,10 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
     rt.sec13,
     rt.sec14,
   ]
-    .map((t, i) => `<li>${i + 1}. ${esc(t)}</li>`)
+    .map(
+      (t, i) =>
+        `<li><span class="toc-label">${i + 1}. ${esc(t)}</span><span class="toc-dots" aria-hidden="true"></span></li>`,
+    )
     .join('');
 
   const m = report.statusMetrics;
@@ -614,10 +632,13 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
       <tbody>${phaseRows}</tbody>
     </table>`;
 
+  const coverSubtitle = report.professional?.reportSubtitle ?? rt.platformTitle;
+
   const body = `
 <div class="doc">
   <section class="sheet sheet--cover">
     <header class="cover">
+      <div class="cover-band" aria-hidden="true"></div>
       <div class="cover-head">
         <div class="cover-brand">
           ${printLogoBlock(printLogoUrl(input), rt.companyName)}
@@ -626,6 +647,10 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
             <p class="platform">${esc(rt.platformTitle)}</p>
           </div>
         </div>
+      </div>
+      <div class="cover-title-block">
+        <p class="cover-doc-type">${esc(rt.sec3)}</p>
+        <p class="cover-doc-sub">${esc(coverSubtitle)}</p>
       </div>
       <dl class="cover-meta">
         <dt>${esc(rt.f_reportId)}</dt><dd>${esc(report.reportId)}</dd>
@@ -640,23 +665,21 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
         <dt>${esc(rt.liveBadge)}</dt><dd>${esc(rt.liveBadge)}</dd>
       </dl>
     </header>
-
-    <section class="evidence">
-      <h2>${esc(rt.printEvidenceTitle)}</h2>
-      <ul>${evidenceSources}</ul>
-      <p class="note">${esc(rt.printMethodology)}</p>
-    </section>
   </section>
-
-  ${standardsBlockHtml(standards)}
 
   <section class="sheet sheet--toc">
     <nav class="toc">
       <h2>${esc(rt.reportTocTitle)}</h2>
       <ol>${tocItems}</ol>
     </nav>
+    <section class="evidence evidence--toc">
+      <h2>${esc(rt.printEvidenceTitle)}</h2>
+      <ul>${evidenceSources}</ul>
+      <p class="note">${esc(rt.printMethodology)}</p>
+    </section>
   </section>
 
+  <main class="doc-body">
   ${snapshotBlock}
 
   <section class="status-panel">
@@ -710,6 +733,9 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
   </section>
 
   ${richSection(14, rt.sec14, packs.conclusion, rt, standards, '', undefined, 'sec14')}
+  </main>
+
+  ${standardsBlockHtml(standards, 'standards-block--appendix')}
 
   <footer class="doc-footer">
     ${printLogoBlock(printLogoUrl(input), rt.companyName, true)}
@@ -724,7 +750,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(rt.companyName)} — ${esc(report.reportId)}</title>
-<style>${buildEnergyQualityPrintCss(rt)}</style>
+<style>${buildEnergyQualityPrintCss(rt, { reportId: report.reportId })}</style>
 </head>
 <body>${body}
 <script>window.addEventListener('load',function(){setTimeout(function(){window.print()},400)});</script>
