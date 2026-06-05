@@ -12,35 +12,28 @@ function InsightIcon({ severity }: { severity: TechnicalInsight['severity'] }) {
   return <Info className="w-4 h-4 text-sky-600" strokeWidth={2.5} />;
 }
 
-export default function EnergyQualityReportCharts({
+export function ReportCurrentChartPanel({
   rt,
   ui,
   chartData,
   stats,
-  insights,
   pending,
+  compact,
+  ch1Only = true,
 }: {
   rt: ReportStrings;
   ui: { l1: string; l2: string; l3: string; noChart: string };
   chartData: DbChartPoint[];
   stats: CurrentHistoryStats | null;
-  insights: TechnicalInsight[];
   pending?: boolean;
+  compact?: boolean;
+  ch1Only?: boolean;
 }) {
-  const chartLines = buildEqCurrentChartLines(ui);
+  const chartLines = buildEqCurrentChartLines(ui, ch1Only);
   const hasChart = chartData.length > 0;
 
   return (
-    <section id="sec-charts" className="eq-report-section eq-report-charts-section">
-      <h3 className="eq-report-section-title">
-        <span className="eq-report-section-num">
-          <BarChart3 className="w-3.5 h-3.5" strokeWidth={2.5} />
-        </span>
-        {rt.secCharts}
-      </h3>
-
-      <p className="eq-report-charts-source">{rt.secChartsSource}</p>
-
+    <>
       {stats && (
         <div className="eq-report-chart-stats">
           <div>
@@ -75,7 +68,9 @@ export default function EnergyQualityReportCharts({
         </div>
       )}
 
-      <div className={`eq-report-chart-panel${pending && !hasChart ? ' eq-report-chart-panel--empty' : ''}`}>
+      <div
+        className={`eq-report-chart-panel${compact ? ' eq-report-chart-panel--compact' : ''}${pending && !hasChart ? ' eq-report-chart-panel--empty' : ''}`}
+      >
         {hasChart ? (
           <>
             <p className="eq-report-chart-caption">
@@ -83,15 +78,66 @@ export default function EnergyQualityReportCharts({
               {rt.chartCaption}
             </p>
             <div className="eq-report-chart-canvas">
-              <EqCurrentHistoryChart data={chartData as Record<string, unknown>[]} lines={chartLines} height={300} />
+              <EqCurrentHistoryChart
+                data={chartData as Record<string, unknown>[]}
+                lines={chartLines}
+                height={compact ? 240 : 300}
+              />
             </div>
           </>
         ) : (
           <p className="eq-report-chart-empty">{pending ? rt.waitingLive : ui.noChart}</p>
         )}
       </div>
+    </>
+  );
+}
 
-      <h4 className="eq-report-tech-title">{rt.secTechnical}</h4>
+export default function EnergyQualityReportCharts({
+  rt,
+  ui,
+  chartData,
+  stats,
+  insights,
+  pending,
+  technicalOnly = false,
+  sectionIndex,
+}: {
+  rt: ReportStrings;
+  ui: { l1: string; l2: string; l3: string; noChart: string };
+  chartData: DbChartPoint[];
+  stats: CurrentHistoryStats | null;
+  insights: TechnicalInsight[];
+  pending?: boolean;
+  technicalOnly?: boolean;
+  sectionIndex?: number;
+}) {
+  return (
+    <section id="sec-charts" className="eq-report-section eq-report-charts-section">
+      <h3 className="eq-report-section-title">
+        <span className="eq-report-section-num">
+          {sectionIndex != null ? (
+            sectionIndex
+          ) : (
+            <BarChart3 className="w-3.5 h-3.5" strokeWidth={2.5} />
+          )}
+        </span>
+        {technicalOnly ? rt.secTechnical : rt.secCharts}
+      </h3>
+
+      {!technicalOnly ? <p className="eq-report-charts-source">{rt.secChartsSource}</p> : null}
+
+      {!technicalOnly ? (
+        <ReportCurrentChartPanel
+          rt={rt}
+          ui={ui}
+          chartData={chartData}
+          stats={stats}
+          pending={pending}
+        />
+      ) : null}
+
+      {!technicalOnly ? <h4 className="eq-report-tech-title">{rt.secTechnical}</h4> : null}
       <ul className="eq-report-tech-list">
         {insights.map((ins, i) => (
           <li

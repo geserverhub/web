@@ -54,7 +54,21 @@ function imbalancePct(vals: (number | null | undefined)[]): number | null {
   return ((mx - min) / a) * 100;
 }
 
-function computeStats(points: DbChartPoint[], periodLabel: string): CurrentHistoryStats {
+/** Strip CH2 (after-install) series — pre-install meters are CH1 only. */
+export function chartDataCh1Only(points: DbChartPoint[]): DbChartPoint[] {
+  return points.map((p) => ({
+    ...p,
+    afterL1: null,
+    afterL2: null,
+    afterL3: null,
+    afterAvg: null,
+  }));
+}
+
+export function computeCurrentHistoryStats(
+  points: DbChartPoint[],
+  periodLabel: string,
+): CurrentHistoryStats {
   let peakCh1: number | null = null;
   let peakCh1Time: string | null = null;
   const ch1Avgs: number[] = [];
@@ -98,7 +112,13 @@ function computeStats(points: DbChartPoint[], periodLabel: string): CurrentHisto
 
 export function analyzeCurrentHistory(
   points: DbChartPoint[],
-  opts: { locale: EqLocale; ch1Label: string; ch2Label: string; periodLabel?: string },
+  opts: {
+    locale: EqLocale;
+    ch1Label: string;
+    ch2Label: string;
+    periodLabel?: string;
+    ch1Only?: boolean;
+  },
 ): { insights: TechnicalInsight[]; stats: CurrentHistoryStats | null } {
   const t = reportT(opts.locale);
   const periodLabel = opts.periodLabel ?? '—';
@@ -116,7 +136,7 @@ export function analyzeCurrentHistory(
     };
   }
 
-  const stats = computeStats(points, periodLabel);
+  const stats = computeCurrentHistoryStats(points, periodLabel);
   const insights: TechnicalInsight[] = [];
 
   insights.push({
@@ -170,7 +190,7 @@ export function analyzeCurrentHistory(
     });
   }
 
-  if (stats.avgCh2 != null && stats.avgCh1 != null && stats.avgCh2 > 0.1) {
+  if (!opts.ch1Only && stats.avgCh2 != null && stats.avgCh1 != null && stats.avgCh2 > 0.1) {
     const ratio = stats.avgCh1 / stats.avgCh2;
     insights.push({
       severity: 'info',
@@ -203,4 +223,19 @@ export function analyzeCurrentHistory(
   }
 
   return { insights, stats };
+}
+
+/** Latest row with phase current data (for executive phase table fallback). */
+export function getLatestChartPhases(points: DbChartPoint[]): DbChartPoint | null {
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i];
+    const hasBefore = [p.beforeL1, p.beforeL2, p.beforeL3].some(
+      (v) => v != null && Number.isFinite(v),
+    );
+    const hasAfter = [p.afterL1, p.afterL2, p.afterL3].some(
+      (v) => v != null && Number.isFinite(v),
+    );
+    if (hasBefore || hasAfter) return p;
+  }
+  return null;
 }

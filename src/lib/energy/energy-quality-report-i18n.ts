@@ -73,6 +73,10 @@ export type ReportStrings = {
   f_payback: string;
   paybackMonthsUnit: string;
   paybackYearsUnit: string;
+  paybackRatingExcellent: string;
+  paybackRatingAcceptable: string;
+  paybackRatingCaution: string;
+  paybackRatingPoor: string;
   f_roi: string;
   f_currentProblem: string;
   f_technicalRisk: string;
@@ -159,6 +163,29 @@ export type ReportStrings = {
   f_maintenance: string;
   maintenanceNote: string;
   solutionApfc: string;
+  geSolutionCapabilities: string;
+  geCompareExecutiveTitle: string;
+  geCompareExecutiveDetail: string;
+  geComparePfTitle: string;
+  geComparePfDetail: string;
+  geComparePeakTitle: string;
+  geComparePeakDetail: string;
+  geCompareBalanceTitle: string;
+  geCompareBalanceDetail: string;
+  geCompareHarmonicTitle: string;
+  geCompareHarmonicDetail: string;
+  geCompareVoltageTitle: string;
+  geCompareVoltageDetail: string;
+  geCompareEnergyTitle: string;
+  geCompareEnergyDetail: string;
+  geCompareFinancialTitle: string;
+  geCompareFinancialDetail: string;
+  geCompareEquipmentTitle: string;
+  geCompareEquipmentDetail: string;
+  geCompareRoiTitle: string;
+  geCompareRoiDetail: string;
+  geCompareConclusionTitle: string;
+  geCompareConclusionDetail: string;
   investmentDefault: string;
   recApfcTitle: string;
   recApfcDesc: string;
@@ -182,6 +209,129 @@ export type ReportStrings = {
   phaseL2: string;
   phaseL3: string;
   phaseAvg: string;
+  execSummaryTitle: string;
+  execChartTitle: string;
+  execPhaseTableTitle: string;
+  execLineEnergy: string;
+  execLineAvgCurrent: string;
+  execLinePeakDemand: string;
+  execLineLoadFactor: string;
+  execLinePowerFactor: string;
+  execLineImbalance: string;
+  execLineOverallRisk: string;
+  execLineGeSolution: string;
+  execSourceHistory: string;
+  secAnalysisTitle: string;
+  secRecommendTitle: string;
+  secEnergyChartCaption: string;
+  secPeakChartCaption: string;
+  secPfChartCaption: string;
+  secBalanceChartCaption: string;
+  secHarmonicChartCaption: string;
+  secEnergyInsightTotal: string;
+  secEnergyInsightTotalDetail: string;
+  secEnergyInsightMonthly: string;
+  secEnergyInsightMonthlyDetail: string;
+  secEnergyInsightLoad: string;
+  secEnergyInsightLoadDetail: string;
+  secEnergyRecMonitor: string;
+  secEnergyRecMonitorDesc: string;
+  secEnergyRecTou: string;
+  secEnergyRecTouDesc: string;
+  secEnergyBarDaily: string;
+  secEnergyBarMonthly: string;
+  secEnergyBarAnnual: string;
+  secEnergyEstSeries: string;
+  secPfInsightStatus: string;
+  secPfInsightStatusDetail: string;
+  secPfInsightNoData: string;
+  secPfInsightNoDataDetail: string;
+  secPfRecMaintain: string;
+  secPfTarget: string;
+  secPfIdeal: string;
+  secBalanceInsightOk: string;
+  secBalanceInsightOkDetail: string;
+  secBalanceRecOk: string;
+  secBalanceRecOkDesc: string;
+  secHarmonicInsightThd: string;
+  secHarmonicInsightThdDetail: string;
+  secHarmonicInsightNoData: string;
+  secHarmonicInsightNoDataDetail: string;
+  secHarmonicRecFilter: string;
+  secHarmonicRecOk: string;
+  secHarmonicRecOkDesc: string;
+  secEquipmentChartCaption: string;
+  secEquipmentRiskAxis: string;
+  secEquipmentInsightMotor: string;
+  secEquipmentInsightBreaker: string;
+  secEquipmentInsightTransformer: string;
+  secEquipmentRecInspect: string;
+  secEquipmentRecInspectDesc: string;
+  secFinancialChartCaption: string;
+  secFinancialInsightCost: string;
+  secFinancialInsightCostDetail: string;
+  secFinancialInsightPenaltyDetail: string;
+  secFinancialInsightNoPenalty: string;
+  secFinancialInsightSaving: string;
+  secFinancialInsightSavingDetail: string;
+  secFinancialRecReview: string;
+  secFinancialRecReviewDesc: string;
+  secFinancialRecApfcDesc: string;
+  secRoiChartCaption: string;
+  secRoiInsightSolution: string;
+  secRoiInsightSolutionDetail: string;
+  secRoiInsightPayback: string;
+  secRoiInsightPaybackDetail: string;
+  secRoiPaybackBenchmark: string;
+  secRoiPaybackBenchmarkDetail: string;
+  secRoiRecOptimize: string;
+  secRoiRecOptimizeDesc: string;
+  secRoiInsightReturn: string;
+  secRoiInsightReturnDetail: string;
+  secRoiInsightPending: string;
+  secRoiInsightPendingDetail: string;
+  secRoiRecApprove: string;
+  secRoiRecApproveDesc: string;
+  secAiChartCaption: string;
+  secAiFieldCount: string;
+  secAiInsightOverview: string;
+  secAiInsightOverviewDetail: string;
+  secAiInsightItem: string;
+  secAiInsightEmpty: string;
+  secAiInsightEmptyDetail: string;
+  secAiRecReviewDesc: string;
+  secActionChartCaption: string;
+  secActionFieldHorizons: string;
+  secActionFieldTasks: string;
+  secActionTaskAxis: string;
+  secActionInsightOverview: string;
+  secActionInsightOverviewDetail: string;
+  secActionRecAssign: string;
+  secActionRecAssignDesc: string;
+  secActionRecTrack: string;
+  secActionRecTrackDesc: string;
+  secConclusionChartCaption: string;
+  secConclusionScoreAxis: string;
+  secConclusionInsightProblem: string;
+  secConclusionInsightTech: string;
+  secConclusionInsightFinancial: string;
+  secConclusionInsightDecision: string;
+  secConclusionInsightDecisionDetail: string;
+  secConclusionRecSignoff: string;
+  secConclusionRecSignoffDesc: string;
+  printEvidenceTitle: string;
+  printMethodology: string;
+  printSourceMeter: string;
+  printSourcePeriod: string;
+  printSourceRecords: string;
+  printSourcePeak: string;
+  printFooterLegal: string;
+  printPagePrefix: string;
+  printPageMiddle: string;
+  printPageSuffix: string;
+  printTableItem: string;
+  printTableValue: string;
+  printColTime: string;
 };
 
 const th: ReportStrings = {
@@ -256,6 +406,10 @@ const th: ReportStrings = {
   f_payback: 'ระยะคืนทุน',
   paybackMonthsUnit: 'เดือน',
   paybackYearsUnit: 'ปี',
+  paybackRatingExcellent: 'เยี่ยม',
+  paybackRatingAcceptable: 'ยอมรับได้',
+  paybackRatingCaution: 'ควรทบทวน',
+  paybackRatingPoor: 'คืนทุนช้า',
   f_roi: 'ROI %',
   f_currentProblem: 'ปัญหาปัจจุบัน',
   f_technicalRisk: 'ความเสี่ยงทางเทคนิค',
@@ -293,7 +447,7 @@ const th: ReportStrings = {
   selectMeterHint: 'เลือกมิเตอร์ด้านบนเพื่อเริ่มรับค่าสด',
   phaseCol: 'เฟส',
   secCharts: 'กราฟกระแสไฟจากฐานข้อมูล',
-  secChartsSource: 'ข้อมูลจาก power_records / power_records_preinstall — อัปเดตตามช่วงเวลาที่เลือก',
+  secChartsSource: 'ข้อมูลจากระบบบันทึกมิเตอร์ — อัปเดตตามช่วงเวลาที่เลือก',
   secTechnical: 'คำแนะนำวิเคราะห์ทางเทคนิค (จากข้อมูลกระแสจริง)',
   chartCaption: 'แนวโน้มกระแส CH1 (ก่อน) / CH2 (หลัง) รายเฟส',
   chartStatRecords: 'จำนวนบันทึก',
@@ -333,7 +487,7 @@ const th: ReportStrings = {
   f_minPf: 'PF ต่ำสุด',
   f_timeBelow095: 'เวลาที่ PF ต่ำกว่า 0.95',
   f_apfcRecommendation: 'แนะนำ APFC',
-  apfcRecommended: 'แนะนำ De-tuned APFC',
+  apfcRecommended: 'แนะนำระบบ GE Energy Tech (ปรับแรงดัน·กระแส·เสถียร·เก็บพลังงาน)',
   withinTarget: 'อยู่ในเป้าหมาย',
   f_annualSaving: 'ประหยัดรายปี',
   f_motorCompressor: 'มอเตอร์ / คอมเพรสเซอร์',
@@ -341,10 +495,45 @@ const th: ReportStrings = {
   f_transformer: 'หม้อแปลง',
   f_maintenance: 'การบำรุงรักษา',
   maintenanceNote: 'ตรวจ Thermographic หาก imbalance > 20%',
-  solutionApfc: 'De-tuned APFC',
+  solutionApfc: 'GE Energy Tech Smart Power System',
+  geSolutionCapabilities: 'ปรับแรงดัน · ปรับกระแส · ปรับเสถียร · เก็บกระแสไว้ใช้ภายหลัง',
+  geCompareExecutiveTitle: 'เปรียบเทียบก่อนติดตั้ง — ระบบ GE Energy Tech',
+  geCompareExecutiveDetail:
+    'ก่อนติดตั้ง: PF {pf} · ไม่สมดุลกระแส {imb} · Peak {peak} · THD {thd} — ระบบ GE Energy Tech ({capabilities}) แก้ปัญหาข้างต้นแบบครบวงจร',
+  geComparePfTitle: 'เปรียบเทียบ Power Factor — ก่อนติดตั้ง',
+  geComparePfDetail:
+    'ก่อนติดตั้ง PF {pf} (< 0.95) — ระบบ GE ปรับกระแสและปรับแรงดันแบบเรียลไทม์ ยก PF ใกล้ 0.95–1.0 ลดค่าปรับ ({capabilities})',
+  geComparePeakTitle: 'เปรียบเทียบ Peak Demand — ก่อนติดตั้ง',
+  geComparePeakDetail:
+    'Peak {peak} (เฉลี่ย {avg}) — ระบบ GE เก็บกระแสไฟใช้ตอน Peak ลด Demand Charge และกระจายโหลดอัตโนมัติ',
+  geCompareBalanceTitle: 'เปรียบเทียบความสมดุล 3 เฟส — ก่อนติดตั้ง',
+  geCompareBalanceDetail:
+    'ไม่สมดุล 3 เฟส {imb} — ระบบ GE ปรับกระแสเฟสอัตโนมัติ ลดความร้อนและความเสี่ยงต่อเบรกเกอร์/สายเคเบิล',
+  geCompareHarmonicTitle: 'เปรียบเทียบฮาร์มอนิก — ก่อนติดตั้ง',
+  geCompareHarmonicDetail:
+    'THD {thd} — ระบบ GE ปรับเสถียรลดฮาร์มอนิก ปกป้องมอเตอร์ หม้อแปลง และอุปกรณ์อิเล็กทรอนิกส์',
+  geCompareVoltageTitle: 'เปรียบเทียบแรงดัน — ก่อนติดตั้ง',
+  geCompareVoltageDetail:
+    'ไม่สมดุลแรงดัน {volt} — ระบบ GE ปรับแรงดันรักษาเสถียร 400V 3 เฟส ลดความเสียหายอุปกรณ์',
+  geCompareEnergyTitle: 'เปรียบเทียบการใช้พลังงาน — ก่อนติดตั้ง',
+  geCompareEnergyDetail:
+    'โหลดเฉลี่ย {avg} — ระบบ GE เก็บพลังงานช่วง Off-peak คืนกระแสช่วง Peak ช่วยลด kWh และค่าไฟ',
+  geCompareFinancialTitle: 'เปรียบเทียบผลทางการเงิน — ก่อน/หลังติดตั้ง GE',
+  geCompareFinancialDetail:
+    'ประหยัดได้ประมาณ {saving}/เดือน — เปรียบเทียบก่อน/หลังติดตั้ง: ลดค่าปรับ PF + Peak + ใช้พลังงานสะสม ({capabilities})',
+  geCompareEquipmentTitle: 'เปรียบเทียบความเสี่ยงอุปกรณ์ — ก่อนติดตั้ง',
+  geCompareEquipmentDetail:
+    'สถานะอุปกรณ์ {status} — ระบบ GE ปรับเสถียรและปรับแรงดัน ยืดอายุมอเตอร์ หม้อแปลง เบรกเกอร์',
+  geCompareRoiTitle: 'เปรียบเทียบ ROI — ลงทุนระบบ GE Energy Tech',
+  geCompareRoiDetail:
+    'แนวทาง {solution} — คืนทุนเร็วขึ้นจากลดค่าปรับ PF·Peak และพลังงานสะสมช่วง Off-peak ({capabilities})',
+  geCompareConclusionTitle: 'สรุปเปรียบเทียบก่อน/หลังติดตั้ง GE Energy Tech',
+  geCompareConclusionDetail:
+    'ก่อนติดตั้ง: {problem} — แนะนำ {solution} ({capabilities}) ประหยัด {saving}',
   investmentDefault: '200,000 บาท',
-  recApfcTitle: 'ติดตั้ง De-tuned APFC',
-  recApfcDesc: 'ปรับปรุง Power Factor และลดค่าปรับ',
+  recApfcTitle: 'ติดตั้งระบบ GE Energy Tech Smart Power',
+  recApfcDesc:
+    'เปรียบเทียบก่อนติดตั้ง — ระบบปรับแรงดัน ปรับกระแส 3 เฟส ปรับเสถียรลดฮาร์มอนิก และเก็บกระแสไฟใช้ช่วง Peak/Off-peak',
   recRedistributeTitle: 'กระจายโหลด 3 เฟส',
   recRedistributeDesc: 'สมดุล L1/L2/L3 ลดความเครียดสายและเบรกเกอร์',
   recPeakTitle: 'จัดการ Peak Demand',
@@ -354,7 +543,7 @@ const th: ReportStrings = {
   continueMonitoring: 'ดำเนินการติดตามต่อ',
   actVerifyPhase: 'ตรวจการโหลดแต่ละเฟส',
   actReviewPeak: 'ทบทวนโปรไฟล์ Peak',
-  actInstallApfc: 'ติดตั้ง / ปรับ APFC หาก PF < 0.95',
+  actInstallApfc: 'ติดตั้งระบบ GE Energy Tech หาก PF < 0.95 หรือมี Peak/ไม่สมดุล',
   actRebalance: 'กระจายโหลดเฟสเดียว',
   actHarmonic: 'ประเมิน Harmonic filter',
   actDemand: 'แผนจัดการ Demand',
@@ -365,6 +554,133 @@ const th: ReportStrings = {
   phaseL2: 'L2',
   phaseL3: 'L3',
   phaseAvg: 'เฉลี่ย',
+  execSummaryTitle: 'สรุปผู้บริหาร',
+  execChartTitle: 'กราฟกระแสรายเฟส (CH1 / CH2)',
+  execPhaseTableTitle: 'ตารางกระแส CH1 / CH2 รายเฟส',
+  execLineEnergy: 'พลังงานสะสม {value} จากมิเตอร์',
+  execLineAvgCurrent: 'กระแสเฉลี่ย CH1: {value}',
+  execLinePeakDemand: 'Peak Demand สูงสุด: {value}',
+  execLineLoadFactor: 'Load Factor: {value}',
+  execLinePowerFactor: 'Power Factor เฉลี่ย: {value}',
+  execLineImbalance: 'ความไม่สมดุลกระแส: {value}',
+  execLineOverallRisk: 'ระดับความเสี่ยงรวม: {status}',
+  execLineGeSolution:
+    'แนวทาง GE Energy Tech: ปรับแรงดัน · ปรับกระแส · ปรับเสถียร · เก็บกระแสไว้ใช้ภายหลัง',
+  execSourceHistory: 'จากประวัติ 24 ชม.',
+  secAnalysisTitle: 'การวิเคราะห์',
+  secRecommendTitle: 'คำแนะนำ',
+  secEnergyChartCaption: 'กราฟการใช้พลังงาน (ประมาณการ)',
+  secPeakChartCaption: 'กราฟ Peak Demand จากประวัติกระแส',
+  secPfChartCaption: 'กราฟ Power Factor เทียบเป้าหมาย',
+  secBalanceChartCaption: 'กราฟกระแสรายเฟส L1 / L2 / L3',
+  secHarmonicChartCaption: 'กราฟ THDI รายเฟส',
+  secEnergyInsightTotal: 'พลังงานสะสม',
+  secEnergyInsightTotalDetail: 'มิเตอร์บันทึกพลังงานรวม {value}',
+  secEnergyInsightMonthly: 'ประมาณการรายเดือน',
+  secEnergyInsightMonthlyDetail: '{kwh} · ค่าไฟโดยประมาณ {cost}',
+  secEnergyInsightLoad: 'โหลดจากประวัติกระแส',
+  secEnergyInsightLoadDetail: 'กระแสเฉลี่ย {avg} ในช่วง {period}',
+  secEnergyRecMonitor: 'ติดตามการใช้พลังงาน',
+  secEnergyRecMonitorDesc: 'ใช้ GE IoT ติดตามแนวโน้ม kWh และค่าไฟรายเดือน',
+  secEnergyRecTou: 'จัดการช่วงเวลาใช้ไฟ',
+  secEnergyRecTouDesc: 'Load Factor ต่ำ — พิจารณาเลื่อนโหลดหนักออกจากช่วง Peak',
+  secEnergyBarDaily: 'รายวัน',
+  secEnergyBarMonthly: 'รายเดือน',
+  secEnergyBarAnnual: 'รายปี',
+  secEnergyEstSeries: 'โหลดโดยประมาณ (kWh)',
+  secPfInsightStatus: 'สถานะ Power Factor',
+  secPfInsightStatusDetail: 'PF ปัจจุบัน {value} (เป้าหมาย ≥ 0.95)',
+  secPfInsightNoData: 'ยังไม่มีค่า PF',
+  secPfInsightNoDataDetail: 'รอข้อมูลเรียลไทม์จากมิเตอร์',
+  secPfRecMaintain: 'รักษา PF ในเป้าหมายและตรวจสอบรายเดือน',
+  secPfTarget: 'เป้าหมาย 0.95',
+  secPfIdeal: 'ค่าอ้างอิง 1.00',
+  secBalanceInsightOk: 'สมดุลเฟส',
+  secBalanceInsightOkDetail: 'กระแส 3 เฟสอยู่ในเกณฑ์ที่ยอมรับได้',
+  secBalanceRecOk: 'รักษาสมดุลเฟส',
+  secBalanceRecOkDesc: 'ตรวจสอบการกระจายโหลดเป็นประจำ',
+  secHarmonicInsightThd: 'THDI',
+  secHarmonicInsightThdDetail: 'THDI เฉลี่ย {value}',
+  secHarmonicInsightNoData: 'ยังไม่มีค่า THD',
+  secHarmonicInsightNoDataDetail: 'รอข้อมูลฮาร์มอนิกจากมิเตอร์',
+  secHarmonicRecFilter: 'ประเมินตัวกรองฮาร์มอนิกเมื่อ THDI > 8%',
+  secHarmonicRecOk: 'ระดับฮาร์มอนิกยอมรับได้',
+  secHarmonicRecOkDesc: 'ติดตาม THDI ต่อเนื่อง',
+  secEquipmentChartCaption: 'กราฟระดับความเสี่ยงอุปกรณ์ (1=ต่ำ · 3=สูง)',
+  secEquipmentRiskAxis: 'ระดับความเสี่ยง',
+  secEquipmentInsightMotor: 'มอเตอร์/คอมเพรสเซอร์: {status}',
+  secEquipmentInsightBreaker: 'เมนเบรกเกอร์/สายเคเบิล: {status}',
+  secEquipmentInsightTransformer: 'หม้อแปลง: {status}',
+  secEquipmentRecInspect: 'ตรวจสอบอุปกรณ์ตามรอบ',
+  secEquipmentRecInspectDesc: 'ทำ Thermographic และตรวจสาย-เบรกเกอร์เมื่อ imbalance สูง',
+  secFinancialChartCaption: 'กราฟผลกระทบทางการเงิน ({currency})',
+  secFinancialInsightCost: 'ค่าไฟรายเดือน',
+  secFinancialInsightCostDetail: 'ประมาณ {value}/เดือนจากการใช้พลังงานปัจจุบัน',
+  secFinancialInsightPenaltyDetail: 'ค่าปรับ PF ประมาณ {value}/เดือน — ควรปรับปรุง PF',
+  secFinancialInsightNoPenalty: 'ยังไม่พบค่าปรับ PF ชัดเจน — รักษา PF ≥ 0.95',
+  secFinancialInsightSaving: 'ศักยภาพประหยัด',
+  secFinancialInsightSavingDetail: 'ประหยัดได้ประมาณ {monthly}/เดือน · รวม {annual}/ปี',
+  secFinancialRecReview: 'ทบทวนค่าไฟกับลูกค้า',
+  secFinancialRecReviewDesc: 'นำเสนอตัวเลขค่าไฟ ค่าปรับ และแผนประหยัด',
+  secFinancialRecApfcDesc:
+    'ลงทุนระบบ GE Energy Tech ปรับแรงดัน·กระแส·เสถียร·เก็บพลังงาน ลดค่าปรับและเพิ่มประหยัด',
+  secRoiChartCaption: 'กราฟเงินลงทุนเทียบผลตอบแทนรายปี',
+  secRoiInsightSolution: 'แนวทางลงทุน',
+  secRoiInsightSolutionDetail: 'แนะนำ: {solution}',
+  secRoiInsightPayback: 'ระยะคืนทุน',
+  secRoiInsightPaybackDetail: '{payback} · เกณฑ์ ≤ {benchmark} เดือน = เยี่ยม · ROI {roi}',
+  secRoiPaybackBenchmark: 'เกณฑ์ประเมินคืนทุน',
+  secRoiPaybackBenchmarkDetail:
+    'ระยะคืนทุนไม่เกิน 18 เดือน ถือว่าเยี่ยม · 18–36 เดือน ยอมรับได้ · 36–60 เดือน ควรทบทวน · เกิน 60 เดือน คืนทุนช้า',
+  secRoiRecOptimize: 'ปรับแผนเพิ่มประหยัด',
+  secRoiRecOptimizeDesc: 'เพิ่มประหยัดรายเดือนหรือลดงบลงทุนเพื่อให้คืนทุนภายใน 18 เดือน',
+  secRoiInsightReturn: 'ผลตอบแทนจากการประหยัด',
+  secRoiInsightReturnDetail: 'ประหยัด {monthly}/เดือน · รวม {annual}/ปี',
+  secRoiInsightPending: 'รอข้อมูลประหยัด',
+  secRoiInsightPendingDetail: 'ต้องมีค่าประหยัดรายเดือนเพื่อคำนวณ ROI ที่แม่นยำ',
+  secRoiRecApprove: 'อนุมัติงบลงทุน',
+  secRoiRecApproveDesc: 'ลูกค้าพิจารณาอนุมัติแผนและกำหนดระยะติดตั้ง',
+  secAiChartCaption: 'ลำดับความสำคัญคำแนะนำ AI',
+  secAiFieldCount: 'จำนวนคำแนะนำ',
+  secAiInsightOverview: 'ภาพรวมคำแนะนำ AI',
+  secAiInsightOverviewDetail: 'ระบบสรุป {count} ข้อจากข้อมูลมิเตอร์และประวัติกระแส',
+  secAiInsightItem: 'ลำดับ {priority}: {title}',
+  secAiInsightEmpty: 'ยังไม่มีคำแนะนำ',
+  secAiInsightEmptyDetail: 'รอข้อมูลมิเตอร์เพื่อสร้างคำแนะนำอัตโนมัติ',
+  secAiRecReviewDesc: 'นำคำแนะนำไปทบทวนกับทีมลูกค้าและจัดลำดับดำเนินการ',
+  secActionChartCaption: 'จำนวนงานต่อช่วงเวลาในแผน',
+  secActionFieldHorizons: 'ช่วงเวลาในแผน',
+  secActionFieldTasks: 'งานทั้งหมด',
+  secActionTaskAxis: 'จำนวนงาน',
+  secActionInsightOverview: 'ภาพรวมแผนดำเนินการ',
+  secActionInsightOverviewDetail: 'แบ่ง {count} งานตามระยะทันที/สั้น/กลาง/ยาว',
+  secActionRecAssign: 'มอบหมายผู้รับผิดชอบ',
+  secActionRecAssignDesc: 'ระบุผู้รับผิดชอบแต่ละงานและกำหนดวันเป้าหมาย',
+  secActionRecTrack: 'ติดตามความคืบหน้า',
+  secActionRecTrackDesc: 'อัปเดตสถานะใน GE IoT / รายงานรายสัปดาห์',
+  secConclusionChartCaption: 'สรุปคะแนนความเสี่ยงตามหัวข้อสรุปผล',
+  secConclusionScoreAxis: 'คะแนน',
+  secConclusionInsightProblem: 'ปัญหาหลัก: {value}',
+  secConclusionInsightTech: 'ความเสี่ยงทางเทคนิค: {value}',
+  secConclusionInsightFinancial: 'ผลกระทบทางการเงิน: {value}',
+  secConclusionInsightDecision: 'ข้อเสนอตัดสินใจ',
+  secConclusionInsightDecisionDetail: 'แนวทาง {solution} · ประหยัด {saving} · คืนทุน {payback}',
+  secConclusionRecSignoff: 'ลงนามอนุมัติแผน',
+  secConclusionRecSignoffDesc: 'ลูกค้าและ GE Energy Tech ลงนามรับทราบแผนดำเนินการ',
+  printEvidenceTitle: 'หลักฐานอ้างอิงและแหล่งข้อมูล',
+  printMethodology:
+    'ค่าที่แสดงคำนวณจากข้อมูลมิเตอร์เรียลไทม์ ประวัติกระแสในฐานข้อมูล และสูตรวิเคราะห์ตามเกณฑ์หน่วยงานราชการและมาตรฐาน IEEE/IEC ที่อ้างอิงในรายงาน (PF, THD, Imbalance, Load Factor, ROI) — ค่าที่ไม่มีข้อมูลแสดงเป็น —',
+  printSourceMeter: 'มิเตอร์ / อุปกรณ์',
+  printSourcePeriod: 'ช่วงวิเคราะห์',
+  printSourceRecords: 'จำนวนบันทึก',
+  printSourcePeak: 'Peak จากประวัติ',
+  printFooterLegal: 'เอกสารสร้างอัตโนมัติจากระบบ GE IoT · ใช้สำหรับอ้างอิงการตัดสินใจเท่านั้น',
+  printPagePrefix: 'หน้า ',
+  printPageMiddle: ' จาก ',
+  printPageSuffix: '',
+  printTableItem: 'รายการ',
+  printTableValue: 'ค่า',
+  printColTime: 'เวลา',
 };
 
 const en: ReportStrings = {
@@ -439,6 +755,10 @@ const en: ReportStrings = {
   f_payback: 'Payback Period',
   paybackMonthsUnit: 'months',
   paybackYearsUnit: 'years',
+  paybackRatingExcellent: 'Excellent',
+  paybackRatingAcceptable: 'Acceptable',
+  paybackRatingCaution: 'Review needed',
+  paybackRatingPoor: 'Slow payback',
   f_roi: 'ROI %',
   f_currentProblem: 'Current Problem',
   f_technicalRisk: 'Technical Risk',
@@ -470,7 +790,7 @@ const en: ReportStrings = {
   selectMeterHint: 'Select a meter above to start live updates',
   phaseCol: 'Phase',
   secCharts: 'Current trend chart (database)',
-  secChartsSource: 'From power_records / power_records_preinstall for the selected period',
+  secChartsSource: 'From meter logging for the selected period',
   secTechnical: 'Technical analysis (recorded current data)',
   chartCaption: 'CH1 (before) / CH2 (after) phase current trend',
   chartStatRecords: 'Records',
@@ -516,7 +836,7 @@ const en: ReportStrings = {
   f_minPf: 'Minimum PF',
   f_timeBelow095: 'Time Below 0.95',
   f_apfcRecommendation: 'APFC Recommendation',
-  apfcRecommended: 'De-tuned APFC recommended',
+  apfcRecommended: 'GE Energy Tech system recommended (voltage · current · stability · storage)',
   withinTarget: 'Within target',
   f_annualSaving: 'Annual Saving',
   f_motorCompressor: 'Motor / Compressor',
@@ -524,10 +844,45 @@ const en: ReportStrings = {
   f_transformer: 'Transformer',
   f_maintenance: 'Maintenance',
   maintenanceNote: 'Thermographic inspection if imbalance > 20%',
-  solutionApfc: 'De-tuned APFC',
+  solutionApfc: 'GE Energy Tech Smart Power System',
+  geSolutionCapabilities: 'voltage · current · stability · stored energy',
+  geCompareExecutiveTitle: 'Pre-install comparison — GE Energy Tech system',
+  geCompareExecutiveDetail:
+    'Before install: PF {pf} · current imbalance {imb} · peak {peak} · THD {thd} — GE Energy Tech ({capabilities}) addresses these holistically',
+  geComparePfTitle: 'PF comparison — before install',
+  geComparePfDetail:
+    'Before install PF {pf} (< 0.95) — GE system adjusts current and voltage in real time to raise PF toward 0.95–1.0 ({capabilities})',
+  geComparePeakTitle: 'Peak demand comparison — before install',
+  geComparePeakDetail:
+    'Peak {peak} (avg {avg}) — GE stored energy discharges at peak to cut demand charges and smooth load',
+  geCompareBalanceTitle: '3-phase balance comparison — before install',
+  geCompareBalanceDetail:
+    'Imbalance {imb} — GE auto phase-current balancing reduces heat and breaker/cable stress',
+  geCompareHarmonicTitle: 'Harmonic comparison — before install',
+  geCompareHarmonicDetail:
+    'THD {thd} — GE stability control reduces harmonics and protects motors, transformers, and electronics',
+  geCompareVoltageTitle: 'Voltage comparison — before install',
+  geCompareVoltageDetail:
+    'Voltage imbalance {volt} — GE voltage regulation maintains stable 400V 3-phase supply',
+  geCompareEnergyTitle: 'Energy use comparison — before install',
+  geCompareEnergyDetail:
+    'Average load {avg} — GE stores energy off-peak and returns current at peak to lower kWh and bills',
+  geCompareFinancialTitle: 'Financial comparison — before/after GE install',
+  geCompareFinancialDetail:
+    'Estimated savings {saving}/month — before/after: lower PF penalties, peak charges, and stored-energy use ({capabilities})',
+  geCompareEquipmentTitle: 'Equipment risk comparison — before install',
+  geCompareEquipmentDetail:
+    'Equipment status {status} — GE stability and voltage control extends motor, transformer, and breaker life',
+  geCompareRoiTitle: 'ROI comparison — GE Energy Tech investment',
+  geCompareRoiDetail:
+    '{solution} — faster payback from PF/peak savings and off-peak stored energy ({capabilities})',
+  geCompareConclusionTitle: 'GE Energy Tech before/after summary',
+  geCompareConclusionDetail:
+    'Before install: {problem} — recommend {solution} ({capabilities}) · save {saving}',
   investmentDefault: '200,000 THB',
-  recApfcTitle: 'Install De-tuned APFC',
-  recApfcDesc: 'Improve power factor and reduce penalty charges.',
+  recApfcTitle: 'Install GE Energy Tech Smart Power System',
+  recApfcDesc:
+    'Pre-install comparison — voltage regulation, 3-phase current balancing, stability/harmonic control, and stored energy for peak/off-peak use',
   recRedistributeTitle: 'Redistribute Three-Phase Load',
   recRedistributeDesc: 'Balance L1/L2/L3 loading to reduce cable and breaker stress.',
   recPeakTitle: 'Peak Demand Management',
@@ -537,7 +892,7 @@ const en: ReportStrings = {
   continueMonitoring: 'Continue monitoring',
   actVerifyPhase: 'Verify phase loading',
   actReviewPeak: 'Review peak time profile',
-  actInstallApfc: 'Install / tune APFC if PF < 0.95',
+  actInstallApfc: 'Install GE Energy Tech if PF < 0.95 or peak/imbalance issues',
   actRebalance: 'Rebalance single-phase loads',
   actHarmonic: 'Harmonic filter assessment',
   actDemand: 'Demand management plan',
@@ -548,6 +903,133 @@ const en: ReportStrings = {
   phaseL2: 'L2',
   phaseL3: 'L3',
   phaseAvg: 'Avg',
+  execSummaryTitle: 'Executive summary',
+  execChartTitle: 'Phase current trend (CH1 / CH2)',
+  execPhaseTableTitle: 'CH1 / CH2 current by phase',
+  execLineEnergy: 'Cumulative energy {value} from meter',
+  execLineAvgCurrent: 'CH1 average current: {value}',
+  execLinePeakDemand: 'Peak demand: {value}',
+  execLineLoadFactor: 'Load factor: {value}',
+  execLinePowerFactor: 'Average power factor: {value}',
+  execLineImbalance: 'Current imbalance: {value}',
+  execLineOverallRisk: 'Overall risk level: {status}',
+  execLineGeSolution:
+    'GE Energy Tech approach: voltage · current · stability · stored energy for later use',
+  execSourceHistory: 'from 24h history',
+  secAnalysisTitle: 'Analysis',
+  secRecommendTitle: 'Recommendations',
+  secEnergyChartCaption: 'Energy consumption (estimated)',
+  secPeakChartCaption: 'Peak demand from current history',
+  secPfChartCaption: 'Power factor vs target',
+  secBalanceChartCaption: 'L1 / L2 / L3 phase currents',
+  secHarmonicChartCaption: 'THDI by phase',
+  secEnergyInsightTotal: 'Cumulative energy',
+  secEnergyInsightTotalDetail: 'Meter total {value}',
+  secEnergyInsightMonthly: 'Monthly estimate',
+  secEnergyInsightMonthlyDetail: '{kwh} · est. cost {cost}',
+  secEnergyInsightLoad: 'Load from current history',
+  secEnergyInsightLoadDetail: 'Average {avg} over {period}',
+  secEnergyRecMonitor: 'Monitor consumption',
+  secEnergyRecMonitorDesc: 'Use GE IoT to track kWh and monthly cost trends',
+  secEnergyRecTou: 'Time-of-use management',
+  secEnergyRecTouDesc: 'Low load factor — shift heavy loads away from peak windows',
+  secEnergyBarDaily: 'Daily',
+  secEnergyBarMonthly: 'Monthly',
+  secEnergyBarAnnual: 'Annual',
+  secEnergyEstSeries: 'Est. load (kWh)',
+  secPfInsightStatus: 'Power factor status',
+  secPfInsightStatusDetail: 'Current PF {value} (target ≥ 0.95)',
+  secPfInsightNoData: 'No PF data yet',
+  secPfInsightNoDataDetail: 'Waiting for live meter PF readings',
+  secPfRecMaintain: 'Maintain PF within target and review monthly',
+  secPfTarget: 'Target 0.95',
+  secPfIdeal: 'Reference 1.00',
+  secBalanceInsightOk: 'Phase balance',
+  secBalanceInsightOkDetail: 'Three-phase currents within acceptable range',
+  secBalanceRecOk: 'Maintain phase balance',
+  secBalanceRecOkDesc: 'Review load distribution periodically',
+  secHarmonicInsightThd: 'THDI',
+  secHarmonicInsightThdDetail: 'Average THDI {value}',
+  secHarmonicInsightNoData: 'No THD data yet',
+  secHarmonicInsightNoDataDetail: 'Waiting for harmonic data from meter',
+  secHarmonicRecFilter: 'Assess harmonic filters when THDI > 8%',
+  secHarmonicRecOk: 'Harmonic level acceptable',
+  secHarmonicRecOkDesc: 'Continue THDI monitoring',
+  secEquipmentChartCaption: 'Equipment risk levels (1=low · 3=high)',
+  secEquipmentRiskAxis: 'Risk level',
+  secEquipmentInsightMotor: 'Motor/compressor: {status}',
+  secEquipmentInsightBreaker: 'Main breaker/cable: {status}',
+  secEquipmentInsightTransformer: 'Transformer: {status}',
+  secEquipmentRecInspect: 'Scheduled equipment inspection',
+  secEquipmentRecInspectDesc: 'Thermography and breaker checks when imbalance is high',
+  secFinancialChartCaption: 'Financial impact ({currency})',
+  secFinancialInsightCost: 'Monthly electricity cost',
+  secFinancialInsightCostDetail: 'Estimated {value}/month from current usage',
+  secFinancialInsightPenaltyDetail: 'Estimated PF penalty {value}/month — improve PF',
+  secFinancialInsightNoPenalty: 'No clear PF penalty — maintain PF ≥ 0.95',
+  secFinancialInsightSaving: 'Savings potential',
+  secFinancialInsightSavingDetail: 'About {monthly}/month · {annual}/year total',
+  secFinancialRecReview: 'Review bill with customer',
+  secFinancialRecReviewDesc: 'Present cost, penalties, and savings plan',
+  secFinancialRecApfcDesc:
+    'GE Energy Tech (voltage · current · stability · storage) reduces penalties and increases savings',
+  secRoiChartCaption: 'Investment vs annual savings',
+  secRoiInsightSolution: 'Proposed solution',
+  secRoiInsightSolutionDetail: 'Recommended: {solution}',
+  secRoiInsightPayback: 'Payback period',
+  secRoiInsightPaybackDetail: '{payback} · benchmark ≤ {benchmark} mo = excellent · ROI {roi}',
+  secRoiPaybackBenchmark: 'Payback benchmark',
+  secRoiPaybackBenchmarkDetail:
+    'Payback ≤ 18 months = excellent · 18–36 acceptable · 36–60 review · > 60 slow',
+  secRoiRecOptimize: 'Improve payback plan',
+  secRoiRecOptimizeDesc: 'Increase monthly savings or reduce investment to target ≤ 18 months',
+  secRoiInsightReturn: 'Return from savings',
+  secRoiInsightReturnDetail: '{monthly}/month · {annual}/year',
+  secRoiInsightPending: 'Awaiting savings data',
+  secRoiInsightPendingDetail: 'Monthly savings required for accurate ROI',
+  secRoiRecApprove: 'Approve investment',
+  secRoiRecApproveDesc: 'Customer reviews budget and installation timeline',
+  secAiChartCaption: 'AI recommendation priority',
+  secAiFieldCount: 'Recommendation count',
+  secAiInsightOverview: 'AI recommendations overview',
+  secAiInsightOverviewDetail: '{count} items from meter data and current history',
+  secAiInsightItem: 'Priority {priority}: {title}',
+  secAiInsightEmpty: 'No recommendations yet',
+  secAiInsightEmptyDetail: 'Waiting for meter data to generate suggestions',
+  secAiRecReviewDesc: 'Review priorities with the customer team',
+  secActionChartCaption: 'Tasks per time horizon',
+  secActionFieldHorizons: 'Plan horizons',
+  secActionFieldTasks: 'Total tasks',
+  secActionTaskAxis: 'Tasks',
+  secActionInsightOverview: 'Action plan overview',
+  secActionInsightOverviewDetail: '{count} tasks across immediate/short/medium/long term',
+  secActionRecAssign: 'Assign owners',
+  secActionRecAssignDesc: 'Name owners and target dates for each task',
+  secActionRecTrack: 'Track progress',
+  secActionRecTrackDesc: 'Update status in GE IoT or weekly reports',
+  secConclusionChartCaption: 'Conclusion risk scores by topic',
+  secConclusionScoreAxis: 'Score',
+  secConclusionInsightProblem: 'Main issue: {value}',
+  secConclusionInsightTech: 'Technical risk: {value}',
+  secConclusionInsightFinancial: 'Financial impact: {value}',
+  secConclusionInsightDecision: 'Decision summary',
+  secConclusionInsightDecisionDetail: '{solution} · save {saving} · payback {payback}',
+  secConclusionRecSignoff: 'Sign off plan',
+  secConclusionRecSignoffDesc: 'Customer and GE Energy Tech acknowledge the action plan',
+  printEvidenceTitle: 'Evidence and data sources',
+  printMethodology:
+    'Values are derived from live meter data, database current history, and analysis formulas aligned with cited government/regulatory and IEEE/IEC standards (PF, THD, imbalance, load factor, ROI). Missing data is shown as —.',
+  printSourceMeter: 'Meter / device',
+  printSourcePeriod: 'Analysis period',
+  printSourceRecords: 'Record count',
+  printSourcePeak: 'Historical peak',
+  printFooterLegal: 'Auto-generated by GE IoT · For decision support only',
+  printPagePrefix: 'Page ',
+  printPageMiddle: ' of ',
+  printPageSuffix: '',
+  printTableItem: 'Item',
+  printTableValue: 'Value',
+  printColTime: 'Time',
 };
 
 const catalog: Record<EqLocale, ReportStrings> = {

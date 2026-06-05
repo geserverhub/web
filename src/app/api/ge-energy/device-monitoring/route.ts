@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
+import {
+  pickCh1CurrentColumns,
+  pickCh1VoltageColumns,
+  pickCh2CurrentColumns,
+  readCh1Currents,
+  readCh2Currents,
+} from '@/lib/energy/power-record-fields'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -120,13 +127,28 @@ function buildChannel(
   }
 }
 
-function buildMonitoringPayload(record: Record<string, unknown>) {
-  const ch1Voltage = [toNum(record.ch1_v_L1), toNum(record.ch1_v_L2), toNum(record.ch1_v_L3)]
-  const ch1Current = [toNum(record.ch1_i_L1), toNum(record.ch1_i_L2), toNum(record.ch1_i_L3)]
-  const ch2Current = [toNum(record.ch2_L1), toNum(record.ch2_L2), toNum(record.ch2_L3)]
+function buildMonitoringPayload(
+  record: Record<string, unknown>,
+  columnSets: {
+    ch1CurrentCols: (string | null)[]
+    ch1VoltageCols: (string | null)[]
+    ch2CurrentCols: (string | null)[]
+  },
+) {
+  const scope = record.record_scope as RecordScope | undefined
+  const ch1Only = scope === 'pre_install'
+  const ch1Voltage = columnSets.ch1VoltageCols.map((col) =>
+    col ? toNum(record[col]) : null,
+  )
+  const ch1Current = readCh1Currents(record, columnSets.ch1CurrentCols, columnSets.ch1VoltageCols)
+  const ch2Current = ch1Only
+    ? [null, null, null]
+    : readCh2Currents(record, columnSets.ch2CurrentCols)
 
   const ch1 = buildChannel(ch1Voltage, ch1Current, 'before', record)
-  const ch2 = buildChannel([null, null, null], ch2Current, 'metrics', record)
+  const ch2 = ch1Only
+    ? buildChannel([null, null, null], [null, null, null], 'metrics', {})
+    : buildChannel([null, null, null], ch2Current, 'metrics', record)
 
   return {
     deviceId: record.device_id,
@@ -147,13 +169,13 @@ function buildMonitoringPayload(record: Record<string, unknown>) {
       reactivePower: ch2.reactivePower ?? 0,
       apparentPower: ch2.apparentPower ?? 0,
       frequency: ch1.frequency ?? ch2.frequency,
-      powerFactor: ch1.powerFactor ?? ch2.powerFactor,
-      energy: ch2.energyKwh ?? 0,
-      energySaved: record.energy_reduction ?? 0,
-      co2Saved: record.co2_reduction ?? 0,
+      powerFactor: ch1.powerFactor ?? (ch1Only ? null : ch2.powerFactor),
+      energy: ch1Only ? (ch1.energyKwh ?? 0) : (ch2.energyKwh ?? 0),
+      energySaved: ch1Only ? 0 : (record.energy_reduction ?? 0),
+      co2Saved: ch1Only ? 0 : (record.co2_reduction ?? 0),
       beforeEnergy: ch1.energyKwh ?? 0,
       thdBefore: ch1.thd,
-      thdAfter: ch2.thd,
+      thdAfter: ch1Only ? null : ch2.thd,
     },
   }
 }
@@ -204,7 +226,12 @@ async function fetchLatestRecord(deviceId: string, table: string, scope: RecordS
   if (!rows.length) return null
   const record = rows[0] as Record<string, unknown>
   record.record_scope = scope
-  return record
+  return {
+    record,
+    ch1CurrentCols: pickCh1CurrentColumns(powerCols),
+    ch1VoltageCols: pickCh1VoltageColumns(powerCols),
+    ch2CurrentCols: pickCh2CurrentColumns(powerCols),
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -226,11 +253,11 @@ export async function GET(request: NextRequest) {
 
     for (const scope of tablesToTry) {
       const table = SCOPE_TO_TABLE[scope]
-      const record = await fetchLatestRecord(deviceId, table, scope)
-      if (record) {
+      const loaded = await fetchLatestRecord(deviceId, table, scope)
+      if (loaded) {
         return NextResponse.json({
           success: true,
-          data: buildMonitoringPayload(record),
+          data: buildMonitoringPayload(loaded.record, loaded),
           timestamp: new Date().toISOString(),
         })
       }

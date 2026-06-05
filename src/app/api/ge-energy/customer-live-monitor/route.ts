@@ -157,9 +157,9 @@ export async function GET(request: NextRequest) {
       'record_time',
     ]);
 
-    const beforeL1 = pickCol(powerCols, ['before_current_L1', 'before_L1']);
-    const beforeL2 = pickCol(powerCols, ['before_current_L2', 'before_L2']);
-    const beforeL3 = pickCol(powerCols, ['before_current_L3', 'before_L3']);
+    const beforeL1 = pickCol(powerCols, ['before_current_L1']);
+    const beforeL2 = pickCol(powerCols, ['before_current_L2']);
+    const beforeL3 = pickCol(powerCols, ['before_current_L3']);
     const outL1 = pickCol(powerCols, ['metrics_L1']);
     const outL2 = pickCol(powerCols, ['metrics_L2']);
     const outL3 = pickCol(powerCols, ['metrics_L3']);

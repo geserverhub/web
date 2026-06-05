@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
+import {
+  avgCurrent,
+  pickCh1CurrentColumns,
+  pickCh1VoltageColumns,
+  pickCh2CurrentColumns,
+  readCh1Currents,
+  readCh2Currents,
+} from '@/lib/energy/power-record-fields'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -8,21 +16,7 @@ type RecordScope = 'installed' | 'pre_install'
 
 type ColumnRow = { COLUMN_NAME: string }
 
-type HistoryRow = {
-  record_time: string | Date
-  ch1_L1?: string | number | null
-  ch1_L2?: string | number | null
-  ch1_L3?: string | number | null
-  ch2_L1?: string | number | null
-  ch2_L2?: string | number | null
-  ch2_L3?: string | number | null
-}
-
-const toFloat = (value: string | number | null | undefined): number | null => {
-  if (value === null || value === undefined || value === '') return null
-  const n = typeof value === 'number' ? value : parseFloat(value)
-  return Number.isFinite(n) ? n : null
-}
+type HistoryRow = Record<string, unknown> & { record_time: string | Date }
 
 const SCOPE_TO_TABLE: Record<RecordScope, string> = {
   installed: 'power_records',
@@ -71,7 +65,7 @@ async function loadHistoryRecords(
   deviceId: string,
   hours: number,
   scope: RecordScope
-): Promise<{ records: HistoryRow[]; scope: RecordScope; table: string } | null> {
+): Promise<{ records: HistoryRow[]; scope: RecordScope; table: string; powerCols: Set<string> } | null> {
   const table = SCOPE_TO_TABLE[scope]
   if (!(await tableExists(table))) return null
 
@@ -83,25 +77,17 @@ async function loadHistoryRecords(
     'before_L1',
     'before_L2',
     'before_L3',
+    'before_P',
+    'before_PF',
     'metrics_L1',
     'metrics_L2',
     'metrics_L3',
   ])
 
-  const ch1L1 = pickCol(powerCols, ['before_current_L1', 'before_L1'])
-  const ch1L2 = pickCol(powerCols, ['before_current_L2', 'before_L2'])
-  const ch1L3 = pickCol(powerCols, ['before_current_L3', 'before_L3'])
-  const ch2L1 = pickCol(powerCols, ['metrics_L1'])
-  const ch2L2 = pickCol(powerCols, ['metrics_L2'])
-  const ch2L3 = pickCol(powerCols, ['metrics_L3'])
-
   const selectParts = ['record_time']
-  if (ch1L1) selectParts.push(`${ch1L1} AS ch1_L1`)
-  if (ch1L2) selectParts.push(`${ch1L2} AS ch1_L2`)
-  if (ch1L3) selectParts.push(`${ch1L3} AS ch1_L3`)
-  if (ch2L1) selectParts.push(`${ch2L1} AS ch2_L1`)
-  if (ch2L2) selectParts.push(`${ch2L2} AS ch2_L2`)
-  if (ch2L3) selectParts.push(`${ch2L3} AS ch2_L3`)
+  for (const col of powerCols) {
+    if (col !== 'record_time') selectParts.push(col)
+  }
 
   const records = (await queryGe(
     `SELECT ${selectParts.join(', ')}
@@ -112,7 +98,7 @@ async function loadHistoryRecords(
     [deviceId, hours]
   )) as HistoryRow[]
 
-  return { records, scope, table }
+  return { records, scope, table, powerCols }
 }
 
 /**
@@ -137,7 +123,7 @@ export async function GET(request: NextRequest) {
     const scopesToTry: RecordScope[] =
       scope === 'pre_install' ? ['pre_install', 'installed'] : ['installed', 'pre_install']
 
-    let loaded: { records: HistoryRow[]; scope: RecordScope; table: string } | null = null
+    let loaded: { records: HistoryRow[]; scope: RecordScope; table: string; powerCols: Set<string> } | null = null
     for (const tryScope of scopesToTry) {
       loaded = await loadHistoryRecords(deviceId, hours, tryScope)
       if (loaded?.records.length) break
@@ -158,16 +144,20 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const { records, scope: effectiveScope } = loaded
+    const { records, scope: effectiveScope, powerCols } = loaded
+
+    const ch1Only = effectiveScope === 'pre_install'
+
+    const ch1CurrentCols = pickCh1CurrentColumns(powerCols)
+    const ch1VoltageCols = pickCh1VoltageColumns(powerCols)
+    const ch2CurrentCols = pickCh2CurrentColumns(powerCols)
 
     const chartData = records.map((record) => {
       const time = new Date(record.record_time)
-      const b1 = toFloat(record.ch1_L1)
-      const b2 = toFloat(record.ch1_L2)
-      const b3 = toFloat(record.ch1_L3)
-      const a1 = toFloat(record.ch2_L1)
-      const a2 = toFloat(record.ch2_L2)
-      const a3 = toFloat(record.ch2_L3)
+      const [b1, b2, b3] = readCh1Currents(record, ch1CurrentCols, ch1VoltageCols)
+      const [a1, a2, a3] = ch1Only
+        ? [null, null, null]
+        : readCh2Currents(record, ch2CurrentCols)
       const beforeVals = [b1, b2, b3].filter((v): v is number => v != null)
       const afterVals = [a1, a2, a3].filter((v): v is number => v != null)
       return {
@@ -189,17 +179,19 @@ export async function GET(request: NextRequest) {
     })
 
     const latestRecord = records[records.length - 1]
+    const latestCh1 = latestRecord
+      ? readCh1Currents(latestRecord, ch1CurrentCols, ch1VoltageCols)
+      : [null, null, null]
+    const latestCh2 = latestRecord && !ch1Only
+      ? readCh2Currents(latestRecord, ch2CurrentCols)
+      : [null, null, null]
+
     const stats = latestRecord ? {
-      currentBefore: {
-        L1: toFloat(latestRecord.ch1_L1),
-        L2: toFloat(latestRecord.ch1_L2),
-        L3: toFloat(latestRecord.ch1_L3)
-      },
-      currentAfter: {
-        L1: toFloat(latestRecord.ch2_L1),
-        L2: toFloat(latestRecord.ch2_L2),
-        L3: toFloat(latestRecord.ch2_L3)
-      }
+      currentBefore: { L1: latestCh1[0], L2: latestCh1[1], L3: latestCh1[2] },
+      currentAfter: ch1Only
+        ? { L1: null, L2: null, L3: null }
+        : { L1: latestCh2[0], L2: latestCh2[1], L3: latestCh2[2] },
+      avgBefore: avgCurrent(latestCh1),
     } : null
 
     return NextResponse.json({

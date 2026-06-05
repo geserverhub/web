@@ -122,17 +122,20 @@ export default function EqCurrentHistoryChart({
   );
 }
 
-export function buildEqCurrentChartLines(ui: {
-  l1: string;
-  l2: string;
-  l3: string;
-}): EqChartLineSpec[] {
+export function buildEqCurrentChartLines(
+  ui: { l1: string; l2: string; l3: string },
+  ch1Only = true,
+): EqChartLineSpec[] {
+  const before: EqChartLineSpec[] = [
+    { dataKey: 'beforeL1', name: `CH1 ${ui.l1}`, stroke: '#c2410c', width: 3.5 },
+    { dataKey: 'beforeL2', name: `CH1 ${ui.l2}`, stroke: '#ea580c', width: 3 },
+    { dataKey: 'beforeL3', name: `CH1 ${ui.l3}`, stroke: '#f97316', width: 2.75 },
+  ];
+  if (ch1Only) return before;
   return [
     { dataKey: 'afterL1', name: `CH2 ${ui.l1}`, stroke: '#1d4ed8', width: 3.5 },
     { dataKey: 'afterL2', name: `CH2 ${ui.l2}`, stroke: '#2563eb', width: 3 },
     { dataKey: 'afterL3', name: `CH2 ${ui.l3}`, stroke: '#3b82f6', width: 2.75 },
-    { dataKey: 'beforeL1', name: `CH1 ${ui.l1}`, stroke: '#c2410c', width: 3.5 },
-    { dataKey: 'beforeL2', name: `CH1 ${ui.l2}`, stroke: '#ea580c', width: 3 },
-    { dataKey: 'beforeL3', name: `CH1 ${ui.l3}`, stroke: '#f97316', width: 2.75 },
+    ...before,
   ];
 }

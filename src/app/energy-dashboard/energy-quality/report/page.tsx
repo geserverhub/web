@@ -26,8 +26,10 @@ import {
 import EnergyQualityReportView from '@/components/energy/EnergyQualityReportView';
 import {
   analyzeCurrentHistory,
+  chartDataCh1Only,
   type DbChartPoint,
 } from '@/lib/energy/energy-quality-current-analysis';
+import { isCh1OnlyScope, normalizeRecordScope } from '@/lib/energy/energy-quality-scope';
 import {
   RefreshCw,
   Wifi,
@@ -63,19 +65,11 @@ const EMPTY_CHANNEL: ReportChannel = {
   energyKwh: null,
 };
 
-function resolveRecordScope(scope?: string | null): 'installed' | 'pre_install' {
-  const normalized = String(scope || '').trim().toLowerCase();
-  if (normalized === 'pre_install' || normalized === 'pre-install' || normalized === 'preinstall') {
-    return 'pre_install';
-  }
-  return 'installed';
-}
-
-function mapChannels(raw: Record<string, unknown>) {
+function mapChannels(raw: Record<string, unknown>, ch1Only: boolean) {
   const channels = raw.channels as { ch1?: ReportChannel; ch2?: ReportChannel } | undefined;
   return {
     ch1: channels?.ch1 ?? EMPTY_CHANNEL,
-    ch2: channels?.ch2 ?? EMPTY_CHANNEL,
+    ch2: ch1Only ? EMPTY_CHANNEL : (channels?.ch2 ?? EMPTY_CHANNEL),
   };
 }
 
@@ -129,8 +123,9 @@ function EnergyQualityReportInner() {
 
   const selectedInfo = filteredDevices.find((d) => d.deviceID === selectedDevice);
   const rt = reportT(printLocale);
+  const ch1Only = isCh1OnlyScope(selectedInfo?.recordScope);
 
-  const hasLiveData = channelHasLiveData(ch1) || channelHasLiveData(ch2);
+  const hasLiveData = channelHasLiveData(ch1) || (!ch1Only && channelHasLiveData(ch2));
   const livePending = Boolean(selectedDevice) && !hasLiveData;
   const noMeter = !selectedDevice;
 
@@ -141,8 +136,9 @@ function EnergyQualityReportInner() {
         ch1Label: rt.ch1Label,
         ch2Label: rt.ch2Label,
         periodLabel: historyPeriod,
+        ch1Only,
       }),
-    [chartData, printLocale, rt.ch1Label, rt.ch2Label, historyPeriod],
+    [chartData, printLocale, rt.ch1Label, rt.ch2Label, historyPeriod, ch1Only],
   );
 
   const report = useMemo(() => {
@@ -152,11 +148,13 @@ function EnergyQualityReportInner() {
       site: selectedSite,
       lastUpdate: lastUpdate || rt.waitingLive,
       ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
-      ch2: selectedDevice ? ch2 : EMPTY_CHANNEL,
+      ch2: selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL,
+      ch1Only,
       historyPoints,
       measurementStart,
       measurementEnd,
       chartData,
+      historyPeriod,
       locale: printLocale,
       livePending,
       noMeter,
@@ -173,10 +171,12 @@ function EnergyQualityReportInner() {
     measurementStart,
     measurementEnd,
     chartData,
+    historyPeriod,
     printLocale,
     livePending,
     noMeter,
     selectedDevice,
+    ch1Only,
     dbCustomer,
     dbSite,
     rt,
@@ -218,7 +218,8 @@ function EnergyQualityReportInner() {
       if (!lastUpdate) setLoading(true);
       else setRefreshing(true);
       setError(null);
-      const scope = resolveRecordScope(selectedInfo.recordScope);
+      const scope = normalizeRecordScope(selectedInfo.recordScope);
+      const scopeCh1Only = isCh1OnlyScope(selectedInfo.recordScope);
       const scopeQ = `&scope=${scope}`;
       const [monRes, histRes] = await Promise.all([
         fetch(
@@ -234,9 +235,9 @@ function EnergyQualityReportInner() {
       const histJson = await histRes.json();
 
       if (json.success && json.data?.metrics) {
-        const { ch1: c1, ch2: c2 } = mapChannels(json.data.metrics as Record<string, unknown>);
+        const { ch1: c1, ch2: c2 } = mapChannels(json.data.metrics as Record<string, unknown>, scopeCh1Only);
         setCh1(c1);
-        setCh2(c2);
+        setCh2(scopeCh1Only ? EMPTY_CHANNEL : c2);
         setLastUpdate(
           json.data.lastUpdate
             ? new Date(json.data.lastUpdate).toLocaleString()
@@ -251,7 +252,8 @@ function EnergyQualityReportInner() {
       }
 
       const hist = histJson.data;
-      const points = (hist?.chartData ?? []) as DbChartPoint[];
+      const rawPoints = (hist?.chartData ?? []) as DbChartPoint[];
+      const points = scopeCh1Only ? chartDataCh1Only(rawPoints) : rawPoints;
       setChartData(points);
       setHistoryPoints(hist?.dataPoints ?? points.length);
       if (hist?.period) setHistoryPeriod(String(hist.period));
@@ -393,12 +395,66 @@ function EnergyQualityReportInner() {
 
   const printReport = useCallback(() => {
     if (!report) return;
-    const html = buildReportPrintHtml(report, rt, rt.ch1Label, rt.ch2Label);
-    const win = window.open('', '_blank', 'width=960,height=720');
+    const device = selectedInfo ?? PLACEHOLDER_DEVICE;
+    const html = buildReportPrintHtml({
+      report,
+      locale: printLocale,
+      ch1Label: rt.ch1Label,
+      ch2Label: rt.ch2Label,
+      ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
+      ch2: selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL,
+      ch1Only,
+      chartData: ch1Only ? chartDataCh1Only(chartData) : chartData,
+      historyPeriod,
+      historyPoints,
+      measurementStart,
+      measurementEnd,
+      deviceName: device.deviceName,
+      meterId: device.geID || device.deviceID,
+      chartStats: dbAnalysis.stats,
+      technicalInsights: dbAnalysis.insights,
+      snapshotLabels: {
+        lastUpdate: ui.lastUpdate,
+        l1: ui.l1,
+        l2: ui.l2,
+        l3: ui.l3,
+        avg: ui.avg,
+        thd: ui.thd,
+        powerFactor: ui.powerFactor,
+        frequency: ui.frequency,
+      },
+    });
+    const win = window.open('', '_blank');
     if (!win) return;
+    win.document.open();
     win.document.write(html);
     win.document.close();
-  }, [report, rt]);
+  }, [
+    report,
+    printLocale,
+    rt.ch1Label,
+    rt.ch2Label,
+    selectedDevice,
+    ch1,
+    ch2,
+    chartData,
+    historyPeriod,
+    historyPoints,
+    measurementStart,
+    measurementEnd,
+    selectedInfo,
+    dbAnalysis.stats,
+    ch1Only,
+    dbAnalysis.insights,
+    ui.lastUpdate,
+    ui.l1,
+    ui.l2,
+    ui.l3,
+    ui.avg,
+    ui.thd,
+    ui.powerFactor,
+    ui.frequency,
+  ]);
 
   return (
     <div className="energy-page eq-page eq-page--report mx-auto px-4 sm:px-6 pb-10">
@@ -499,6 +555,10 @@ function EnergyQualityReportInner() {
             ch1Label={rt.ch1Label}
             ch2Label={rt.ch2Label}
             ch1={selectedDevice ? ch1 : EMPTY_CHANNEL}
+            ch2={selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL}
+            ch1Only={ch1Only}
+            reportLocale={printLocale}
+            historyPeriod={historyPeriod}
             livePending={livePending}
             noMeter={noMeter}
             isRefreshing={refreshing}

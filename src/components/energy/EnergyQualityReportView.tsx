@@ -1,26 +1,30 @@
 'use client';
 
+import { useMemo } from 'react';
 import type {
   EnergyQualityReport,
   ReportChannel,
   RiskLevel,
 } from '@/lib/energy/energy-quality-report-model';
+import type { EqLocale } from '@/lib/energy/energy-quality-i18n';
 import type { ReportStrings } from '@/lib/energy/energy-quality-report-i18n';
 import { fmtNum } from '@/lib/energy/energy-quality-i18n';
 import EnergyQualityLiveSnapshot from '@/components/energy/EnergyQualityLiveSnapshot';
-import EnergyQualityReportCharts from '@/components/energy/EnergyQualityReportCharts';
+import { ReportCurrentChartPanel } from '@/components/energy/EnergyQualityReportCharts';
+import EnergyQualityReportSectionBlock from '@/components/energy/EnergyQualityReportSectionBlock';
+import { buildReportSectionPacks } from '@/lib/energy/energy-quality-section-analysis';
+import { riskLevelFromPaybackValue } from '@/lib/energy/energy-quality-payback';
 import type {
   CurrentHistoryStats,
   DbChartPoint,
   TechnicalInsight,
 } from '@/lib/energy/energy-quality-current-analysis';
-import { Activity, AlertTriangle, CheckCircle2, FileText, Loader2, Radio } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, FileText, Info, Loader2, Radio } from 'lucide-react';
 
 const REPORT_SECTIONS = [
   { id: 'sec-customer', key: 'sec1' as const },
   { id: 'sec-measurement', key: 'sec2' as const },
   { id: 'sec-executive', key: 'sec3' as const },
-  { id: 'sec-charts', key: 'secCharts' as const },
   { id: 'sec-energy', key: 'sec4' as const },
   { id: 'sec-peak', key: 'sec5' as const },
   { id: 'sec-pf', key: 'sec6' as const },
@@ -61,7 +65,15 @@ function riskLabel(level: RiskLevel, rt: ReportStrings): string {
   return rt.statusGood;
 }
 
+function InsightIcon({ severity }: { severity: TechnicalInsight['severity'] }) {
+  if (severity === 'critical') return <AlertTriangle className="w-4 h-4 text-red-600" strokeWidth={2.5} />;
+  if (severity === 'warning') return <AlertTriangle className="w-4 h-4 text-amber-600" strokeWidth={2.5} />;
+  return <Info className="w-4 h-4 text-sky-600" strokeWidth={2.5} />;
+}
+
 function valueToRiskLevel(value: string, rt: ReportStrings): RiskLevel | null {
+  const paybackRisk = riskLevelFromPaybackValue(value, rt);
+  if (paybackRisk) return paybackRisk;
   const v = value.trim();
   if (v === rt.statusCritical || v === 'Critical' || v.includes('วิกฤต')) return 'critical';
   if (v === rt.statusWarning || v === 'Warning' || v.includes('เตือน') || v === 'Caution' || v === 'High Risk') {
@@ -171,6 +183,8 @@ export default function EnergyQualityReportView({
   ch1Label,
   ch2Label,
   ch1,
+  ch2,
+  reportLocale = 'en',
   snapshotUi,
   livePending = false,
   noMeter = false,
@@ -179,12 +193,16 @@ export default function EnergyQualityReportView({
   dbStats = null,
   technicalInsights = [],
   chartUi,
+  historyPeriod = '24 hours',
+  ch1Only = true,
 }: {
   report: EnergyQualityReport;
   rt: ReportStrings;
   ch1Label: string;
   ch2Label: string;
   ch1?: ReportChannel;
+  ch2?: ReportChannel;
+  reportLocale?: EqLocale;
   snapshotUi?: {
     lastUpdate: string;
     l1: string;
@@ -202,8 +220,36 @@ export default function EnergyQualityReportView({
   dbStats?: CurrentHistoryStats | null;
   technicalInsights?: TechnicalInsight[];
   chartUi?: { l1: string; l2: string; l3: string; noChart: string };
+  historyPeriod?: string;
+  /** Pre-install analysis: CH1 (before install) only — hide CH2. */
+  ch1Only?: boolean;
 }) {
   const pending = livePending || noMeter;
+  const emptyCh: ReportChannel = {
+    voltage: [null, null, null],
+    current: [null, null, null],
+    activePower: null,
+    reactivePower: null,
+    apparentPower: null,
+    powerFactor: null,
+    thd: null,
+    frequency: null,
+    energyKwh: null,
+  };
+  const sectionPacks = useMemo(
+    () =>
+      buildReportSectionPacks({
+        report,
+        chartData: dbChartData,
+        ch1: ch1 ?? emptyCh,
+        ch2: ch2 ?? emptyCh,
+        periodLabel: historyPeriod,
+        locale: reportLocale,
+        chartUi: chartUi ?? { l1: 'L1', l2: 'L2', l3: 'L3' },
+        ch1Only,
+      }),
+    [report, dbChartData, ch1, ch2, historyPeriod, reportLocale, chartUi, ch1Only],
+  );
   const m = report.statusMetrics ?? {
     pf: null,
     thd: null,
@@ -366,21 +412,52 @@ export default function EnergyQualityReportView({
         livePending={pending}
       />
 
-      <ReportSection
-        id="sec-executive"
-        index={3}
-        title={rt.sec3}
-        fields={report.executive}
-        rt={rt}
-        livePending={pending}
-      >
+      <section id="sec-executive" className="eq-report-section eq-report-executive">
+        <h3 className="eq-report-section-title">
+          <span className="eq-report-section-num">3</span>
+          {rt.sec3}
+        </h3>
+
+        <h4 className="eq-report-exec-subtitle">{rt.execSummaryTitle}</h4>
+        <ul className="eq-report-exec-bullets">
+          {report.executiveBullets.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+
+        <div className="eq-report-exec-kpis">
+          {report.executiveKpis.map((kpi) => (
+            <div key={kpi.label} className="eq-report-exec-kpi">
+              <span className="eq-report-field-label">{kpi.label}</span>
+              <FieldValue value={kpi.value} rt={rt} livePending={pending} />
+            </div>
+          ))}
+        </div>
+
+        {chartUi ? (
+          <>
+            <h4 className="eq-report-exec-subtitle">{rt.execChartTitle}</h4>
+            <p className="eq-report-charts-source">{rt.secChartsSource}</p>
+            <ReportCurrentChartPanel
+              rt={rt}
+              ui={chartUi}
+              chartData={dbChartData}
+              stats={dbStats}
+              pending={pending}
+              compact
+              ch1Only={ch1Only}
+            />
+          </>
+        ) : null}
+
+        <h4 className="eq-report-exec-subtitle">{rt.execPhaseTableTitle}</h4>
         <div className="eq-report-phase-table-wrap">
           <table className="eq-report-table">
             <thead>
               <tr>
                 <th>{rt.phaseCol}</th>
                 <th>{ch1Label}</th>
-                <th>{ch2Label}</th>
+                {!ch1Only ? <th>{ch2Label}</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -388,78 +465,148 @@ export default function EnergyQualityReportView({
                 <tr key={row.phase}>
                   <td>{row.phase}</td>
                   <td>{row.ch1}</td>
-                  <td>{row.ch2}</td>
+                  {!ch1Only ? <td>{row.ch2}</td> : null}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </ReportSection>
 
-      {chartUi ? (
-        <EnergyQualityReportCharts
-          rt={rt}
-          ui={chartUi}
-          chartData={dbChartData}
-          stats={dbStats}
-          insights={technicalInsights}
-          pending={pending}
-        />
-      ) : null}
-
-      <ReportSection id="sec-energy" index={4} title={rt.sec4} fields={report.energy} rt={rt} livePending={pending} />
-      <ReportSection id="sec-peak" index={5} title={rt.sec5} fields={report.peak} rt={rt} livePending={pending} />
-      <ReportSection id="sec-pf" index={6} title={rt.sec6} fields={report.powerFactor} rt={rt} livePending={pending} />
-      <ReportSection id="sec-balance" index={7} title={rt.sec7} fields={report.balance} rt={rt} livePending={pending} />
-      <ReportSection id="sec-harmonic" index={8} title={rt.sec8} fields={report.harmonic} rt={rt} livePending={pending} />
-      <ReportSection id="sec-equipment" index={9} title={rt.sec9} fields={report.equipment} rt={rt} livePending={pending} />
-      <ReportSection id="sec-financial" index={10} title={rt.sec10} fields={report.financial} rt={rt} livePending={pending} />
-      <ReportSection id="sec-roi" index={11} title={rt.sec11} fields={report.roi} rt={rt} livePending={pending} />
-
-      <section id="sec-ai" className="eq-report-section">
-        <h3 className="eq-report-section-title">
-          <span className="eq-report-section-num">12</span>
-          {rt.sec12}
-        </h3>
-        <ol className="eq-report-rec-list">
-          {report.recommendations.map((rec) => (
-            <li key={rec.priority} className="eq-report-rec-item">
-              <span className="eq-report-rec-priority">
-                {rt.priority} {rec.priority}
-              </span>
-              <strong>{rec.title}</strong>
-              <p>{rec.description}</p>
-            </li>
-          ))}
-        </ol>
+        {technicalInsights.length > 0 ? (
+          <>
+            <h4 className="eq-report-exec-subtitle">{rt.secTechnical}</h4>
+            <ul className="eq-report-tech-list">
+              {technicalInsights.map((ins, i) => (
+                <li
+                  key={`${ins.title}-${i}`}
+                  className={`eq-report-tech-item eq-report-tech-item--${ins.severity}`}
+                >
+                  <InsightIcon severity={ins.severity} />
+                  <div>
+                    <strong>{ins.title}</strong>
+                    <p>{ins.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
       </section>
 
-      <section id="sec-action" className="eq-report-section">
-        <h3 className="eq-report-section-title">
-          <span className="eq-report-section-num">13</span>
-          {rt.sec13}
-        </h3>
-        <div className="eq-report-action-grid">
-          {report.actionPlan.map((block) => (
-            <div key={block.horizon} className="eq-report-action-card">
-              <h4>{block.horizon}</h4>
-              <ul>
-                {block.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <ReportSection
+      <EnergyQualityReportSectionBlock
+        id="sec-energy"
+        index={4}
+        title={rt.sec4}
+        pack={sectionPacks.energy}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-peak"
+        index={5}
+        title={rt.sec5}
+        pack={sectionPacks.peak}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-pf"
+        index={6}
+        title={rt.sec6}
+        pack={sectionPacks.pf}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-balance"
+        index={7}
+        title={rt.sec7}
+        pack={sectionPacks.balance}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-harmonic"
+        index={8}
+        title={rt.sec8}
+        pack={sectionPacks.harmonic}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-equipment"
+        index={9}
+        title={rt.sec9}
+        pack={sectionPacks.equipment}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-financial"
+        index={10}
+        title={rt.sec10}
+        pack={sectionPacks.financial}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-roi"
+        index={11}
+        title={rt.sec11}
+        pack={sectionPacks.roi}
+        rt={rt}
+        pending={pending}
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-ai"
+        index={12}
+        title={rt.sec12}
+        pack={sectionPacks.ai}
+        rt={rt}
+        pending={pending}
+        primaryContent={
+          <ol className="eq-report-rec-list eq-report-rec-list--primary">
+            {report.recommendations.map((rec) => (
+              <li key={rec.priority} className="eq-report-rec-item">
+                <span className="eq-report-rec-priority">
+                  {rt.priority} {rec.priority}
+                </span>
+                <strong>{rec.title}</strong>
+                <p>{rec.description}</p>
+              </li>
+            ))}
+          </ol>
+        }
+      />
+      <EnergyQualityReportSectionBlock
+        id="sec-action"
+        index={13}
+        title={rt.sec13}
+        pack={sectionPacks.action}
+        rt={rt}
+        pending={pending}
+        primaryContent={
+          <div className="eq-report-action-grid">
+            {report.actionPlan.map((block) => (
+              <div key={block.horizon} className="eq-report-action-card">
+                <h4>{block.horizon}</h4>
+                <ul>
+                  {block.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        }
+      />
+      <EnergyQualityReportSectionBlock
         id="sec-conclusion"
         index={14}
         title={rt.sec14}
-        fields={report.conclusion}
+        pack={sectionPacks.conclusion}
         rt={rt}
-        livePending={pending}
+        pending={pending}
       />
     </article>
   );

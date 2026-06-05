@@ -1,5 +1,17 @@
 import { fmtA, fmtNum, type EqLocale } from './energy-quality-i18n';
+import {
+  computeCurrentHistoryStats,
+  getLatestChartPhases,
+  type DbChartPoint,
+} from './energy-quality-current-analysis';
 import { reportT } from './energy-quality-report-i18n';
+import { isCh1OnlyScope } from './energy-quality-scope';
+import { formatPaybackPeriod } from './energy-quality-payback';
+import {
+  defaultReportInvestment,
+  fmtReportMoney,
+  reportKwhTariff,
+} from './energy-quality-currency';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
 export type HarmonicRisk = 'acceptable' | 'caution' | 'high';
@@ -50,10 +62,13 @@ export type BuildReportInput = {
   lastUpdate: string;
   ch1: ReportChannel;
   ch2: ReportChannel;
+  /** Pre-install meters: analyze CH1 only (before install). */
+  ch1Only?: boolean;
   historyPoints: number;
   measurementStart?: string;
   measurementEnd?: string;
   chartData: HistoryPoint[];
+  historyPeriod?: string;
   preparedBy?: string;
   locale: EqLocale;
 };
@@ -94,6 +109,8 @@ export type EnergyQualityReport = {
   actionPlan: ReportAction[];
   conclusion: ReportField[];
   phaseTable: { phase: string; ch1: string; ch2: string }[];
+  executiveBullets: string[];
+  executiveKpis: ReportField[];
 };
 
 function avg(vals: (number | null | undefined)[]): number | null {
@@ -162,15 +179,20 @@ function field(label: string, value: string): ReportField {
   return { label, value: value || '—' };
 }
 
-function formatPaybackPeriod(
-  monthlySaving: number,
-  investment: number,
-  t: ReturnType<typeof reportT>,
-): string {
-  if (monthlySaving <= 0) return '—';
-  const months = investment / monthlySaving;
-  const years = months / 12;
-  return `${fmtNum(months, 1)} ${t.paybackMonthsUnit} (${fmtNum(years, 1)} ${t.paybackYearsUnit})`;
+function fillTpl(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, v),
+    template,
+  );
+}
+
+function pickCurrent(
+  live: number | null | undefined,
+  history: number | null | undefined,
+): number | null {
+  if (live != null && Number.isFinite(live)) return live;
+  if (history != null && Number.isFinite(history)) return history;
+  return null;
 }
 
 function patchField(fields: ReportField[], label: string, value: string): ReportField[] {
@@ -303,49 +325,74 @@ export function buildDisplayEnergyQualityReport(input: BuildDisplayReportInput):
 export function buildEnergyQualityReport(input: BuildReportInput): EnergyQualityReport {
   const t = reportT(input.locale);
   const { device, ch1, ch2, chartData } = input;
+  const ch1Only = input.ch1Only ?? isCh1OnlyScope(device.recordScope);
   const now = new Date();
   const reportId = `GE-EQ-${device.deviceID}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const reportDate = now.toLocaleString();
 
-  const i1 = ch1.current[0];
-  const i2 = ch1.current[1];
-  const i3 = ch1.current[2];
-  const avgI = avg(ch1.current);
-  const maxI = max(ch1.current);
-  const curImb = imbalancePct(ch1.current);
+  const histPoints = chartData as DbChartPoint[];
+  const histStats = histPoints.length
+    ? computeCurrentHistoryStats(histPoints, input.historyPeriod ?? '24h')
+    : null;
+  const latestChart = getLatestChartPhases(histPoints);
+
+  const i1 = pickCurrent(ch1.current[0], latestChart?.beforeL1);
+  const i2 = pickCurrent(ch1.current[1], latestChart?.beforeL2);
+  const i3 = pickCurrent(ch1.current[2], latestChart?.beforeL3);
+  const j1 = ch1Only ? null : pickCurrent(ch2.current[0], latestChart?.afterL1);
+  const j2 = ch1Only ? null : pickCurrent(ch2.current[1], latestChart?.afterL2);
+  const j3 = ch1Only ? null : pickCurrent(ch2.current[2], latestChart?.afterL3);
+
+  const resolvedCh1: (number | null)[] = [i1, i2, i3];
+  const resolvedCh2: (number | null)[] = ch1Only ? [null, null, null] : [j1, j2, j3];
+
+  const avgILive = avg(ch1.current);
+  const avgI =
+    avgILive ??
+    histStats?.avgCh1 ??
+    avg(resolvedCh1);
+  const maxI = max(resolvedCh1);
+  const curImb = imbalancePct(resolvedCh1) ?? (histStats?.maxImbalancePct ?? null);
   const voltImb = imbalancePct(ch1.voltage);
   const thdAvg = ch1.thd;
   const pf = ch1.powerFactor;
-  const freq = ch1.frequency;
   const energy = ch1.energyKwh;
-  const apparent = ch1.apparentPower;
 
   const totalI = [i1, i2, i3].filter((v): v is number => v != null).reduce((a, b) => a + b, 0) || null;
 
-  let peakVal: number | null = null;
-  let peakTime = '—';
-  for (const row of chartData) {
-    const v = row.afterAvg ?? row.beforeAvg;
-    if (v == null || !Number.isFinite(v)) continue;
-    if (peakVal == null || v > peakVal) {
-      peakVal = v;
-      peakTime = row.time;
+  let peakVal: number | null = histStats?.peakCh1 ?? null;
+  let peakTime = histStats?.peakCh1Time ?? '—';
+  if (peakVal == null) {
+    for (const row of chartData) {
+      const v = row.beforeAvg ?? (ch1Only ? null : row.afterAvg);
+      if (v == null || !Number.isFinite(v)) continue;
+      if (peakVal == null || v > peakVal) {
+        peakVal = v;
+        peakTime = row.time;
+      }
     }
   }
   if (peakVal == null) peakVal = maxI;
 
   const loadFactor =
-    avgI != null && peakVal != null && peakVal > 0 ? (avgI / peakVal) * 100 : null;
+    histStats?.loadFactor ??
+    (avgI != null && peakVal != null && peakVal > 0 ? (avgI / peakVal) * 100 : null);
   const peakRatio = avgI != null && peakVal != null && avgI > 0 ? peakVal / avgI : null;
+
+  const avgFromHistory = avgILive == null && histStats?.avgCh1 != null;
+  const peakFromHistory = max(ch1.current) == null && peakVal != null && histStats?.peakCh1 != null;
 
   const risk = riskFromMetrics(pf, thdAvg, curImb, t);
   const hRisk = harmonicRisk(thdAvg, t);
 
-  const estMonthlyKwh =
-    energy != null ? energy : avgI != null ? avgI * 24 * 30 * 0.4 : null;
-  const estMonthlyCost = estMonthlyKwh != null ? estMonthlyKwh * 4.2 : null;
+  const kwhRate = reportKwhTariff(input.locale);
+  const investment = defaultReportInvestment(input.locale);
+  const estMonthlyKwh = energy != null ? energy : null;
+  const estMonthlyCost = estMonthlyKwh != null ? estMonthlyKwh * kwhRate : null;
   const penaltyCost = pf != null && pf < 0.95 && estMonthlyCost != null ? estMonthlyCost * 0.08 : null;
   const potentialSaving = penaltyCost != null ? penaltyCost * 0.65 : estMonthlyCost != null ? estMonthlyCost * 0.05 : null;
+  const money = (amount: number | null, perMonth = false) =>
+    amount != null ? fmtReportMoney(input.locale, amount, { perMonth }) : '—';
 
   const problems: string[] = [];
   if (curImb != null && curImb > 20) problems.push(`${t.f_currentImbalance}: ${fmtNum(curImb, 1)}%`);
@@ -379,6 +426,56 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     title: t.recMonitorTitle,
     description: t.recMonitorDesc,
   });
+
+  const fmtWithHist = (value: string, fromHistory: boolean) =>
+    fromHistory && value !== '—' ? `${value} (${t.execSourceHistory})` : value;
+
+  const executiveBullets: string[] = [];
+  if (energy != null) {
+    executiveBullets.push(fillTpl(t.execLineEnergy, { value: display(energy, 'kWh') }));
+  }
+  if (avgI != null) {
+    executiveBullets.push(
+      fillTpl(t.execLineAvgCurrent, {
+        value: fmtWithHist(display(avgI, 'A'), avgFromHistory),
+      }),
+    );
+  }
+  if (peakVal != null) {
+    const peakLabel =
+      peakTime !== '—' ? `${display(peakVal, 'A')} @ ${peakTime}` : display(peakVal, 'A');
+    executiveBullets.push(
+      fillTpl(t.execLinePeakDemand, {
+        value: fmtWithHist(peakLabel, peakFromHistory),
+      }),
+    );
+  }
+  if (loadFactor != null) {
+    executiveBullets.push(
+      fillTpl(t.execLineLoadFactor, { value: `${fmtNum(loadFactor, 1)}%` }),
+    );
+  }
+  if (pf != null) {
+    executiveBullets.push(fillTpl(t.execLinePowerFactor, { value: display(pf) }));
+  }
+  if (curImb != null) {
+    executiveBullets.push(
+      fillTpl(t.execLineImbalance, { value: `${fmtNum(curImb, 1)}%` }),
+    );
+  }
+  executiveBullets.push(
+    fillTpl(t.execLineOverallRisk, { status: risk.label }),
+  );
+  if (problems.length > 0) {
+    executiveBullets.push(t.execLineGeSolution);
+  }
+
+  const executiveKpis = [
+    field(t.f_totalEnergy, display(energy, 'kWh')),
+    field(t.f_avgLoad, fmtWithHist(display(avgI, 'A'), avgFromHistory)),
+    field(t.f_maxDemand, fmtWithHist(display(peakVal, 'A'), peakFromHistory)),
+    field(t.f_riskLevel, risk.label),
+  ];
 
   return {
     reportId,
@@ -421,8 +518,8 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     ],
     executive: [
       field(t.f_totalEnergy, display(energy, 'kWh')),
-      field(t.f_avgLoad, display(avgI, 'A')),
-      field(t.f_maxDemand, display(peakVal, 'A')),
+      field(t.f_avgLoad, fmtWithHist(display(avgI, 'A'), avgFromHistory)),
+      field(t.f_maxDemand, fmtWithHist(display(peakVal, 'A'), peakFromHistory)),
       field(t.f_loadFactor, loadFactor != null ? `${fmtNum(loadFactor, 1)}%` : '—'),
       field(t.f_avgPf, display(pf)),
       field(t.f_currentImbalance, curImb != null ? `${fmtNum(curImb, 1)}%` : '—'),
@@ -431,12 +528,14 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       field(t.f_thdv, '—'),
       field(t.f_riskLevel, risk.label),
     ],
+    executiveBullets,
+    executiveKpis,
     energy: [
       field(t.f_totalEnergy, display(energy, 'kWh')),
       field(t.f_dailyAvgKwh, estMonthlyKwh != null ? display(estMonthlyKwh / 30, 'kWh') : '—'),
       field(t.f_monthlyEstKwh, display(estMonthlyKwh, 'kWh')),
       field(t.f_annualEstKwh, estMonthlyKwh != null ? display(estMonthlyKwh * 12, 'kWh') : '—'),
-      field(t.f_monthlyCost, estMonthlyCost != null ? `${fmtNum(estMonthlyCost, 0)} THB` : '—'),
+      field(t.f_monthlyCost, money(estMonthlyCost)),
     ],
     peak: [
       field(t.f_peakDemand, display(peakVal, 'A')),
@@ -449,7 +548,7 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       field(t.f_avgPf, display(pf)),
       field(t.f_minPf, display(pf)),
       field(t.f_timeBelow095, pf != null && pf < 0.95 ? t.statusWarning : t.statusGood),
-      field(t.f_penaltyCost, penaltyCost != null ? `${fmtNum(penaltyCost, 0)} THB` : '—'),
+      field(t.f_penaltyCost, money(penaltyCost)),
       field(
         t.f_apfcRecommendation,
         pf != null && pf < 0.95 ? t.apfcRecommended : t.withinTarget,
@@ -483,22 +582,27 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       field(t.f_maintenance, t.maintenanceNote),
     ],
     financial: [
-      field(t.f_monthlyCost, estMonthlyCost != null ? `${fmtNum(estMonthlyCost, 0)} THB` : '—'),
-      field(t.f_penaltyCost, penaltyCost != null ? `${fmtNum(penaltyCost, 0)} THB` : '—'),
-      field(t.f_potentialSaving, potentialSaving != null ? `${fmtNum(potentialSaving, 0)} THB` : '—'),
-      field(t.f_annualSaving, potentialSaving != null ? `${fmtNum(potentialSaving * 12, 0)} THB` : '—'),
+      field(t.f_monthlyCost, money(estMonthlyCost)),
+      field(t.f_penaltyCost, money(penaltyCost)),
+      field(t.f_potentialSaving, money(potentialSaving)),
+      field(t.f_annualSaving, money(potentialSaving != null ? potentialSaving * 12 : null)),
     ],
     roi: [
       field(t.f_solution, t.solutionApfc),
-      field(t.f_investment, t.investmentDefault),
-      field(t.f_potentialSaving, potentialSaving != null ? `${fmtNum(potentialSaving, 0)} THB/mo` : '—'),
+      field(t.f_investment, money(investment)),
+      field(t.f_potentialSaving, money(potentialSaving, true)),
       field(
         t.f_payback,
         potentialSaving != null && potentialSaving > 0
-          ? formatPaybackPeriod(potentialSaving, 200000, t)
+          ? formatPaybackPeriod(potentialSaving, investment, t)
           : '—',
       ),
-      field(t.f_roi, potentialSaving != null && potentialSaving > 0 ? `${fmtNum((potentialSaving * 12 * 100) / 200000, 0)}%` : '—'),
+      field(
+        t.f_roi,
+        potentialSaving != null && potentialSaving > 0
+          ? `${fmtNum((potentialSaving * 12 * 100) / investment, 0)}%`
+          : '—',
+      ),
     ],
     recommendations,
     actionPlan: [
@@ -510,107 +614,25 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     conclusion: [
       field(t.f_currentProblem, problems.length ? problems.join('; ') : t.statusGood),
       field(t.f_technicalRisk, risk.label),
-      field(t.f_financialImpact, estMonthlyCost != null ? `${fmtNum(estMonthlyCost, 0)} THB/mo` : '—'),
+      field(t.f_financialImpact, money(estMonthlyCost, true)),
       field(t.f_recommendedSolution, recommendations[0]?.title || t.continueMonitoring),
-      field(t.f_expectedSaving, potentialSaving != null ? `${fmtNum(potentialSaving, 0)} THB/mo` : '—'),
+      field(t.f_expectedSaving, money(potentialSaving, true)),
       field(
         t.f_payback,
         potentialSaving != null && potentialSaving > 0
-          ? formatPaybackPeriod(potentialSaving, 200000, t)
+          ? formatPaybackPeriod(potentialSaving, investment, t)
           : '—',
       ),
       field(t.f_nextStep, t.nextStepReview),
     ],
     phaseTable: [
-      { phase: t.phaseL1, ch1: display(ch1.current[0], 'A'), ch2: display(ch2.current[0], 'A') },
-      { phase: t.phaseL2, ch1: display(ch1.current[1], 'A'), ch2: display(ch2.current[1], 'A') },
-      { phase: t.phaseL3, ch1: display(ch1.current[2], 'A'), ch2: display(ch2.current[2], 'A') },
-      { phase: t.phaseAvg, ch1: display(avg(ch1.current), 'A'), ch2: display(avg(ch2.current), 'A') },
+      { phase: t.phaseL1, ch1: display(i1, 'A'), ch2: display(j1, 'A') },
+      { phase: t.phaseL2, ch1: display(i2, 'A'), ch2: display(j2, 'A') },
+      { phase: t.phaseL3, ch1: display(i3, 'A'), ch2: display(j3, 'A') },
+       { phase: t.phaseAvg, ch1: display(avg(resolvedCh1), 'A'), ch2: display(avg(resolvedCh2), 'A') },
     ],
   };
 }
 
-function fieldsGridHtml(fields: ReportField[]): string {
-  return fields
-    .map(
-      (f) =>
-        `<div class="cell"><label>${f.label}</label><strong>${f.value}</strong></div>`,
-    )
-    .join('');
-}
-
-function sectionHtml(title: string, fields: ReportField[], extra = ''): string {
-  return `<div class="sec"><h2>${title}</h2><div class="grid">${fieldsGridHtml(fields)}</div>${extra}</div>`;
-}
-
-export function buildReportPrintHtml(
-  report: EnergyQualityReport,
-  rt: ReturnType<typeof reportT>,
-  ch1Label: string,
-  ch2Label: string,
-): string {
-  const phaseRows = report.phaseTable
-    .map(
-      (r) =>
-        `<tr><td>${r.phase}</td><td>${r.ch1}</td><td>${r.ch2}</td></tr>`,
-    )
-    .join('');
-  const recs = report.recommendations
-    .map(
-      (r) =>
-        `<li><strong>P${r.priority}: ${r.title}</strong><br/>${r.description}</li>`,
-    )
-    .join('');
-  const actions = report.actionPlan
-    .map((a) => `<div class="act"><h4>${a.horizon}</h4><ul>${a.items.map((i) => `<li>${i}</li>`).join('')}</ul></div>`)
-    .join('');
-
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rt.companyName} — ${report.reportId}</title>
-<style>
-@page{size:A4;margin:14mm}
-body{font-family:'Sarabun','Noto Sans',Arial,sans-serif;font-size:9pt;color:#1e293b;line-height:1.5}
-.cover{background:linear-gradient(135deg,#065f46,#16a34a);color:#fff;padding:20px;border-radius:10px;margin-bottom:14px}
-.cover h1{font-size:16pt;margin:0 0 6px}
-.cover p{margin:0;opacity:.9;font-size:9pt}
-.sec{margin-bottom:12px;page-break-inside:avoid}
-.sec h2{font-size:10pt;color:#047857;border-left:4px solid #10b981;padding:4px 8px;margin:0 0 8px;background:#f0fdf4}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
-.cell{border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;background:#fafafa}
-.cell label{display:block;font-size:7pt;color:#64748b;margin-bottom:2px}
-.cell strong{font-size:9pt;color:#0f172a}
-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-top:8px}
-th{background:#047857;color:#fff;padding:5px 6px;text-align:left}
-td{padding:5px 6px;border-bottom:1px solid #e5e7eb}
-.rec{padding-left:18px;margin:0}
-.rec li{margin-bottom:6px}
-.act{border:1px solid #d1fae5;border-radius:6px;padding:8px;margin-bottom:6px;background:#f0fdf4}
-.act h4{margin:0 0 4px;font-size:8.5pt;color:#047857}
-.note{font-size:7.5pt;color:#64748b;margin:8px 0}
-.footer{text-align:center;font-size:7pt;color:#94a3b8;margin-top:16px}
-</style></head><body>
-<div class="cover"><h1>${rt.companyName}</h1><p>${rt.platformTitle}</p>
-<p><b>${report.reportId}</b> · ${report.reportDate} · ${rt.liveBadge}</p>
-<p>${rt.f_endDate}: ${report.lastUpdate}</p></div>
-<p class="note">${rt.aiNote}</p>
-${sectionHtml(rt.sec1, report.customer)}
-${sectionHtml(rt.sec2, report.measurement)}
-${sectionHtml(
-  rt.sec3,
-  report.executive,
-  `<table><thead><tr><th>Phase</th><th>${ch1Label}</th><th>${ch2Label}</th></tr></thead><tbody>${phaseRows}</tbody></table>`,
-)}
-${sectionHtml(rt.sec4, report.energy)}
-${sectionHtml(rt.sec5, report.peak)}
-${sectionHtml(rt.sec6, report.powerFactor)}
-${sectionHtml(rt.sec7, report.balance)}
-${sectionHtml(rt.sec8, report.harmonic)}
-${sectionHtml(rt.sec9, report.equipment)}
-${sectionHtml(rt.sec10, report.financial)}
-${sectionHtml(rt.sec11, report.roi)}
-<div class="sec"><h2>${rt.sec12}</h2><ol class="rec">${recs}</ol></div>
-<div class="sec"><h2>${rt.sec13}</h2>${actions}</div>
-${sectionHtml(rt.sec14, report.conclusion)}
-<p class="footer">${rt.companyName} · ${rt.platformTitle}</p>
-<script>setTimeout(function(){window.print()},600)</script>
-</body></html>`;
-}
+export { buildReportPrintHtml } from './energy-quality-report-print';
+export type { PrintReportInput } from './energy-quality-report-print';
