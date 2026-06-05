@@ -231,7 +231,10 @@ export function buildReportSectionPacks(input: {
       peakInsights.push({
         severity: pt.onPeakAvgA > pt.offPeakAvgA * 1.15 ? 'warning' : 'info',
         title: t.insightOnPeakLoad,
-        detail: `On-peak ${fmtA(pt.onPeakAvgA)} A · Off-peak ${fmtA(pt.offPeakAvgA)} A`,
+        detail: fillTpl(t.insightOnPeakDetail, {
+          onPeak: fmtA(pt.onPeakAvgA),
+          offPeak: fmtA(pt.offPeakAvgA),
+        }),
       });
     }
     if (stats.loadFactor != null) {

@@ -25,6 +25,7 @@ import {
 } from './energy-quality-professional-analysis';
 import { buildCh1PhaseTable } from './energy-quality-phase-analysis';
 import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display';
+import { eqDateLocale } from './energy-quality-i18n';
 import { buildEnergyQualityReportId } from './energy-quality-report-id';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
@@ -228,6 +229,21 @@ export type ReportDbSite = {
   location: string | null;
 };
 
+/** Apply allocated report number to report document fields. */
+export function withReportNumber(
+  report: EnergyQualityReport,
+  reportNumber: string,
+  reportIdLabel: string,
+): EnergyQualityReport {
+  return {
+    ...report,
+    reportId: reportNumber,
+    customer: report.customer.map((row) =>
+      row.label === reportIdLabel ? { ...row, value: reportNumber } : row,
+    ),
+  };
+}
+
 export function enrichEnergyQualityReport(
   report: EnergyQualityReport,
   ctx: {
@@ -349,7 +365,7 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
   const ch1Only = input.ch1Only ?? isCh1OnlyScope(device.recordScope);
   const now = new Date();
   const reportId = buildEnergyQualityReportId(device.deviceID, now);
-  const reportDate = now.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+  const reportDate = now.toLocaleString(eqDateLocale(input.locale), { timeZone: 'Asia/Bangkok' });
 
   const histPoints = chartData as DbChartPoint[];
   const histStats = histPoints.length

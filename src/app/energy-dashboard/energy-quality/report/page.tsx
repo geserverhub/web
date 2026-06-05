@@ -10,6 +10,8 @@ import {
   eqT,
   EQ_PRINT_LOCALES,
   EQ_PRINT_LANG_META,
+  formatEqDateTime,
+  formatHistoryPeriodHours,
   type EqLocale,
 } from '@/lib/energy/energy-quality-i18n';
 import { reportT } from '@/lib/energy/energy-quality-report-i18n';
@@ -17,6 +19,7 @@ import {
   buildDisplayEnergyQualityReport,
   buildReportPrintHtml,
   enrichEnergyQualityReport,
+  withReportNumber,
   type ReportChannel,
   type DeviceReportInput,
   type HistoryPoint,
@@ -98,24 +101,50 @@ function EnergyQualityReportInner() {
   const [selectedDevice, setSelectedDevice] = useState(initialDevice);
   const [ch1, setCh1] = useState<ReportChannel>(EMPTY_CHANNEL);
   const [ch2, setCh2] = useState<ReportChannel>(EMPTY_CHANNEL);
-  const [lastUpdate, setLastUpdate] = useState('');
+  const [lastUpdateTs, setLastUpdateTs] = useState<number | null>(null);
   const [historyPoints, setHistoryPoints] = useState(0);
   const [chartData, setChartData] = useState<DbChartPoint[]>([]);
-  const [historyPeriod, setHistoryPeriod] = useState('24 hours');
-  const [measurementStart, setMeasurementStart] = useState<string>();
-  const [measurementEnd, setMeasurementEnd] = useState<string>();
+  const [historyHours, setHistoryHours] = useState(336);
+  const [measurementStartTs, setMeasurementStartTs] = useState<number | undefined>();
+  const [measurementEndTs, setMeasurementEndTs] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
-  const reportLocale = (
-    ['th', 'ko', 'en', 'cn', 'vn', 'ms'].includes(locale) ? locale : 'en'
-  ) as EqLocale;
+  const resolveLocale = (code: string): EqLocale =>
+    (['th', 'ko', 'en', 'cn', 'vn', 'ms'].includes(code) ? code : 'en') as EqLocale;
+
+  const [reportLocale, setReportLocale] = useState<EqLocale>(() => resolveLocale(locale));
+
+  useEffect(() => {
+    setReportLocale(resolveLocale(locale));
+  }, [locale]);
+
   const ui = eqT(reportLocale);
+  const rt = reportT(reportLocale);
+
+  const lastUpdate = useMemo(
+    () => (lastUpdateTs != null ? formatEqDateTime(lastUpdateTs, reportLocale) : ''),
+    [lastUpdateTs, reportLocale],
+  );
+  const historyPeriod = useMemo(
+    () => formatHistoryPeriodHours(historyHours, reportLocale),
+    [historyHours, reportLocale],
+  );
+  const measurementStart = useMemo(
+    () =>
+      measurementStartTs != null ? formatEqDateTime(measurementStartTs, reportLocale) : undefined,
+    [measurementStartTs, reportLocale],
+  );
+  const measurementEnd = useMemo(
+    () => (measurementEndTs != null ? formatEqDateTime(measurementEndTs, reportLocale) : undefined),
+    [measurementEndTs, reportLocale],
+  );
   const [dbCustomer, setDbCustomer] = useState<ReportDbCustomer | null>(null);
   const [dbSite, setDbSite] = useState<ReportDbSite | null>(null);
   const [dbTablesReady, setDbTablesReady] = useState<boolean | null>(null);
-  const lastPersistRef = useRef(0);
+  const [nextReportNumber, setNextReportNumber] = useState<string | null>(null);
+  const [printing, setPrinting] = useState(false);
 
   const filteredDevices = useMemo(() => {
     if (!selectedLocation) return devices;
@@ -123,14 +152,12 @@ function EnergyQualityReportInner() {
   }, [devices, selectedLocation]);
 
   const selectedInfo = filteredDevices.find((d) => d.deviceID === selectedDevice);
-  const rt = reportT(reportLocale);
   const ch1Only = true;
 
   const hasLiveData = channelHasLiveData(ch1) || (!ch1Only && channelHasLiveData(ch2));
   const hasHistoryData = chartData.length > 0;
   const livePending = Boolean(selectedDevice) && !hasLiveData && !hasHistoryData;
   const noMeter = !selectedDevice;
-  const canPersistReport = Boolean(selectedDevice && dbTablesReady && (hasLiveData || hasHistoryData));
 
   const dbAnalysis = useMemo(
     () =>
@@ -162,8 +189,14 @@ function EnergyQualityReportInner() {
       livePending,
       noMeter,
     });
-    if (noMeter || (!dbCustomer && !dbSite)) return built;
-    return enrichEnergyQualityReport(built, { customer: dbCustomer, site: dbSite }, rt);
+    let doc = built;
+    if (!noMeter && (dbCustomer || dbSite)) {
+      doc = enrichEnergyQualityReport(built, { customer: dbCustomer, site: dbSite }, rt);
+    }
+    if (nextReportNumber) {
+      doc = withReportNumber(doc, nextReportNumber, rt.f_reportId);
+    }
+    return doc;
   }, [
     selectedInfo,
     selectedSite,
@@ -183,7 +216,12 @@ function EnergyQualityReportInner() {
     dbCustomer,
     dbSite,
     rt,
+    nextReportNumber,
   ]);
+
+  const canPrintReport = Boolean(
+    selectedDevice && dbTablesReady && report && (hasLiveData || hasHistoryData),
+  );
 
   const fetchDevices = useCallback(async () => {
     try {
@@ -220,7 +258,7 @@ function EnergyQualityReportInner() {
   const fetchSnapshot = useCallback(async () => {
     if (!selectedDevice || !selectedInfo) return;
     try {
-      if (!lastUpdate) setLoading(true);
+      if (lastUpdateTs == null) setLoading(true);
       else setRefreshing(true);
       setError(null);
       const scope = normalizeRecordScope(selectedInfo.recordScope);
@@ -242,16 +280,14 @@ function EnergyQualityReportInner() {
         const { ch1: c1 } = mapChannels(json.data.metrics as Record<string, unknown>, ch1Only);
         setCh1(c1);
         setCh2(EMPTY_CHANNEL);
-        setLastUpdate(
-          json.data.lastUpdate
-            ? new Date(json.data.lastUpdate).toLocaleString()
-            : new Date().toLocaleString(),
+        setLastUpdateTs(
+          json.data.lastUpdate ? new Date(json.data.lastUpdate).getTime() : Date.now(),
         );
       } else {
         setError(json.error || ui.errorLoad);
         setCh1(EMPTY_CHANNEL);
         setCh2(EMPTY_CHANNEL);
-        setLastUpdate('');
+        setLastUpdateTs(null);
         return;
       }
 
@@ -260,14 +296,17 @@ function EnergyQualityReportInner() {
       const points = chartDataCh1Only(rawPoints);
       setChartData(points);
       setHistoryPoints(hist?.dataPoints ?? points.length);
-      if (hist?.period) setHistoryPeriod(String(hist.period));
+      if (hist?.period) {
+        const match = String(hist.period).match(/(\d+)/);
+        if (match) setHistoryHours(Number(match[1]));
+      }
       if (points.length > 0) {
         const first = points[0];
         const last = points[points.length - 1];
-        const fmtTs = (p: DbChartPoint) =>
-          p.timestamp ? new Date(p.timestamp).toLocaleString() : p.time;
-        setMeasurementStart(fmtTs(first));
-        setMeasurementEnd(fmtTs(last));
+        const toTs = (p: DbChartPoint) =>
+          p.timestamp ?? (p.time ? new Date(p.time).getTime() : undefined);
+        setMeasurementStartTs(toTs(first));
+        setMeasurementEndTs(toTs(last));
       }
     } catch {
       setError(ui.errorLoad);
@@ -277,12 +316,12 @@ function EnergyQualityReportInner() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedDevice, selectedInfo, ui.errorLoad, lastUpdate]);
+  }, [selectedDevice, selectedInfo, ui.errorLoad, lastUpdateTs]);
 
   const fetchDbContext = useCallback(async (deviceId: string) => {
     try {
       const res = await fetch(
-        `/api/ge-energy/energy-quality-report?deviceId=${encodeURIComponent(deviceId)}`,
+        `/api/ge-energy/energy-quality-report?deviceId=${encodeURIComponent(deviceId)}&previewNext=1`,
         { cache: 'no-store' },
       );
       const json = await res.json();
@@ -290,9 +329,13 @@ function EnergyQualityReportInner() {
         setDbTablesReady(false);
         setDbCustomer(null);
         setDbSite(null);
+        setNextReportNumber(null);
         return;
       }
       setDbTablesReady(json.tablesReady ?? false);
+      setNextReportNumber(
+        typeof json.nextReportNumber === 'string' ? json.nextReportNumber : null,
+      );
       const c = json.customer;
       const s = json.site;
       setDbCustomer(
@@ -311,43 +354,9 @@ function EnergyQualityReportInner() {
       setDbTablesReady(false);
       setDbCustomer(null);
       setDbSite(null);
+      setNextReportNumber(null);
     }
   }, []);
-
-  const persistReport = useCallback(
-    async (snapshot: EnergyQualityReport) => {
-      if (!selectedDevice || !dbTablesReady) return;
-      const now = Date.now();
-      if (now - lastPersistRef.current < 30000) return;
-      lastPersistRef.current = now;
-      try {
-        await fetch('/api/ge-energy/energy-quality-report', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            deviceId: selectedDevice,
-            siteRegion: selectedSite,
-            locale: reportLocale,
-            report: snapshot,
-            ch1,
-            measurementStart,
-            measurementEnd,
-          }),
-        });
-      } catch {
-        /* non-blocking */
-      }
-    },
-    [
-      selectedDevice,
-      selectedSite,
-      reportLocale,
-      ch1,
-      measurementStart,
-      measurementEnd,
-      dbTablesReady,
-    ],
-  );
 
   useEffect(() => {
     fetchDevices();
@@ -373,19 +382,16 @@ function EnergyQualityReportInner() {
       return;
     }
     fetchDbContext(selectedDevice);
-    lastPersistRef.current = 0;
   }, [selectedDevice, fetchDbContext]);
-
-  useEffect(() => {
-    if (report && canPersistReport) persistReport(report);
-  }, [report, persistReport, canPersistReport]);
 
   useEffect(() => {
     if (!selectedDevice) {
       setIsLive(false);
       setCh1(EMPTY_CHANNEL);
       setCh2(EMPTY_CHANNEL);
-      setLastUpdate('');
+      setLastUpdateTs(null);
+      setMeasurementStartTs(undefined);
+      setMeasurementEndTs(undefined);
       return undefined;
     }
     fetchSnapshot();
@@ -403,51 +409,94 @@ function EnergyQualityReportInner() {
     }
   }, [selectedDevice]);
 
-  const printReport = useCallback(() => {
-    if (!report) return;
-    const device = selectedInfo ?? PLACEHOLDER_DEVICE;
-    const html = buildReportPrintHtml({
-      report,
-      locale: reportLocale,
-      ch1Label: rt.ch1Label,
-      ch2Label: rt.ch2Label,
-      ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
-      ch2: selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL,
-      ch1Only,
-      logoUrl: `${window.location.origin}/momoge/Logo-brand.png`,
-      chartData: ch1Only ? chartDataCh1Only(chartData) : chartData,
-      historyPeriod,
-      historyPoints,
-      measurementStart,
-      measurementEnd,
-      deviceName: device.deviceName,
-      meterId: device.GEsaveID || device.deviceID,
-      chartStats: dbAnalysis.stats,
-      technicalInsights: dbAnalysis.insights,
-      snapshotLabels: {
-        lastUpdate: ui.lastUpdate,
-        l1: ui.l1,
-        l2: ui.l2,
-        l3: ui.l3,
-        avg: ui.avg,
-        thd: ui.thd,
-        powerFactor: ui.powerFactor,
-        frequency: ui.frequency,
-      },
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+  const printReport = useCallback(async () => {
+    if (!report || !selectedDevice || !dbTablesReady) return;
+    setPrinting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/ge-energy/energy-quality-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: selectedDevice,
+          siteRegion: selectedSite,
+          locale: reportLocale,
+          assignNewReportNumber: true,
+          reportIdLabel: rt.f_reportId,
+          report,
+          ch1,
+          measurementStart,
+          measurementEnd,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success || typeof json.reportNumber !== 'string') {
+        setError(json.error || ui.errorLoad);
+        return;
+      }
+      const reportToPrint = withReportNumber(report, json.reportNumber, rt.f_reportId);
+      const device = selectedInfo ?? PLACEHOLDER_DEVICE;
+      const html = buildReportPrintHtml({
+        report: reportToPrint,
+        locale: reportLocale,
+        ch1Label: rt.ch1Label,
+        ch2Label: rt.ch2Label,
+        ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
+        ch2: selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL,
+        ch1Only,
+        logoUrl: `${window.location.origin}/momoge/Logo-brand.png`,
+        chartData: ch1Only ? chartDataCh1Only(chartData) : chartData,
+        historyPeriod,
+        historyPoints,
+        measurementStart,
+        measurementEnd,
+        deviceName: device.deviceName,
+        meterId: device.GEsaveID || device.deviceID,
+        chartStats: dbAnalysis.stats,
+        technicalInsights: dbAnalysis.insights,
+        snapshotLabels: {
+          lastUpdate: ui.lastUpdate,
+          l1: ui.l1,
+          l2: ui.l2,
+          l3: ui.l3,
+          avg: ui.avg,
+          thd: ui.thd,
+          powerFactor: ui.powerFactor,
+          frequency: ui.frequency,
+        },
+      });
+      const win = window.open('', '_blank');
+      if (!win) {
+        setError(ui.errorLoad);
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+
+      const previewRes = await fetch(
+        `/api/ge-energy/energy-quality-report?deviceId=${encodeURIComponent(selectedDevice)}&previewNext=1`,
+        { cache: 'no-store' },
+      );
+      const previewJson = await previewRes.json();
+      if (previewJson.success && typeof previewJson.nextReportNumber === 'string') {
+        setNextReportNumber(previewJson.nextReportNumber);
+      }
+    } catch {
+      setError(ui.errorLoad);
+    } finally {
+      setPrinting(false);
+    }
   }, [
     report,
-    reportLocale,
-    rt.ch1Label,
-    rt.ch2Label,
     selectedDevice,
+    dbTablesReady,
+    selectedSite,
+    reportLocale,
+    rt,
     ch1,
     ch2,
+    ch1Only,
     chartData,
     historyPeriod,
     historyPoints,
@@ -455,16 +504,8 @@ function EnergyQualityReportInner() {
     measurementEnd,
     selectedInfo,
     dbAnalysis.stats,
-    ch1Only,
     dbAnalysis.insights,
-    ui.lastUpdate,
-    ui.l1,
-    ui.l2,
-    ui.l3,
-    ui.avg,
-    ui.thd,
-    ui.powerFactor,
-    ui.frequency,
+    ui,
   ]);
 
   return (
@@ -561,6 +602,7 @@ function EnergyQualityReportInner() {
       <div className="eq-report-page-body" data-page="energy-quality-report-v2">
         <div ref={reportRef} id="report-doc" className="eq-report-wrap eq-report-wrap--primary">
           <EnergyQualityReportView
+            key={reportLocale}
             report={report}
             rt={rt}
             ch1Label={rt.ch1Label}
@@ -614,7 +656,10 @@ function EnergyQualityReportInner() {
                     key={loc}
                     type="button"
                     className={`eq-lang-btn eq-lang-btn--${loc}${active ? ' eq-lang-btn-active' : ''}`}
-                    onClick={() => applyEnergyLocale(setLocale, loc)}
+                    onClick={() => {
+                      setReportLocale(loc);
+                      applyEnergyLocale(setLocale, loc);
+                    }}
                     aria-pressed={active}
                   >
                     <span className="eq-lang-btn-flag" aria-hidden>
@@ -635,12 +680,12 @@ function EnergyQualityReportInner() {
             </div>
             <button
               type="button"
-              onClick={printReport}
-              disabled={!report}
+              onClick={() => void printReport()}
+              disabled={!canPrintReport || printing}
               className="eq-btn eq-btn-primary eq-btn-print"
             >
               <Printer className="w-4 h-4" />
-              {ui.printReport}
+              {printing ? ui.loading : ui.printReport}
             </button>
           </aside>
         ) : null}
@@ -651,7 +696,13 @@ function EnergyQualityReportInner() {
 
 export default function EnergyQualityReportPage() {
   return (
-    <Suspense fallback={<div className="energy-page p-8 text-center text-slate-400">Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className="energy-page p-8 text-center text-slate-400">
+          {eqT('en').loading}
+        </div>
+      }
+    >
       <EnergyQualityReportInner />
     </Suspense>
   );

@@ -22,9 +22,17 @@ export type PhasedRecommendation = {
   expectedOutcome: string;
 };
 
-export type PercentileRow = { label: string; value: string; line: string };
+export type PercentileRow = { label: string; value: string; line: string; hint: string };
 
-export type ExceedanceRow = { threshold: string; pct: string };
+export type ExceedanceLiveLevel = 'good' | 'warning' | 'critical' | 'neutral';
+
+export type ExceedanceRow = {
+  threshold: string;
+  pct: string;
+  liveStatus: string;
+  liveLevel: ExceedanceLiveLevel;
+  liveImbDisplay: string | null;
+};
 
 export type ProfessionalReportContent = {
   reportSubtitle: string;
@@ -122,27 +130,65 @@ function rollingPeak15(values: number[], window = 15): number | null {
   return maxRoll;
 }
 
-function percentileRow(label: string, value: number, unit: 'kW' | 'A'): PercentileRow {
-  const formatted = fmtLoad(value, unit);
-  return { label, value: formatted, line: `${label}  ${formatted}` };
+function percentileHint(label: string, t: ReportStrings): string {
+  if (label === 'P50') return t.pctHintP50;
+  if (label === 'P75') return t.pctHintP75;
+  if (label === 'P90') return t.pctHintP90;
+  if (label === 'P95') return t.pctHintP95;
+  if (label === 'P99') return t.pctHintP99;
+  return '';
 }
 
-function computePercentiles(points: DbChartPoint[]): PercentileRow[] | null {
+function percentileRow(
+  label: string,
+  value: number,
+  unit: 'kW' | 'A',
+  t: ReportStrings,
+): PercentileRow {
+  const formatted = fmtLoad(value, unit);
+  const hint = percentileHint(label, t);
+  return { label, value: formatted, line: `${label}  ${formatted}`, hint };
+}
+
+function computePercentiles(points: DbChartPoint[], t: ReportStrings): PercentileRow[] | null {
   const series = loadSeries(points).sort((a, b) => a - b);
   if (series.length < 5) return null;
   const unit = loadUnit(points);
   return [
-    percentileRow('P50', percentile(series, 50), unit),
-    percentileRow('P75', percentile(series, 75), unit),
-    percentileRow('P90', percentile(series, 90), unit),
-    percentileRow('P95', percentile(series, 95), unit),
-    percentileRow('P99', percentile(series, 99), unit),
+    percentileRow('P50', percentile(series, 50), unit, t),
+    percentileRow('P75', percentile(series, 75), unit, t),
+    percentileRow('P90', percentile(series, 90), unit, t),
+    percentileRow('P95', percentile(series, 95), unit, t),
+    percentileRow('P99', percentile(series, 99), unit, t),
   ];
+}
+
+function liveExceedStatus(
+  liveImb: number | null,
+  threshold: number,
+  t: ReportStrings,
+): Pick<ExceedanceRow, 'liveStatus' | 'liveLevel' | 'liveImbDisplay'> {
+  const liveImbDisplay =
+    liveImb != null && Number.isFinite(liveImb) ? `${fmtNum(liveImb, 1)}%` : null;
+  if (liveImb == null || !Number.isFinite(liveImb)) {
+    return { liveStatus: t.statusNoData, liveLevel: 'neutral', liveImbDisplay };
+  }
+  if (liveImb > threshold) {
+    if (threshold >= 50) {
+      return { liveStatus: t.exceedLiveSevere, liveLevel: 'critical', liveImbDisplay };
+    }
+    if (threshold >= 20) {
+      return { liveStatus: t.riskHigh, liveLevel: 'critical', liveImbDisplay };
+    }
+    return { liveStatus: t.statusWarning, liveLevel: 'warning', liveImbDisplay };
+  }
+  return { liveStatus: t.exceedLiveNormal, liveLevel: 'good', liveImbDisplay };
 }
 
 function computeImbalanceExceedance(
   points: DbChartPoint[],
   t: ReportStrings,
+  liveImb: number | null,
 ): ExceedanceRow[] | null {
   const vals = points
     .map((p) => p.currentImbalancePct)
@@ -150,11 +196,16 @@ function computeImbalanceExceedance(
   if (vals.length < 5) return null;
   const pctAbove = (threshold: number) =>
     `${fmtNum((vals.filter((v) => v > threshold).length / vals.length) * 100, 1)}%`;
-  return [
-    { threshold: t.exceedWarn10, pct: pctAbove(10) },
-    { threshold: t.exceedHigh20, pct: pctAbove(20) },
-    { threshold: t.exceedSevere50, pct: pctAbove(50) },
-  ];
+  const thresholds = [
+    { label: t.exceedWarn10, pct: 10 },
+    { label: t.exceedHigh20, pct: 20 },
+    { label: t.exceedSevere50, pct: 50 },
+  ] as const;
+  return thresholds.map(({ label, pct }) => ({
+    threshold: label,
+    pct: pctAbove(pct),
+    ...liveExceedStatus(liveImb, pct, t),
+  }));
 }
 
 function pfBelowPct(points: DbChartPoint[], threshold: number): number | null {
@@ -260,8 +311,8 @@ export function buildProfessionalReportContent(input: {
   const pfBelow085 = pfBelowPct(points, 0.85);
   const pfBelow095 = pfBelowPct(points, 0.95);
   const shares = phaseShares(points);
-  const peakPercentiles = computePercentiles(points);
-  const imbalanceExceedance = computeImbalanceExceedance(points, t);
+  const peakPercentiles = computePercentiles(points, t);
+  const imbalanceExceedance = computeImbalanceExceedance(points, t, curImb);
   const loadProfileNarrative = buildLoadProfileNarrative(stats?.peakTimeAnalysis, t);
 
   const periodLabel =

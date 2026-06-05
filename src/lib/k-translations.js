@@ -2832,7 +2832,7 @@ const translationData = {
     momogeMarketplace: 'สินค้า IoT / Momoge',
     energyAnalytics: 'วิเคราะห์พลังงาน',
     menuEnergyQuality: 'การวิเคราะห์คุณภาพพลังงาน ก่อนการติดตั้ง',
-    energyQualityMeters: 'เพิ่มมอเตอร์เพื่อเก็บค่า',
+    energyQualityMeters: 'เพิ่มมิเตอร์เพื่อเก็บค่า',
     energyQualityReport: 'รายงานการวิเคราะห์กระแสไฟ',
     menuMonitoring: 'มอนิเตอร์พลังงาน',
     menuTools: 'เครื่องมือ',

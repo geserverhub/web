@@ -1,6 +1,7 @@
 'use client';
 
 import type {
+  ExceedanceRow,
   FindingAssessment,
   ProfessionalReportContent,
 } from '@/lib/energy/energy-quality-professional-analysis';
@@ -159,6 +160,30 @@ export function EnergyQualityPhasedRecommendations({
   );
 }
 
+function LiveExceedStatus({ row }: { row: ExceedanceRow }) {
+  const cls =
+    row.liveLevel === 'good'
+      ? 'eq-pro-assess eq-pro-assess--good'
+      : row.liveLevel === 'warning' || row.liveLevel === 'critical'
+        ? 'eq-pro-assess eq-pro-assess--warn'
+        : 'eq-pro-assess eq-pro-assess--neutral';
+  const Icon =
+    row.liveLevel === 'good'
+      ? CheckCircle2
+      : row.liveLevel === 'warning' || row.liveLevel === 'critical'
+        ? AlertTriangle
+        : Minus;
+  return (
+    <span className={`${cls} eq-pro-live-status`}>
+      {row.liveImbDisplay ? (
+        <strong className="eq-pro-live-val">{row.liveImbDisplay}</strong>
+      ) : null}
+      <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
+      {row.liveStatus}
+    </span>
+  );
+}
+
 export function EnergyQualityAnalysisStats({
   pro,
   rt,
@@ -180,7 +205,11 @@ export function EnergyQualityAnalysisStats({
           <div className="eq-pro-pct-grid">
             {pro.peakPercentiles!.map((r) => (
               <div key={r.label} className="eq-pro-pct-cell">
-                {r.line}
+                <div className="eq-pro-pct-main">
+                  <span className="eq-pro-pct-label">{r.label}</span>
+                  <strong className="eq-pro-pct-value">{r.value}</strong>
+                </div>
+                {r.hint ? <p className="eq-pro-pct-hint">{r.hint}</p> : null}
               </div>
             ))}
           </div>
@@ -190,12 +219,22 @@ export function EnergyQualityAnalysisStats({
         <div className="eq-pro-mini-table">
           <h5>{pro.imbalanceExceedanceCaption}</h5>
           <table className="eq-pro-table eq-pro-table--compact">
+            <thead>
+              <tr>
+                <th>{rt.proTableParameter}</th>
+                <th>{rt.proTableExceedShare}</th>
+                <th className="eq-pro-th-live">{rt.proTableLiveStatus}</th>
+              </tr>
+            </thead>
             <tbody>
               {pro.imbalanceExceedance!.map((r) => (
                 <tr key={r.threshold}>
                   <td>{r.threshold}</td>
                   <td>
                     <strong>{r.pct}</strong>
+                  </td>
+                  <td className="eq-pro-td-live">
+                    <LiveExceedStatus row={r} />
                   </td>
                 </tr>
               ))}

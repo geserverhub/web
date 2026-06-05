@@ -2156,6 +2156,22 @@
 .eq-pro-assess--warn { color: #b91c1c; }
 .eq-pro-assess--neutral { color: #64748b; }
 
+.eq-pro-table--compact .eq-pro-th-live,
+.eq-pro-table--compact .eq-pro-td-live {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.eq-pro-live-status {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.eq-pro-live-val {
+  margin-right: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .eq-pro-risk-line {
   display: flex;
   align-items: center;
@@ -2233,12 +2249,37 @@
 
 .eq-pro-pct-cell {
   text-align: left;
-  padding: 0.35rem 0.5rem;
+  padding: 0.45rem 0.55rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 0.4rem;
+}
+
+.eq-pro-pct-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
   font-variant-numeric: tabular-nums;
-  white-space: pre;
+}
+
+.eq-pro-pct-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #047857;
+  letter-spacing: 0.02em;
+}
+
+.eq-pro-pct-value {
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.eq-pro-pct-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.62rem;
+  line-height: 1.4;
+  color: #64748b;
 }
 
 @media print {

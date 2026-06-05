@@ -1,6 +1,11 @@
 ﻿import { queryGe } from '@/lib/mysql-ge';
 import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display';
-import type { EnergyQualityReport } from './energy-quality-report-model';
+import {
+  buildEnergyQualityReportIdBase,
+  nextReportNumberFromExisting,
+} from './energy-quality-report-id';
+import { toMysqlDateTime } from './energy-quality-mysql-datetime';
+import { withReportNumber, type EnergyQualityReport } from './energy-quality-report-model';
 
 export type EqCustomerRow = {
   id: number;
@@ -54,26 +59,24 @@ export type PersistReportInput = {
   measurementEnd?: string;
   locale: string;
   preparedBy?: string;
+  /** Allocate a new unique report_number and always INSERT (used on print). */
+  assignNewReportNumber?: boolean;
+  reportIdLabel?: string;
 };
 
 const TABLE_CHECK = `eq_customers`;
 
-/** Normalize UI/locale date strings to MySQL DATETIME (YYYY-MM-DD HH:MM:SS). */
-function toMysqlDateTime(value: string | undefined | null): string | null {
-  if (value == null) return null;
-  const trimmed = value.trim();
-  if (!trimmed || trimmed === '—') return null;
-
-  const mysqlMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}:\d{2}))?/);
-  if (mysqlMatch) {
-    return mysqlMatch[2] ? `${mysqlMatch[1]} ${mysqlMatch[2]}` : `${mysqlMatch[1]} 00:00:00`;
-  }
-
-  const parsed = new Date(trimmed);
-  if (Number.isNaN(parsed.getTime())) return null;
-
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}`;
+/** Preview next report_number for device (not reserved). */
+export async function peekNextReportNumber(deviceId: string): Promise<string | null> {
+  const base = buildEnergyQualityReportIdBase(deviceId);
+  if (!base) return null;
+  const rows = await queryGe(
+    `SELECT report_number FROM eq_reports
+     WHERE device_id = ? AND (report_number = ? OR report_number LIKE ?)`,
+    [Number(deviceId), base, `${base}-%`],
+  );
+  const existing = rows.map((r) => String((r as { report_number: string }).report_number));
+  return nextReportNumberFromExisting(existing, base);
 }
 
 async function insertReturningId(sql: string, values: unknown[]): Promise<number> {
@@ -196,7 +199,11 @@ export async function insertEnergySnapshot(
   );
 }
 
-export async function persistEnergyQualityReport(input: PersistReportInput): Promise<number> {
+export type PersistReportResult = { dbReportId: number; reportNumber: string };
+
+export async function persistEnergyQualityReport(
+  input: PersistReportInput,
+): Promise<PersistReportResult> {
   const deviceId = Number(input.deviceId);
   const dev = input.device ?? { deviceID: input.deviceId, site: input.siteRegion };
   const { customerId, siteId } = await ensureCustomerSiteForDevice({
@@ -209,49 +216,95 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
   const measurementStart = toMysqlDateTime(input.measurementStart);
   const measurementEnd = toMysqlDateTime(input.measurementEnd);
 
-  const reportNumber = input.report.reportId;
-  const existing = await queryGe(
-    `SELECT id FROM eq_reports WHERE report_number = ? LIMIT 1`,
-    [reportNumber],
-  );
+  let reportNumber: string;
+  let reportPayload: EnergyQualityReport = input.report;
+
   let reportId: number;
-  if (existing.length) {
-    reportId = Number((existing[0] as { id: number }).id);
-    await queryGe(
-      `UPDATE eq_reports SET
-        customer_id = ?, site_id = ?, measurement_start = ?, measurement_end = ?,
-        prepared_by = ?, report_status = 'analyzed', locale = ?, updated_at = NOW(6)
-       WHERE id = ?`,
-      [
-        customerId,
-        siteId,
-        measurementStart,
-        measurementEnd,
-        input.preparedBy || 'GE Energy Tech',
-        input.locale,
-        reportId,
-      ],
-    );
+
+  if (input.assignNewReportNumber) {
+    let insertedId: number | undefined;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const allocated = await peekNextReportNumber(input.deviceId);
+      if (!allocated) {
+        throw new Error('Could not allocate report number for device');
+      }
+      reportNumber = allocated;
+      reportPayload = input.reportIdLabel
+        ? withReportNumber(input.report, reportNumber, input.reportIdLabel)
+        : { ...input.report, reportId: reportNumber };
+      try {
+        insertedId = await insertReturningId(
+          `INSERT INTO eq_reports (
+            report_number, customer_id, site_id, device_id,
+            measurement_start, measurement_end, prepared_by, report_status, locale
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'analyzed', ?)`,
+          [
+            reportNumber,
+            customerId,
+            siteId,
+            deviceId,
+            measurementStart,
+            measurementEnd,
+            input.preparedBy || 'GE Energy Tech',
+            input.locale,
+          ],
+        );
+        break;
+      } catch (err) {
+        const errno = (err as { errno?: number })?.errno;
+        if (errno === 1062 && attempt < 7) continue;
+        throw err;
+      }
+    }
+    if (insertedId == null) {
+      throw new Error('Could not allocate unique report number');
+    }
+    reportId = insertedId;
   } else {
-    reportId = await insertReturningId(
-      `INSERT INTO eq_reports (
-        report_number, customer_id, site_id, device_id,
-        measurement_start, measurement_end, prepared_by, report_status, locale
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'analyzed', ?)`,
-      [
-        reportNumber,
-        customerId,
-        siteId,
-        deviceId,
-        measurementStart,
-        measurementEnd,
-        input.preparedBy || 'GE Energy Tech',
-        input.locale,
-      ],
+    reportNumber = input.report.reportId;
+    reportPayload = input.report;
+    const existing = await queryGe(
+      `SELECT id FROM eq_reports WHERE report_number = ? LIMIT 1`,
+      [reportNumber],
     );
+    if (existing.length) {
+      reportId = Number((existing[0] as { id: number }).id);
+      await queryGe(
+        `UPDATE eq_reports SET
+          customer_id = ?, site_id = ?, measurement_start = ?, measurement_end = ?,
+          prepared_by = ?, report_status = 'analyzed', locale = ?, updated_at = NOW(6)
+         WHERE id = ?`,
+        [
+          customerId,
+          siteId,
+          measurementStart,
+          measurementEnd,
+          input.preparedBy || 'GE Energy Tech',
+          input.locale,
+          reportId,
+        ],
+      );
+    } else {
+      reportId = await insertReturningId(
+        `INSERT INTO eq_reports (
+          report_number, customer_id, site_id, device_id,
+          measurement_start, measurement_end, prepared_by, report_status, locale
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'analyzed', ?)`,
+        [
+          reportNumber,
+          customerId,
+          siteId,
+          deviceId,
+          measurementStart,
+          measurementEnd,
+          input.preparedBy || 'GE Energy Tech',
+          input.locale,
+        ],
+      );
+    }
   }
 
-  const thdiAvg = parseThdFromHarmonic(input.report);
+  const thdiAvg = parseThdFromHarmonic(reportPayload);
   const analysisValues = [
     siteId,
     reportId,
@@ -265,14 +318,14 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
     parseNumField(input.report.executive, 'Voltage Imbalance'),
     thdiAvg,
     parseThdvFromHarmonic(input.report),
-    input.report.overallRisk,
-    parseNumField(input.report.peak, 'Peak Demand'),
-    input.report.peak.find((p) => p.label.includes('Peak Time'))?.value || null,
-    parseNumField(input.report.peak, 'Peak / Average'),
-    parseMoneyField(input.report.financial, 'Est. Monthly Cost'),
-    parseMoneyField(input.report.financial, 'Est. PF Penalty'),
-    parseMoneyField(input.report.financial, 'Potential Monthly Saving'),
-    JSON.stringify(input.report),
+    reportPayload.overallRisk,
+    parseNumField(reportPayload.peak, 'Peak Demand'),
+    reportPayload.peak.find((p) => p.label.includes('Peak Time'))?.value || null,
+    parseNumField(reportPayload.peak, 'Peak / Average'),
+    parseMoneyField(reportPayload.financial, 'Est. Monthly Cost'),
+    parseMoneyField(reportPayload.financial, 'Est. PF Penalty'),
+    parseMoneyField(reportPayload.financial, 'Potential Monthly Saving'),
+    JSON.stringify(reportPayload),
   ];
 
   const analysisExists = await queryGe(
@@ -306,7 +359,7 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
   }
 
   await queryGe(`DELETE FROM eq_recommendations WHERE report_id = ?`, [reportId]);
-  for (const rec of input.report.recommendations) {
+  for (const rec of reportPayload.recommendations) {
     await queryGe(
       `INSERT INTO eq_recommendations (report_id, priority, title, description)
        VALUES (?, ?, ?, ?)`,
@@ -314,7 +367,7 @@ export async function persistEnergyQualityReport(input: PersistReportInput): Pro
     );
   }
 
-  return reportId;
+  return { dbReportId: reportId, reportNumber };
 }
 
 function parseNumField(fields: { label: string; value: string }[], keyPart: string): number | null {

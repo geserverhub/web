@@ -5,6 +5,10 @@ import {
   type PeakTimeAnalysis,
 } from './energy-quality-peak-time-analysis';
 
+function fillTpl(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), template);
+}
+
 export type DbChartPoint = {
   time: string;
   timestamp?: number;
@@ -182,7 +186,10 @@ export function analyzeCurrentHistory(
       insights.push({
         severity: pt.onPeakAvgA > pt.offPeakAvgA * 1.15 ? 'warning' : 'info',
         title: t.insightOnPeakLoad,
-        detail: `On-peak ${fmtA(pt.onPeakAvgA)} A · Off-peak ${fmtA(pt.offPeakAvgA)} A`,
+        detail: fillTpl(t.insightOnPeakDetail, {
+          onPeak: fmtA(pt.onPeakAvgA),
+          offPeak: fmtA(pt.offPeakAvgA),
+        }),
       });
     }
     if (stats.peakCh1 > stats.avgCh1 * 1.5) {

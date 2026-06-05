@@ -106,7 +106,7 @@ type EqStrings = {
 };
 
 const th: EqStrings = {
-  pageTitle: 'เพิ่มมอเตอร์เพื่อเก็บค่า',
+  pageTitle: 'เพิ่มมิเตอร์เพื่อเก็บค่า',
   pageSubtitle: 'เลือกมิเตอร์ที่ติดตั้งในระบบและดูค่ากระแสไฟแบบเรียลไทม์',
   tagline: 'การวิเคราะห์คุณภาพพลังงาน ก่อนการติดตั้ง',
   location: 'โลเคชั่น',
@@ -578,6 +578,30 @@ const catalog: Record<EqLocale, EqStrings> = { th, ko, en, cn, vn, ms };
 export function eqT(locale: string): EqStrings {
   const key = (['th', 'ko', 'en', 'cn', 'vn', 'ms'].includes(locale) ? locale : 'en') as EqLocale;
   return catalog[key];
+}
+
+export function formatEqDateTime(
+  value: string | number | Date | null | undefined,
+  locale: EqLocale,
+): string {
+  if (value == null || value === '') return '—';
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString(eqDateLocale(locale), { timeZone: 'Asia/Bangkok' });
+}
+
+const HISTORY_PERIOD_HOURS: Record<EqLocale, (h: number) => string> = {
+  th: (h) => `${h} ชั่วโมง`,
+  ko: (h) => `${h}시간`,
+  en: (h) => `${h} hours`,
+  cn: (h) => `${h} 小时`,
+  vn: (h) => `${h} giờ`,
+  ms: (h) => `${h} jam`,
+};
+
+export function formatHistoryPeriodHours(hours: number, locale: EqLocale): string {
+  const fn = HISTORY_PERIOD_HOURS[locale] ?? HISTORY_PERIOD_HOURS.en;
+  return fn(hours);
 }
 
 export function eqDateLocale(locale: EqLocale): string {

@@ -364,6 +364,30 @@ function chartStatsHtml(stats: CurrentHistoryStats, rt: ReportStrings): string {
   return `<div class="chart-stats-row">${items}</div>`;
 }
 
+function professionalImbalanceExceedHtml(pro: ProfessionalReportContent | null, rt: ReportStrings): string {
+  if (!pro?.imbalanceExceedance?.length) return '';
+  const imbRows = pro.imbalanceExceedance
+    .map((r) => {
+      const live = r.liveImbDisplay ? `${r.liveImbDisplay} · ${r.liveStatus}` : r.liveStatus;
+      return `<tr>
+        <td>${esc(r.threshold)}</td>
+        <td><strong>${esc(r.pct)}</strong></td>
+        <td class="live-status live-status--${esc(r.liveLevel)}">${esc(live)}</td>
+      </tr>`;
+    })
+    .join('');
+  return `
+    <h3>${esc(pro.imbalanceExceedanceCaption)}</h3>
+    <table class="data-table data-table--imb-exceed">
+      <thead><tr>
+        <th>${esc(rt.proTableParameter)}</th>
+        <th>${esc(rt.proTableExceedShare)}</th>
+        <th>${esc(rt.proTableLiveStatus)}</th>
+      </tr></thead>
+      <tbody>${imbRows}</tbody>
+    </table>`;
+}
+
 function professionalExecutiveHtml(pro: ProfessionalReportContent | null, rt: ReportStrings): string {
   if (!pro) return '';
   const rows = pro.keyFindings
@@ -387,6 +411,7 @@ function professionalExecutiveHtml(pro: ProfessionalReportContent | null, rt: Re
       <tbody>${rows}</tbody>
     </table>
     <p class="note"><strong>${esc(rt.statusOverall)}:</strong> ${esc(pro.overallTechnicalRisk)}</p>
+    ${professionalImbalanceExceedHtml(pro, rt)}
     ${narrative}`;
 }
 

@@ -134,6 +134,7 @@ export type ReportStrings = {
   insightPeakPeriod: string;
   insightPeakWindows: string;
   insightOnPeakLoad: string;
+  insightOnPeakDetail: string;
   insightAvg: string;
   insightPeakSpike: string;
   insightPeakRatio: string;
@@ -366,6 +367,10 @@ export type ReportStrings = {
   exceedWarn10: string;
   exceedHigh20: string;
   exceedSevere50: string;
+  exceedLiveNormal: string;
+  exceedLiveSevere: string;
+  proTableExceedShare: string;
+  proTableLiveStatus: string;
   proReportSubtitle: string;
   proKeyFindingsIntro: string;
   proKeyFindingsTableTitle: string;
@@ -410,6 +415,11 @@ export type ReportStrings = {
   proPhaseMonitorBullet2: string;
   proPhaseMonitorOutcome: string;
   proPeakPercentileCaption: string;
+  pctHintP50: string;
+  pctHintP75: string;
+  pctHintP90: string;
+  pctHintP95: string;
+  pctHintP99: string;
   proImbalanceExceedCaption: string;
   proLoadProfileNarrative: string;
   overallRiskCritical: string;
@@ -552,6 +562,7 @@ const th: ReportStrings = {
   insightPeakPeriod: 'ช่วงเวลา Peak',
   insightPeakWindows: 'ช่วงที่โหลดสูงกว่าค่าเฉลี่ย',
   insightOnPeakLoad: 'On-peak vs Off-peak (จ–ศ 09:00–22:00)',
+  insightOnPeakDetail: 'ช่วง On-peak {onPeak} A · ช่วง Off-peak {offPeak} A',
   insightAvg: 'เฉลี่ย',
   insightPeakSpike: 'จุด Peak สูงกว่าค่าเฉลี่ยมาก',
   insightPeakRatio: 'อัตราส่วน Peak/Avg',
@@ -803,6 +814,10 @@ const th: ReportStrings = {
   exceedWarn10: '> 10% (เตือน)',
   exceedHigh20: '> 20% (เสี่ยงสูง)',
   exceedSevere50: '> 50% (รุนแรง)',
+  exceedLiveNormal: '✓ ปกติ',
+  exceedLiveSevere: 'รุนแรง',
+  proTableExceedShare: '% เวลาเกินเกณฑ์',
+  proTableLiveStatus: 'สถานะ (กระแสจริง)',
   proReportSubtitle:
     'รายงานวิเคราะห์คุณภาพไฟฟ้าและประสิทธิภาพพลังงาน · {period} · {records} บันทึก @ {resolution}',
   proKeyFindingsIntro:
@@ -857,6 +872,11 @@ const th: ReportStrings = {
   proPhaseMonitorBullet2: 'ตั้ง alarm: PF < 0.85 · CI > 15%',
   proPhaseMonitorOutcome: 'ป้องกันความเสียหายจาก overload และ imbalance สะสม',
   proPeakPercentileCaption: 'สถิติ Peak Demand (Percentile)',
+  pctHintP50: 'ค่ามัธยฐาน — 50% ของเวลาโหลดต่ำกว่านี้',
+  pctHintP75: 'โหลดสูงกว่าปกติ — 25% ของเวลาสูงกว่านี้',
+  pctHintP90: 'โหลดสูง — เกินค่านี้แค่ 10% ของเวลา',
+  pctHintP95: 'โหลดสูงมาก — เกินค่านี้แค่ 5% ของเวลา',
+  pctHintP99: 'ใกล้ Peak สูงสุด — เกินค่านี้แค่ 1% ของเวลา',
   proImbalanceExceedCaption: 'สัดส่วนเวลาที่ Current Imbalance เกินเกณฑ์',
   proLoadProfileNarrative:
     'โปรไฟล์โหลดแสดงช่วงโหลดสูงที่ {windows} — ควรเลื่อนโหลดหนักออกจากช่วง Peak billing',
@@ -994,6 +1014,7 @@ const en: ReportStrings = {
   insightPeakPeriod: 'Peak time window',
   insightPeakWindows: 'Hours above average load',
   insightOnPeakLoad: 'On-peak vs off-peak (Mon–Fri 09:00–22:00)',
+  insightOnPeakDetail: 'On-peak {onPeak} A · Off-peak {offPeak} A',
   insightAvg: 'avg',
   insightPeakSpike: 'Peak spike vs average',
   insightPeakRatio: 'Peak/Avg ratio',
@@ -1251,6 +1272,10 @@ const en: ReportStrings = {
   exceedWarn10: '> 10% (warning)',
   exceedHigh20: '> 20% (high risk)',
   exceedSevere50: '> 50% (severe)',
+  exceedLiveNormal: 'Normal',
+  exceedLiveSevere: 'Severe',
+  proTableExceedShare: '% time exceeded',
+  proTableLiveStatus: 'Status (live current)',
   proReportSubtitle:
     'Power Quality & Energy Efficiency Analysis · {period} · {records} records @ {resolution}',
   proKeyFindingsIntro:
@@ -1305,6 +1330,11 @@ const en: ReportStrings = {
   proPhaseMonitorBullet2: 'Set alarms: PF < 0.85 · CI > 15%',
   proPhaseMonitorOutcome: 'Prevent damage from sustained overload and imbalance',
   proPeakPercentileCaption: 'Peak demand statistics (percentiles)',
+  pctHintP50: 'Median — 50% of readings are below this',
+  pctHintP75: 'Above-normal load — exceeded 25% of the time',
+  pctHintP90: 'High load — exceeded only 10% of the time',
+  pctHintP95: 'Very high load — exceeded only 5% of the time',
+  pctHintP99: 'Near peak — exceeded only 1% of the time',
   proImbalanceExceedCaption: 'Time exceeding current imbalance thresholds',
   proLoadProfileNarrative:
     'Load profile shows high-load windows at {windows} — shift heavy loads away from billing peaks',

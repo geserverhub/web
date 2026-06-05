@@ -614,6 +614,31 @@ body {
   font-weight: 700;
 }
 
+.data-table--imb-exceed th:last-child,
+.data-table--imb-exceed td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.data-table--imb-exceed .live-status--good {
+  color: #047857;
+  font-weight: 700;
+}
+
+.data-table--imb-exceed .live-status--warning {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.data-table--imb-exceed .live-status--critical {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.data-table--imb-exceed .live-status--neutral {
+  color: #64748b;
+}
+
 .ai-rec {
   margin: 0 0 2mm;
   padding: 0;

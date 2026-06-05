@@ -6,9 +6,11 @@ import {
   loadCustomerSiteForDevice,
   loadLatestEnergyMetrics,
   loadLatestReportSnapshot,
+  peekNextReportNumber,
   persistEnergyQualityReport,
   type PersistReportInput,
 } from '@/lib/energy/energy-quality-db';
+import { toMysqlDateTime } from '@/lib/energy/energy-quality-mysql-datetime';
 import type { EnergyQualityReport } from '@/lib/energy/energy-quality-report-model';
 
 export const runtime = 'nodejs';
@@ -57,10 +59,12 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const [{ customer, site }, dbMetrics, snapshot] = await Promise.all([
+  const previewNext = req.nextUrl.searchParams.get('previewNext') === '1';
+  const [{ customer, site }, dbMetrics, snapshot, nextReportNumber] = await Promise.all([
     loadCustomerSiteForDevice(deviceId),
     loadLatestEnergyMetrics(deviceId),
     loadLatestReportSnapshot(deviceId),
+    previewNext ? peekNextReportNumber(deviceId) : Promise.resolve(null),
   ]);
 
   return NextResponse.json({
@@ -70,6 +74,7 @@ export async function GET(req: NextRequest) {
     site,
     dbMetrics,
     snapshot,
+    nextReportNumber: previewNext ? nextReportNumber : undefined,
   });
 }
 
@@ -107,15 +112,26 @@ export async function POST(req: NextRequest) {
   const siteRegion = String(body.siteRegion ?? 'thailand');
   const deviceRow = await loadDeviceRow(deviceId);
 
-  const reportId = await persistEnergyQualityReport({
+  const assignNewReportNumber = body.assignNewReportNumber === true;
+  const reportIdLabel =
+    typeof body.reportIdLabel === 'string' ? body.reportIdLabel : undefined;
+
+  const measurementStartRaw = body.measurementStart as string | undefined;
+  const measurementEndRaw = body.measurementEnd as string | undefined;
+  const measurementStart = toMysqlDateTime(measurementStartRaw) ?? undefined;
+  const measurementEnd = toMysqlDateTime(measurementEndRaw) ?? undefined;
+
+  const persisted = await persistEnergyQualityReport({
     deviceId,
     siteRegion,
     report,
     ch1,
-    measurementStart: body.measurementStart as string | undefined,
-    measurementEnd: body.measurementEnd as string | undefined,
+    measurementStart,
+    measurementEnd,
     locale,
     preparedBy: body.preparedBy as string | undefined,
+    assignNewReportNumber,
+    reportIdLabel,
     device: deviceRow
       ? {
           deviceID: String(deviceRow.deviceID),
@@ -132,5 +148,9 @@ export async function POST(req: NextRequest) {
       : undefined,
   });
 
-  return NextResponse.json({ success: true, reportId });
+  return NextResponse.json({
+    success: true,
+    reportId: persisted.dbReportId,
+    reportNumber: persisted.reportNumber,
+  });
 }
