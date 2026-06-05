@@ -1887,6 +1887,39 @@
   }
 }
 
+.eq-report-measurement-sizing {
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid #a7f3d0;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 55%, #fff 100%);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.08);
+}
+
+.eq-report-measurement-sizing-lbl {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #047857;
+}
+
+.eq-report-measurement-sizing-val {
+  margin: 0.25rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #065f46;
+  letter-spacing: -0.02em;
+}
+
+.eq-report-measurement-sizing-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
 .eq-report-field {
   padding: 0.55rem 0.6rem;
   border-radius: 0.55rem;

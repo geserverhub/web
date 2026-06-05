@@ -27,6 +27,10 @@ import { buildCh1PhaseTable } from './energy-quality-phase-analysis';
 import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display';
 import { eqDateLocale } from './energy-quality-i18n';
 import { buildEnergyQualityReportId } from './energy-quality-report-id';
+import {
+  formatBreakerSize,
+  recommendGeEnergySaverKva,
+} from './energy-quality-equipment-sizing';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
 export type HarmonicRisk = 'acceptable' | 'caution' | 'high';
@@ -534,6 +538,16 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
     field(t.f_riskLevel, risk.label),
   ];
 
+  const peakKwForSizing = estimateActivePowerKw({
+    avgCurrentA: peakVal,
+    powerFactor: pf,
+    voltageLL: avgLineVoltage(ch1.voltage),
+    activePowerKw: ch1.activePower,
+  });
+  const breakerSizeDisplay = formatBreakerSize(peakVal) ?? '—';
+  const recommendedInstallSize =
+    recommendGeEnergySaverKva(peakKwForSizing, peakVal) ?? '—';
+
   return {
     reportId,
     reportDate,
@@ -572,6 +586,8 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       field(t.f_gatewayId, device.ipAddress || device.deviceID),
       field(t.f_measurementPoint, `${device.deviceName} · ${t.ch1Label}`),
       field(t.f_voltageSystem, t.threePhase400V),
+      field(t.f_breakerSize, breakerSizeDisplay),
+      field(t.f_recommendedInstallSize, recommendedInstallSize),
       field(t.f_resolution, t.realtimeResolution),
       field(t.f_totalRecords, String(input.historyPoints)),
       field(t.f_startDate, input.measurementStart || input.lastUpdate),

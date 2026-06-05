@@ -33,6 +33,9 @@ export type ReportStrings = {
   f_gatewayId: string;
   f_measurementPoint: string;
   f_voltageSystem: string;
+  f_breakerSize: string;
+  f_recommendedInstallSize: string;
+  measurementSizingHint: string;
   f_resolution: string;
   f_totalRecords: string;
   f_startDate: string;
@@ -196,6 +199,7 @@ export type ReportStrings = {
   geCompareConclusionDetail: string;
   investmentDefault: string;
   recApfcTitle: string;
+  recApfcInvestTitle: string;
   recApfcDesc: string;
   recRedistributeTitle: string;
   recRedistributeDesc: string;
@@ -461,6 +465,9 @@ const th: ReportStrings = {
   f_gatewayId: 'Gateway ID',
   f_measurementPoint: 'จุดตรวจวัด',
   f_voltageSystem: 'ระบบแรงดัน',
+  f_breakerSize: 'ขนาดเบรกเกอร์',
+  f_recommendedInstallSize: 'ขนาดเครื่องที่แนะนำติดตั้ง',
+  measurementSizingHint: 'ประเมินจากกระแส Peak และโหลดจริง — สำหรับ GE Energy Tech Smart Power',
   f_resolution: 'ความละเอียดข้อมูล',
   f_totalRecords: 'จำนวนบันทึก',
   f_startDate: 'เริ่มวัด',
@@ -635,6 +642,7 @@ const th: ReportStrings = {
     'ก่อนติดตั้ง: {problem} — แนะนำ {solution} ({capabilities}) ประหยัด {saving}',
   investmentDefault: '200,000 บาท',
   recApfcTitle: 'ติดตั้งระบบ GE Energy Tech Smart Power',
+  recApfcInvestTitle: 'ลงทุนระบบ GE Energy Tech Smart Power',
   recApfcDesc:
     'เปรียบเทียบก่อนติดตั้ง — ระบบปรับแรงดัน ปรับกระแส 3 เฟส ปรับเสถียรลดฮาร์มอนิก และเก็บกระแสไฟใช้ช่วง Peak/Off-peak',
   recRedistributeTitle: 'กระจายโหลด 3 เฟส',
@@ -919,6 +927,9 @@ const en: ReportStrings = {
   f_gatewayId: 'Gateway ID',
   f_measurementPoint: 'Measurement Point',
   f_voltageSystem: 'Voltage System',
+  f_breakerSize: 'Breaker size',
+  f_recommendedInstallSize: 'Recommended install capacity',
+  measurementSizingHint: 'Estimated from peak current and measured load — for GE Energy Tech Smart Power',
   f_resolution: 'Data Resolution',
   f_totalRecords: 'Total Records',
   f_startDate: 'Measurement Start',
@@ -1093,6 +1104,7 @@ const en: ReportStrings = {
     'Before install: {problem} — recommend {solution} ({capabilities}) · save {saving}',
   investmentDefault: '200,000 THB',
   recApfcTitle: 'Install GE Energy Tech Smart Power System',
+  recApfcInvestTitle: 'Invest in GE Energy Tech Smart Power',
   recApfcDesc:
     'Pre-install comparison — voltage regulation, 3-phase current balancing, stability/harmonic control, and stored energy for peak/off-peak use',
   recRedistributeTitle: 'Redistribute Three-Phase Load',

@@ -253,10 +253,11 @@ export default function EnergyQualityReportView({
         ch2: ch2 ?? emptyCh,
         periodLabel: historyPeriod,
         locale: reportLocale,
+        strings: rt,
         chartUi: chartUi ?? { l1: 'L1', l2: 'L2', l3: 'L3' },
         ch1Only,
       }),
-    [report, dbChartData, ch1, ch2, historyPeriod, reportLocale, chartUi, ch1Only],
+    [report, dbChartData, ch1, ch2, historyPeriod, reportLocale, rt, chartUi, ch1Only],
   );
   const m = report.statusMetrics ?? {
     pf: null,
@@ -422,7 +423,20 @@ export default function EnergyQualityReportView({
         fields={report.measurement}
         rt={rt}
         livePending={pending}
-      />
+      >
+        {(() => {
+          const recommended = report.measurement.find((f) => f.label === rt.f_recommendedInstallSize);
+          const value = recommended?.value;
+          if (!value || value === '—' || pending) return null;
+          return (
+            <div className="eq-report-measurement-sizing" role="note">
+              <p className="eq-report-measurement-sizing-lbl">{rt.f_recommendedInstallSize}</p>
+              <p className="eq-report-measurement-sizing-val">{value}</p>
+              <p className="eq-report-measurement-sizing-hint">{rt.measurementSizingHint}</p>
+            </div>
+          );
+        })()}
+      </ReportSection>
 
       <section id="sec-executive" className="eq-report-section eq-report-executive">
         <h3 className="eq-report-section-title">

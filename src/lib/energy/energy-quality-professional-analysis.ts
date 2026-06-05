@@ -3,6 +3,7 @@ import type { CurrentHistoryStats, DbChartPoint } from './energy-quality-current
 import type { ReportChannel, RiskLevel } from './energy-quality-report-model';
 import type { ReportStrings } from './energy-quality-report-i18n';
 import type { PeakTimeAnalysis } from './energy-quality-peak-time-analysis';
+import { recommendGeEnergySaverKva } from './energy-quality-equipment-sizing';
 
 export type FindingAssessment = 'excellent' | 'acceptable' | 'caution' | 'warning' | 'neutral';
 
@@ -243,13 +244,6 @@ function overallTechnicalRiskLabel(risk: RiskLevel, t: ReportStrings): string {
   if (risk === 'critical') return t.overallRiskCritical;
   if (risk === 'warning') return t.overallRiskCaution;
   return t.overallRiskGood;
-}
-
-function recommendGeEnergySaver(peakKw: number | null, peakA: number | null): string | null {
-  const base = peakKw ?? (peakA != null ? peakA * 0.22 : null);
-  if (base == null) return null;
-  const kva = Math.ceil((base * 1.2) / 5) * 5;
-  return `${Math.max(50, kva)} kVA`;
 }
 
 export function buildProfessionalReportContent(input: {
@@ -539,7 +533,7 @@ export function buildProfessionalReportContent(input: {
   });
 
   const peakKw = unit === 'kW' ? rollPeak : null;
-  const recommendedModel = recommendGeEnergySaver(peakKw, stats?.peakCh1 ?? peakVal);
+  const recommendedModel = recommendGeEnergySaverKva(peakKw, stats?.peakCh1 ?? peakVal);
 
   return {
     reportSubtitle,

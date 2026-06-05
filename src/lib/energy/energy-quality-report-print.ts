@@ -521,6 +521,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
     ch2: ch1Only ? input.ch1 : input.ch2,
     periodLabel: input.historyPeriod,
     locale: input.locale,
+    strings: rt,
     chartUi: { l1: 'L1', l2: 'L2', l3: 'L3' },
     ch1Only,
   });

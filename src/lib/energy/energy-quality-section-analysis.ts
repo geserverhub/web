@@ -64,6 +64,14 @@ function fillTpl(template: string, vars: Record<string, string>): string {
   return Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), template);
 }
 
+function prependUniqueRec(
+  recs: SectionRecommendation[],
+  item: SectionRecommendation,
+): SectionRecommendation[] {
+  if (recs.some((r) => r.title === item.title && r.description === item.description)) return recs;
+  return [item, ...recs];
+}
+
 export type SectionAnalysisPack = {
   fields: ReportField[];
   insights: TechnicalInsight[];
@@ -123,12 +131,14 @@ export function buildReportSectionPacks(input: {
   ch2: ReportChannel;
   periodLabel: string;
   locale: EqLocale;
+  /** When provided, section copy matches the report view locale strings exactly. */
+  strings?: ReportStrings;
   chartUi: { l1: string; l2: string; l3: string };
   ch1Only?: boolean;
 }): Record<ReportSectionKey, SectionAnalysisPack> {
   const { report, chartData, ch1, periodLabel, locale, chartUi } = input;
   const ch1Only = input.ch1Only ?? true;
-  const t = reportT(locale);
+  const t = input.strings ?? reportT(locale);
   const stats = chartData.length ? computeCurrentHistoryStats(chartData, periodLabel) : null;
   const latest = getLatestChartPhases(chartData);
 
@@ -368,25 +378,32 @@ export function buildReportSectionPacks(input: {
 
   const geEnergy = geCompareInsightEnergy(geMetrics, t);
   if (geEnergy && needsGeSolutionComparison(geMetrics)) energyInsights.push(geEnergy);
-  if (geRec) energyRecs.unshift(geRec);
+  if (geRec) {
+    energyRecs.splice(0, energyRecs.length, ...prependUniqueRec(energyRecs, geRec));
+  }
 
   const gePeak = geCompareInsightPeak(geMetrics, t);
   if (gePeak) peakInsights.push(gePeak);
-  if (geRec) peakRecs.unshift(geRec);
+  if (geRec) {
+    peakRecs.splice(0, peakRecs.length, ...prependUniqueRec(peakRecs, geRec));
+  }
 
   const gePf = geCompareInsightPf(geMetrics, t);
   if (gePf) pfInsights.push(gePf);
-  if (geRec && pfVal != null && pfVal < 0.95) pfRecs.unshift(geRec);
 
   const geBalance = geCompareInsightBalance(geMetrics, t);
   if (geBalance) balanceInsights.push(geBalance);
   const geVoltage = geCompareInsightVoltage(geMetrics, t);
   if (geVoltage) balanceInsights.push(geVoltage);
-  if (geRec && imb != null && imb > 15) balanceRecs.unshift(geRec);
+  if (geRec && imb != null && imb > 15) {
+    balanceRecs.splice(0, balanceRecs.length, ...prependUniqueRec(balanceRecs, geRec));
+  }
 
   const geHarmonic = geCompareInsightHarmonic(geMetrics, t);
   if (geHarmonic) harmonicInsights.push(geHarmonic);
-  if (geRec && thdVal != null && thdVal > 8) harmonicRecs.unshift(geRec);
+  if (geRec && thdVal != null && thdVal > 8) {
+    harmonicRecs.splice(0, harmonicRecs.length, ...prependUniqueRec(harmonicRecs, geRec));
+  }
 
   return {
     energy: {
@@ -503,7 +520,11 @@ function buildEquipmentPack(
     { title: t.actAnnualAudit, description: t.maintenanceNote },
   ];
   if (needsGeSolutionComparison(geMetrics)) {
-    equipmentRecs.unshift(geSolutionRecommendation(t));
+    equipmentRecs.splice(
+      0,
+      equipmentRecs.length,
+      ...prependUniqueRec(equipmentRecs, geSolutionRecommendation(t)),
+    );
   }
 
   return {
@@ -577,11 +598,8 @@ function buildFinancialPack(
 
   const financialRecs: SectionRecommendation[] = [
     { title: t.secFinancialRecReview, description: t.secFinancialRecReviewDesc },
-    { title: t.recApfcTitle, description: t.secFinancialRecApfcDesc },
+    { title: t.recApfcInvestTitle, description: t.secFinancialRecApfcDesc },
   ];
-  if (needsGeSolutionComparison(geMetrics)) {
-    financialRecs.unshift(geSolutionRecommendation(t));
-  }
 
   return {
     fields: report.financial,
@@ -818,7 +836,11 @@ function buildConclusionPack(
     { title: t.secConclusionRecSignoff, description: t.secConclusionRecSignoffDesc },
   ];
   if (needsGeSolutionComparison(geMetrics)) {
-    conclusionRecs.unshift(geSolutionRecommendation(t));
+    conclusionRecs.splice(
+      0,
+      conclusionRecs.length,
+      ...prependUniqueRec(conclusionRecs, geSolutionRecommendation(t)),
+    );
   }
 
   return {

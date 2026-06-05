@@ -1,6 +1,7 @@
 import type { EqLocale } from './energy-quality-i18n';
 import type { ReportStrings } from './energy-quality-report-i18n';
 import { cnPro, koPro, msPro, vnPro } from './energy-quality-report-pro-locales';
+import { cnSec, koSec, msSec, vnSec } from './energy-quality-report-section-locales';
 
 type ReportLocale = Exclude<EqLocale, 'th' | 'en'>;
 
@@ -35,6 +36,9 @@ const ko: Partial<ReportStrings> = {
   f_gatewayId: '게이트웨이 ID',
   f_measurementPoint: '측정 지점',
   f_voltageSystem: '전압 시스템',
+  f_breakerSize: '차단기 용량',
+  f_recommendedInstallSize: '권장 설치 용량',
+  measurementSizingHint: '피크 전류·실측 부하 기준 추정 — GE Energy Tech Smart Power',
   f_resolution: '데이터 해상도',
   f_totalRecords: '총 기록 수',
   f_startDate: '측정 시작',
@@ -217,6 +221,7 @@ const ko: Partial<ReportStrings> = {
   investmentDefault: '8,000,000 원',
   secFinancialChartCaption: '재무 영향 ({currency})',
   recApfcTitle: 'GE Energy Tech Smart Power 설치',
+  recApfcInvestTitle: 'GE Energy Tech Smart Power 투자',
   recApfcDesc:
     '설치 전 비교 — 전압 조정, 3상 전류 조정, 안정화·고조파 제어, 피크/비피크 전력 저장',
   apfcRecommended: 'GE Energy Tech 시스템 권장 (전압·전류·안정화·저장)',
@@ -245,6 +250,17 @@ const ko: Partial<ReportStrings> = {
   phaseAvg: '평균',
   phaseAvgN: '평균 N',
   phaseAnalysisCol: '분석',
+  phaseAnalysisAboveAvg:
+    '{phase} 상 평균 {value} — 전체 N 평균 ({avgN}) 대비 {delta}% 높음',
+  phaseAnalysisBelowAvg:
+    '{phase} 상 평균 {value} — 전체 N 평균 ({avgN}) 대비 {delta}% 낮음',
+  phaseAnalysisNearAvg: '{phase} 상 평균 {value} — 전체 N 평균 ({avgN})에 근접',
+  phaseAnalysisValueOnly: '{phase} 상 평균 {value}',
+  phaseAnalysisHeaviest: '· 3상 중 부하 최대',
+  phaseAnalysisLightest: '· 3상 중 부하 최소',
+  phaseAnalysisOverallN:
+    '전체 N 평균 {value} — 전류 불균형 {imb}% · 최대 {maxPhase} {maxVal} · 최소 {minPhase} {minVal}',
+  phaseAnalysisNoData: '분석에 필요한 데이터가 부족합니다',
   execSummaryTitle: '경영 요약',
   execChartTitle: '상별 전류 추이 (CH1)',
   execPhaseTableTitle: 'CH1 상별 전류 분석',
@@ -256,7 +272,14 @@ const ko: Partial<ReportStrings> = {
   execLineImbalance: '전류 불균형: {value}',
   execLineOverallRisk: '종합 위험 수준: {status}',
   execSourceHistory: '24시간 이력 기준',
+  ...koSec,
   ...koPro,
+  secActionRecAssign: '담당자 지정',
+  secActionRecAssignDesc: '작업별 담당자·목표일 지정',
+  secActionRecTrack: '진행 추적',
+  secActionRecTrackDesc: 'GE IoT / 주간 보고로 상태 업데이트',
+  secConclusionRecSignoff: '계획 승인 서명',
+  secConclusionRecSignoffDesc: '고객·GE Energy Tech 실행 계획 확인',
 };
 
 const cn: Partial<ReportStrings> = {
@@ -290,6 +313,9 @@ const cn: Partial<ReportStrings> = {
   f_gatewayId: '网关编号',
   f_measurementPoint: '测量点',
   f_voltageSystem: '电压系统',
+  f_breakerSize: '断路器容量',
+  f_recommendedInstallSize: '建议安装容量',
+  measurementSizingHint: '根据峰值电流与实测负载估算 — GE Energy Tech Smart Power',
   f_resolution: '数据分辨率',
   f_totalRecords: '记录总数',
   f_startDate: '测量开始',
@@ -437,8 +463,10 @@ const cn: Partial<ReportStrings> = {
   solutionApfc: 'De-tuned APFC',
   investmentDefault: '40,000 元',
   secFinancialChartCaption: '财务影响 ({currency})',
-  recApfcTitle: '安装 De-tuned APFC',
-  recApfcDesc: '改善功率因数并减少罚款。',
+  recApfcTitle: '安装 GE Energy Tech Smart Power',
+  recApfcInvestTitle: '投资 GE Energy Tech Smart Power',
+  recApfcDesc:
+    '安装前对比 — 调压、三相电流调节、稳态与谐波控制，以及峰/谷时段储能',
   recRedistributeTitle: '重新分配三相负载',
   recRedistributeDesc: '均衡 L1/L2/L3 减轻电缆与断路器压力。',
   recPeakTitle: '峰值需求管理',
@@ -461,6 +489,17 @@ const cn: Partial<ReportStrings> = {
   phaseAvg: '平均',
   phaseAvgN: '平均 N',
   phaseAnalysisCol: '分析',
+  phaseAnalysisAboveAvg:
+    '{phase} 相平均 {value} — 高于总 N 平均 ({avgN}) {delta}%',
+  phaseAnalysisBelowAvg:
+    '{phase} 相平均 {value} — 低于总 N 平均 ({avgN}) {delta}%',
+  phaseAnalysisNearAvg: '{phase} 相平均 {value} — 接近总 N 平均 ({avgN})',
+  phaseAnalysisValueOnly: '{phase} 相平均 {value}',
+  phaseAnalysisHeaviest: '· 三相中负载最重',
+  phaseAnalysisLightest: '· 三相中负载最轻',
+  phaseAnalysisOverallN:
+    '总 N 平均 {value} — 电流不平衡 {imb}% · 最高 {maxPhase} {maxVal} · 最低 {minPhase} {minVal}',
+  phaseAnalysisNoData: '数据不足，无法分析',
   execSummaryTitle: '管理层摘要',
   execChartTitle: '分相电流趋势 (CH1)',
   execPhaseTableTitle: 'CH1 分相电流分析',
@@ -472,7 +511,14 @@ const cn: Partial<ReportStrings> = {
   execLineImbalance: '电流不平衡: {value}',
   execLineOverallRisk: '综合风险等级: {status}',
   execSourceHistory: '来自 24 小时历史',
+  ...cnSec,
   ...cnPro,
+  secActionRecAssign: '指定负责人',
+  secActionRecAssignDesc: '为每项任务指定负责人与目标日',
+  secActionRecTrack: '跟踪进度',
+  secActionRecTrackDesc: '通过 GE IoT / 周报更新状态',
+  secConclusionRecSignoff: '计划签字确认',
+  secConclusionRecSignoffDesc: '客户与 GE Energy Tech 确认执行计划',
 };
 
 const vn: Partial<ReportStrings> = {
@@ -506,6 +552,9 @@ const vn: Partial<ReportStrings> = {
   f_gatewayId: 'ID gateway',
   f_measurementPoint: 'Điểm đo',
   f_voltageSystem: 'Hệ thống điện áp',
+  f_breakerSize: 'Cỡ aptomat',
+  f_recommendedInstallSize: 'Công suất lắp đặt đề xuất',
+  measurementSizingHint: 'Ước tính từ dòng đỉnh và tải đo — GE Energy Tech Smart Power',
   f_resolution: 'Độ phân giải dữ liệu',
   f_totalRecords: 'Tổng bản ghi',
   f_startDate: 'Bắt đầu đo',
@@ -654,8 +703,10 @@ const vn: Partial<ReportStrings> = {
   solutionApfc: 'De-tuned APFC',
   investmentDefault: '140.000.000 đồng',
   secFinancialChartCaption: 'Tác động tài chính ({currency})',
-  recApfcTitle: 'Lắp De-tuned APFC',
-  recApfcDesc: 'Cải thiện hệ số công suất và giảm phạt.',
+  recApfcTitle: 'Lắp GE Energy Tech Smart Power',
+  recApfcInvestTitle: 'Đầu tư GE Energy Tech Smart Power',
+  recApfcDesc:
+    'So sánh trước lắp — điều chỉnh điện áp, cân bằng dòng 3 pha, ổn định/hài và lưu trữ năng lượng Peak/Off-peak',
   recRedistributeTitle: 'Phân bổ lại tải 3 pha',
   recRedistributeDesc: 'Cân bằng L1/L2/L3 giảm áp lực cáp và aptomat.',
   recPeakTitle: 'Quản lý công suất đỉnh',
@@ -678,6 +729,17 @@ const vn: Partial<ReportStrings> = {
   phaseAvg: 'TB',
   phaseAvgN: 'TB N',
   phaseAnalysisCol: 'Phân tích',
+  phaseAnalysisAboveAvg:
+    '{phase} TB {value} — cao hơn N tổng ({avgN}) {delta}%',
+  phaseAnalysisBelowAvg:
+    '{phase} TB {value} — thấp hơn N tổng ({avgN}) {delta}%',
+  phaseAnalysisNearAvg: '{phase} TB {value} — gần N tổng ({avgN})',
+  phaseAnalysisValueOnly: '{phase} TB {value}',
+  phaseAnalysisHeaviest: '· pha chịu tải nặng nhất trong 3 pha',
+  phaseAnalysisLightest: '· pha chịu tải nhẹ nhất trong 3 pha',
+  phaseAnalysisOverallN:
+    'N tổng TB {value} — mất cân bằng dòng {imb}% · cao nhất {maxPhase} {maxVal} · thấp nhất {minPhase} {minVal}',
+  phaseAnalysisNoData: 'Không đủ dữ liệu để phân tích',
   execSummaryTitle: 'Tóm tắt điều hành',
   execChartTitle: 'Xu hướng dòng theo pha (CH1)',
   execPhaseTableTitle: 'Phân tích dòng CH1 theo pha',
@@ -689,7 +751,14 @@ const vn: Partial<ReportStrings> = {
   execLineImbalance: 'Mất cân bằng dòng: {value}',
   execLineOverallRisk: 'Mức rủi ro tổng: {status}',
   execSourceHistory: 'từ lịch sử 24 giờ',
+  ...vnSec,
   ...vnPro,
+  secActionRecAssign: 'Giao người phụ trách',
+  secActionRecAssignDesc: 'Giao việc và ngày mục tiêu',
+  secActionRecTrack: 'Theo dõi tiến độ',
+  secActionRecTrackDesc: 'Cập nhật qua GE IoT / báo cáo tuần',
+  secConclusionRecSignoff: 'Ký duyệt kế hoạch',
+  secConclusionRecSignoffDesc: 'Khách và GE Energy Tech xác nhận kế hoạch',
 };
 
 const ms: Partial<ReportStrings> = {
@@ -723,6 +792,9 @@ const ms: Partial<ReportStrings> = {
   f_gatewayId: 'ID Gateway',
   f_measurementPoint: 'Titik Ukuran',
   f_voltageSystem: 'Sistem Voltan',
+  f_breakerSize: 'Saiz pemutus',
+  f_recommendedInstallSize: 'Kapasiti pemasangan disyorkan',
+  measurementSizingHint: 'Anggaran dari arus puncak dan beban diukur — GE Energy Tech Smart Power',
   f_resolution: 'Resolusi Data',
   f_totalRecords: 'Jumlah Rekod',
   f_startDate: 'Mula Ukuran',
@@ -871,8 +943,10 @@ const ms: Partial<ReportStrings> = {
   solutionApfc: 'De-tuned APFC',
   investmentDefault: '27,000 RM',
   secFinancialChartCaption: 'Impak kewangan ({currency})',
-  recApfcTitle: 'Pasang De-tuned APFC',
-  recApfcDesc: 'Tingkatkan faktor kuasa dan kurangkan denda.',
+  recApfcTitle: 'Pasang GE Energy Tech Smart Power',
+  recApfcInvestTitle: 'Melabur GE Energy Tech Smart Power',
+  recApfcDesc:
+    'Perbandingan pra-pasang — pelarasan voltan, imbangan arus 3 fasa, kestabilan/harmonik dan storan tenaga Peak/Off-peak',
   recRedistributeTitle: 'Agih semula beban 3 fasa',
   recRedistributeDesc: 'Imbang L1/L2/L3 kurangkan tekanan kabel dan pemutus.',
   recPeakTitle: 'Pengurusan permintaan puncak',
@@ -895,6 +969,17 @@ const ms: Partial<ReportStrings> = {
   phaseAvg: 'Purata',
   phaseAvgN: 'Purata N',
   phaseAnalysisCol: 'Analisis',
+  phaseAnalysisAboveAvg:
+    '{phase} purata {value} — {delta}% lebih tinggi daripada N keseluruhan ({avgN})',
+  phaseAnalysisBelowAvg:
+    '{phase} purata {value} — {delta}% lebih rendah daripada N keseluruhan ({avgN})',
+  phaseAnalysisNearAvg: '{phase} purata {value} — hampir N keseluruhan ({avgN})',
+  phaseAnalysisValueOnly: '{phase} purata {value}',
+  phaseAnalysisHeaviest: '· beban terberat dalam 3 fasa',
+  phaseAnalysisLightest: '· beban teringan dalam 3 fasa',
+  phaseAnalysisOverallN:
+    'Purata N keseluruhan {value} — ketidakseimbangan arus {imb}% · tertinggi {maxPhase} {maxVal} · terendah {minPhase} {minVal}',
+  phaseAnalysisNoData: 'Data tidak mencukupi untuk analisis',
   execSummaryTitle: 'Ringkasan eksekutif',
   execChartTitle: 'Trend arus fasa (CH1)',
   execPhaseTableTitle: 'Analisis arus CH1 mengikut fasa',
@@ -906,7 +991,14 @@ const ms: Partial<ReportStrings> = {
   execLineImbalance: 'Ketidakseimbangan arus: {value}',
   execLineOverallRisk: 'Tahap risiko keseluruhan: {status}',
   execSourceHistory: 'dari sejarah 24 jam',
+  ...msSec,
   ...msPro,
+  secActionRecAssign: 'Tetapkan pemilik',
+  secActionRecAssignDesc: 'Tetapkan pemilik dan tarikh sasaran setiap tugas',
+  secActionRecTrack: 'Jejak kemajuan',
+  secActionRecTrackDesc: 'Kemas kini melalui GE IoT / laporan mingguan',
+  secConclusionRecSignoff: 'Tandatangan pelan',
+  secConclusionRecSignoffDesc: 'Pelanggan dan GE Energy Tech sahkan pelan',
 };
 
 const PACKS: Record<ReportLocale, Partial<ReportStrings>> = { ko, cn, vn, ms };
