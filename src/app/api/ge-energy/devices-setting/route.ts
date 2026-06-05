@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGeserverhub as queryGe } from '@/lib/geserverhub-db'
+import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display'
 import {
   buildInstallationLocationExpr,
   deviceSiteFilterSql,
@@ -170,6 +171,9 @@ export async function GET(req: NextRequest) {
       const rawLocation = String(d.installation_location || d.location || '').trim()
       return {
         ...d,
+        customerName: d.customerName
+          ? normalizeCustomerDisplayName(d.customerName as string, d.deviceName as string)
+          : d.customerName,
         site: meterSite,
         location: formatDeviceLocation(meterSite, rawLocation),
         timeSinceUpdate: d.secondsSinceUpdate ? formatTimeSince(Number(d.secondsSinceUpdate)) : 'N/A',

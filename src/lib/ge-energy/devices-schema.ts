@@ -1,12 +1,13 @@
+import { stripLegacyDemoCustomerNames } from '@/lib/ge-energy/customer-display';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 
 /** Canonical meter ID column on devices (never ksaveID). */
 export const DEVICE_METER_ID_COLUMN = 'GEsaveID' as const;
 
 let devicesColumnCache: Set<string> | null = null;
+let ensureDevicesSchemaPromise: Promise<void> | null = null;
 
 export async function getDevicesColumnSet(): Promise<Set<string>> {
-  await ensureDevicesSchema();
   if (devicesColumnCache) return devicesColumnCache;
   const rows = await queryGeserverhub(
     `SELECT COLUMN_NAME
@@ -82,21 +83,21 @@ export async function ensureDevicesMeterIdColumn(): Promise<void> {
   if (devicesMeterIdEnsured) return;
 
   try {
-    const hasGEsaveID = await columnExists('devices', DEVICE_METER_ID_COLUMN);
-    const hasGeID = await columnExists('devices', 'geID');
-    const hasKsaveID = await columnExists('devices', 'ksaveID');
-
-    if (!hasGEsaveID && hasKsaveID) {
+    if (!(await columnExists('devices', DEVICE_METER_ID_COLUMN)) && (await columnExists('devices', 'ksaveID'))) {
       await queryGeserverhub(
         `ALTER TABLE devices CHANGE COLUMN ksaveID ${DEVICE_METER_ID_COLUMN} varchar(255) DEFAULT NULL`,
       );
       console.info('[devices-schema] migrated devices.ksaveID → GEsaveID');
-    } else if (!hasGEsaveID && hasGeID) {
+    }
+
+    if (!(await columnExists('devices', DEVICE_METER_ID_COLUMN)) && (await columnExists('devices', 'geID'))) {
       await queryGeserverhub(
         `ALTER TABLE devices CHANGE COLUMN geID ${DEVICE_METER_ID_COLUMN} varchar(255) DEFAULT NULL`,
       );
       console.info('[devices-schema] migrated devices.geID → GEsaveID');
-    } else if (hasKsaveID && hasGEsaveID) {
+    }
+
+    if ((await columnExists('devices', 'ksaveID')) && (await columnExists('devices', DEVICE_METER_ID_COLUMN))) {
       await queryGeserverhub('ALTER TABLE devices DROP COLUMN ksaveID');
       console.info('[devices-schema] dropped obsolete devices.ksaveID');
     }
@@ -195,7 +196,15 @@ export async function syncDeviceSitesFromMeterId(): Promise<void> {
 
 /** Run meter ID + customer column normalization once per process. */
 export async function ensureDevicesSchema(): Promise<void> {
-  await ensureDevicesMeterIdColumn();
-  await syncDeviceSitesFromMeterId();
-  await ensureDevicesCustomerColumns();
+  if (!ensureDevicesSchemaPromise) {
+    ensureDevicesSchemaPromise = (async () => {
+      await ensureDevicesMeterIdColumn();
+      await syncDeviceSitesFromMeterId();
+      await ensureDevicesCustomerColumns();
+      await stripLegacyDemoCustomerNames(queryGeserverhub);
+    })().finally(() => {
+      ensureDevicesSchemaPromise = null;
+    });
+  }
+  await ensureDevicesSchemaPromise;
 }

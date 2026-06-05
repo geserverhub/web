@@ -127,8 +127,10 @@ function EnergyQualityReportInner() {
   const ch1Only = true;
 
   const hasLiveData = channelHasLiveData(ch1) || (!ch1Only && channelHasLiveData(ch2));
-  const livePending = Boolean(selectedDevice) && !hasLiveData;
+  const hasHistoryData = chartData.length > 0;
+  const livePending = Boolean(selectedDevice) && !hasLiveData && !hasHistoryData;
   const noMeter = !selectedDevice;
+  const canPersistReport = Boolean(selectedDevice && dbTablesReady && (hasLiveData || hasHistoryData));
 
   const dbAnalysis = useMemo(
     () =>
@@ -352,10 +354,16 @@ function EnergyQualityReportInner() {
   }, [fetchDevices]);
 
   useEffect(() => {
-    if (!initialDevice || !devices.length) return;
-    const exists = devices.some((d) => d.deviceID === initialDevice);
-    if (exists) setSelectedDevice(initialDevice);
-  }, [devices, initialDevice]);
+    if (!devices.length) return;
+    if (initialDevice) {
+      const exists = devices.some((d) => d.deviceID === initialDevice);
+      if (exists) setSelectedDevice(initialDevice);
+      return;
+    }
+    if (!selectedDevice && filteredDevices.length === 1) {
+      setSelectedDevice(filteredDevices[0].deviceID);
+    }
+  }, [devices, initialDevice, filteredDevices, selectedDevice]);
 
   useEffect(() => {
     if (!selectedDevice) {
@@ -369,8 +377,8 @@ function EnergyQualityReportInner() {
   }, [selectedDevice, fetchDbContext]);
 
   useEffect(() => {
-    if (report && hasLiveData) persistReport(report);
-  }, [report, persistReport, hasLiveData]);
+    if (report && canPersistReport) persistReport(report);
+  }, [report, persistReport, canPersistReport]);
 
   useEffect(() => {
     if (!selectedDevice) {
@@ -584,6 +592,10 @@ function EnergyQualityReportInner() {
 
         {selectedDevice ? (
           <aside className="eq-panel eq-print-panel eq-print-panel--side">
+            <p className="eq-report-id-auto">
+              <span>{rt.f_reportId}</span>
+              <strong>{report.reportId}</strong>
+            </p>
             <div className="eq-print-lang-head">
               <span className="eq-print-lang-head-icon" aria-hidden>
                 <Globe className="w-4 h-4" strokeWidth={2.25} />

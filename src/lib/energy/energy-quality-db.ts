@@ -1,4 +1,5 @@
 ﻿import { queryGe } from '@/lib/mysql-ge';
+import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display';
 import type { EnergyQualityReport } from './energy-quality-report-model';
 
 export type EqCustomerRow = {
@@ -101,7 +102,10 @@ export async function ensureCustomerSiteForDevice(device: {
     return { customerId: row.customer_id, siteId: row.site_id };
   }
 
-  const name = String(device.customerName || device.deviceName || `Device ${deviceId}`).trim();
+  const name = normalizeCustomerDisplayName(
+    device.customerName,
+    device.deviceName || `Device ${deviceId}`,
+  );
   const customerId = await insertReturningId(
     `INSERT INTO eq_customers (customer_name, business_type, address, contact_person, phone, legacy_client_id)
      VALUES (?, 'Industrial / Commercial', ?, ?, ?, ?)`,
@@ -362,10 +366,10 @@ export async function loadCustomerSiteForDevice(deviceId: string): Promise<{
   return {
     customer: {
       id: Number(r.id),
-      customer_name: String(r.customer_name),
+      customer_name: normalizeCustomerDisplayName(String(r.customer_name)),
       business_type: r.business_type as string | null,
       address: r.address as string | null,
-      contact_person: r.contact_person as string | null,
+      contact_person: normalizeCustomerDisplayName(r.contact_person as string | null),
       phone: r.phone as string | null,
       email: r.email as string | null,
     },

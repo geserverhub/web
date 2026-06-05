@@ -133,8 +133,8 @@ async function seedDemoData(db) {
     await db.query(`
       INSERT INTO devices (deviceName, GEsaveID, series_no, ipAddress, location, site, status, U_email, P_email, phone, pass_phone, customerName, customerPhone)
       VALUES
-      ('GE01', 'GE01', 'GE2024010001', '192.168.1.46', 'Seongnam Research Institute', 'korea', 'ON', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '010-8105-0384', '0000', 'GE Energy Demo', '010-8105-0384'),
-      ('GE02', 'GE02', 'GE2024010002', '192.168.1.2', 'Republic of Korea', 'korea', 'ON', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '010-8105-0384', '0000', 'Green Retail Demo', '010-8105-0384'),
+      ('GE01', 'GE01', 'GE2024010001', '192.168.1.46', 'Seongnam Research Institute', 'korea', 'ON', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '010-8105-0384', '0000', 'GE Energy', '010-8105-0384'),
+      ('GE02', 'GE02', 'GE2024010002', '192.168.1.2', 'Republic of Korea', 'korea', 'ON', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '010-8105-0384', '0000', 'Green Retail', '010-8105-0384'),
       ('GE-TH01', 'GE-TH01', 'GE2024010007', '192.168.1.3', 'Bangkok', 'thailand', 'OFF', 'demo@ge-serverhub.com', 'demo@ge-serverhub.com', '02-555-1199', '0000', 'Thailand', '02-555-1199')
     `);
     console.log('Seeded demo devices (GE01, GE02, GE-TH01).');

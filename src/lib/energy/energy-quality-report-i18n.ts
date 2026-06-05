@@ -216,6 +216,16 @@ export type ReportStrings = {
   phaseL2: string;
   phaseL3: string;
   phaseAvg: string;
+  phaseAvgN: string;
+  phaseAnalysisCol: string;
+  phaseAnalysisAboveAvg: string;
+  phaseAnalysisBelowAvg: string;
+  phaseAnalysisNearAvg: string;
+  phaseAnalysisValueOnly: string;
+  phaseAnalysisHeaviest: string;
+  phaseAnalysisLightest: string;
+  phaseAnalysisOverallN: string;
+  phaseAnalysisNoData: string;
   execSummaryTitle: string;
   execChartTitle: string;
   execPhaseTableTitle: string;
@@ -636,9 +646,22 @@ const th: ReportStrings = {
   phaseL2: 'L2',
   phaseL3: 'L3',
   phaseAvg: 'เฉลี่ย',
+  phaseAvgN: 'เฉลี่ย N',
+  phaseAnalysisCol: 'การวิเคราะห์',
+  phaseAnalysisAboveAvg:
+    'เฟส {phase} เฉลี่ย {value} — สูงกว่าค่าเฉลี่ยรวม N ({avgN}) {delta}%',
+  phaseAnalysisBelowAvg:
+    'เฟส {phase} เฉลี่ย {value} — ต่ำกว่าค่าเฉลี่ยรวม N ({avgN}) {delta}%',
+  phaseAnalysisNearAvg: 'เฟส {phase} เฉลี่ย {value} — ใกล้ค่าเฉลี่ยรวม N ({avgN})',
+  phaseAnalysisValueOnly: 'เฟส {phase} เฉลี่ย {value}',
+  phaseAnalysisHeaviest: '· รับโหลดมากที่สุดใน 3 เฟส',
+  phaseAnalysisLightest: '· โหลดเบาที่สุดใน 3 เฟส',
+  phaseAnalysisOverallN:
+    'ค่าเฉลี่ยรวม N {value} — ความไม่สมดุลกระแส {imb}% · เฟสสูงสุด {maxPhase} {maxVal} · เฟสต่ำสุด {minPhase} {minVal}',
+  phaseAnalysisNoData: 'ไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์',
   execSummaryTitle: 'สรุปผู้บริหาร',
   execChartTitle: 'กราฟกระแสรายเฟส (CH1)',
-  execPhaseTableTitle: 'ตารางกระแส CH1 รายเฟส',
+  execPhaseTableTitle: 'วิเคราะห์กระแส CH1 รายเฟส',
   execLineEnergy: 'พลังงานสะสม {value} จากมิเตอร์',
   execLineAvgCurrent: 'กระแสเฉลี่ย CH1: {value}',
   execLinePeakDemand: 'Peak Demand สูงสุด: {value}',
@@ -1071,9 +1094,22 @@ const en: ReportStrings = {
   phaseL2: 'L2',
   phaseL3: 'L3',
   phaseAvg: 'Avg',
+  phaseAvgN: 'Avg N',
+  phaseAnalysisCol: 'Analysis',
+  phaseAnalysisAboveAvg:
+    'Phase {phase} avg {value} — above overall N ({avgN}) by {delta}%',
+  phaseAnalysisBelowAvg:
+    'Phase {phase} avg {value} — below overall N ({avgN}) by {delta}%',
+  phaseAnalysisNearAvg: 'Phase {phase} avg {value} — close to overall N ({avgN})',
+  phaseAnalysisValueOnly: 'Phase {phase} avg {value}',
+  phaseAnalysisHeaviest: '· heaviest load among 3 phases',
+  phaseAnalysisLightest: '· lightest load among 3 phases',
+  phaseAnalysisOverallN:
+    'Overall N avg {value} — current imbalance {imb}% · highest {maxPhase} {maxVal} · lowest {minPhase} {minVal}',
+  phaseAnalysisNoData: 'Insufficient data for analysis',
   execSummaryTitle: 'Executive summary',
   execChartTitle: 'Phase current trend (CH1)',
-  execPhaseTableTitle: 'CH1 current by phase',
+  execPhaseTableTitle: 'CH1 phase current analysis',
   execLineEnergy: 'Cumulative energy {value} from meter',
   execLineAvgCurrent: 'CH1 average current: {value}',
   execLinePeakDemand: 'Peak demand: {value}',

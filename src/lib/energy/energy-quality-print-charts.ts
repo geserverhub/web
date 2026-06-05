@@ -1,8 +1,8 @@
 import type { DbChartPoint } from './energy-quality-current-analysis';
 import type { EqChartLineSpec } from './eq-chart-palette';
 
-const W = 680;
-const H = 220;
+const W = 720;
+const H = 300;
 const PAD = { top: 18, right: 16, bottom: 36, left: 48 };
 
 function sampleRows<T>(rows: T[], max = 96): T[] {

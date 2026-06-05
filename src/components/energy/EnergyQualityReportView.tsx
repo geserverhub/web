@@ -479,14 +479,16 @@ export default function EnergyQualityReportView({
                 <th>{rt.phaseCol}</th>
                 <th>{ch1Label}</th>
                 {!ch1Only ? <th>{ch2Label}</th> : null}
+                <th>{rt.phaseAnalysisCol}</th>
               </tr>
             </thead>
             <tbody>
               {report.phaseTable.map((row) => (
-                <tr key={row.phase}>
+                <tr key={row.phase} className={row.phase === rt.phaseAvgN ? 'eq-report-phase-row--avg' : undefined}>
                   <td>{row.phase}</td>
-                  <td>{row.ch1}</td>
-                  {!ch1Only ? <td>{row.ch2}</td> : null}
+                  <td className="eq-report-phase-value">{row.ch1}</td>
+                  {!ch1Only ? <td className="eq-report-phase-value">{row.ch2}</td> : null}
+                  <td className="eq-report-phase-analysis">{row.analysis}</td>
                 </tr>
               ))}
             </tbody>

@@ -180,8 +180,7 @@ export function EnergyQualityAnalysisStats({
           <div className="eq-pro-pct-grid">
             {pro.peakPercentiles!.map((r) => (
               <div key={r.label} className="eq-pro-pct-cell">
-                <span>{r.label}</span>
-                <strong>{r.value}</strong>
+                {r.line}
               </div>
             ))}
           </div>

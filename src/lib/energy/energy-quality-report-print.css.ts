@@ -12,7 +12,7 @@ export function buildEnergyQualityPrintCss(rt: ReportStrings): string {
   return `
 @page {
   size: A4 portrait;
-  margin: 14mm 12mm 20mm 12mm;
+  margin: 10mm 10mm 16mm 10mm;
   @bottom-center {
     content: "${prefix}" counter(page) "${middle}" counter(pages) "${suffix}";
     font-family: 'Sarabun', 'Noto Sans Thai', 'Segoe UI', sans-serif;
@@ -58,8 +58,31 @@ body {
 }
 
 .doc {
-  max-width: 186mm;
+  width: 100%;
+  max-width: 190mm;
   margin: 0 auto;
+}
+
+.sheet {
+  box-sizing: border-box;
+}
+
+.sheet--cover {
+  page-break-after: always;
+  break-after: page;
+  min-height: 271mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5mm;
+}
+
+.sheet--toc {
+  page-break-after: always;
+  break-after: page;
+  min-height: 271mm;
+  display: flex;
+  flex-direction: column;
 }
 
 .print-logo {
@@ -77,17 +100,32 @@ body {
 }
 
 .cover {
-  page-break-after: always;
-  border: 2px solid var(--print-brand);
-  border-radius: 4px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d1fae5;
+  border-radius: 5px;
   overflow: hidden;
   margin-bottom: 0;
+  background: #fff;
 }
 
 .cover-head {
-  background: linear-gradient(135deg, var(--print-brand-dark) 0%, var(--print-brand) 55%, var(--print-brand-mid) 100%);
-  color: #fff;
-  padding: 8mm 8mm 7mm;
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: var(--print-ink);
+  padding: 9mm 8mm 7mm;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cover-head::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--print-brand-dark) 0%, var(--print-brand-mid) 55%, #34d399 100%);
 }
 
 .cover-brand {
@@ -100,9 +138,10 @@ body {
   height: 16mm;
   max-width: 38mm;
   padding: 1.5mm 2mm;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(2, 44, 34, 0.35);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: none;
 }
 
 .cover-brand-text {
@@ -111,26 +150,29 @@ body {
 }
 
 .cover-head h1 {
-  margin: 0 0 2mm;
-  font-size: 16pt;
+  margin: 0 0 1.5mm;
+  font-size: 15pt;
   font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #fff;
+  letter-spacing: 0.03em;
+  color: var(--print-brand-dark);
 }
 
 .cover-head .platform {
   margin: 0;
-  font-size: 10.5pt;
-  font-weight: 700;
-  color: #ecfdf5;
+  font-size: 10pt;
+  font-weight: 600;
+  color: var(--print-brand-mid);
+  letter-spacing: 0.01em;
 }
 
 .cover-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3mm 6mm;
-  padding: 6mm 8mm;
-  background: var(--print-surface);
+  flex: 1;
+  align-content: start;
+  padding: 6mm 8mm 8mm;
+  background: #fafafa;
   font-size: 8.5pt;
 }
 
@@ -176,8 +218,10 @@ body {
 }
 
 .toc {
-  page-break-after: always;
-  margin-bottom: 4mm;
+  flex: 1;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .toc h2 {
@@ -193,7 +237,8 @@ body {
   padding-left: 5mm;
   columns: 2;
   column-gap: 8mm;
-  font-size: 8.5pt;
+  font-size: 9pt;
+  flex: 1;
 }
 
 .toc li {
@@ -232,8 +277,9 @@ body {
 }
 
 .print-sec {
-  margin-bottom: 5mm;
-  page-break-inside: avoid;
+  margin-bottom: 4mm;
+  page-break-inside: auto;
+  break-inside: auto;
 }
 
 .print-sec h2 {
@@ -241,24 +287,29 @@ body {
   align-items: center;
   gap: 3mm;
   margin: 0 0 3mm;
-  padding: 2mm 3mm;
-  font-size: 10.5pt;
+  padding: 2.2mm 3.5mm;
+  font-size: 10pt;
   font-weight: 800;
-  color: #fff;
-  background: var(--print-brand);
-  border-radius: 2px;
+  color: var(--print-brand-dark);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3.5px solid var(--print-brand);
+  border-radius: 3px;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .print-sec h2 .num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 7mm;
-  height: 7mm;
-  background: #fff;
-  color: var(--print-brand);
-  border-radius: 2px;
-  font-size: 9pt;
+  min-width: 6.5mm;
+  height: 6.5mm;
+  background: var(--print-brand);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 8pt;
+  flex-shrink: 0;
 }
 
 .print-sec h3 {
@@ -340,13 +391,15 @@ body {
   font-size: 9.5pt;
   font-weight: 800;
   color: var(--print-brand);
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .print-chart-wrap {
   width: 100%;
-  margin: 0 0 4mm;
-  page-break-inside: avoid;
-  break-inside: avoid-page;
+  margin: 0 0 3mm;
+  page-break-inside: auto;
+  break-inside: auto;
   border: 1px solid #e2e8f0;
   border-radius: 3px;
   padding: 2mm;
@@ -357,7 +410,8 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 52mm;
+  min-height: 58mm;
+  max-height: 78mm;
 }
 
 .print-chart-legend {
@@ -448,14 +502,26 @@ body {
   border-collapse: collapse;
   font-size: 8.5pt;
   margin: 2mm 0;
+  break-inside: auto;
+  page-break-inside: auto;
+}
+
+.data-table thead {
+  display: table-header-group;
+}
+
+.data-table tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .data-table th {
-  background: var(--print-brand);
-  color: #fff;
+  background: #ecfdf5;
+  color: var(--print-brand-dark);
   padding: 2mm;
   text-align: left;
-  font-weight: 700;
+  font-weight: 800;
+  border-bottom: 2px solid var(--print-brand-mid);
 }
 
 .data-table td {
@@ -465,6 +531,22 @@ body {
 
 .data-table tr:nth-child(even) td {
   background: #f8fafc;
+}
+
+.data-table--phase .phase-val {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.data-table--phase .phase-analysis {
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--print-ink-soft);
+}
+
+.data-table--phase tr.phase-row-avg td {
+  background: #f0fdf4;
+  font-weight: 700;
 }
 
 .ai-rec {
@@ -531,11 +613,18 @@ body {
 }
 
 .standards-block {
-  margin: 0 0 5mm;
+  margin: 0 0 4mm;
   padding: 4mm 5mm;
   border: 1px solid #86efac;
   background: #ecfdf5;
-  page-break-inside: avoid;
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+.standards-block h2,
+.standards-block h3 {
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .standards-block h2 {
@@ -584,10 +673,12 @@ body {
 }
 
 .criteria-table th {
-  background: var(--print-brand);
-  color: #fff;
+  background: #ecfdf5;
+  color: var(--print-brand-dark);
   padding: 1.5mm 2mm;
   text-align: left;
+  font-weight: 800;
+  border-bottom: 2px solid var(--print-brand-mid);
 }
 
 .criteria-table td {
@@ -691,7 +782,30 @@ body {
 
 .technical-block {
   margin-bottom: 4mm;
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+.phase-card {
+  margin-bottom: 2mm;
+  padding: 2.5mm;
+  border: 1px solid #d1fae5;
+  border-radius: 2px;
+  background: #f0fdf4;
   page-break-inside: avoid;
+  break-inside: avoid-page;
+}
+
+.phase-card h4 {
+  margin: 0 0 1mm;
+  font-size: 8.5pt;
+  color: var(--print-brand);
+}
+
+.phase-card ul {
+  margin: 0;
+  padding-left: 3.5mm;
+  font-size: 8pt;
 }
 
 .technical-block h2 {
@@ -737,14 +851,36 @@ body {
 }
 
 @media print {
-  .print-sec {
-    break-inside: avoid-page;
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
-  .cover {
-    break-after: page;
+
+  .doc {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
   }
-  .toc {
-    break-after: page;
+
+  .sheet--cover,
+  .sheet--toc {
+    min-height: 271mm;
+  }
+
+  .print-sec h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .grid,
+  .act-grid,
+  .snapshot-grid,
+  .chart-stats-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 `;

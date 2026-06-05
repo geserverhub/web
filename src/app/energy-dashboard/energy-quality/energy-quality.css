@@ -1233,6 +1233,31 @@
   }
 }
 
+.eq-report-id-auto {
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.55rem;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.eq-report-id-auto span {
+  display: block;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.eq-report-id-auto strong {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #065f46;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
 .eq-report-wrap {
   margin-top: 0;
   scroll-margin-top: 5rem;
@@ -1333,9 +1358,21 @@
 }
 
 .eq-report-cover {
-  background: linear-gradient(135deg, #064e3b 0%, #059669 45%, #10b981 100%);
-  color: #fff;
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: #0f172a;
   padding: 1.35rem 1.5rem 1.15rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.eq-report-cover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #064e3b 0%, #059669 55%, #34d399 100%);
 }
 
 .eq-report-cover-brand {
@@ -1345,13 +1382,18 @@
   margin-bottom: 1rem;
 }
 
+.eq-report-cover-brand > svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
 .eq-report-company {
   margin: 0;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.9;
+  color: #064e3b;
 }
 
 .eq-report-platform {
@@ -1359,6 +1401,7 @@
   font-size: 1.05rem;
   font-weight: 800;
   line-height: 1.3;
+  color: #065f46;
 }
 
 .eq-report-cover-meta {
@@ -1375,8 +1418,8 @@
 }
 
 .eq-report-cover-meta > div {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #fff;
+  border: 1px solid #e2e8f0;
   border-radius: 0.55rem;
   padding: 0.45rem 0.55rem;
 }
@@ -1384,7 +1427,7 @@
 .eq-report-meta-lbl {
   display: block;
   font-size: 0.58rem;
-  opacity: 0.8;
+  color: #64748b;
   margin-bottom: 0.1rem;
 }
 
@@ -1393,13 +1436,13 @@
   align-items: center;
   gap: 0.35rem;
   font-weight: 700;
-  color: #bbf7d0;
+  color: #059669;
 }
 
 .eq-report-last-update {
   margin: 0.65rem 0 0.5rem;
   font-size: 0.68rem;
-  opacity: 0.92;
+  color: #475569;
 }
 
 .eq-report-cover-risks {
@@ -1421,7 +1464,8 @@
 }
 
 .eq-risk--good {
-  background: rgba(255, 255, 255, 0.95);
+  background: #ecfdf5;
+  border: 1px solid #86efac;
   color: #047857;
 }
 
@@ -1801,8 +1845,9 @@
   height: 1.35rem;
   margin-right: 0.45rem;
   border-radius: 999px;
-  background: #059669;
-  color: #fff;
+  background: #ecfdf5;
+  border: 1.5px solid #059669;
+  color: #065f46;
   font-size: 0.62rem;
   font-weight: 800;
   vertical-align: middle;
@@ -1874,6 +1919,27 @@
   overflow-x: auto;
 }
 
+.eq-report-phase-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.eq-report-phase-analysis {
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: #334155;
+  min-width: 12rem;
+}
+
+.eq-report-phase-row--avg td {
+  background: #f0fdf4;
+  font-weight: 600;
+}
+
+.eq-report-phase-row--avg .eq-report-phase-analysis {
+  color: #065f46;
+}
+
 .eq-report-table {
   width: 100%;
   border-collapse: collapse;
@@ -1881,12 +1947,13 @@
 }
 
 .eq-report-table th {
-  background: #047857;
-  color: #fff;
+  background: #ecfdf5;
+  color: #064e3b;
   padding: 0.45rem 0.55rem;
   text-align: left;
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 800;
+  border-bottom: 2px solid #059669;
 }
 
 .eq-report-table td {
@@ -2159,17 +2226,19 @@
 }
 
 .eq-pro-pct-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .eq-pro-pct-cell {
-  text-align: center;
-  padding: 0.4rem 0.25rem;
+  text-align: left;
+  padding: 0.35rem 0.5rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 0.4rem;
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
 }
 
 @media print {
@@ -2226,7 +2295,18 @@
   }
 
   .eq-report-section,
-  .eq-report-section-rich,
+  .eq-report-section-rich {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  .eq-report-section > h2,
+  .eq-report-section-rich > h2,
+  .eq-report-status-panel {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
   .eq-report-status-panel {
     page-break-inside: avoid;
     break-inside: avoid-page;
@@ -2237,8 +2317,10 @@
   }
 
   .eq-report-chart-canvas {
-    height: 200px !important;
-    page-break-inside: avoid;
+    height: 240px !important;
+    min-height: 200px !important;
+    page-break-inside: auto;
+    break-inside: auto;
   }
 
   .eq-report-field,
@@ -2248,7 +2330,8 @@
   }
 
   .eq-report-table th {
-    background: #047857 !important;
-    color: #fff !important;
+    background: #ecfdf5 !important;
+    color: #064e3b !important;
+    border-bottom: 2px solid #059669 !important;
   }
 }

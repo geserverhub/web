@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { queryGe } from '@/lib/mysql-ge'
+import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display'
 import { effectiveDeviceSiteSql, normalizeSiteKey } from '@/lib/ge-energy/customer-scope'
 import { getDevicesColumnSet, meterIdSelectSql, resolveMeterIdColumn } from '@/lib/ge-energy/devices-schema'
 
@@ -324,8 +325,8 @@ export async function GET(request: NextRequest) {
         deviceID: device.deviceID,
         deviceName: device.deviceName,
         recordScope: (device.record_scope || 'installed'),
-        customerName: device.customerName,
-        customerNameEn: device.customerNameEn,
+        customerName: normalizeCustomerDisplayName(device.customerName, device.deviceName),
+        customerNameEn: normalizeCustomerDisplayName(device.customerNameEn, device.deviceName),
         customerPhone: device.customerPhone,
         customerAddress: device.customerAddress,
         seriesNo: device.series_no,

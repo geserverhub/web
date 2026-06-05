@@ -13,6 +13,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import AiCarbonInsightsPanel from '@/components/energy/AiCarbonInsightsPanel'
 import ElectricityRateManager from '@/components/energy/ElectricityRateManager'
+import { stripDemoSuffix } from '@/lib/ge-energy/customer-display'
 
 interface DashboardStats {
   totalDevices: number
@@ -94,8 +95,6 @@ const companyNameFallbackMap: Record<string, string> = {
   'บริษัท ซีเจ มอร์ จำกัด': 'CJ MORE Co., Ltd.',
   'บริษัท คาลเท็กซ์ (ไทยแลนด์) จำกัด': 'Caltex (Thailand) Co., Ltd.'
 }
-
-const stripDemoSuffix = (name: string) => name.replace(/\s+Demo$/i, '').trim() || name
 
 const getLocalizedCustomerName = (
   device: Pick<RecentDevice, 'customerName' | 'customerNameEn' | 'deviceName'>,

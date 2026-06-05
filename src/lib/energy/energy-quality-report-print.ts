@@ -488,7 +488,7 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
   const phaseRows = report.phaseTable
     .map(
       (r) =>
-        `<tr><td>${esc(r.phase)}</td><td>${esc(r.ch1)}</td>${ch1Only ? '' : `<td>${esc(r.ch2)}</td>`}</tr>`,
+        `<tr class="${r.phase === rt.phaseAvgN ? 'phase-row-avg' : ''}"><td>${esc(r.phase)}</td><td class="phase-val">${esc(r.ch1)}</td>${ch1Only ? '' : `<td class="phase-val">${esc(r.ch2)}</td>`}<td class="phase-analysis">${esc(r.analysis)}</td></tr>`,
     )
     .join('');
 
@@ -609,49 +609,53 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
     ${sec3ChartStats}
     ${sec3ChartSvg}
     <h3>${esc(rt.execPhaseTableTitle)}</h3>
-    <table class="data-table">
-      <thead><tr><th>${esc(rt.phaseCol)}</th><th>${esc(input.ch1Label)}</th>${ch1Only ? '' : `<th>${esc(input.ch2Label)}</th>`}</tr></thead>
+    <table class="data-table data-table--phase">
+      <thead><tr><th>${esc(rt.phaseCol)}</th><th>${esc(input.ch1Label)}</th>${ch1Only ? '' : `<th>${esc(input.ch2Label)}</th>`}<th>${esc(rt.phaseAnalysisCol)}</th></tr></thead>
       <tbody>${phaseRows}</tbody>
     </table>`;
 
   const body = `
 <div class="doc">
-  <header class="cover">
-    <div class="cover-head">
-      <div class="cover-brand">
-        ${printLogoBlock(printLogoUrl(input), rt.companyName)}
-        <div class="cover-brand-text">
-          <h1>${esc(rt.companyName)}</h1>
-          <p class="platform">${esc(rt.platformTitle)}</p>
+  <section class="sheet sheet--cover">
+    <header class="cover">
+      <div class="cover-head">
+        <div class="cover-brand">
+          ${printLogoBlock(printLogoUrl(input), rt.companyName)}
+          <div class="cover-brand-text">
+            <h1>${esc(rt.companyName)}</h1>
+            <p class="platform">${esc(rt.platformTitle)}</p>
+          </div>
         </div>
       </div>
-    </div>
-    <dl class="cover-meta">
-      <dt>${esc(rt.f_reportId)}</dt><dd>${esc(report.reportId)}</dd>
-      <dt>${esc(rt.f_reportDate)}</dt><dd>${esc(report.reportDate)}</dd>
-      <dt>${esc(rt.f_customerName)}</dt><dd>${esc(report.customer[0]?.value ?? '—')}</dd>
-      <dt>${esc(rt.f_siteName)}</dt><dd>${esc(input.deviceName ?? report.customer[1]?.value ?? '—')}</dd>
-      <dt>${esc(rt.f_preparedBy)}</dt><dd>${esc(report.customer.find((f) => f.label === rt.f_preparedBy)?.value ?? rt.preparedByDefault)}</dd>
-      <dt>${esc(rt.reportStatus)}</dt><dd>${esc(rt.statusDraft)} · ${esc(report.overallRiskLabel)}</dd>
-      <dt>${esc(rt.f_endDate)}</dt><dd>${esc(report.lastUpdate)}</dd>
-      <dt>${esc(rt.f_riskLevel)}</dt><dd>${esc(report.overallRiskLabel)}</dd>
-      <dt>${esc(rt.f_harmonicRisk)}</dt><dd>${esc(report.harmonicRiskLabel)}</dd>
-      <dt>${esc(rt.liveBadge)}</dt><dd>${esc(rt.liveBadge)}</dd>
-    </dl>
-  </header>
+      <dl class="cover-meta">
+        <dt>${esc(rt.f_reportId)}</dt><dd>${esc(report.reportId)}</dd>
+        <dt>${esc(rt.f_reportDate)}</dt><dd>${esc(report.reportDate)}</dd>
+        <dt>${esc(rt.f_customerName)}</dt><dd>${esc(report.customer[0]?.value ?? '—')}</dd>
+        <dt>${esc(rt.f_siteName)}</dt><dd>${esc(input.deviceName ?? report.customer[1]?.value ?? '—')}</dd>
+        <dt>${esc(rt.f_preparedBy)}</dt><dd>${esc(report.customer.find((f) => f.label === rt.f_preparedBy)?.value ?? rt.preparedByDefault)}</dd>
+        <dt>${esc(rt.reportStatus)}</dt><dd>${esc(rt.statusDraft)} · ${esc(report.overallRiskLabel)}</dd>
+        <dt>${esc(rt.f_endDate)}</dt><dd>${esc(report.lastUpdate)}</dd>
+        <dt>${esc(rt.f_riskLevel)}</dt><dd>${esc(report.overallRiskLabel)}</dd>
+        <dt>${esc(rt.f_harmonicRisk)}</dt><dd>${esc(report.harmonicRiskLabel)}</dd>
+        <dt>${esc(rt.liveBadge)}</dt><dd>${esc(rt.liveBadge)}</dd>
+      </dl>
+    </header>
 
-  <section class="evidence">
-    <h2>${esc(rt.printEvidenceTitle)}</h2>
-    <ul>${evidenceSources}</ul>
-    <p class="note">${esc(rt.printMethodology)}</p>
+    <section class="evidence">
+      <h2>${esc(rt.printEvidenceTitle)}</h2>
+      <ul>${evidenceSources}</ul>
+      <p class="note">${esc(rt.printMethodology)}</p>
+    </section>
   </section>
 
   ${standardsBlockHtml(standards)}
 
-  <nav class="toc">
-    <h2>${esc(rt.reportTocTitle)}</h2>
-    <ol>${tocItems}</ol>
-  </nav>
+  <section class="sheet sheet--toc">
+    <nav class="toc">
+      <h2>${esc(rt.reportTocTitle)}</h2>
+      <ol>${tocItems}</ol>
+    </nav>
+  </section>
 
   ${snapshotBlock}
 

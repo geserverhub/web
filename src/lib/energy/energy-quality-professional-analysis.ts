@@ -22,7 +22,7 @@ export type PhasedRecommendation = {
   expectedOutcome: string;
 };
 
-export type PercentileRow = { label: string; value: string };
+export type PercentileRow = { label: string; value: string; line: string };
 
 export type ExceedanceRow = { threshold: string; pct: string };
 
@@ -122,16 +122,21 @@ function rollingPeak15(values: number[], window = 15): number | null {
   return maxRoll;
 }
 
+function percentileRow(label: string, value: number, unit: 'kW' | 'A'): PercentileRow {
+  const formatted = fmtLoad(value, unit);
+  return { label, value: formatted, line: `${label}  ${formatted}` };
+}
+
 function computePercentiles(points: DbChartPoint[]): PercentileRow[] | null {
   const series = loadSeries(points).sort((a, b) => a - b);
   if (series.length < 5) return null;
   const unit = loadUnit(points);
   return [
-    { label: 'P50', value: fmtLoad(percentile(series, 50), unit) },
-    { label: 'P75', value: fmtLoad(percentile(series, 75), unit) },
-    { label: 'P90', value: fmtLoad(percentile(series, 90), unit) },
-    { label: 'P95', value: fmtLoad(percentile(series, 95), unit) },
-    { label: 'P99', value: fmtLoad(percentile(series, 99), unit) },
+    percentileRow('P50', percentile(series, 50), unit),
+    percentileRow('P75', percentile(series, 75), unit),
+    percentileRow('P90', percentile(series, 90), unit),
+    percentileRow('P95', percentile(series, 95), unit),
+    percentileRow('P99', percentile(series, 99), unit),
   ];
 }
 

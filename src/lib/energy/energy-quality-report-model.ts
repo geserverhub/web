@@ -23,6 +23,9 @@ import {
   buildProfessionalReportContent,
   type ProfessionalReportContent,
 } from './energy-quality-professional-analysis';
+import { buildCh1PhaseTable } from './energy-quality-phase-analysis';
+import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display';
+import { buildEnergyQualityReportId } from './energy-quality-report-id';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
 export type HarmonicRisk = 'acceptable' | 'caution' | 'high';
@@ -119,7 +122,7 @@ export type EnergyQualityReport = {
   recommendations: ReportRecommendation[];
   actionPlan: ReportAction[];
   conclusion: ReportField[];
-  phaseTable: { phase: string; ch1: string; ch2: string }[];
+  phaseTable: { phase: string; ch1: string; ch2: string; analysis: string }[];
   executiveBullets: string[];
   executiveKpis: ReportField[];
   /** ZERA-style professional analysis (key findings table, interpretation, phased recs) */
@@ -251,7 +254,11 @@ export function enrichEnergyQualityReport(
 
   if (ctx.customer) {
     let customer = next.customer;
-    customer = patchField(customer, t.f_customerName, ctx.customer.customer_name);
+    customer = patchField(
+      customer,
+      t.f_customerName,
+      normalizeCustomerDisplayName(ctx.customer.customer_name),
+    );
     customer = patchField(
       customer,
       t.f_businessType,
@@ -341,8 +348,8 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
   const { device, ch1, ch2, chartData } = input;
   const ch1Only = input.ch1Only ?? isCh1OnlyScope(device.recordScope);
   const now = new Date();
-  const reportId = `GE-EQ-${device.deviceID}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const reportDate = now.toLocaleString();
+  const reportId = buildEnergyQualityReportId(device.deviceID, now);
+  const reportDate = now.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
 
   const histPoints = chartData as DbChartPoint[];
   const histStats = histPoints.length
@@ -526,7 +533,11 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       voltageImbalance: voltImb,
     },
     customer: [
-      field(t.f_customerName, device.customerName || device.deviceName),
+      field(t.f_reportId, reportId),
+      field(
+        t.f_customerName,
+        normalizeCustomerDisplayName(device.customerName, device.deviceName),
+      ),
       field(t.f_siteName, device.deviceName),
       field(t.f_location, device.location || device.customerAddress || '—'),
       field(t.f_businessType, t.businessTypeDefault),
@@ -676,12 +687,12 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       ),
       field(t.f_nextStep, t.nextStepReview),
     ],
-    phaseTable: [
-      { phase: t.phaseL1, ch1: display(i1, 'A'), ch2: display(j1, 'A') },
-      { phase: t.phaseL2, ch1: display(i2, 'A'), ch2: display(j2, 'A') },
-      { phase: t.phaseL3, ch1: display(i3, 'A'), ch2: display(j3, 'A') },
-       { phase: t.phaseAvg, ch1: display(avg(resolvedCh1), 'A'), ch2: display(avg(resolvedCh2), 'A') },
-    ],
+    phaseTable: buildCh1PhaseTable({
+      t,
+      histPoints,
+      snapshot: { l1: i1, l2: i2, l3: i3, j1, j2, j3 },
+      ch1Only,
+    }),
     professional: buildProfessionalReportContent({
       t,
       points: histPoints,
@@ -711,5 +722,6 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
   };
 }
 
+export { buildEnergyQualityReportId, formatReportDateStamp } from './energy-quality-report-id';
 export { buildReportPrintHtml } from './energy-quality-report-print';
 export type { PrintReportInput } from './energy-quality-report-print';
