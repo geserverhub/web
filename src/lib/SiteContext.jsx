@@ -4,27 +4,27 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 
 const SiteContext = createContext(undefined);
 
-export function SiteProvider({ children }) {
+export function SiteProvider({ children, storageKey = "selectedSite" }) {
   const [selectedSite, setSelectedSiteState] = useState("thailand");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("selectedSite");
+    const saved = localStorage.getItem(storageKey);
     const valid = ["thailand", "korea", "vietnam", "malaysia"];
     if (saved && valid.includes(saved)) {
       setSelectedSiteState(saved);
     }
     setMounted(true);
-  }, []);
+  }, [storageKey]);
 
   const setSelectedSite = useCallback((site) => {
     setSelectedSiteState(site);
     try {
-      localStorage.setItem("selectedSite", site);
+      localStorage.setItem(storageKey, site);
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [storageKey]);
 
   const activeSite = mounted ? selectedSite : "thailand";
 

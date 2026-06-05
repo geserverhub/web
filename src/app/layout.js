@@ -1,9 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
-import {
-  CHUNK_RECOVERY_INLINE_SCRIPT,
-  CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT,
-} from "@/lib/chunk-recovery";
+import { CHUNK_RECOVERY_INLINE_SCRIPT } from "@/lib/chunk-recovery";
 
 export const metadata = {
   title: "GE SERVER HUB",
@@ -26,7 +23,6 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_INLINE_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT }} />
         {children}
       </body>
     </html>

@@ -13,11 +13,22 @@
 }
 
 .cm-hero {
-  background: linear-gradient(135deg, #065f46 0%, var(--cm-green-700) 38%, var(--cm-green-600) 68%, #0d9488 100%);
+  background: linear-gradient(
+    128deg,
+    #047857 0%,
+    #059669 28%,
+    #10b981 55%,
+    #14b8a6 78%,
+    #2dd4bf 100%
+  );
   border-radius: 1.25rem;
   padding: 0.875rem 1rem;
   color: #fff;
-  box-shadow: 0 14px 48px rgba(5, 150, 105, 0.22), 0 4px 12px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 16px 48px rgba(5, 150, 105, 0.18),
+    0 4px 12px rgba(15, 41, 34, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   margin-bottom: 1.5rem;
   position: relative;
   overflow: hidden;

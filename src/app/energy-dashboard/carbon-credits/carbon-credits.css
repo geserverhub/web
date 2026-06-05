@@ -2,8 +2,8 @@
 
 .cc-page {
   padding: 1.5rem;
-  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 50%, #f8fafc 100%);
-  min-height: 100vh;
+  background: transparent;
+  min-height: 100%;
 }
 
 /* Hero Section */
@@ -15,7 +15,19 @@
   margin-bottom: 2rem;
   padding: 2rem;
   border-radius: 1.25rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(
+    128deg,
+    #047857 0%,
+    #059669 28%,
+    #10b981 55%,
+    #14b8a6 78%,
+    #2dd4bf 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 16px 48px rgba(5, 150, 105, 0.18),
+    0 4px 12px rgba(15, 41, 34, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   color: white;
 }
 

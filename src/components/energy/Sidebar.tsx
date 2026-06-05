@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { ENERGY_SYSTEM_TOKEN_KEY, ENERGY_SYSTEM_USER_KEY } from "@/lib/ge-storage-keys";
 import { useLocale } from "@/lib/LocaleContext";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -23,13 +24,13 @@ import {
   LogOut,
   Gauge,
   Leaf,
-  LogIn,
   Store,
   LineChart,
-  Building2,
   Cable,
   Wind,
   Link2,
+  Waves,
+  ClipboardList,
 } from "lucide-react";
 import "./energy-sidebar.css";
 
@@ -63,11 +64,15 @@ const menuSections: NavSection[] = [
         href: "/energy-dashboard/current-monitor",
         badge: "live",
       },
-      { key: "energyLogin", icon: LogIn, href: "/energy-dashboard-login" },
-      { key: "customerPortal", icon: Users, href: "/customer-dashboard-login" },
-      { key: "customerDashboard", icon: Building2, href: "/customer-dashboard" },
       { key: "momogeMarketplace", icon: Store, href: "/momoge-product" },
       { key: "energyAnalytics", icon: LineChart, href: "/energy-dashboard/overview" },
+    ],
+  },
+  {
+    sectionKey: "menuEnergyQuality",
+    items: [
+      { key: "energyQualityMeters", icon: Waves, href: "/energy-dashboard/energy-quality", badge: "live" },
+      { key: "energyQualityReport", icon: ClipboardList, href: "/energy-dashboard/energy-quality/report" },
     ],
   },
   {
@@ -111,14 +116,14 @@ const menuSections: NavSection[] = [
 
 const sectionFallback: Record<string, Record<string, string>> = {
   menuGreenEnergy: { th: "พลังงานสีเขียว", en: "Green Energy", ko: "그린 에너지" },
+  menuEnergyQuality: { th: "การวิเคราะห์คุณภาพพลังงาน ก่อนการติดตั้ง", en: "Energy Quality Analysis Before Installation", ko: "설치 전 전력 품질 분석" },
+  energyQualityMeters: { th: "เพิ่มมอเตอร์เพื่อเก็บค่า", en: "Add meters for monitoring", ko: "측정 미터 추가" },
+  energyQualityReport: { th: "รายงานการวิเคราะห์กระแสไฟ", en: "Current analysis report", ko: "전류 분석 보고서" },
   menuMonitoring: { th: "มอนิเตอร์พลังงาน", en: "Energy Monitoring", ko: "에너지 모니터링" },
   menuTools: { th: "เครื่องมือ", en: "Tools", ko: "도구" },
   configurations: { th: "การตั้งค่า", en: "Configurations", ko: "설정" },
   userSupports: { th: "สนับสนุนผู้ใช้", en: "User Supports", ko: "사용자 지원" },
   greenEnergyPortal: { th: "พอร์ทัลพลังงานสีเขียว", en: "Green Energy Portal", ko: "그린 에너지 포털" },
-  energyLogin: { th: "ลงชื่อ เข้าระบบใหม่", en: "Sign in again", ko: "다시 로그인" },
-  customerPortal: { th: "เข้าใช้ผ่านสมาร์ทโฟน", en: "Access via smartphone", ko: "스마트폰으로 이용" },
-  customerDashboard: { th: "แดชบอร์ดลูกค้า", en: "Customer dashboard", ko: "고객 대시보드" },
   momogeMarketplace: { th: "สินค้า IoT / Momoge", en: "Momoge IoT Store", ko: "MOMOGE IoT 상품" },
   energyAnalytics: { th: "วิเคราะห์พลังงาน", en: "Energy analytics", ko: "에너지 분석" },
   compareMonitoring: { th: "เปรียบเทียบ", en: "Compare", ko: "비교 모니터" },
@@ -172,8 +177,8 @@ export default function Sidebar() {
   })();
 
   function handleSignOut() {
-    localStorage.removeItem("energy_system_token");
-    localStorage.removeItem("energy_system_user");
+    localStorage.removeItem(ENERGY_SYSTEM_TOKEN_KEY);
+    localStorage.removeItem(ENERGY_SYSTEM_USER_KEY);
     router.push("/energy-dashboard-login");
   }
 

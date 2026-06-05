@@ -29,6 +29,7 @@
     "db:prisma-push": "node scripts/run-prisma-db-push.mjs",
     "db:migrate-software-downloads": "node scripts/apply-software-downloads-migration.mjs",
     "db:setup-geet-orders": "node scripts/apply-ge-energy-tech-orders-schema.mjs",
+    "db:migrate-energy-quality-report": "node scripts/apply-energy-quality-report-schema.mjs",
     "db:export": "node scripts/export-geserverhub-db.mjs",
     "mqtt:bridge": "node scripts/mqtt-bridge.mjs",
     "mqtt:broker": "node scripts/start-broker.mjs",

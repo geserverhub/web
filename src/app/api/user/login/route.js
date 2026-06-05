@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { getPrisma } from '@/lib/prisma';
 import { formatDbConnectError } from '@/lib/db-connect-error';
 import { signCustomerDashboardToken } from '@/lib/customer-dashboard-auth';
+import { signEnergyDashboardToken } from '@/lib/energy-dashboard-auth';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import {
   isRoleAllowedForUserLogin,
@@ -54,9 +55,10 @@ export async function POST(request) {
       return NextResponse.json({ error: userLoginDeniedMessage(page) }, { status: 403 });
     }
 
+    const portalKey = userLoginPortalKey(page);
+
     // Check portal permissions (skip for SUPER_ADMIN)
     if (user.role !== 'SUPER_ADMIN') {
-      const portalKey = userLoginPortalKey(page);
       try {
         const permRows = await queryGeserverhub(
           'SELECT is_allowed FROM user_permissions WHERE user_id = ? AND portal = ? LIMIT 1',
@@ -73,13 +75,17 @@ export async function POST(request) {
       }
     }
 
-    const token = signCustomerDashboardToken({
+    const tokenInput = {
       userId: user.id,
       clientId: user.clientId ?? null,
       email: user.email ?? null,
       username: user.username ?? null,
       phone: null,
-    });
+    };
+    const token =
+      portalKey === 'energy'
+        ? signEnergyDashboardToken(tokenInput)
+        : signCustomerDashboardToken(tokenInput);
 
     let name = user.name ?? user.username;
     let role = user.role;

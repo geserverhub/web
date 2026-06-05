@@ -10,6 +10,7 @@ import {
   ensureCustomerDashboardAuthRedirect,
   installChunkRecoveryClient,
 } from '@/lib/chunk-recovery';
+import { isJwtExpiredUnsafe, readJwtPortalUnsafe } from '@/lib/portal-jwt';
 import './customer-dashboard.css';
 
 function CustomerSiteInit({ children }) {
@@ -62,7 +63,10 @@ export default function CustomerDashboardShell({ children }) {
 
     try {
       const token = localStorage.getItem(GE_ADMIN_TOKEN_KEY)?.trim();
-      if (!token) {
+      const portal = readJwtPortalUnsafe(token);
+      if (!token || isJwtExpiredUnsafe(token) || portal !== 'customer') {
+        localStorage.removeItem(GE_ADMIN_TOKEN_KEY);
+        localStorage.removeItem(GE_ADMIN_USER_KEY);
         goLogin();
       } else {
         setAuthState('ready');
@@ -104,7 +108,7 @@ export default function CustomerDashboardShell({ children }) {
 
   return (
     <LocaleProvider>
-      <SiteProvider>
+      <SiteProvider storageKey="customer_selectedSite">
         <CustomerSiteInit>
           <div className="cd-root">
             <CustomerDashboardHeader />

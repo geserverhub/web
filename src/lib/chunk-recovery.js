@@ -59,14 +59,47 @@ function isCustomerDashboardAppPath(pathname = '') {
   return path.includes('/customer-dashboard') && !path.includes('customer-dashboard-login');
 }
 
-/** Redirect to customer login when token missing (client fallback). */
+function readJwtPortalUnsafe(token) {
+  try {
+    const body = String(token || '').split('.')[0];
+    if (!body) return null;
+    const json = JSON.parse(atob(body.replace(/-/g, '+').replace(/_/g, '/')));
+    return json.portal || null;
+  } catch {
+    return null;
+  }
+}
+
+function isEnergyDashboardAppPath(pathname = '') {
+  const path = String(pathname || '');
+  return path.includes('/energy-dashboard') && !path.includes('energy-dashboard-login');
+}
+
+/** Redirect to customer login when token missing or wrong portal (client fallback). */
 export function ensureCustomerDashboardAuthRedirect() {
   if (typeof window === 'undefined') return;
   try {
     if (!isCustomerDashboardAppPath(window.location.pathname)) return;
-    const token = localStorage.getItem('ge_admin_token');
-    if (token && String(token).trim()) return;
+    const token = localStorage.getItem('ge_admin_token')?.trim();
+    if (token && readJwtPortalUnsafe(token) === 'customer') return;
+    localStorage.removeItem('ge_admin_token');
+    localStorage.removeItem('ge_admin_user');
     window.location.replace('/customer-dashboard-login');
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Redirect to energy login when token missing or wrong portal (client fallback). */
+export function ensureEnergyDashboardAuthRedirect() {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!isEnergyDashboardAppPath(window.location.pathname)) return;
+    const token = localStorage.getItem('energy_system_token')?.trim();
+    if (token && readJwtPortalUnsafe(token) === 'energy') return;
+    localStorage.removeItem('energy_system_token');
+    localStorage.removeItem('energy_system_user');
+    window.location.replace('/energy-dashboard-login');
   } catch {
     /* ignore */
   }
@@ -103,13 +136,42 @@ export const CHUNK_RECOVERY_INLINE_SCRIPT = `(function(){
 
 /** Redirect to login before React if ge_admin_token is missing (works when JS chunks fail). */
 export const CUSTOMER_DASHBOARD_AUTH_INLINE_SCRIPT = `(function(){
+  function readPortal(token){
+    try{
+      var body=String(token||'').split('.')[0];
+      if(!body)return null;
+      return JSON.parse(atob(body.replace(/-/g,'+').replace(/_/g,'/'))).portal||null;
+    }catch(_){return null;}
+  }
   try{
     var path=location.pathname||'';
     if(path.indexOf('/customer-dashboard')===-1)return;
     if(path.indexOf('customer-dashboard-login')!==-1)return;
-    var key='ge_admin_token';
-    var token=localStorage.getItem(key);
-    if(token&&String(token).trim())return;
+    var token=localStorage.getItem('ge_admin_token');
+    if(token&&String(token).trim()&&readPortal(token)==='customer')return;
+    localStorage.removeItem('ge_admin_token');
+    localStorage.removeItem('ge_admin_user');
     location.replace('/customer-dashboard-login');
+  }catch(_){}
+})();`;
+
+/** Energy dashboard — scoped auth (not loaded on customer routes). */
+export const ENERGY_DASHBOARD_AUTH_INLINE_SCRIPT = `(function(){
+  function readPortal(token){
+    try{
+      var body=String(token||'').split('.')[0];
+      if(!body)return null;
+      return JSON.parse(atob(body.replace(/-/g,'+').replace(/_/g,'/'))).portal||null;
+    }catch(_){return null;}
+  }
+  try{
+    var path=location.pathname||'';
+    if(path.indexOf('/energy-dashboard')===-1)return;
+    if(path.indexOf('energy-dashboard-login')!==-1)return;
+    var token=localStorage.getItem('energy_system_token');
+    if(token&&String(token).trim()&&readPortal(token)==='energy')return;
+    localStorage.removeItem('energy_system_token');
+    localStorage.removeItem('energy_system_user');
+    location.replace('/energy-dashboard-login');
   }catch(_){}
 })();`;

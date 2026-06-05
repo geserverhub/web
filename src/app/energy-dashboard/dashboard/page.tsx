@@ -1766,52 +1766,90 @@ function CurrentTrendChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+            <LineChart data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 6 }}>
+              <defs>
+                <filter id="dash-glow-before" x="-40%" y="-40%" width="180%" height="180%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#dc2626" floodOpacity="0.55" />
+                </filter>
+                <filter id="dash-glow-after" x="-40%" y="-40%" width="180%" height="180%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#16a34a" floodOpacity="0.55" />
+                </filter>
+              </defs>
+              <CartesianGrid stroke="#cbd5e1" strokeDasharray="4 6" strokeOpacity={0.65} vertical={false} />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 9 }}
-                stroke="#000"
+                tick={{ fontSize: 9, fill: '#475569', fontWeight: 600 }}
+                stroke="#94a3b8"
                 interval="preserveEnd"
                 tickMargin={5}
               />
               <YAxis
-                tick={{ fontSize: 9 }}
-                stroke="#000"
+                tick={{ fontSize: 9, fill: '#475569', fontWeight: 600 }}
+                stroke="#94a3b8"
                 domain={['auto', 'auto']}
                 tickMargin={5}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
+                  background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
                   fontSize: '11px',
-                  padding: '8px'
+                  padding: '8px',
+                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)',
+                  fontWeight: 600,
                 }}
                 formatter={(value: number | string) => [`${value} A`, '']}
               />
               <Legend
-                wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
-                iconType="line"
+                wrapperStyle={{ fontSize: '10px', paddingTop: '8px', fontWeight: 700 }}
+                iconType="plainline"
               />
               <Line
                 type="natural"
                 dataKey="beforeAvg"
-                stroke="#ef4444"
-                strokeWidth={3}
+                stroke="#dc2626"
+                strokeWidth={8}
+                strokeOpacity={0.14}
+                dot={false}
+                legendType="none"
+                isAnimationActive={false}
+                activeDot={false}
+              />
+              <Line
+                type="natural"
+                dataKey="beforeAvg"
+                stroke="#dc2626"
+                strokeWidth={3.5}
+                strokeLinecap="round"
                 name={labels.before}
                 dot={false}
                 animationDuration={800}
+                style={{ filter: 'url(#dash-glow-before)' }}
+                activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: '#dc2626' }}
               />
               <Line
                 type="natural"
                 dataKey="afterAvg"
-                stroke="#22c55e"
-                strokeWidth={3}
+                stroke="#16a34a"
+                strokeWidth={8}
+                strokeOpacity={0.14}
+                dot={false}
+                legendType="none"
+                isAnimationActive={false}
+                activeDot={false}
+              />
+              <Line
+                type="natural"
+                dataKey="afterAvg"
+                stroke="#16a34a"
+                strokeWidth={3.5}
+                strokeLinecap="round"
                 name={labels.after}
                 dot={false}
                 animationDuration={800}
+                style={{ filter: 'url(#dash-glow-after)' }}
+                activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: '#16a34a' }}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Bell, RefreshCw, X, CheckCheck, AlertTriangle, Info, Zap, Home } from "lucide-react";
 import { useSite } from "@/lib/SiteContext";
 import { useLocale } from "@/lib/LocaleContext";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import EnergyLangSwitcher from "./EnergyLangSwitcher";
 import { formatEnergyDisplayUser, type EnergySessionUser } from "@/lib/energy/display-user";
 
@@ -43,24 +43,31 @@ export default function Header() {
 
   const { displayName, displayRole } = formatEnergyDisplayUser(energyUser);
 
-  // Fetch notifications from API
-  const fetchNotifications = async (signal?: AbortSignal) => {
+  const fetchNotifications = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true);
-      const res = await fetch(`/api/ge-energy/notifications?site=${selectedSite}&limit=10`, { signal });
+      if (!opts?.silent) setLoading(true);
+      const site = encodeURIComponent(selectedSite);
+      const res = await fetch(`/api/ge-energy/notifications?site=${site}&limit=10`, {
+        cache: 'no-store',
+      });
+      if (!res.ok) return;
       const json = await res.json();
       if (json.success) {
         setNotifications(json.data.notifications);
         setUnreadCount(json.data.unreadCount);
       }
     } catch (error) {
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Failed to fetch notifications:', error);
+      const benign =
+        (error instanceof DOMException && error.name === 'AbortError') ||
+        (error instanceof Error &&
+          (error.name === 'AbortError' || error.message === 'Failed to fetch'));
+      if (!benign) {
+        console.warn('Notifications unavailable:', error);
       }
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
-  };
+  }, [selectedSite]);
 
   // Mark all as read
   const markAllRead = async () => {
@@ -109,16 +116,28 @@ export default function Header() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Fetch notifications on mount and when site changes
+  // Poll notifications (no shared AbortSignal — avoids Strict Mode / site-change noise)
   useEffect(() => {
-    const controller = new AbortController();
-    fetchNotifications(controller.signal);
-    const interval = setInterval(() => fetchNotifications(controller.signal), 30000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
+    let cancelled = false;
+
+    const poll = () => {
+      if (cancelled || document.visibilityState === 'hidden') return;
+      void fetchNotifications({ silent: true });
     };
-  }, [selectedSite]);
+
+    poll();
+    const interval = setInterval(poll, 30000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') poll();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetchNotifications]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -135,7 +154,7 @@ export default function Header() {
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/energy-dashboard/dashboard"
-          className="inline-flex items-center gap-2 rounded-lg border border-emerald-200/90 bg-emerald-50/60 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 hover:border-emerald-300 shrink-0"
+          className="energy-header-btn inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-800 shrink-0"
         >
           <Home className="w-4 h-4 shrink-0" strokeWidth={2} />
           <span className="hidden sm:inline">{backMainMenu}</span>
@@ -145,7 +164,7 @@ export default function Header() {
           {mounted && displayName && (
             <Link
               href="/energy-dashboard/profile"
-              className="hidden sm:flex items-center gap-2 max-w-[220px] rounded-lg border border-emerald-100 bg-white px-3 py-2 hover:bg-emerald-50/80 transition shrink min-w-0"
+              className="energy-header-btn hidden sm:flex items-center gap-2 max-w-[220px] rounded-xl px-3 py-2 shrink min-w-0"
               title={displayName}
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
@@ -188,7 +207,7 @@ export default function Header() {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+              <div className="energy-notif-panel absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
                   <div className="flex items-center gap-2">

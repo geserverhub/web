@@ -46,12 +46,18 @@ export async function GET(req: NextRequest) {
     const hasCustomerPhone = deviceColumns.has('customerPhone')
     const hasCustomerAddress = deviceColumns.has('customerAddress')
     const hasCustomerId = deviceColumns.has('customer_id')
+    const hasBeforeMeterNo = deviceColumns.has('beforeMeterNo')
+    const hasMetricsMeterNo = deviceColumns.has('metricsMeterNo')
+    const hasRecordScope = deviceColumns.has('record_scope')
 
     const customerSelectFields = [
       hasCustomerId ? 'd.customer_id,' : '',
       hasCustomerName ? 'd.customerName,' : '',
       hasCustomerPhone ? 'd.customerPhone,' : '',
-      hasCustomerAddress ? 'd.customerAddress,' : ''
+      hasCustomerAddress ? 'd.customerAddress,' : '',
+      hasBeforeMeterNo ? 'd.beforeMeterNo,' : '',
+      hasMetricsMeterNo ? 'd.metricsMeterNo,' : '',
+      hasRecordScope ? 'd.record_scope,' : '',
     ]
       .filter(Boolean)
       .join('\n        ')
@@ -60,7 +66,10 @@ export async function GET(req: NextRequest) {
       hasCustomerId ? 'd.customer_id,' : '',
       hasCustomerName ? 'd.customerName,' : '',
       hasCustomerPhone ? 'd.customerPhone,' : '',
-      hasCustomerAddress ? 'd.customerAddress,' : ''
+      hasCustomerAddress ? 'd.customerAddress,' : '',
+      hasBeforeMeterNo ? 'd.beforeMeterNo,' : '',
+      hasMetricsMeterNo ? 'd.metricsMeterNo,' : '',
+      hasRecordScope ? 'd.record_scope,' : '',
     ]
       .filter(Boolean)
       .join('\n               ')

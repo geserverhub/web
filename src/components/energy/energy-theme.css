@@ -1,37 +1,84 @@
-/* GE Energy Tech — unified green dimensional theme */
+/* GE Energy Tech — bright dimensional theme (v2) */
 
 .energy-app {
-  --eg-green-50: #ecfdf5;
+  --eg-green-50: #f0fdf9;
   --eg-green-100: #d1fae5;
+  --eg-green-200: #a7f3d0;
+  --eg-green-400: #34d399;
   --eg-green-500: #10b981;
   --eg-green-600: #059669;
   --eg-green-700: #047857;
   --eg-green-800: #065f46;
-  --eg-shadow: 0 6px 28px rgba(5, 150, 105, 0.1), 0 2px 6px rgba(15, 23, 42, 0.05);
-  --eg-shadow-lg: 0 14px 48px rgba(5, 150, 105, 0.16), 0 4px 14px rgba(15, 23, 42, 0.07);
-  --eg-shadow-card: 0 8px 32px rgba(5, 150, 105, 0.12), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  --eg-teal-400: #2dd4bf;
+  --eg-surface: #ffffff;
+  --eg-surface-soft: #f8fffb;
+  --eg-surface-muted: rgba(240, 253, 249, 0.72);
+  --eg-text: #0f2922;
+  --eg-text-secondary: #1e4039;
+  --eg-text-muted: #4b7268;
+  --eg-text-soft: #6b9084;
+  --eg-border: rgba(16, 185, 129, 0.16);
+  --eg-border-strong: rgba(16, 185, 129, 0.28);
+  --eg-shadow-sm:
+    0 1px 2px rgba(15, 41, 34, 0.04),
+    0 4px 14px rgba(5, 150, 105, 0.07);
+  --eg-shadow:
+    0 4px 6px rgba(15, 41, 34, 0.03),
+    0 10px 32px rgba(5, 150, 105, 0.11),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset;
+  --eg-shadow-lg:
+    0 8px 16px rgba(15, 41, 34, 0.04),
+    0 20px 56px rgba(5, 150, 105, 0.14),
+    0 2px 0 rgba(255, 255, 255, 0.9) inset;
+  --eg-shadow-card:
+    0 2px 4px rgba(15, 41, 34, 0.03),
+    0 12px 40px rgba(5, 150, 105, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+  --eg-shadow-float:
+    0 16px 48px rgba(5, 150, 105, 0.18),
+    0 4px 12px rgba(15, 41, 34, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: var(--eg-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .energy-app {
-  background: linear-gradient(145deg, #d1fae5 0%, #ecfdf5 22%, #f0fdf4 45%, #f8fafc 100%);
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(167, 243, 208, 0.45), transparent 55%),
+    linear-gradient(165deg, #ecfdf5 0%, #f8fffb 28%, #ffffff 58%, #f0fdf9 100%);
 }
 
 .energy-main {
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(ellipse 70% 45% at 100% 0%, rgba(16, 185, 129, 0.14), transparent 58%),
-    radial-gradient(ellipse 55% 35% at 0% 100%, rgba(5, 150, 105, 0.1), transparent 52%),
-    linear-gradient(180deg, rgba(236, 253, 245, 0.55) 0%, rgba(248, 250, 252, 0.35) 100%);
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(52, 211, 153, 0.12), transparent 62%),
+    radial-gradient(ellipse 65% 45% at 0% 100%, rgba(45, 212, 191, 0.1), transparent 58%),
+    radial-gradient(ellipse 50% 30% at 50% 50%, rgba(255, 255, 255, 0.65), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(248, 255, 251, 0.2) 100%);
 }
 
 .energy-main::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px);
-  background-size: 22px 22px;
-  opacity: 0.45;
+  background-image: radial-gradient(rgba(16, 185, 129, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.energy-main::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -39,78 +86,137 @@
 .energy-page {
   position: relative;
   z-index: 1;
-  padding: 1.25rem;
+  padding: 1.25rem 1.35rem 1.75rem;
   min-height: 100%;
 }
 
+/* —— Header —— */
 .energy-header {
   position: relative;
   z-index: 120;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.97) 0%,
-    rgba(236, 253, 245, 0.92) 100%
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 255, 251, 0.94) 100%
   ) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(16, 185, 129, 0.22) !important;
-  box-shadow: 0 4px 28px rgba(5, 150, 105, 0.1), 0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  border-bottom: 1px solid var(--eg-border) !important;
+  box-shadow:
+    0 6px 32px rgba(5, 150, 105, 0.08),
+    0 1px 0 rgba(255, 255, 255, 1) inset !important;
 }
 
-/* Elevated panels */
+.energy-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.35), transparent);
+  pointer-events: none;
+}
+
+.energy-header-btn {
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(236, 253, 245, 0.85) 100%) !important;
+  box-shadow: var(--eg-shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.energy-header-btn:hover {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  box-shadow: var(--eg-shadow);
+  transform: translateY(-1px);
+}
+
+/* —— Elevated panels —— */
 .energy-main .bg-white.rounded-xl,
 .energy-main .bg-white.rounded-2xl,
-.energy-main .bg-white.rounded-3xl {
-  border-color: rgba(16, 185, 129, 0.14) !important;
+.energy-main .bg-white.rounded-3xl,
+.energy-glass {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(248, 255, 251, 0.88) 100%
+  ) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: var(--eg-border) !important;
   box-shadow: var(--eg-shadow-card) !important;
 }
 
 .energy-main .border-gray-100,
 .energy-main .border-gray-200 {
-  border-color: rgba(16, 185, 129, 0.12) !important;
+  border-color: var(--eg-border) !important;
 }
 
 .energy-main .shadow-sm {
-  box-shadow: var(--eg-shadow) !important;
+  box-shadow: var(--eg-shadow-sm) !important;
 }
 
 .energy-main .shadow-lg,
-.energy-main .shadow-xl {
+.energy-main .shadow-xl,
+.energy-main .shadow-2xl {
   box-shadow: var(--eg-shadow-lg) !important;
 }
 
-/* Hero banner — green depth */
+/* Gradient stat cards — extra depth */
+.energy-main .rounded-2xl.shadow-lg,
+.energy-main .rounded-3xl.shadow-lg {
+  box-shadow: var(--eg-shadow-float) !important;
+}
+
+.energy-main .rounded-2xl.shadow-lg:hover,
+.energy-main .rounded-3xl.shadow-lg:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 60px rgba(5, 150, 105, 0.22),
+    0 6px 16px rgba(15, 41, 34, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+/* —— Hero banner — brighter emerald depth —— */
 .energy-hero {
   position: relative;
   overflow: hidden;
   border-radius: 1.5rem;
-  background: linear-gradient(135deg, #065f46 0%, #047857 38%, #059669 68%, #0d9488 100%);
-  box-shadow: var(--eg-shadow-lg);
+  background: linear-gradient(
+    128deg,
+    #047857 0%,
+    #059669 28%,
+    #10b981 55%,
+    #14b8a6 78%,
+    #2dd4bf 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: var(--eg-shadow-float);
 }
 
 .energy-hero::before {
   content: "";
   position: absolute;
-  top: -4rem;
-  right: -4rem;
-  width: 16rem;
-  height: 16rem;
+  top: -5rem;
+  right: -3rem;
+  width: 18rem;
+  height: 18rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  filter: blur(32px);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, transparent 68%);
+  filter: blur(8px);
   pointer-events: none;
 }
 
 .energy-hero::after {
   content: "";
   position: absolute;
-  bottom: -2rem;
-  left: 28%;
-  width: 12rem;
-  height: 12rem;
+  bottom: -3rem;
+  left: 10%;
+  width: 14rem;
+  height: 14rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  filter: blur(24px);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 70%);
+  filter: blur(12px);
   pointer-events: none;
 }
 
@@ -119,56 +225,87 @@
   z-index: 1;
 }
 
-/* Tables & inputs — subtle green focus */
+/* —— Forms —— */
+.energy-main input:not([type="checkbox"]):not([type="radio"]),
+.energy-main select,
+.energy-main textarea {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(16, 185, 129, 0.18) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
 .energy-main input:focus,
 .energy-main select:focus,
 .energy-main textarea:focus {
-  border-color: #34d399 !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+  background: #fff !important;
+  border-color: var(--eg-green-400) !important;
+  box-shadow:
+    0 0 0 4px rgba(16, 185, 129, 0.12),
+    0 4px 14px rgba(5, 150, 105, 0.08) !important;
 }
 
 .energy-main .bg-gray-50.rounded-xl,
 .energy-main tr.bg-gray-50,
 .energy-main thead tr.bg-gray-50 {
-  background: rgba(236, 253, 245, 0.65) !important;
+  background: var(--eg-surface-muted) !important;
 }
 
 .energy-main .hover\:bg-gray-50:hover {
-  background: rgba(209, 250, 229, 0.5) !important;
+  background: rgba(209, 250, 229, 0.45) !important;
 }
 
-/* Notification dropdown in header */
+/* —— Notification panel —— */
 .energy-notif-panel {
-  border-color: rgba(16, 185, 129, 0.15) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%) !important;
+  border-color: var(--eg-border) !important;
   box-shadow: var(--eg-shadow-lg) !important;
 }
 
 .energy-notif-panel .bg-gray-50 {
-  background: rgba(236, 253, 245, 0.8) !important;
+  background: var(--eg-surface-muted) !important;
 }
 
-/* Gray / slate text → black (energy dashboard readability) */
+/* —— Readable text hierarchy (soft, not harsh black) —— */
 .energy-app :is(
-  .text-gray-300,
-  .text-gray-400,
-  .text-gray-500,
+  .text-gray-800,
+  .text-gray-900,
+  .text-slate-800,
+  .text-slate-900,
+  .text-zinc-800,
+  .text-neutral-800
+) {
+  color: var(--eg-text) !important;
+}
+
+.energy-app :is(
   .text-gray-600,
   .text-gray-700,
-  .text-gray-800,
-  .text-slate-300,
-  .text-slate-400,
-  .text-slate-500,
   .text-slate-600,
   .text-slate-700,
-  .text-slate-800,
-  .text-zinc-400,
-  .text-zinc-500,
   .text-zinc-600,
-  .text-neutral-400,
-  .text-neutral-500,
   .text-neutral-600
 ) {
-  color: #000 !important;
+  color: var(--eg-text-secondary) !important;
+}
+
+.energy-app :is(
+  .text-gray-500,
+  .text-slate-500,
+  .text-zinc-500,
+  .text-neutral-500
+) {
+  color: var(--eg-text-muted) !important;
+}
+
+.energy-app :is(
+  .text-gray-400,
+  .text-gray-300,
+  .text-slate-400,
+  .text-slate-300,
+  .text-zinc-400,
+  .text-neutral-400
+) {
+  color: var(--eg-text-soft) !important;
 }
 
 .energy-app :is(
@@ -178,16 +315,16 @@
   .group-hover\:text-gray-500,
   .group-hover\:text-gray-600
 ) {
-  color: #000 !important;
+  color: var(--eg-text-secondary) !important;
 }
 
 .energy-main ::placeholder,
 .energy-app ::placeholder {
-  color: #000 !important;
+  color: var(--eg-text-soft) !important;
   opacity: 1;
 }
 
-/* Keep light text on dark / green hero surfaces */
+/* Keep light text on dark / hero surfaces */
 .energy-app :is(.energy-hero, .cm-hero, .cc-hero) :is(
   .text-gray-300,
   .text-gray-400,
@@ -215,14 +352,26 @@
   .text-slate-600,
   .text-slate-700,
   .text-slate-800
-) {
+),
+.energy-app :is(.energy-hero, .cm-hero, .cc-hero) .text-white,
+.energy-app .esb-link-active {
   color: inherit !important;
 }
 
-/* Chart axis / legend labels (Recharts inline fill) */
+/* Chart labels */
 .energy-main .recharts-cartesian-axis-tick-value,
 .energy-main .recharts-label tspan,
 .energy-main .recharts-legend-item-text {
-  fill: #000 !important;
-  color: #000 !important;
+  fill: var(--eg-text-muted) !important;
+  color: var(--eg-text-muted) !important;
+}
+
+/* Loading skeletons */
+.energy-main .animate-pulse :is(.bg-slate-100, .bg-slate-200, .bg-gray-100, .bg-gray-200) {
+  background: linear-gradient(
+    90deg,
+    rgba(236, 253, 245, 0.8) 0%,
+    rgba(209, 250, 229, 0.55) 50%,
+    rgba(236, 253, 245, 0.8) 100%
+  ) !important;
 }

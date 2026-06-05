@@ -24,10 +24,8 @@ import {
   LogOut,
   Gauge,
   Leaf,
-  LogIn,
   Store,
   LineChart,
-  Building2,
   Database,
 } from "lucide-react";
 import "./energy-sidebar.css";
@@ -62,9 +60,6 @@ const menuSections: NavSection[] = [
         href: "/energy-dashboard/current-monitor",
         badge: "live",
       },
-      { key: "energyLogin", icon: LogIn, href: "/energy-dashboard-login" },
-      { key: "customerPortal", icon: Users, href: "/customer-dashboard-login" },
-      { key: "customerDashboard", icon: Building2, href: "/customer-dashboard" },
       { key: "momogeMarketplace", icon: Store, href: "/momoge-product" },
       { key: "energyAnalytics", icon: LineChart, href: "/energy-dashboard/overview" },
     ],

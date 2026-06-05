@@ -1,19 +1,21 @@
-/* Energy dashboard sidebar — unified green dimensional panels */
+/* Energy dashboard sidebar — bright dimensional panels (v2) */
 
 .esb-root {
   width: 17rem;
-  background: linear-gradient(180deg, #d1fae5 0%, #ecfdf5 18%, #f8fffb 45%, #ffffff 100%);
-  border-right: 1px solid rgba(16, 185, 129, 0.25);
+  background:
+    linear-gradient(180deg, #ecfdf5 0%, #f8fffb 22%, #ffffff 55%, #f0fdf9 100%);
+  border-right: 1px solid rgba(16, 185, 129, 0.2);
   box-shadow:
-    8px 0 36px rgba(5, 150, 105, 0.1),
-    2px 0 10px rgba(15, 23, 42, 0.05);
+    10px 0 40px rgba(5, 150, 105, 0.08),
+    2px 0 8px rgba(15, 41, 34, 0.04),
+    inset -1px 0 0 rgba(255, 255, 255, 0.85);
 }
 
 .esb-brand {
   padding: 1rem 1rem 0.875rem;
-  border-bottom: 1px solid rgba(16, 185, 129, 0.15);
-  background: linear-gradient(145deg, rgba(236, 253, 245, 0.95), #fff);
-  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.06);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.12);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 253, 245, 0.75) 100%);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.05);
 }
 
 .esb-brand-link {
@@ -23,19 +25,23 @@
   gap: 0.5rem;
   text-align: center;
   text-decoration: none;
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(16, 185, 129, 0.12);
-  background: rgba(255, 255, 255, 0.7);
+  padding: 0.65rem 0.5rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(16, 185, 129, 0.14);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 253, 249, 0.8) 100%);
   box-shadow:
-    0 4px 14px rgba(5, 150, 105, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: box-shadow 0.2s, border-color 0.2s;
+    0 6px 20px rgba(5, 150, 105, 0.09),
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .esb-brand-link:hover {
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.14);
+  border-color: rgba(16, 185, 129, 0.32);
+  box-shadow:
+    0 10px 28px rgba(5, 150, 105, 0.14),
+    0 1px 0 rgba(255, 255, 255, 1) inset;
+  transform: translateY(-1px);
 }
 
 .esb-brand-logo {
@@ -43,14 +49,14 @@
   width: auto;
   max-width: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(5, 150, 105, 0.15));
+  filter: drop-shadow(0 3px 8px rgba(5, 150, 105, 0.12));
 }
 
 .esb-brand-name {
   font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.35;
-  color: #14532d;
+  color: #065f46;
   padding: 0 0.25rem;
 }
 
@@ -67,33 +73,50 @@
 }
 
 .esb-nav::-webkit-scrollbar-thumb {
-  background: #34d399;
+  background: linear-gradient(180deg, #6ee7b7, #34d399);
   border-radius: 999px;
 }
 
-/* —— Section panels (all groups) —— */
+/* —— Section panels —— */
 .esb-section {
   margin-bottom: 0.75rem;
 }
 
 .esb-section-panel {
   padding: 0.5rem 0.45rem 0.55rem;
-  border-radius: 0.875rem;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(236, 253, 245, 0.55) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 0.9375rem;
+  background: linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(240, 253, 249, 0.72) 100%
+  );
+  border: 1px solid rgba(16, 185, 129, 0.16);
   box-shadow:
-    0 6px 20px rgba(5, 150, 105, 0.08),
-    0 1px 0 rgba(255, 255, 255, 0.95) inset,
-    0 -1px 0 rgba(16, 185, 129, 0.06) inset;
+    0 8px 24px rgba(5, 150, 105, 0.07),
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.45) inset;
 }
 
 .esb-section-highlight {
-  background: linear-gradient(165deg, rgba(236, 253, 245, 0.98) 0%, rgba(209, 250, 229, 0.45) 100%);
-  border-color: rgba(5, 150, 105, 0.28);
+  background: linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(209, 250, 229, 0.55) 100%
+  );
+  border-color: rgba(5, 150, 105, 0.24);
   box-shadow:
-    0 8px 28px rgba(5, 150, 105, 0.14),
-    0 0 0 1px rgba(16, 185, 129, 0.08),
+    0 10px 32px rgba(5, 150, 105, 0.12),
+    0 0 0 1px rgba(16, 185, 129, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.esb-section--menuEnergyQuality .esb-section-title span {
+  color: #047857;
+  white-space: normal;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  max-width: 100%;
 }
 
 .esb-section--menuMonitoring .esb-section-title span {
@@ -125,27 +148,27 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000;
+  color: #0f2922;
   white-space: nowrap;
-  padding: 0.2rem 0.45rem;
-  border-radius: 0.375rem;
-  background: rgba(255, 255, 255, 0.75);
+  padding: 0.22rem 0.5rem;
+  border-radius: 0.4375rem;
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(16, 185, 129, 0.12);
-  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.06);
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.05);
 }
 
 .esb-section-highlight .esb-section-title span {
   color: #047857;
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(16, 185, 129, 0.22);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 .esb-section-line {
   flex: 1;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.45), rgba(16, 185, 129, 0.08));
-  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.08);
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.5), rgba(52, 211, 153, 0.06));
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.06);
 }
 
 .esb-list {
@@ -163,15 +186,17 @@
   align-items: center;
   gap: 0.625rem;
   padding: 0.5rem 0.55rem;
-  border-radius: 0.625rem;
+  border-radius: 0.6875rem;
   text-decoration: none;
-  color: #000;
+  color: #0f2922;
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.25;
-  background: rgba(255, 255, 255, 0.65);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 255, 251, 0.75) 100%);
   border: 1px solid rgba(16, 185, 129, 0.1);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  box-shadow:
+    0 2px 8px rgba(15, 41, 34, 0.03),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
   transition:
     background 0.15s,
     color 0.15s,
@@ -185,24 +210,29 @@
   background: #fff;
   color: #047857;
   border-color: rgba(16, 185, 129, 0.28);
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.12);
+  box-shadow:
+    0 6px 18px rgba(5, 150, 105, 0.12),
+    0 1px 0 rgba(255, 255, 255, 1) inset;
   transform: translateY(-1px);
 }
 
 .esb-link-active {
-  background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b981 48%, #14b8a6 100%);
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.28);
   box-shadow:
-    0 6px 20px rgba(5, 150, 105, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 8px 24px rgba(5, 150, 105, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06);
   transform: none;
 }
 
 .esb-link-active:hover {
   color: #fff;
-  background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
-  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
+  background: linear-gradient(135deg, #047857 0%, #059669 48%, #10b981 100%);
+  box-shadow:
+    0 10px 28px rgba(5, 150, 105, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -210,33 +240,33 @@
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
-  border-radius: 0.5rem;
+  border-radius: 0.5625rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(145deg, #fff, #ecfdf5);
-  border: 1px solid rgba(16, 185, 129, 0.15);
+  background: linear-gradient(145deg, #ffffff, #ecfdf5);
+  border: 1px solid rgba(16, 185, 129, 0.14);
   box-shadow:
-    0 2px 6px rgba(5, 150, 105, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 3px 8px rgba(5, 150, 105, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 .esb-link:hover .esb-icon-wrap {
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.15);
+  border-color: rgba(16, 185, 129, 0.32);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.14);
 }
 
 .esb-link-active .esb-icon-wrap {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .esb-icon {
   width: 1.125rem;
   height: 1.125rem;
-  color: #059669;
+  color: #10b981;
 }
 
 .esb-link-active .esb-icon {
@@ -263,20 +293,20 @@
   text-transform: uppercase;
   padding: 0.15rem 0.4rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ef4444, #dc2626);
+  background: linear-gradient(180deg, #f87171, #ef4444);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.45);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
   animation: esb-pulse-live 2s ease-in-out infinite;
 }
 
 .esb-link:not(.esb-link-active) .esb-badge {
-  background: linear-gradient(180deg, #f87171, #ef4444);
+  background: linear-gradient(180deg, #fca5a5, #f87171);
   color: #fff;
 }
 
 .esb-link-active .esb-badge {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.24);
   border-color: rgba(255, 255, 255, 0.45);
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
 }
@@ -284,19 +314,19 @@
 @keyframes esb-pulse-live {
   0%,
   100% {
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
   }
   50% {
-    box-shadow: 0 2px 14px rgba(220, 38, 38, 0.65);
+    box-shadow: 0 2px 14px rgba(220, 38, 38, 0.6);
   }
 }
 
 /* —— Footer —— */
 .esb-footer {
   padding: 0.65rem 0.5rem 0.75rem;
-  border-top: 1px solid rgba(16, 185, 129, 0.15);
-  background: linear-gradient(180deg, #fff, #f0fdf4);
-  box-shadow: 0 -4px 16px rgba(5, 150, 105, 0.05);
+  border-top: 1px solid rgba(16, 185, 129, 0.12);
+  background: linear-gradient(180deg, #ffffff, #f0fdf9);
+  box-shadow: 0 -6px 20px rgba(5, 150, 105, 0.04);
 }
 
 .esb-logout {
@@ -306,26 +336,26 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.625rem 0.75rem;
-  border-radius: 0.625rem;
+  border-radius: 0.6875rem;
   font-size: 0.8125rem;
   font-weight: 600;
   font-family: inherit;
   color: #047857;
-  background: linear-gradient(180deg, #fff, #ecfdf5);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: linear-gradient(180deg, #ffffff, #ecfdf5);
+  border: 1px solid rgba(16, 185, 129, 0.22);
   text-decoration: none;
   cursor: pointer;
   box-shadow:
-    0 4px 12px rgba(5, 150, 105, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 4px 14px rgba(5, 150, 105, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
   transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.12s;
 }
 
 .esb-logout:hover {
-  background: linear-gradient(135deg, #047857, #059669);
+  background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
-  border-color: #047857;
-  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.28);
+  border-color: #059669;
+  box-shadow: 0 8px 22px rgba(5, 150, 105, 0.26);
   transform: translateY(-1px);
 }
 

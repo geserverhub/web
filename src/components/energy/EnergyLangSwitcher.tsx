@@ -29,7 +29,7 @@ export default function EnergyLangSwitcher({ className = '' }: { className?: str
 
   return (
     <div
-      className={`inline-flex items-center gap-0.5 rounded-full border border-emerald-200/90 bg-white/90 p-0.5 shadow-sm ${className}`}
+      className={`inline-flex items-center gap-0.5 rounded-full border border-emerald-200/80 bg-white/95 p-0.5 shadow-md backdrop-blur-sm ${className}`}
       role="group"
       aria-label="Language"
     >
