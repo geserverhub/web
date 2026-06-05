@@ -10,7 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import type { EqChartLineSpec } from '@/components/energy/EqCurrentHistoryChart';
+import type { EqChartLineSpec } from '@/lib/energy/eq-chart-palette';
 
 function formatTimeLabel(val: string) {
   if (!val) return '';
@@ -46,7 +46,7 @@ export default function EqReportLineChart({
               width="180%"
               height="180%"
             >
-              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor={line.stroke} floodOpacity="0.45" />
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor={line.stroke} floodOpacity="0.28" />
             </filter>
           ))}
         </defs>
@@ -83,8 +83,8 @@ export default function EqReportLineChart({
             strokeWidth={line.width}
             strokeLinecap="round"
             strokeLinejoin="round"
-            dot={{ r: 4, stroke: '#fff', strokeWidth: 2, fill: line.stroke }}
-            activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2.5, fill: line.stroke }}
+            dot={false}
+            activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: line.stroke }}
             style={{ filter: `url(#eq-metric-glow-${line.dataKey})` }}
           />
         ))}

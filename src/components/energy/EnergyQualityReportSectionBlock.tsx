@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Activity, AlertTriangle, Info } from 'lucide-react';
 import EqCurrentHistoryChart from '@/components/energy/EqCurrentHistoryChart';
 import EqReportLineChart from '@/components/energy/EqReportLineChart';
+import EqReportBarChart from '@/components/energy/EqReportBarChart';
 import type { SectionAnalysisPack } from '@/lib/energy/energy-quality-section-analysis';
 import type { TechnicalInsight } from '@/lib/energy/energy-quality-current-analysis';
 import type { ReportStrings } from '@/lib/energy/energy-quality-report-i18n';
@@ -90,7 +91,23 @@ export default function EnergyQualityReportSectionBlock({
       <div
         className={`eq-report-chart-panel eq-report-chart-panel--compact${pending && !hasChart ? ' eq-report-chart-panel--empty' : ''}`}
       >
-        {hasChart && pack.chartKind === 'line' && pack.chartLines ? (
+        {hasChart && pack.chartKind === 'bar' && pack.chartLines ? (
+          <>
+            <p className="eq-report-chart-caption">
+              <Activity className="w-3.5 h-3.5" />
+              {pack.chartCaption}
+            </p>
+            <div className="eq-report-chart-canvas">
+              <EqReportBarChart
+                data={pack.chartData as { label: string; value: number; fullLabel?: string }[]}
+                line={pack.chartLines[0]}
+                unit={pack.chartUnit ?? ''}
+                height={240}
+                integerAxis={pack.chartIntegerAxis ?? true}
+              />
+            </div>
+          </>
+        ) : hasChart && pack.chartKind === 'line' && pack.chartLines ? (
           <>
             <p className="eq-report-chart-caption">
               <Activity className="w-3.5 h-3.5" />

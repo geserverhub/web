@@ -11,12 +11,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-export type EqChartLineSpec = {
-  dataKey: string;
-  name: string;
-  stroke: string;
-  width: number;
-};
+import {
+  buildCh1Ch2PhaseLines,
+  buildCh1PhaseLines,
+  type EqChartLineSpec,
+} from '@/lib/energy/eq-chart-palette';
+
+export type { EqChartLineSpec };
 
 function formatTimeLabel(val: string) {
   if (!val) return '';
@@ -48,7 +49,7 @@ export default function EqCurrentHistoryChart({
               width="180%"
               height="180%"
             >
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={line.stroke} floodOpacity="0.55" />
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor={line.stroke} floodOpacity="0.3" />
             </filter>
           ))}
         </defs>
@@ -87,8 +88,8 @@ export default function EqCurrentHistoryChart({
             type="monotone"
             dataKey={line.dataKey}
             stroke={line.stroke}
-            strokeWidth={line.width + 6}
-            strokeOpacity={0.16}
+            strokeWidth={line.width + 2}
+            strokeOpacity={0.12}
             strokeLinecap="round"
             dot={false}
             legendType="none"
@@ -109,9 +110,9 @@ export default function EqCurrentHistoryChart({
             dot={false}
             style={{ filter: `url(#eq-glow-${line.dataKey})` }}
             activeDot={{
-              r: 6,
+              r: 5,
               stroke: '#fff',
-              strokeWidth: 2.5,
+              strokeWidth: 2,
               fill: line.stroke,
               style: { filter: `url(#eq-glow-${line.dataKey})` },
             }}
@@ -126,16 +127,6 @@ export function buildEqCurrentChartLines(
   ui: { l1: string; l2: string; l3: string },
   ch1Only = true,
 ): EqChartLineSpec[] {
-  const before: EqChartLineSpec[] = [
-    { dataKey: 'beforeL1', name: `CH1 ${ui.l1}`, stroke: '#c2410c', width: 3.5 },
-    { dataKey: 'beforeL2', name: `CH1 ${ui.l2}`, stroke: '#ea580c', width: 3 },
-    { dataKey: 'beforeL3', name: `CH1 ${ui.l3}`, stroke: '#f97316', width: 2.75 },
-  ];
-  if (ch1Only) return before;
-  return [
-    { dataKey: 'afterL1', name: `CH2 ${ui.l1}`, stroke: '#1d4ed8', width: 3.5 },
-    { dataKey: 'afterL2', name: `CH2 ${ui.l2}`, stroke: '#2563eb', width: 3 },
-    { dataKey: 'afterL3', name: `CH2 ${ui.l3}`, stroke: '#3b82f6', width: 2.75 },
-    ...before,
-  ];
+  if (ch1Only) return buildCh1PhaseLines(ui);
+  return buildCh1Ch2PhaseLines(ui);
 }

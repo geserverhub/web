@@ -12,6 +12,13 @@ import {
   fmtReportMoney,
   reportKwhTariff,
 } from './energy-quality-currency';
+import {
+  avgLineVoltage,
+  estimateActivePowerKw,
+  estimateMonthlyKwh,
+  estimatePotentialSaving,
+} from './energy-quality-financial-estimate';
+import { buildActionPlan } from './energy-quality-action-plan';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
 export type HarmonicRisk = 'acceptable' | 'caution' | 'high';
@@ -387,10 +394,25 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
 
   const kwhRate = reportKwhTariff(input.locale);
   const investment = defaultReportInvestment(input.locale);
-  const estMonthlyKwh = energy != null ? energy : null;
+  const avgPowerKw = estimateActivePowerKw({
+    avgCurrentA: avgI,
+    powerFactor: pf,
+    voltageLL: avgLineVoltage(ch1.voltage),
+    activePowerKw: ch1.activePower,
+  });
+  const estMonthlyKwh = estimateMonthlyKwh(avgPowerKw);
   const estMonthlyCost = estMonthlyKwh != null ? estMonthlyKwh * kwhRate : null;
-  const penaltyCost = pf != null && pf < 0.95 && estMonthlyCost != null ? estMonthlyCost * 0.08 : null;
-  const potentialSaving = penaltyCost != null ? penaltyCost * 0.65 : estMonthlyCost != null ? estMonthlyCost * 0.05 : null;
+  const penaltyCost =
+    pf != null && pf < 0.95 && estMonthlyCost != null ? estMonthlyCost * (0.95 - pf) * 1.5 : null;
+  const potentialSaving =
+    estMonthlyCost != null
+      ? estimatePotentialSaving({
+          monthlyCost: estMonthlyCost,
+          pf,
+          curImb: curImb,
+          peakRatio,
+        })
+      : null;
   const money = (amount: number | null, perMonth = false) =>
     amount != null ? fmtReportMoney(input.locale, amount, { perMonth }) : '—';
 
@@ -605,12 +627,15 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
       ),
     ],
     recommendations,
-    actionPlan: [
-      { horizon: t.immediate, items: [t.actVerifyPhase, t.actReviewPeak] },
-      { horizon: t.shortTerm, items: [t.actInstallApfc, t.actRebalance] },
-      { horizon: t.mediumTerm, items: [t.actHarmonic, t.actDemand] },
-      { horizon: t.longTerm, items: [t.actIotMonitor, t.actAnnualAudit] },
-    ],
+    actionPlan: buildActionPlan({
+      t,
+      pf,
+      curImb,
+      thd: thdAvg,
+      peakRatio,
+      peakVal,
+      avgI,
+    }),
     conclusion: [
       field(t.f_currentProblem, problems.length ? problems.join('; ') : t.statusGood),
       field(t.f_technicalRisk, risk.label),

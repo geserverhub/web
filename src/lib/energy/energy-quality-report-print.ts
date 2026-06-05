@@ -17,6 +17,10 @@ import {
   type ReportStandardsPack,
 } from './energy-quality-report-standards';
 import { buildEnergyQualityPrintCss } from './energy-quality-report-print.css';
+import {
+  buildCh1Ch2PhaseLines,
+  buildCh1PhaseLines,
+} from './eq-chart-palette';
 
 export type PrintSnapshotLabels = {
   lastUpdate: string;
@@ -167,7 +171,7 @@ function chartTableHtml(
   const rows = pack.chartData
     .slice(0, 20)
     .map((row) => {
-      const label = String(row.label ?? row.time ?? '—');
+      const label = String(row.fullLabel ?? row.label ?? row.time ?? '—');
       const val = row[key] ?? row.beforeAvg ?? row.afterAvg;
       const display =
         val != null && Number.isFinite(Number(val))
@@ -407,19 +411,15 @@ export function buildReportPrintHtml(input: PrintReportInput): string {
     .join('');
 
   const execChartLines = ch1Only
-    ? [
-        { dataKey: 'beforeL1', name: `${input.ch1Label} L1`, stroke: '#c2410c', width: 3 },
-        { dataKey: 'beforeL2', name: `${input.ch1Label} L2`, stroke: '#ea580c', width: 2.75 },
-        { dataKey: 'beforeL3', name: `${input.ch1Label} L3`, stroke: '#f97316', width: 2.5 },
-      ]
-    : [
-        { dataKey: 'afterL1', name: `${input.ch2Label} L1`, stroke: '#1d4ed8', width: 3 },
-        { dataKey: 'afterL2', name: `${input.ch2Label} L2`, stroke: '#2563eb', width: 2.75 },
-        { dataKey: 'afterL3', name: `${input.ch2Label} L3`, stroke: '#3b82f6', width: 2.5 },
-        { dataKey: 'beforeL1', name: `${input.ch1Label} L1`, stroke: '#c2410c', width: 3 },
-        { dataKey: 'beforeL2', name: `${input.ch1Label} L2`, stroke: '#ea580c', width: 2.75 },
-        { dataKey: 'beforeL3', name: `${input.ch1Label} L3`, stroke: '#f97316', width: 2.5 },
-      ];
+    ? buildCh1PhaseLines({ l1: 'L1', l2: 'L2', l3: 'L3' }, input.ch1Label)
+    : buildCh1Ch2PhaseLines({ l1: 'L1', l2: 'L2', l3: 'L3' }).map((line) => {
+        const isCh2 = line.dataKey.startsWith('after');
+        const phase = line.dataKey.replace(/^(before|after)/, '');
+        return {
+          ...line,
+          name: `${isCh2 ? input.ch2Label : input.ch1Label} ${phase}`,
+        };
+      });
 
   const aiRecs = report.recommendations
     .map(

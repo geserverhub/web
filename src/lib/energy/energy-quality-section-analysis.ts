@@ -35,7 +35,14 @@ import {
   needsGeSolutionComparison,
   type GeSolutionMetrics,
 } from './energy-quality-ge-solution';
-import type { EqChartLineSpec } from '@/components/energy/EqCurrentHistoryChart';
+import {
+  buildCh1PhaseLines,
+  EQ_CH1_STROKE,
+  EQ_CH2_STROKE,
+  EQ_LINE_WIDTH,
+  type EqChartLineSpec,
+} from '@/lib/energy/eq-chart-palette';
+import { actionPlanOutcomeChartData, countActionItems } from './energy-quality-action-plan';
 
 export type ReportSectionKey =
   | 'energy'
@@ -60,11 +67,13 @@ export type SectionAnalysisPack = {
   fields: ReportField[];
   insights: TechnicalInsight[];
   recommendations: SectionRecommendation[];
-  chartKind: 'line' | 'none';
+  chartKind: 'line' | 'bar' | 'none';
   chartCaption: string;
   chartData: Record<string, unknown>[];
   chartLines?: EqChartLineSpec[];
   chartUnit?: string;
+  /** When false, Y-axis allows decimals (e.g. currency savings). */
+  chartIntegerAxis?: boolean;
 };
 
 function metricLine(
@@ -74,7 +83,7 @@ function metricLine(
   unit = '',
 ): { chartLines: EqChartLineSpec[]; chartUnit: string } {
   return {
-    chartLines: [{ dataKey, name, stroke, width: 3 }],
+    chartLines: [{ dataKey, name, stroke, width: EQ_LINE_WIDTH.metric }],
     chartUnit: unit,
   };
 }
@@ -297,17 +306,13 @@ export function buildReportSectionPacks(input: {
         ]
       : [{ title: t.secHarmonicRecOk, description: t.secHarmonicRecOkDesc }];
 
-  const phaseLines: EqChartLineSpec[] = [
-    { dataKey: 'beforeL1', name: `CH1 ${chartUi.l1}`, stroke: '#c2410c', width: 3 },
-    { dataKey: 'beforeL2', name: `CH1 ${chartUi.l2}`, stroke: '#ea580c', width: 2.75 },
-    { dataKey: 'beforeL3', name: `CH1 ${chartUi.l3}`, stroke: '#f97316', width: 2.5 },
-  ];
+  const phaseLines: EqChartLineSpec[] = buildCh1PhaseLines(chartUi);
 
   const peakLines: EqChartLineSpec[] = ch1Only
-    ? [{ dataKey: 'beforeAvg', name: `${t.ch1Label} avg`, stroke: '#c2410c', width: 3.5 }]
+    ? [{ dataKey: 'beforeAvg', name: `${t.ch1Label} avg`, stroke: EQ_CH1_STROKE.avg, width: EQ_LINE_WIDTH.avg }]
     : [
-        { dataKey: 'beforeAvg', name: `${t.ch1Label} avg`, stroke: '#c2410c', width: 3.5 },
-        { dataKey: 'afterAvg', name: `${t.ch2Label} avg`, stroke: '#1d4ed8', width: 3 },
+        { dataKey: 'beforeAvg', name: `${t.ch1Label} avg`, stroke: EQ_CH1_STROKE.avg, width: EQ_LINE_WIDTH.avg },
+        { dataKey: 'afterAvg', name: `${t.ch2Label} avg`, stroke: EQ_CH2_STROKE.avg, width: EQ_LINE_WIDTH.l2 },
       ];
 
   const geMetrics: GeSolutionMetrics = {
@@ -358,12 +363,8 @@ export function buildReportSectionPacks(input: {
       chartCaption: t.secEnergyChartCaption,
       chartData: energyBarData.length ? energyBarData : chartData,
       chartLines: energyBarData.length
-        ? [{ dataKey: 'value', name: 'kWh', stroke: '#10b981', width: 3 }]
-        : [
-            { dataKey: 'beforeL1', name: `CH1 ${chartUi.l1}`, stroke: '#c2410c', width: 3 },
-            { dataKey: 'beforeL2', name: `CH1 ${chartUi.l2}`, stroke: '#ea580c', width: 2.75 },
-            { dataKey: 'beforeL3', name: `CH1 ${chartUi.l3}`, stroke: '#f97316', width: 2.5 },
-          ],
+        ? [{ dataKey: 'value', name: 'kWh', stroke: '#047857', width: EQ_LINE_WIDTH.metric }]
+        : phaseLines,
       chartUnit: energyBarData.length ? ' kWh' : ' A',
     },
     peak: {
@@ -388,7 +389,7 @@ export function buildReportSectionPacks(input: {
             { label: t.secPfIdeal, value: 1 },
           ]
         : [],
-      ...metricLine('PF', 'value', '#8b5cf6'),
+      ...metricLine('PF', 'value', '#6d28d9'),
     },
     balance: {
       fields: balanceFields,
@@ -413,13 +414,13 @@ export function buildReportSectionPacks(input: {
               { label: chartUi.l3, value: thdVal },
             ]
           : [],
-      ...metricLine('THDI %', 'value', '#d97706', '%'),
+      ...metricLine('THDI %', 'value', '#b45309', '%'),
     },
     equipment: buildEquipmentPack(report, t, geMetrics),
     financial: buildFinancialPack(report, t, geMetrics, locale, currency, money),
     roi: buildRoiPack(report, t, geMetrics, locale, currency, money),
     ai: buildAiPack(report, t),
-    action: buildActionPack(report, t),
+    action: buildActionPack(report, t, locale, currency),
     conclusion: buildConclusionPack(report, t, geMetrics),
   };
 }
@@ -478,7 +479,7 @@ function buildEquipmentPack(
       { label: t.f_mainBreaker, value: riskScoreFromLabel(breaker, t) },
       { label: t.f_transformer, value: riskScoreFromLabel(transformer, t) },
     ],
-    ...metricLine(t.secEquipmentRiskAxis, 'value', '#dc2626'),
+    ...metricLine(t.secEquipmentRiskAxis, 'value', '#b91c1c'),
   };
 }
 
@@ -551,7 +552,7 @@ function buildFinancialPack(
     chartKind: barData.length ? 'line' : 'none',
     chartCaption: fillTpl(t.secFinancialChartCaption, { currency: currency.code }),
     chartData: barData,
-    ...metricLine(currency.code, 'value', '#0d9488', currency.chartUnit),
+    ...metricLine(currency.code, 'value', '#0f766e', currency.chartUnit),
   };
 }
 
@@ -638,7 +639,7 @@ function buildRoiPack(
     chartKind: barData.length ? 'line' : 'none',
     chartCaption: t.secRoiChartCaption,
     chartData: barData,
-    ...metricLine(currency.code, 'value', '#6366f1', currency.chartUnit),
+    ...metricLine(currency.code, 'value', '#4338ca', currency.chartUnit),
   };
 }
 
@@ -683,16 +684,28 @@ function buildAiPack(report: EnergyQualityReport, t: ReportStrings): SectionAnal
       label: `P${rec.priority}`,
       value: Math.max(1, 5 - rec.priority),
     })),
-    ...metricLine(t.priority, 'value', '#059669'),
+    ...metricLine(t.priority, 'value', '#047857'),
   };
 }
 
-function buildActionPack(report: EnergyQualityReport, t: ReportStrings): SectionAnalysisPack {
-  const totalItems = report.actionPlan.reduce((n, b) => n + b.items.length, 0);
+function buildActionPack(
+  report: EnergyQualityReport,
+  t: ReportStrings,
+  locale: EqLocale,
+  currency: ReturnType<typeof reportCurrency>,
+): SectionAnalysisPack {
+  const totalItems = report.actionPlan.reduce((n, b) => n + countActionItems(b.items), 0);
+  const monthlySaving = parseReportMoney(
+    report.financial.find((f) => f.label === t.f_potentialSaving)?.value ?? '',
+  );
+  const outcomeUnit = `${currency.chartUnit}${currency.perMonth}`;
   const insights: TechnicalInsight[] = report.actionPlan.map((block) => ({
     severity: block.horizon === t.immediate ? 'warning' : 'info',
     title: block.horizon,
-    detail: block.items.join(' · '),
+    detail:
+      countActionItems(block.items) > 0
+        ? block.items.filter((item) => item.trim() && item !== '—').join(' · ')
+        : '—',
   }));
   insights.unshift({
     severity: 'info',
@@ -710,13 +723,15 @@ function buildActionPack(report: EnergyQualityReport, t: ReportStrings): Section
       { title: t.secActionRecAssign, description: t.secActionRecAssignDesc },
       { title: t.secActionRecTrack, description: t.secActionRecTrackDesc },
     ],
-    chartKind: 'line',
+    chartKind: 'bar',
     chartCaption: t.secActionChartCaption,
-    chartData: report.actionPlan.map((block, i) => ({
-      label: block.horizon,
-      value: block.items.length,
-    })),
-    ...metricLine(t.secActionTaskAxis, 'value', '#0284c7'),
+    chartData: actionPlanOutcomeChartData({
+      plan: report.actionPlan,
+      monthlySaving,
+      t,
+    }),
+    chartIntegerAxis: false,
+    ...metricLine(t.secActionOutcomeAxis, 'value', '#0369a1', outcomeUnit),
   };
 }
 

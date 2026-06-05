@@ -14,6 +14,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import mysql from 'mysql2/promise';
 import { printWindowsDbHelp, runInWsl, shouldFallbackToWsl } from './lib/wsl-db-fallback.mjs';
+import { METER1_REFERENCE, estimateMeter1PhaseCurrent } from './lib/meter-parameter-import.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -71,18 +72,23 @@ function genPoint(baseTime, idx, deviceId) {
   const noise = () => (Math.random() - 0.5) * 4;
   const seed = deviceId * 0.17 + idx * 0.003;
 
-  const i1 = round(95 * lf + 12 + noise() + Math.sin(seed) * 5, 2);
-  const i2 = round(38 * lf + 8 + noise() + Math.sin(seed + 1) * 3, 2);
-  const i3 = round(35 * lf + 7 + noise() + Math.sin(seed + 2) * 3, 2);
-  const v1 = round(400 + noise() * 0.5, 2);
-  const v2 = round(401 + noise() * 0.5, 2);
-  const v3 = round(399 + noise() * 0.5, 2);
-  // Pre-install meters: CH1 only (before install) — no CH2 / metrics channel
-  const beforePf = round(0.84 + lf * 0.06 + (Math.random() - 0.5) * 0.03, 3);
-  const beforeThd = round(7.5 + (1 - lf) * 3 + Math.random() * 2, 3);
-  const freq = round(50 + (Math.random() - 0.5) * 0.08, 3);
+  const [refI1, refI2, refI3] = estimateMeter1PhaseCurrent();
+  const load = 0.35 + lf * 0.65;
+  const i1 = round(refI1 * load + noise() + Math.sin(seed) * 4, 2);
+  const i2 = round(refI2 * load + noise() + Math.sin(seed + 1) * 3.5, 2);
+  const i3 = round(refI3 * load + noise() + Math.sin(seed + 2) * 3.5, 2);
+  const v1 = round(METER1_REFERENCE.voltageLL[0] + noise() * 0.8, 2);
+  const v2 = round(METER1_REFERENCE.voltageLL[1] + noise() * 0.8, 2);
+  const v3 = round(METER1_REFERENCE.voltageLL[2] + noise() * 0.8, 2);
+  const beforePf = round(METER1_REFERENCE.powerFactor + (Math.random() - 0.5) * 0.015, 3);
+  const beforeThd = round(
+    (METER1_REFERENCE.voltageThd[0] + METER1_REFERENCE.voltageThd[1] + METER1_REFERENCE.voltageThd[2]) / 3 +
+      (Math.random() - 0.5) * 0.2,
+    3,
+  );
+  const freq = round(METER1_REFERENCE.frequency + (Math.random() - 0.5) * 0.06, 3);
 
-  const beforeP = round((Math.sqrt(3) * v1 * (i1 + i2 + i3) / 3 * beforePf) / 1000, 3);
+  const beforeP = round((Math.sqrt(3) * ((v1 + v2 + v3) / 3) * ((i1 + i2 + i3) / 3) * beforePf) / 1000, 3);
   const beforeS = round(beforeP / Math.max(beforePf, 0.01), 3);
   const beforeQ = round(Math.sqrt(Math.max(0, beforeS ** 2 - beforeP ** 2)), 3);
 
@@ -213,21 +219,91 @@ async function backfillEqLinks(conn) {
 }
 
 async function ensureCurrentColumns(conn) {
-  const cols = [
-    ['power_records', 'before_current_L1', 'DECIMAL(10,2) DEFAULT NULL AFTER before_L3'],
-    ['power_records', 'before_current_L2', 'DECIMAL(10,2) DEFAULT NULL AFTER before_current_L1'],
-    ['power_records', 'before_current_L3', 'DECIMAL(10,2) DEFAULT NULL AFTER before_current_L2'],
+  const preinstallExtras = [
+    ['power_records_preinstall', 'before_L1', 'DECIMAL(10,2) DEFAULT NULL', 'record_time'],
+    ['power_records_preinstall', 'before_L2', 'DECIMAL(10,2) DEFAULT NULL', 'before_L1'],
+    ['power_records_preinstall', 'before_L3', 'DECIMAL(10,2) DEFAULT NULL', 'before_L2'],
+    ['power_records_preinstall', 'before_P', 'DECIMAL(12,3) DEFAULT NULL', 'before_current_L3'],
+    ['power_records_preinstall', 'before_Q', 'DECIMAL(12,3) DEFAULT NULL', 'before_P'],
+    ['power_records_preinstall', 'before_S', 'DECIMAL(12,3) DEFAULT NULL', 'before_Q'],
+    ['power_records_preinstall', 'before_PF', 'DECIMAL(6,3) DEFAULT NULL', 'before_S'],
+    ['power_records_preinstall', 'before_THD', 'DECIMAL(8,3) DEFAULT NULL', 'before_PF'],
+    ['power_records_preinstall', 'before_F', 'DECIMAL(8,3) DEFAULT NULL', 'before_THD'],
   ];
-  for (const [table, name, def] of cols) {
+  const currentCols = [
+    ['power_records', 'before_current_L1', 'before_L3'],
+    ['power_records', 'before_current_L2', 'before_current_L1'],
+    ['power_records', 'before_current_L3', 'before_current_L2'],
+    ['power_records_preinstall', 'before_current_L1', 'before_L3'],
+    ['power_records_preinstall', 'before_current_L2', 'before_current_L1'],
+    ['power_records_preinstall', 'before_current_L3', 'before_current_L2'],
+  ];
+
+  async function addColIfMissing(table, name, type, after) {
+    if (!(await tableExists(conn, table))) return;
     const [exists] = await conn.query(
       `SELECT COUNT(*) AS c FROM information_schema.COLUMNS
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
       [table, name],
     );
-    if (!Number(exists[0].c)) {
-      await conn.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${def}`);
-      console.log(`  added ${table}.${name}`);
-    }
+    if (Number(exists[0].c)) return;
+    const [afterExists] = await conn.query(
+      `SELECT COUNT(*) AS c FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+      [table, after],
+    );
+    const afterClause = Number(afterExists[0].c) ? ` AFTER ${after}` : '';
+    await conn.query(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}${afterClause}`);
+    console.log(`  added ${table}.${name}`);
+  }
+
+  for (const [table, name, type, after] of preinstallExtras) {
+    await addColIfMissing(table, name, type, after);
+  }
+  for (const [table, name, after] of currentCols) {
+    await addColIfMissing(table, name, 'DECIMAL(10,2) DEFAULT NULL', after);
+  }
+}
+
+async function configureDevicesForCh1Report(conn) {
+  try {
+    const [cols] = await conn.query(
+      `SELECT COUNT(*) AS c FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'devices' AND COLUMN_NAME = 'record_scope'`,
+    );
+    if (!Number(cols[0].c)) return;
+    await conn.query(
+      `UPDATE devices SET record_scope = 'pre_install'
+       WHERE record_scope IS NULL OR record_scope = '' OR record_scope = 'both'`,
+    );
+    console.log('  devices.record_scope → pre_install (CH1 only)');
+  } catch {
+    /* optional column */
+  }
+}
+
+async function backfillMissingCurrent(conn, table) {
+  if (!(await tableExists(conn, table))) return;
+  const [res] = await conn.query(
+    `UPDATE ${table}
+     SET
+       before_current_L1 = IF(
+         before_current_L1 IS NULL AND before_L1 IS NOT NULL AND before_L1 > 0 AND before_L1 < 50,
+         before_L1, before_current_L1),
+       before_current_L2 = IF(
+         before_current_L2 IS NULL AND before_L2 IS NOT NULL AND before_L2 > 0 AND before_L2 < 50,
+         before_L2, before_current_L2),
+       before_current_L3 = IF(
+         before_current_L3 IS NULL AND before_L3 IS NOT NULL AND before_L3 > 0 AND before_L3 < 50,
+         before_L3, before_current_L3),
+       before_L1 = IF(before_L1 IS NOT NULL AND before_L1 > 0 AND before_L1 < 50, 400.00, before_L1),
+       before_L2 = IF(before_L2 IS NOT NULL AND before_L2 > 0 AND before_L2 < 50, 401.00, before_L2),
+       before_L3 = IF(before_L3 IS NOT NULL AND before_L3 > 0 AND before_L3 < 50, 399.00, before_L3)
+     WHERE (before_current_L1 IS NULL OR before_current_L2 IS NULL OR before_current_L3 IS NULL)
+       AND (before_L1 IS NOT NULL OR before_L2 IS NOT NULL OR before_L3 IS NOT NULL)`,
+  );
+  if (res.affectedRows > 0) {
+    console.log(`  backfilled ${res.affectedRows} rows in ${table} (before_current_*)`);
   }
 }
 
@@ -310,7 +386,7 @@ async function seedPowerHistory(conn, device, table = 'power_records') {
 async function seedEnergySnapshot(conn, deviceId, point) {
   if (!(await tableExists(conn, 'eq_energy_data'))) return;
   const p = point;
-  const voltage = [400, 401.2, 399.5];
+  const voltage = [p.v1, p.v2, p.v3];
   await conn.query(
     `INSERT INTO eq_energy_data (
       device_id, recorded_at,
@@ -359,6 +435,9 @@ async function runSeed(cfg) {
 
     await ensureEqSchema(conn);
     await ensureCurrentColumns(conn);
+    await configureDevicesForCh1Report(conn);
+    await backfillMissingCurrent(conn, 'power_records');
+    await backfillMissingCurrent(conn, 'power_records_preinstall');
     await backfillEqLinks(conn);
 
     let deviceSql = `SELECT deviceID, deviceName, geID, site FROM devices`;

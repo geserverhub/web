@@ -303,7 +303,7 @@ export type ReportStrings = {
   secActionChartCaption: string;
   secActionFieldHorizons: string;
   secActionFieldTasks: string;
-  secActionTaskAxis: string;
+  secActionOutcomeAxis: string;
   secActionInsightOverview: string;
   secActionInsightOverviewDetail: string;
   secActionRecAssign: string;
@@ -648,10 +648,10 @@ const th: ReportStrings = {
   secAiInsightEmpty: 'ยังไม่มีคำแนะนำ',
   secAiInsightEmptyDetail: 'รอข้อมูลมิเตอร์เพื่อสร้างคำแนะนำอัตโนมัติ',
   secAiRecReviewDesc: 'นำคำแนะนำไปทบทวนกับทีมลูกค้าและจัดลำดับดำเนินการ',
-  secActionChartCaption: 'จำนวนงานต่อช่วงเวลาในแผน',
+  secActionChartCaption: 'คาดการณ์ผลลัพธ์ต่อช่วงเวลาในแผน',
   secActionFieldHorizons: 'ช่วงเวลาในแผน',
   secActionFieldTasks: 'งานทั้งหมด',
-  secActionTaskAxis: 'จำนวนงาน',
+  secActionOutcomeAxis: 'ประมาณการประหยัด',
   secActionInsightOverview: 'ภาพรวมแผนดำเนินการ',
   secActionInsightOverviewDetail: 'แบ่ง {count} งานตามระยะทันที/สั้น/กลาง/ยาว',
   secActionRecAssign: 'มอบหมายผู้รับผิดชอบ',
@@ -997,10 +997,10 @@ const en: ReportStrings = {
   secAiInsightEmpty: 'No recommendations yet',
   secAiInsightEmptyDetail: 'Waiting for meter data to generate suggestions',
   secAiRecReviewDesc: 'Review priorities with the customer team',
-  secActionChartCaption: 'Tasks per time horizon',
+  secActionChartCaption: 'Estimated outcome by plan horizon',
   secActionFieldHorizons: 'Plan horizons',
   secActionFieldTasks: 'Total tasks',
-  secActionTaskAxis: 'Tasks',
+  secActionOutcomeAxis: 'Est. savings',
   secActionInsightOverview: 'Action plan overview',
   secActionInsightOverviewDetail: '{count} tasks across immediate/short/medium/long term',
   secActionRecAssign: 'Assign owners',
