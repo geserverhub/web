@@ -97,9 +97,10 @@ body {
   page-break-after: always;
   break-after: page;
   margin-bottom: 0;
-  /* Fill the first printable page (A4 297mm − 11mm top − 18mm bottom ≈ 268mm),
-     kept under that to avoid spilling into a blank page. */
-  min-height: 262mm;
+  /* Fill most of the first printable page (≈268mm) but keep a safety buffer so
+     the bordered card never spills past the bottom edge (browser print margins
+     vary), which would push it onto a blank page. */
+  min-height: 248mm;
   display: flex;
   flex-direction: column;
 }
@@ -107,9 +108,9 @@ body {
 .sheet--toc {
   page-break-after: always;
   break-after: page;
-  margin-bottom: 3mm;
-  /* Fill the printable page (A4 297mm − 14mm top − 18mm bottom ≈ 265mm). */
-  min-height: 260mm;
+  margin-bottom: 0;
+  /* Printable height ≈265mm; keep a buffer to avoid bottom overflow. */
+  min-height: 246mm;
   display: flex;
   flex-direction: column;
 }
