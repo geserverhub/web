@@ -107,11 +107,16 @@ html, body {
 
 /* ── Parameter table ── */
 .param-tbl { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12px; }
+.param-tbl thead { display: table-header-group; }
 .param-tbl th {
-  background: linear-gradient(135deg, #047857, #059669);
-  color: #fff; padding: 8px 10px; text-align: left;
-  font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: .3px;
+  background-color: #047857;
+  background: #047857;
+  color: #fff !important;
+  padding: 8px 10px; text-align: left;
+  font-size: 8pt; font-weight: 800; text-transform: none; letter-spacing: .2px;
   border: 1px solid #047857;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .param-tbl td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
 .param-tbl tr:nth-child(even) td { background: #f9fafb; }
@@ -160,10 +165,14 @@ html, body {
 .data-tbl tfoot { display: table-footer-group; }
 .data-tbl tr { break-inside: avoid; break-after: auto; }
 .data-tbl th {
-  background: linear-gradient(135deg, #047857, #059669);
-  color: #fff; padding: 7px 6px; text-align: left;
-  font-size: 7pt; font-weight: 800; text-transform: uppercase;
+  background-color: #047857;
+  background: #047857;
+  color: #fff !important;
+  padding: 7px 6px; text-align: left;
+  font-size: 7pt; font-weight: 800; text-transform: none; letter-spacing: .1px;
   border: 1px solid #047857;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .data-tbl td { padding: 6px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
 .data-tbl tr:nth-child(even) td { background: #f9fafb; }
@@ -258,6 +267,19 @@ html, body {
 }
 .sec { break-after: avoid; page-break-after: avoid; }
 .warn { border: 1.5px solid #fde68a; border-radius: 8px; padding: 10px 14px; background: #fffbeb; font-size: 8.5pt; color: #92400e; font-weight: 600; margin-bottom: 10px; }
+
+@media print {
+  .param-tbl th,
+  .data-tbl th {
+    /* PDF/print often drops cell backgrounds — use readable dark-on-light headers */
+    background-color: #d1fae5 !important;
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+    border: 1.5px solid #047857 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
 `;
 
 }

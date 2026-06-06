@@ -425,12 +425,14 @@ export function buildCarbonPrintHtml(options: {
 </div>
 
 <table class="param-tbl">
-  <tr><th>${t('พารามิเตอร์', 'Parameter', '파라미터')}</th><th>${t('ค่า', 'Value', '값')}</th><th>${t('หน่วย', 'Unit', '단위')}</th><th>${t('แหล่งอ้างอิง', 'Source', '출처')}</th></tr>
+  <thead><tr><th>${t('พารามิเตอร์', 'Parameter', '파라미터')}</th><th>${t('ค่า', 'Value', '값')}</th><th>${t('หน่วย', 'Unit', '단위')}</th><th>${t('แหล่งอ้างอิง', 'Source', '출처')}</th></tr></thead>
+  <tbody>
   <tr><td>${t('ค่าแฟกเตอร์ปล่อยก๊าซ Thailand Grid', 'Thailand Grid Emission Factor', '태국 그리드 배출 계수')}</td><td><strong>0.5135</strong></td><td>kg CO₂/kWh</td><td>TGO / DEDE 2023</td></tr>
   <tr><td>${t('ราคาอ้างอิง Korea K-ETS', 'Korea K-ETS Reference Price', '한국 K-ETS 참고 가격')}</td><td><strong>₩${krwPrice.toLocaleString()}</strong></td><td>KRW / tCO₂e</td><td>KRX Carbon Market 2024</td></tr>
   <tr><td>${t('ราคาอ้างอิง Thailand T-VER', 'Thailand T-VER Reference Price', '태국 T-VER 참고 가격')}</td><td><strong>฿${thbPrice.toLocaleString()}</strong></td><td>THB / tCO₂e</td><td>TGO Carbon Market 2024</td></tr>
   ${fxRow}
   <tr><td>${t('จำนวนมิเตอร์ที่รายงาน', 'Meters Reported', '보고 미터 수')}</td><td><strong>${perDeviceCards.length}</strong></td><td>${t('เครื่อง', 'devices', '대')}</td><td>GE IoT / power_records</td></tr>
+  </tbody>
 </table>
 
 <div class="two-col">
