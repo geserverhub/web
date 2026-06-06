@@ -99,3 +99,24 @@ SET @sql_cm = IF(@has_cm > 0,
    WHERE cm.deviceID IS NULL OR cm.deviceID <> d.deviceID',
   'SELECT ''carbon_meters sync skipped''');
 PREPARE s_cm FROM @sql_cm; EXECUTE s_cm; DEALLOCATE PREPARE s_cm;
+
+-- CH2 phase-current columns (metrics_current_L1/L2/L3) for MQTT telemetry — idempotent
+SET @c_pr = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'power_records' AND COLUMN_NAME = 'metrics_current_L1');
+SET @sql_pr_mc = IF(@c_pr = 0,
+  'ALTER TABLE power_records
+     ADD COLUMN metrics_current_L1 decimal(10,2) DEFAULT NULL AFTER metrics_L3,
+     ADD COLUMN metrics_current_L2 decimal(10,2) DEFAULT NULL AFTER metrics_current_L1,
+     ADD COLUMN metrics_current_L3 decimal(10,2) DEFAULT NULL AFTER metrics_current_L2',
+  'SELECT ''power_records metrics_current_* exist''');
+PREPARE s_pr_mc FROM @sql_pr_mc; EXECUTE s_pr_mc; DEALLOCATE PREPARE s_pr_mc;
+
+SET @c_pp = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'power_records_preinstall' AND COLUMN_NAME = 'metrics_current_L1');
+SET @sql_pp_mc = IF(@c_pp = 0,
+  'ALTER TABLE power_records_preinstall
+     ADD COLUMN metrics_current_L1 decimal(10,2) DEFAULT NULL,
+     ADD COLUMN metrics_current_L2 decimal(10,2) DEFAULT NULL,
+     ADD COLUMN metrics_current_L3 decimal(10,2) DEFAULT NULL',
+  'SELECT ''preinstall metrics_current_* exist''');
+PREPARE s_pp_mc FROM @sql_pp_mc; EXECUTE s_pp_mc; DEALLOCATE PREPARE s_pp_mc;
