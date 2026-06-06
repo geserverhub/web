@@ -175,7 +175,7 @@ export default function ElectricityRateManager({ site, locale }: Props) {
         const bills = Array.isArray(json.bills) ? json.bills : []
         // Map bills into 12-month structure, defaulting missing months
         const base = buildLast12Months()
-        const byMonth = new Map(bills.map((b: any) => [String(b.billMonth).slice(0, 10), b]))
+        const byMonth = new Map<string, any>(bills.map((b: any) => [String(b.billMonth).slice(0, 10), b]))
         const mapped = base.map((r: any) => {
           const key = String(r.billMonth).slice(0, 10)
           const found = byMonth.get(key)
@@ -223,7 +223,7 @@ export default function ElectricityRateManager({ site, locale }: Props) {
       if (reloadRes.ok && reloadJson.success) {
         const bills = Array.isArray(reloadJson.bills) ? reloadJson.bills : []
         const base = buildLast12Months()
-        const byMonth = new Map(bills.map((b: any) => [String(b.billMonth).slice(0, 10), b]))
+        const byMonth = new Map<string, any>(bills.map((b: any) => [String(b.billMonth).slice(0, 10), b]))
         const mapped = base.map((r: any) => {
           const key = String(r.billMonth).slice(0, 10)
           const found = byMonth.get(key)
