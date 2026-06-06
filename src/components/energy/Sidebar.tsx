@@ -31,6 +31,7 @@ import {
   Link2,
   Waves,
   ClipboardList,
+  Receipt,
 } from "lucide-react";
 import "./energy-sidebar.css";
 
@@ -72,6 +73,7 @@ const menuSections: NavSection[] = [
     sectionKey: "menuEnergyQuality",
     items: [
       { key: "energyQualityMeters", icon: Waves, href: "/energy-dashboard/energy-quality", badge: "live" },
+      { key: "billHistory", icon: Receipt, href: "/energy-dashboard/bill-history" },
       { key: "energyQualityReport", icon: ClipboardList, href: "/energy-dashboard/energy-quality/report" },
     ],
   },
@@ -139,6 +141,11 @@ const sectionFallback: Record<string, Record<string, string>> = {
     th: "ผูกเชื่อมต่อมิเตอร์กับเครื่องประหยัดพลังงาน",
     en: "Bind meters to energy-saving devices",
     ko: "미터-절감장치 연결",
+  },
+  billHistory: {
+    th: "กรอกบิลค่าไฟย้อนหลัง 1 ปี",
+    en: "Historical electricity bills (1 yr)",
+    ko: "최근 1년 전기요금 입력",
   },
 };
 
