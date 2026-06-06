@@ -164,7 +164,8 @@ export default function MonitorPage() {
   const fetchDevicesForCustomer = useCallback(async (customerName: string) => {
     try {
       setDevicesLoading(true);
-      const res = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`);
+      // Show every meter in the database (all sites), not just the selected site.
+      const res = await fetch(`/api/ge-energy/devices-setting?site=all`);
       const json = await res.json();
       if (json.success) {
         const customerDevices = (json.devices as DeviceSettingsRecord[]).filter((d) => d.customerName === customerName);

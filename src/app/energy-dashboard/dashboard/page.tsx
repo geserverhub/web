@@ -164,7 +164,8 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/ge-energy/dashboard-stats?site=${selectedSite}`)
+      // Show every meter in the database (all sites), not just the selected site.
+      const res = await fetch(`/api/ge-energy/dashboard-stats?site=all`)
       const json = await res.json()
       if (json.success) { setData(json.data); setError(null) }
       else setError(json.error || 'Failed to load dashboard data')
@@ -1008,9 +1009,9 @@ export default function DashboardPage() {
           <div className="space-y-1.5">
             {[
               { icon: Monitor,  label: uiCopy.liveMonitor, desc: uiCopy.realTimeData,   href: '/monitor',    cls: 'text-blue-500 bg-blue-50 hover:bg-blue-100' },
-              { icon: BarChart2,label: uiCopy.analytics,    desc: uiCopy.chartsReports, href: '/analytics',  cls: 'text-purple-500 bg-purple-50 hover:bg-purple-100' },
+              { icon: BarChart2,label: uiCopy.analytics,    desc: uiCopy.chartsReports, href: '/energy-dashboard/energy-quality',  cls: 'text-purple-500 bg-purple-50 hover:bg-purple-100' },
               { icon: Server,   label: uiCopy.devices,      desc: uiCopy.allDevices,      href: '/overview',   cls: 'text-teal-500 bg-teal-50 hover:bg-teal-100' },
-              { icon: Settings, label: uiCopy.settings,     desc: uiCopy.systemConfig,    href: '/settings',   cls: 'text-gray-500 bg-gray-50 hover:bg-gray-100' },
+              { icon: Settings, label: uiCopy.settings,     desc: uiCopy.systemConfig,    href: '/devices-setting',   cls: 'text-gray-500 bg-gray-50 hover:bg-gray-100' },
             ].map(item => (
               <button key={item.label} onClick={() => router.push(item.href)}
                 className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-all group text-left">

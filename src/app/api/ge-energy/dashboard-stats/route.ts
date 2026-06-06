@@ -74,11 +74,15 @@ export async function GET(request: NextRequest) {
     const deviceColumns = await getDevicesColumnSet()
     const meterIdCol = resolveMeterIdColumn(deviceColumns)
     const siteExpr = effectiveDeviceSiteSql(meterIdCol, 'd')
+    // site=all → show every meter in the database (no site filter).
+    const isAllSites = String(site).toLowerCase() === 'all'
+    const siteCond = isAllSites ? '1=1' : `${siteExpr} = ?`
+    const siteArgs: string[] = isAllSites ? [] : [safeSite]
 
     // 1. Get total devices count for selected site
     const totalDevicesResult = await queryGe(
-      `SELECT COUNT(*) as count FROM devices d WHERE ${siteExpr} = ?`,
-      [safeSite]
+      `SELECT COUNT(*) as count FROM devices d WHERE ${siteCond}`,
+      [...siteArgs]
     )
     const totalDevices = totalDevicesResult[0]?.count || 0
 
@@ -89,10 +93,10 @@ export async function GET(request: NextRequest) {
       `SELECT SUM(pr.energy_reduction) as total_energy
        FROM power_records pr
        JOIN devices d ON pr.device_id = d.deviceID
-       WHERE ${siteExpr} = ?
+       WHERE ${siteCond}
        AND MONTH(pr.record_time) = MONTH(NOW())
        AND YEAR(pr.record_time) = YEAR(NOW())`,
-      [safeSite]
+      [...siteArgs]
     )
     const energySaved = Math.round(energySavedResult[0]?.total_energy || 0)
 
@@ -271,9 +275,9 @@ export async function GET(request: NextRequest) {
          ORDER BY pp.record_time DESC, pp.id DESC
          LIMIT 1
        )` : `LEFT JOIN power_records p_pre ON 1 = 0`}
-       WHERE ${siteExpr} = ?
+       WHERE ${siteCond}
        ORDER BY record_time DESC, d.deviceID ASC`,
-      [safeSite]
+      [...siteArgs]
     )
 
     // 5. Calculate connection status for each device
