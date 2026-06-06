@@ -291,7 +291,7 @@ export default function MonitorPage() {
         <div className="energy-hero-inner px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">
-            {t('devicesMonitor') || 'Device Monitor'}
+            {t('devicesMonitor') || 'Meter Monitor'}
           </h1>
           <p className="text-sm text-emerald-100 mt-0.5">Real-time electrical measurements</p>
         </div>

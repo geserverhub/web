@@ -2254,7 +2254,7 @@ const translationData = {
     ago: '前',
 
     // Monitor
-    devicesMonitor: '设备监控',
+    devicesMonitor: '电表监控',
     realTimeMonitoring: '实时监控',
 
     // Energy Dashboard
@@ -2579,7 +2579,7 @@ const translationData = {
     ago: 'trước',
 
     // Monitor
-    devicesMonitor: 'Giám sát thiết bị',
+    devicesMonitor: 'Giám sát đồng hồ',
     realTimeMonitoring: 'Giám sát thời gian thực',
 
     // Energy Dashboard
@@ -2865,7 +2865,7 @@ const translationData = {
     ago: 'ที่แล้ว',
 
     // Monitor
-    devicesMonitor: 'ติดตามอุปกรณ์',
+    devicesMonitor: 'ติดตามมิเตอร์',
     realTimeMonitoring: 'ติดตามแบบเรียลไทม์',
 
     // Energy Dashboard
