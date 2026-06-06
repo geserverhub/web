@@ -5,6 +5,7 @@ import { useSite } from "@/lib/SiteContext";
 import { useLocale } from "@/lib/LocaleContext";
 import { formatCurrencyBySite, getCurrencyCodeBySite } from "@/lib/currency";
 import { ChevronDown, RefreshCw, Clock, Wifi, WifiOff, X, Zap, Activity, Gauge, Leaf, BarChart2, TrendingDown } from "lucide-react";
+import { getMonitorPageT, type MonitorPageStrings } from "@/lib/energy/monitor-page-i18n";
 import MonitorCard from "@/components/MonitorCard";
 import {
   AreaChart, Area, BarChart, Bar, LabelList,
@@ -16,6 +17,8 @@ interface Device {
   deviceID: string;
   deviceName: string;
   location: string;
+  beforeMeterNo?: string;
+  metricsMeterNo?: string;
 }
 
 interface Customer {
@@ -26,9 +29,27 @@ interface Customer {
   deviceNames: string[];
 }
 
+interface ChannelMetrics {
+  voltage: (number | null)[];
+  current: (number | null)[];
+  activePower: number | null;
+  reactivePower: number | null;
+  apparentPower: number | null;
+  powerFactor: number | null;
+  thd: number | null;
+  frequency: number | null;
+  energyKwh: number | null;
+}
+
 interface MonitoringMetrics {
   voltageLL: number[];
   current: number[];
+  beforeCurrent?: (number | null)[];
+  afterCurrent?: (number | null)[];
+  channels?: {
+    ch1: ChannelMetrics;
+    ch2: ChannelMetrics;
+  };
   power: number[];
   totalPower: number;
   reactivePower: number;
@@ -48,6 +69,162 @@ interface DeviceSettingsRecord {
   deviceName?: string;
   location?: string;
   customerName?: string;
+  beforeMeterNo?: string;
+  metricsMeterNo?: string;
+}
+
+const voltageLabels = ['L1–L2', 'L2–L3', 'L3–L1'];
+
+function phaseLabels(m: MonitorPageStrings) {
+  return [m.phase1, m.phase2, m.phase3];
+}
+
+function resolveChannelMetrics(
+  monitoringData: MonitoringMetrics,
+  channel: 'ch1' | 'ch2',
+): ChannelMetrics {
+  const fromApi = monitoringData.channels?.[channel];
+  if (fromApi) return fromApi;
+
+  if (channel === 'ch1') {
+    return {
+      voltage: monitoringData.voltageLL ?? [null, null, null],
+      current: monitoringData.beforeCurrent ?? [null, null, null],
+      activePower: null,
+      reactivePower: null,
+      apparentPower: null,
+      powerFactor: null,
+      thd: monitoringData.thdBefore,
+      frequency: monitoringData.frequency ?? null,
+      energyKwh: monitoringData.beforeEnergy ?? null,
+    };
+  }
+
+  return {
+    voltage: [null, null, null],
+    current: monitoringData.afterCurrent ?? monitoringData.current ?? [null, null, null],
+    activePower: monitoringData.totalPower ?? null,
+    reactivePower: monitoringData.reactivePower ?? null,
+    apparentPower: monitoringData.apparentPower ?? null,
+    powerFactor: monitoringData.powerFactor ?? null,
+    thd: monitoringData.thdAfter,
+    frequency: monitoringData.frequency ?? null,
+    energyKwh: monitoringData.energy ?? null,
+  };
+}
+
+function SectionHeader({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className={`p-1.5 rounded-lg ${color}`}>{icon}</div>
+      <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{label}</h2>
+      <div className="flex-1 h-px bg-gray-200" />
+    </div>
+  );
+}
+
+function ChannelMetricsPanel({
+  title,
+  subtitle,
+  meterNo,
+  accent,
+  channel,
+  lastUpdate,
+  showVoltage = true,
+  m,
+}: {
+  title: string;
+  subtitle: string;
+  meterNo?: string | null;
+  accent: 'before' | 'after';
+  channel: ChannelMetrics;
+  lastUpdate: string;
+  showVoltage?: boolean;
+  m: MonitorPageStrings;
+}) {
+  const isBefore = accent === 'before';
+  const headerClass = isBefore
+    ? 'bg-gradient-to-r from-red-600 to-rose-600'
+    : 'bg-gradient-to-r from-emerald-600 to-teal-600';
+  const badgeClass = isBefore ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  const phasePower = channel.activePower != null ? channel.activePower / 3 : null;
+  const phases = phaseLabels(m);
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className={`px-5 py-4 ${headerClass}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">{subtitle}</p>
+            <h3 className="text-lg font-bold text-white mt-0.5">{title}</h3>
+            {meterNo && <p className="text-xs text-white/75 mt-1">#{meterNo}</p>}
+          </div>
+          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${badgeClass}`}>
+            {isBefore ? m.ch1Input : m.ch2Output}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {showVoltage && (
+          <section>
+            <SectionHeader icon={<Zap className="w-4 h-4 text-yellow-600" />} label={m.voltageLineToLine} color="bg-yellow-100" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {voltageLabels.map((label, i) => (
+                <MonitorCard key={label} title={`${m.voltageLineToLine.split(' ')[0]} ${label}`} value={channel.voltage[i]} unit="V" lastUpdate={lastUpdate} color="yellow" icon="voltage" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <SectionHeader icon={<Activity className="w-4 h-4 text-blue-600" />} label={m.current} color="bg-blue-100" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {phases.map((label, i) => (
+              <MonitorCard key={label} title={`${m.current} ${label}`} value={channel.current[i]} unit="A" lastUpdate={lastUpdate} color="blue" icon="current" />
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <SectionHeader icon={<Gauge className="w-4 h-4 text-orange-600" />} label={m.power} color="bg-orange-100" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {phases.map((label) => (
+              <MonitorCard key={label} title={`${m.power} ${label}`} value={phasePower} unit="kW" lastUpdate={lastUpdate} color="orange" icon="power" />
+            ))}
+            <MonitorCard title={m.totalPower} value={channel.activePower} unit="kW" lastUpdate={lastUpdate} color="orange" icon="total" highlight />
+            <MonitorCard title={m.reactivePower} value={channel.reactivePower} unit="kVAr" lastUpdate={lastUpdate} color="purple" icon="power" />
+            <MonitorCard title={m.apparentPower} value={channel.apparentPower} unit="kVA" lastUpdate={lastUpdate} color="purple" icon="power" />
+            <MonitorCard title={m.frequency} value={channel.frequency} unit="Hz" lastUpdate={lastUpdate} color="blue" icon="frequency" />
+            <MonitorCard title={m.powerFactor} value={channel.powerFactor} unit="PF" lastUpdate={lastUpdate} color="green" icon="pf" />
+            <MonitorCard title={m.energy} value={channel.energyKwh} unit="kWh" lastUpdate={lastUpdate} color="green" icon="energy" />
+          </div>
+        </section>
+
+        <section>
+          <SectionHeader icon={<TrendingDown className="w-4 h-4 text-red-600" />} label={m.thd} color="bg-red-100" />
+          <div className={`rounded-xl border-2 p-4 flex items-center gap-4 ${isBefore ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-300'}`}>
+            <div className="shrink-0">
+              <ResponsiveContainer width={80} height={80}>
+                <RadialBarChart innerRadius={28} outerRadius={40} data={[{ value: Math.min(channel.thd ?? 0, 100), fill: isBefore ? '#ef4444' : '#22c55e' }]} startAngle={90} endAngle={-270}>
+                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                  <RadialBar dataKey="value" cornerRadius={4} background={{ fill: isBefore ? '#fee2e2' : '#dcfce7' }} />
+                </RadialBarChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <p className={`text-xs font-semibold uppercase tracking-wide ${isBefore ? 'text-red-400' : 'text-green-500'}`}>
+                {isBefore ? m.thdBefore : m.thdAfter}
+              </p>
+              <p className={`text-2xl font-bold tabular-nums ${isBefore ? 'text-red-700' : 'text-green-700'}`}>
+                {channel.thd != null ? `${channel.thd.toFixed(2)}%` : '—'}
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 type ChartValue = string | number | null | undefined;
@@ -56,6 +233,7 @@ type ChartPoint = Record<string, ChartValue>;
 export default function MonitorPage() {
   const { selectedSite } = useSite();
   const { t, locale } = useLocale();
+  const m = useMemo(() => getMonitorPageT(locale), [locale]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -130,14 +308,14 @@ export default function MonitorPage() {
     return val;
   };
 
-  const metricOptions: [string, string, string][] = [
-    ['voltageL1','Voltage LN1 (V)','V'], ['voltageL2','Voltage LN2 (V)','V'], ['voltageL3','Voltage LN3 (V)','V'],
-    ['currentL1','Current L1 (A)','A'],  ['currentL2','Current L2 (A)','A'],  ['currentL3','Current L3 (A)','A'],
-    ['totalPower','Active Power (kW)','kW'], ['reactivePower','Reactive Power (kVAr)','kVAr'], ['apparentPower','Apparent Power (kVA)','kVA'],
-    ['powerFactor','Power Factor',''], ['frequency','Frequency (Hz)','Hz'],
-    ['energy','Energy (kWh)','kWh'], ['energySaved','Energy Saved (kWh)','kWh'],
-    ['thdBefore','THD Before (%)','%'], ['thdAfter','THD After (%)','%'],
-  ];
+  const metricOptions: [string, string, string][] = useMemo(() => [
+    ['voltageL1', m.voltageL1, 'V'], ['voltageL2', m.voltageL2, 'V'], ['voltageL3', m.voltageL3, 'V'],
+    ['currentL1', m.currentL1, 'A'],  ['currentL2', m.currentL2, 'A'],  ['currentL3', m.currentL3, 'A'],
+    ['totalPower', m.activePowerKw, 'kW'], ['reactivePower', m.reactivePowerKvar, 'kVAr'], ['apparentPower', m.apparentPowerKva, 'kVA'],
+    ['powerFactor', m.powerFactor, ''], ['frequency', m.frequencyHz, 'Hz'],
+    ['energy', m.energyKwh, 'kWh'], ['energySaved', m.energySavedKwh, 'kWh'],
+    ['thdBefore', m.thdBeforePct, '%'], ['thdAfter', m.thdAfterPct, '%'],
+  ], [m]);
   const activeMetric = metricOptions.find(([key]) => key === trendMetric) ?? metricOptions[0];
   const currencyCode = getCurrencyCodeBySite(selectedSite, locale);
 
@@ -172,7 +350,9 @@ export default function MonitorPage() {
         setDevices(customerDevices.map((d) => ({
           deviceID: String(d.deviceID ?? ''),
           deviceName: d.deviceName ?? '',
-          location: d.location ?? ''
+          location: d.location ?? '',
+          beforeMeterNo: d.beforeMeterNo,
+          metricsMeterNo: d.metricsMeterNo,
         })));
         if (customerDevices.length === 1 && customerDevices[0]?.deviceID != null) {
           setSelectedDevice(String(customerDevices[0].deviceID));
@@ -198,11 +378,11 @@ export default function MonitorPage() {
         setMonitoringData(json.data.metrics);
         setLastUpdate(json.data.lastUpdate);
       } else {
-        setError(json.error || 'Failed to load monitoring data');
+        setError(json.error || m.failedLoad);
         setMonitoringData(null);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Network error');
+      setError(err instanceof Error ? err.message : m.networkError);
       setMonitoringData(null);
     } finally {
       setLoading(false);
@@ -275,14 +455,8 @@ export default function MonitorPage() {
   }, [fetchEnergyHistory, fetchHistData, fetchHistory, fetchMonitoringData, selectedDevice]);
 
   const currentDevice = devices.find(d => d.deviceID === selectedDevice);
-
-  const SectionHeader = ({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) => (
-    <div className={`flex items-center gap-2 mb-3`}>
-      <div className={`p-1.5 rounded-lg ${color}`}>{icon}</div>
-      <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{label}</h2>
-      <div className="flex-1 h-px bg-gray-200" />
-    </div>
-  );
+  const ch1Metrics = monitoringData ? resolveChannelMetrics(monitoringData, 'ch1') : null;
+  const ch2Metrics = monitoringData ? resolveChannelMetrics(monitoringData, 'ch2') : null;
 
   return (
     <div className="energy-page space-y-5">
@@ -291,15 +465,15 @@ export default function MonitorPage() {
         <div className="energy-hero-inner px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">
-            {t('devicesMonitor') || 'Meter Monitor'}
+            {t('devicesMonitor') || 'Monitoring'}
           </h1>
-          <p className="text-sm text-emerald-100 mt-0.5">Real-time electrical measurements</p>
+          <p className="text-sm text-emerald-100 mt-0.5">{m.realTimeMeasurements}</p>
         </div>
 
         {lastUpdate && (
           <div className="flex items-center gap-2 bg-white/95 rounded-lg px-3 py-2 shadow-sm border border-emerald-100">
             {isLive
-              ? <><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /><span className="text-xs text-green-600 font-medium">Live</span></>
+              ? <><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /><span className="text-xs text-green-600 font-medium">{m.live}</span></>
               : <WifiOff className="w-4 h-4 text-gray-400" />
             }
             <Clock className="w-3.5 h-3.5 text-gray-400" />
@@ -321,7 +495,7 @@ export default function MonitorPage() {
             >
               <Activity className="w-4 h-4 text-green-500 shrink-0" />
               <span className="flex-1 text-sm font-medium text-gray-700 text-left">
-                {selectedCustomer || (customersLoading ? "Loading…" : "Select Customer")}
+                {selectedCustomer || (customersLoading ? m.loading : m.selectCustomer)}
               </span>
               {selectedCustomer && !customersLoading && (
                 <X
@@ -347,7 +521,7 @@ export default function MonitorPage() {
                     }`}
                   >
                     <p className="text-sm font-semibold">{customer.customerName}</p>
-                    <p className="text-xs text-gray-400">{customer.deviceCount} device{customer.deviceCount > 1 ? 's' : ''}</p>
+                    <p className="text-xs text-gray-400">{customer.deviceCount} {customer.deviceCount > 1 ? m.devicesCount : m.deviceCount}</p>
                   </button>
                 ))}
               </div>
@@ -364,7 +538,7 @@ export default function MonitorPage() {
               >
                 <Wifi className="w-4 h-4 text-blue-500 shrink-0" />
                 <span className="flex-1 text-sm font-medium text-gray-700 text-left">
-                  {devices.find(d => d.deviceID === selectedDevice)?.deviceName ?? (devicesLoading ? "Loading…" : "Select Device")}
+                  {devices.find(d => d.deviceID === selectedDevice)?.deviceName ?? (devicesLoading ? m.loading : m.selectDevice)}
                 </span>
                 {selectedDevice && !devicesLoading && (
                   <X
@@ -386,7 +560,7 @@ export default function MonitorPage() {
                       }`}
                     >
                       <p className="text-sm font-semibold">{device.deviceName}</p>
-                      <p className="text-xs text-gray-400">{device.location || 'No location'}</p>
+                      <p className="text-xs text-gray-400">{device.location || m.noLocation}</p>
                     </button>
                   ))}
                 </div>
@@ -424,7 +598,7 @@ export default function MonitorPage() {
         <div className="flex-1 flex items-center justify-center py-24">
           <div className="text-center">
             <RefreshCw className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">Loading monitoring data…</p>
+            <p className="text-gray-500 text-sm">{m.loadingMonitoring}</p>
           </div>
         </div>
       )}
@@ -436,8 +610,8 @@ export default function MonitorPage() {
             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Wifi className="w-8 h-8 text-blue-400" />
             </div>
-            <p className="text-gray-700 font-semibold mb-1">No device selected</p>
-            <p className="text-gray-400 text-sm">Choose a device from the dropdown above to view live data</p>
+            <p className="text-gray-700 font-semibold mb-1">{m.noDeviceSelected}</p>
+            <p className="text-gray-400 text-sm">{m.noDeviceSelectedHint}</p>
           </div>
         </div>
       )}
@@ -478,7 +652,7 @@ export default function MonitorPage() {
                   className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50"
                 >
                   <span className="w-2 h-2 rounded-full border-2 border-gray-400" />
-                  <span className="capitalize">{period}</span>
+                  <span className="capitalize">{period === 'minute' ? m.minute : period === 'hour' ? m.hour : m.day}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                 </button>
                 {showPeriodMenu && (
@@ -486,7 +660,7 @@ export default function MonitorPage() {
                     {(['minute','hour','day'] as const).map(p => (
                       <button key={p} onClick={() => { setPeriod(p); setShowPeriodMenu(false); fetchHistory(p); }}
                         className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 capitalize ${period===p ? 'text-green-600 font-semibold' : 'text-gray-700'}`}>
-                        {p}
+                        {p === 'minute' ? m.minute : p === 'hour' ? m.hour : m.day}
                       </button>
                     ))}
                   </div>
@@ -503,18 +677,18 @@ export default function MonitorPage() {
               <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
                 <input type="checkbox" checked={showLimits} onChange={e => setShowLimits(e.target.checked)}
                   className="w-3.5 h-3.5 accent-green-500" />
-                Show Limits
+                {m.showLimits}
               </label>
 
               {/* Plot */}
               <button onClick={() => fetchHistory()}
                 className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-md flex items-center gap-1.5">
-                <BarChart2 className="w-3.5 h-3.5" /> Plot
+                <BarChart2 className="w-3.5 h-3.5" /> {m.plot}
               </button>
 
               {/* Export placeholder */}
               <button className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-md ml-auto">
-                ⬇ Export
+                ⬇ {m.export}
               </button>
             </div>
 
@@ -522,27 +696,27 @@ export default function MonitorPage() {
             <div className="px-4 pb-4 pt-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <BarChart2 className="w-4 h-4 text-gray-400" /> Trend Chart
-                  {historyLoading && <span className="text-xs text-gray-400 animate-pulse ml-1">Loading…</span>}
+                  <BarChart2 className="w-4 h-4 text-gray-400" /> {m.trendChart}
+                  {historyLoading && <span className="text-xs text-gray-400 animate-pulse ml-1">{m.loadingChart}</span>}
                 </span>
                 {/* zoom icon row (decorative, matching reference) */}
                 <div className="flex items-center gap-2 text-gray-400">
-                  <button title="Zoom In"  className="hover:text-gray-600 text-base leading-none">🔍︎</button>
-                  <button title="Zoom Out" className="hover:text-gray-600 text-base leading-none">🔎︎</button>
-                  <button title="Pan"      className="hover:text-gray-600 text-base leading-none">↕︎</button>
-                  <button title="Reset"    className="hover:text-gray-600 text-base leading-none">⌂︎</button>
+                  <button title={m.zoomIn}  className="hover:text-gray-600 text-base leading-none">🔍︎</button>
+                  <button title={m.zoomOut} className="hover:text-gray-600 text-base leading-none">🔎︎</button>
+                  <button title={m.pan}      className="hover:text-gray-600 text-base leading-none">↕︎</button>
+                  <button title={m.reset}    className="hover:text-gray-600 text-base leading-none">⌂︎</button>
                 </div>
               </div>
               {historyLoading ? (
                 <div className="flex items-center justify-center h-52 gap-2 text-gray-400 text-sm">
                   <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                  Loading chart data…
+                  {m.loadingChart}
                 </div>
               ) : history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-52 text-gray-400 text-sm gap-2">
                   <BarChart2 className="w-8 h-8 opacity-30" />
-                  <span>ไม่พบข้อมูลในช่วงวันที่เลือก</span>
-                  <span className="text-xs">ลองเปลี่ยน date range แล้วกด Plot</span>
+                  <span>{m.noDataDateRange}</span>
+                  <span className="text-xs">{m.changeDatePlot}</span>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
@@ -589,8 +763,8 @@ export default function MonitorPage() {
                     />
                     {showLimits && trendMetric.startsWith('voltage') && (
                       <>
-                        <Area type="monotone" dataKey={() => 240} name="Upper (240V)" stroke="#ef444488" fill="none" strokeDasharray="5 3" strokeWidth={1} dot={false} />
-                        <Area type="monotone" dataKey={() => 210} name="Lower (210V)" stroke="#f9731688" fill="none" strokeDasharray="5 3" strokeWidth={1} dot={false} />
+                        <Area type="monotone" dataKey={() => 240} name={m.upperLimit} stroke="#ef444488" fill="none" strokeDasharray="5 3" strokeWidth={1} dot={false} />
+                        <Area type="monotone" dataKey={() => 210} name={m.lowerLimit} stroke="#f9731688" fill="none" strokeDasharray="5 3" strokeWidth={1} dot={false} />
                       </>
                     )}
                   </AreaChart>
@@ -603,10 +777,10 @@ export default function MonitorPage() {
           {(() => {
             const ZoomIcons = () => (
               <div className="flex items-center gap-1.5 text-gray-400 text-sm">
-                <button title="Zoom In"  className="hover:text-gray-600">🔍︎</button>
-                <button title="Zoom Out" className="hover:text-gray-600">🔎︎</button>
-                <button title="Pan"      className="hover:text-gray-600">↕︎</button>
-                <button title="Reset"    className="hover:text-gray-600">⌂︎</button>
+                <button title={m.zoomIn}  className="hover:text-gray-600">🔍︎</button>
+                <button title={m.zoomOut} className="hover:text-gray-600">🔎︎</button>
+                <button title={m.pan}      className="hover:text-gray-600">↕︎</button>
+                <button title={m.reset}    className="hover:text-gray-600">⌂︎</button>
               </div>
             );
             return (
@@ -616,24 +790,24 @@ export default function MonitorPage() {
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 flex-wrap">
                     <button className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white hover:bg-gray-50">
-                      📅 Day <ChevronDown className="w-3 h-3" />
+                      📅 {m.day} <ChevronDown className="w-3 h-3" />
                     </button>
                     <input type="date" value={energyDate}
                       onChange={e => { setEnergyDate(e.target.value); fetchEnergyHistory(e.target.value); }}
                       className="px-2 py-1.5 border border-gray-300 rounded-md text-xs" />
-                    <button className="px-2.5 py-1.5 border border-green-500 text-green-600 text-xs rounded-md ml-auto hover:bg-green-50">⬇ Export</button>
+                    <button className="px-2.5 py-1.5 border border-green-500 text-green-600 text-xs rounded-md ml-auto hover:bg-green-50">⬇ {m.export}</button>
                   </div>
                   <div className="px-4 pb-4 pt-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-sm bg-teal-600 inline-block" />
-                        Energy Trend (KWH)
-                        {energyLoading && <span className="text-xs text-gray-400 animate-pulse ml-1">Loading…</span>}
+                        {m.energyTrendKwh}
+                        {energyLoading && <span className="text-xs text-gray-400 animate-pulse ml-1">{m.loadingChart}</span>}
                       </span>
                       <ZoomIcons />
                     </div>
                     {energyHistory.length === 0 ? (
-                      <div className="flex items-center justify-center h-52 text-gray-400 text-sm">ไม่มีข้อมูลในวันที่เลือก</div>
+                      <div className="flex items-center justify-center h-52 text-gray-400 text-sm">{m.noDataSelectedDate}</div>
                     ) : (
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={energyHistory} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
@@ -641,15 +815,15 @@ export default function MonitorPage() {
                           <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false}
                             tickFormatter={formatXTick} interval="preserveStartEnd" />
                           <YAxis tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false} width={36}
-                            label={{ value: 'Energy Usage', angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
+                            label={{ value: m.energyUsage, angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
                           <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
                             formatter={(v: number | string, n: string) => [`${Number(v).toFixed(2)} kWh`, n]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
-                          <Bar dataKey="offPeak" name="OFF PEAK" fill="#0f766e" radius={[3,3,0,0]} maxBarSize={28}>
+                          <Bar dataKey="offPeak" name={m.offPeak} fill="#0f766e" radius={[3,3,0,0]} maxBarSize={28}>
                             <LabelList dataKey="offPeak" position="top" style={{ fontSize: 8, fill: '#0f766e' }}
                               formatter={(v: number | string) => Number(v) > 0 ? Number(v).toFixed(1) : ''} />
                           </Bar>
-                          <Bar dataKey="onPeak" name="ON PEAK" fill="#fca5a5" radius={[3,3,0,0]} maxBarSize={28}>
+                          <Bar dataKey="onPeak" name={m.onPeak} fill="#fca5a5" radius={[3,3,0,0]} maxBarSize={28}>
                             <LabelList dataKey="onPeak" position="top" style={{ fontSize: 8, fill: '#ef4444' }}
                               formatter={(v: number | string) => Number(v) > 0 ? Number(v).toFixed(1) : ''} />
                           </Bar>
@@ -663,23 +837,23 @@ export default function MonitorPage() {
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 flex-wrap">
                     <button className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white hover:bg-gray-50">
-                      📅 Day <ChevronDown className="w-3 h-3" />
+                      📅 {m.day} <ChevronDown className="w-3 h-3" />
                     </button>
                     <input type="date" value={energyDate}
                       onChange={e => { setEnergyDate(e.target.value); fetchEnergyHistory(e.target.value); }}
                       className="px-2 py-1.5 border border-gray-300 rounded-md text-xs" />
-                    <button className="px-2.5 py-1.5 border border-green-500 text-green-600 text-xs rounded-md ml-auto hover:bg-green-50">⬇ Export</button>
+                    <button className="px-2.5 py-1.5 border border-green-500 text-green-600 text-xs rounded-md ml-auto hover:bg-green-50">⬇ {m.export}</button>
                   </div>
                   <div className="px-4 pb-4 pt-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-sm bg-teal-600 inline-block" />
-                        {`Energy Cost (${currencyCode})`}
+                        {`${m.energyCost} (${currencyCode})`}
                       </span>
                       <ZoomIcons />
                     </div>
                     {energyHistory.length === 0 ? (
-                      <div className="flex items-center justify-center h-52 text-gray-400 text-sm">ไม่มีข้อมูลในวันที่เลือก</div>
+                      <div className="flex items-center justify-center h-52 text-gray-400 text-sm">{m.noDataSelectedDate}</div>
                     ) : (
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={energyHistory} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
@@ -687,18 +861,18 @@ export default function MonitorPage() {
                           <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false}
                             tickFormatter={formatXTick} interval="preserveStartEnd" />
                           <YAxis tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false} width={40}
-                            label={{ value: `Energy Cost (${currencyCode})`, angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
+                            label={{ value: `${m.energyCost} (${currencyCode})`, angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
                           <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
                             formatter={(v: number | string, n: string) => [
                               formatCurrencyBySite(Number(v), selectedSite, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                               n,
                             ]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
-                          <Bar dataKey="costOffPeak" name="OFF PEAK" fill="#0f766e" radius={[3,3,0,0]} maxBarSize={28}>
+                          <Bar dataKey="costOffPeak" name={m.offPeak} fill="#0f766e" radius={[3,3,0,0]} maxBarSize={28}>
                             <LabelList dataKey="costOffPeak" position="top" style={{ fontSize: 8, fill: '#0f766e' }}
                               formatter={(v: number | string) => Number(v) > 0 ? Number(v).toFixed(1) : ''} />
                           </Bar>
-                          <Bar dataKey="costOnPeak" name="ON PEAK" fill="#fca5a5" radius={[3,3,0,0]} maxBarSize={28}>
+                          <Bar dataKey="costOnPeak" name={m.onPeak} fill="#fca5a5" radius={[3,3,0,0]} maxBarSize={28}>
                             <LabelList dataKey="costOnPeak" position="top" style={{ fontSize: 8, fill: '#ef4444' }}
                               formatter={(v: number | string) => Number(v) > 0 ? Number(v).toFixed(1) : ''} />
                           </Bar>
@@ -718,7 +892,7 @@ export default function MonitorPage() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 flex-wrap">
                 <button className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-300 rounded-md text-xs bg-white hover:bg-gray-50">
-                  📅 Hour <ChevronDown className="w-3 h-3" />
+                  📅 {m.hour} <ChevronDown className="w-3 h-3" />
                 </button>
                 <input type="date" value={histFromDate}
                   onChange={e => { setHistFromDate(e.target.value); fetchHistData(e.target.value, histToDate); }}
@@ -726,19 +900,19 @@ export default function MonitorPage() {
                 <input type="date" value={histToDate}
                   onChange={e => { setHistToDate(e.target.value); fetchHistData(histFromDate, e.target.value); }}
                   className="px-2 py-1.5 border border-gray-300 rounded-md text-xs" />
-                <button className="px-2.5 py-1.5 border border-green-500 text-green-600 text-xs rounded-md ml-auto hover:bg-green-50">⬇ Export</button>
+                <button className="px-2.5 py-1.5 border border-green-500 text-green-600 text-xs rounded-md ml-auto hover:bg-green-50">⬇ {m.export}</button>
               </div>
               <div className="px-4 pb-4 pt-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-sm bg-orange-400 inline-block" />
-                    ENERGY HISTORICAL (KWH)
+                    {m.energyHistoricalKwh}
                   </span>
                   <div className="flex items-center gap-1.5 text-gray-400 text-sm">
-                    <button title="Zoom In"  className="hover:text-gray-600">🔍︎</button>
-                    <button title="Zoom Out" className="hover:text-gray-600">🔎︎</button>
-                    <button title="Pan"      className="hover:text-gray-600">↕︎</button>
-                    <button title="Reset"    className="hover:text-gray-600">⌂︎</button>
+                    <button title={m.zoomIn}  className="hover:text-gray-600">🔍︎</button>
+                    <button title={m.zoomOut} className="hover:text-gray-600">🔎︎</button>
+                    <button title={m.pan}      className="hover:text-gray-600">↕︎</button>
+                    <button title={m.reset}    className="hover:text-gray-600">⌂︎</button>
                   </div>
                 </div>
                 {histDataLoading ? (
@@ -749,7 +923,7 @@ export default function MonitorPage() {
                     </svg>
                   </div>
                 ) : histData.length === 0 ? (
-                  <div className="flex items-center justify-center h-52 text-gray-400 text-sm">ไม่มีข้อมูลในช่วงวันที่เลือก</div>
+                  <div className="flex items-center justify-center h-52 text-gray-400 text-sm">{m.noDataDateRange}</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={240}>
                     <AreaChart data={histData} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
@@ -763,12 +937,12 @@ export default function MonitorPage() {
                       <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false}
                         tickFormatter={formatXTick} interval="preserveStartEnd" />
                       <YAxis tick={{ fontSize: 9, fill: '#000' }} axisLine={false} tickLine={false} width={36}
-                        label={{ value: 'Energy (KwH)', angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
+                        label={{ value: m.energyAxisKwH, angle: -90, position: 'insideLeft', fontSize: 9, fill: '#000', dx: -2 }} />
                       <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
-                        formatter={(v: number | string) => [`${Number(v).toFixed(2)} kWh`, 'Energy']}
+                        formatter={(v: number | string) => [`${Number(v).toFixed(2)} kWh`, m.energy]}
                         labelFormatter={(val) => `🕐 ${val}`} />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Area type="monotone" dataKey="energy" name="Energy (KWH)"
+                      <Area type="monotone" dataKey="energy" name={m.energyKwh}
                         stroke="#f97316" fill="url(#energyHistGrad)" strokeWidth={2} dot={false}
                         activeDot={{ r: 4, fill: '#f97316', strokeWidth: 0 }} />
                     </AreaChart>
@@ -781,7 +955,7 @@ export default function MonitorPage() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 flex-wrap">
                 <span className="text-sm font-bold text-gray-700 flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 bg-gray-400 inline-block rounded-sm" /> EVENT VIEWER
+                  <span className="w-2.5 h-2.5 bg-gray-400 inline-block rounded-sm" /> {m.eventViewer}
                 </span>
                 <div className="ml-auto flex items-center gap-2">
                   <input type="date" value={evFromDate} onChange={e => setEvFromDate(e.target.value)}
@@ -792,34 +966,34 @@ export default function MonitorPage() {
               </div>
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
-                  <span className="text-sm text-gray-600">Show</span>
+                  <span className="text-sm text-gray-600">{m.show}</span>
                   <input type="number" defaultValue={8} className="w-14 px-2 py-1 border border-gray-300 rounded text-sm" />
-                  <span className="text-sm text-gray-600">entries</span>
+                  <span className="text-sm text-gray-600">{m.entries}</span>
                   <select className="px-2 py-1 border border-gray-300 rounded text-sm ml-auto">
-                    <option>All Types</option>
-                    <option>Alert</option>
-                    <option>Warning</option>
-                    <option>Info</option>
+                    <option>{m.allTypes}</option>
+                    <option>{m.alert}</option>
+                    <option>{m.warning}</option>
+                    <option>{m.info}</option>
                   </select>
-                  <input type="search" placeholder="Search…" className="px-3 py-1 border border-gray-300 rounded text-sm w-32" />
+                  <input type="search" placeholder={m.search} className="px-3 py-1 border border-gray-300 rounded text-sm w-32" />
                 </div>
                 <div className="overflow-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        {['Date','Data','Type','Message','Status','Actions'].map(h => (
+                        {[m.colDate, m.colData, m.colType, m.colMessage, m.colStatus, m.colActions].map(h => (
                           <th key={h} className="text-left py-2 px-2 text-gray-500 font-semibold">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-gray-400">No data available in table</td>
+                        <td colSpan={6} className="py-8 text-center text-gray-400">{m.noTableData}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <p className="text-xs text-gray-400 mt-3">Showing 0 to 0 of 0 entries</p>
+                <p className="text-xs text-gray-400 mt-3">{m.showingEntries}</p>
               </div>
             </div>
           </div>
@@ -829,142 +1003,55 @@ export default function MonitorPage() {
 
 
 
-      {/* ── Metric Grid ── */}
-      {monitoringData && selectedDevice && (
+      {/* ── Dual Meter Panels (CH1 Before + CH2 After) ── */}
+      {monitoringData && selectedDevice && ch1Metrics && ch2Metrics && (
         <div className="space-y-6">
-
-          {/* Voltage */}
-          <section>
-            <SectionHeader
-              icon={<Zap className="w-4 h-4 text-yellow-600" />}
-              label="Voltage (Line-to-Line)"
-              color="bg-yellow-100"
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <ChannelMetricsPanel
+              title={m.meterBefore}
+              subtitle={m.beforeGeInstall}
+              meterNo={currentDevice?.beforeMeterNo}
+              accent="before"
+              channel={ch1Metrics}
+              lastUpdate={lastUpdate}
+              m={m}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {["L1–L2", "L2–L3", "L3–L1"].map((label, i) => (
-                <MonitorCard key={i} title={`Voltage ${label}`} value={monitoringData.voltageLL[i]} unit="V" lastUpdate={lastUpdate} color="yellow" icon="voltage" />
-              ))}
-            </div>
-          </section>
-
-          {/* Current */}
-          <section>
-            <SectionHeader
-              icon={<Activity className="w-4 h-4 text-blue-600" />}
-              label="Current"
-              color="bg-blue-100"
+            <ChannelMetricsPanel
+              title={m.meterAfter}
+              subtitle={m.afterGeInstall}
+              meterNo={currentDevice?.metricsMeterNo}
+              accent="after"
+              channel={ch2Metrics}
+              lastUpdate={lastUpdate}
+              showVoltage={false}
+              m={m}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {["Phase 1", "Phase 2", "Phase 3"].map((label, i) => (
-                <MonitorCard key={i} title={`Current ${label}`} value={monitoringData.current[i]} unit="A" lastUpdate={lastUpdate} color="blue" icon="current" />
-              ))}
-            </div>
-          </section>
+          </div>
 
-          {/* Power */}
-          <section>
-            <SectionHeader
-              icon={<Gauge className="w-4 h-4 text-orange-600" />}
-              label="Power"
-              color="bg-orange-100"
-            />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {["Phase 1", "Phase 2", "Phase 3"].map((label, i) => (
-                <MonitorCard key={i} title={`Power ${label}`} value={monitoringData.power[i]} unit="kW" lastUpdate={lastUpdate} color="orange" icon="power" />
-              ))}
-              <MonitorCard title="Total Power" value={monitoringData.totalPower} unit="kW" lastUpdate={lastUpdate} color="orange" icon="total" highlight />
-              <MonitorCard title="Reactive Power" value={monitoringData.reactivePower} unit="kVAr" lastUpdate={lastUpdate} color="purple" icon="power" />
-              <MonitorCard title="Apparent Power" value={monitoringData.apparentPower} unit="kVA" lastUpdate={lastUpdate} color="purple" icon="power" />
-              <MonitorCard title="Frequency" value={monitoringData.frequency} unit="Hz" lastUpdate={lastUpdate} color="blue" icon="frequency" />
-              <MonitorCard title="Power Factor" value={monitoringData.powerFactor} unit="PF" lastUpdate={lastUpdate} color="green" icon="pf" />
-            </div>
-          </section>
-
-          {/* THD */}
-          <section>
-            <SectionHeader
-              icon={<TrendingDown className="w-4 h-4 text-red-600" />}
-              label="Total Harmonic Distortion (THD)"
-              color="bg-red-100"
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Before card */}
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center gap-4">
-                <div className="shrink-0">
-                  <ResponsiveContainer width={80} height={80}>
-                    <RadialBarChart
-                      innerRadius={28} outerRadius={40}
-                      data={[{ value: Math.min(monitoringData.thdBefore ?? 0, 100), fill: '#ef4444' }]}
-                      startAngle={90} endAngle={-270}
-                    >
-                      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                      <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#fee2e2' }} />
-                    </RadialBarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-red-400 uppercase tracking-wide">THD Before</p>
-                  <p className="text-2xl font-bold text-red-700 tabular-nums">
-                    {monitoringData.thdBefore != null ? `${monitoringData.thdBefore.toFixed(2)}%` : '—'}
-                  </p>
-                  <p className="text-xs text-red-500 mt-0.5">Before GE</p>
-                </div>
+          {(monitoringData.thdBefore != null && monitoringData.thdAfter != null && monitoringData.thdBefore > 0) && (
+            <section className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center gap-4 max-w-md">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                <TrendingDown className="w-8 h-8 text-blue-600" />
               </div>
-
-              {/* After card */}
-              <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 flex items-center gap-4">
-                <div className="shrink-0">
-                  <ResponsiveContainer width={80} height={80}>
-                    <RadialBarChart
-                      innerRadius={28} outerRadius={40}
-                      data={[{ value: Math.min(monitoringData.thdAfter ?? 0, 100), fill: '#22c55e' }]}
-                      startAngle={90} endAngle={-270}
-                    >
-                      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                      <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#dcfce7' }} />
-                    </RadialBarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-green-500 uppercase tracking-wide">THD After</p>
-                  <p className="text-2xl font-bold text-green-700 tabular-nums">
-                    {monitoringData.thdAfter != null ? `${monitoringData.thdAfter.toFixed(2)}%` : '—'}
-                  </p>
-                  <p className="text-xs text-green-500 mt-0.5">With GE</p>
-                </div>
+              <div>
+                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide">{m.thdReduction}</p>
+                <p className="text-2xl font-bold text-blue-700 tabular-nums">
+                  {(((monitoringData.thdBefore - monitoringData.thdAfter) / monitoringData.thdBefore) * 100).toFixed(1)}%
+                </p>
+                <p className="text-xs text-blue-500 mt-0.5">
+                  ↓ {(monitoringData.thdBefore - monitoringData.thdAfter).toFixed(2)} pp
+                </p>
               </div>
+            </section>
+          )}
 
-              {/* Reduction card */}
-              {monitoringData.thdBefore != null && monitoringData.thdAfter != null && monitoringData.thdBefore > 0 && (
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center gap-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                    <TrendingDown className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide">THD Reduction</p>
-                    <p className="text-2xl font-bold text-blue-700 tabular-nums">
-                      {(((monitoringData.thdBefore - monitoringData.thdAfter) / monitoringData.thdBefore) * 100).toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-blue-500 mt-0.5">
-                      ↓ {(monitoringData.thdBefore - monitoringData.thdAfter).toFixed(2)} pp
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Energy & Savings */}
           <section>
-            <SectionHeader
-              icon={<Leaf className="w-4 h-4 text-green-600" />}
-              label="Energy & Savings"
-              color="bg-green-100"
-            />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              <MonitorCard title="Energy" value={monitoringData.energy} unit="kWh" lastUpdate={lastUpdate} color="green" icon="energy" />
-              <MonitorCard title="Energy Saved" value={monitoringData.energySaved} unit="kWh" lastUpdate={lastUpdate} color="green" icon="energy" highlight />
-              <MonitorCard title="CO₂ Saved" value={monitoringData.co2Saved} unit="kg" lastUpdate={lastUpdate} color="green" icon="co2" highlight />
+            <SectionHeader icon={<Leaf className="w-4 h-4 text-green-600" />} label={m.energyAndSavings} color="bg-green-100" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <MonitorCard title={m.ch1EnergyBefore} value={ch1Metrics.energyKwh} unit="kWh" lastUpdate={lastUpdate} color="orange" icon="energy" />
+              <MonitorCard title={m.ch2EnergyAfter} value={ch2Metrics.energyKwh} unit="kWh" lastUpdate={lastUpdate} color="green" icon="energy" />
+              <MonitorCard title={m.energySaved} value={monitoringData.energySaved} unit="kWh" lastUpdate={lastUpdate} color="green" icon="energy" highlight />
+              <MonitorCard title={m.co2Saved} value={monitoringData.co2Saved} unit="kg" lastUpdate={lastUpdate} color="green" icon="co2" highlight />
             </div>
           </section>
         </div>

@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from '@/lib/LocaleContext'
+import { getComparePageT, formatCompareDevices } from '@/lib/energy/compare-monitoring-i18n'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
@@ -53,6 +55,8 @@ interface PowerRecordRow {
 
 export default function CompareMonitoringPage() {
   const router = useRouter()
+  const { locale } = useLocale()
+  const c = getComparePageT(locale)
   const [rows, setRows] = useState<PowerRecordRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,7 +73,7 @@ export default function CompareMonitoringPage() {
         const res = await fetch('/api/ge-energy/power-records?limit=100')
         const body = await res.json().catch(() => ({}))
         if (!res.ok) {
-          if (mounted) setError(body?.error || 'Failed to load')
+          if (mounted) setError(body?.error || c.failedLoad)
           return
         }
         if (mounted) setRows(body.rows || [])
@@ -203,7 +207,7 @@ export default function CompareMonitoringPage() {
     const lastSeenStr = lastSeenDate ? lastSeenDate.toLocaleString() : '—'
 
     const rows = [
-      { label: 'Current (A)', before: before_I, after: metrics_I, savings: savings_I, higherBetter: false },
+      { label: c.currentA, before: before_I, after: metrics_I, savings: savings_I, higherBetter: false },
       { label: 'P (W)',       before: before_P, after: metrics_P, savings: savings_P, higherBetter: false },
       { label: 'Q (var)',     before: before_Q, after: metrics_Q, savings: savings_Q, higherBetter: false },
       { label: 'S (VA)',      before: before_S, after: metrics_S, savings: savings_S, higherBetter: false },
@@ -251,10 +255,10 @@ export default function CompareMonitoringPage() {
                 <span>📞</span><span>{phone}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
-                <span>📊</span><span>Before Meter: {beforeMeterNo}</span>
+                <span>📊</span><span>{c.beforeMeter}: {beforeMeterNo}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: .9 }}>
-                <span>📈</span><span>Metrics Meter: {metricsMeterNo}</span>
+                <span>📈</span><span>{c.metricsMeter}: {metricsMeterNo}</span>
               </div>
             </div>
           </div>
@@ -271,7 +275,7 @@ export default function CompareMonitoringPage() {
             gap: 6,
           }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusOn ? '#86efac' : '#fca5a5', display: 'inline-block' }} />
-            {statusOn ? 'ONLINE' : 'OFFLINE'}
+            {statusOn ? c.online : c.offline}
           </div>
         </div>
 
@@ -280,8 +284,8 @@ export default function CompareMonitoringPage() {
           {/* ── Device IDs ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {[
-              { label: 'GE ID', value: GEsaveID, mono: true },
-              { label: 'Series No.', value: displaySeriesNo, mono: true },
+              { label: c.geId, value: GEsaveID, mono: true },
+              { label: c.seriesNoLabel, value: displaySeriesNo, mono: true },
             ].map(({ label, value, mono }) => (
               <div key={label} style={{
                 background: '#f8fafc',
@@ -303,21 +307,21 @@ export default function CompareMonitoringPage() {
             padding: '14px 16px',
           }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#065f46', textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 10 }}>
-              ⚡ Power Savings
+              ⚡ {c.powerSavings}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 28, fontWeight: 900, color: '#059669', lineHeight: 1 }}>
                   {Number.isFinite(savingsPercent_P) ? savingsPercent_P.toFixed(1) : '0'}%
                 </div>
-                <div style={{ fontSize: 12, color: '#000', marginTop: 4 }}>Power Reduction</div>
+                <div style={{ fontSize: 12, color: '#000', marginTop: 4 }}>{c.powerReduction}</div>
               </div>
               <div style={{ textAlign: 'center', borderLeft: '1px solid #bbf7d0', paddingLeft: 10 }}>
                 <div style={{ fontSize: 28, fontWeight: 900, color: '#047857', lineHeight: 1 }}>
                   {Number.isFinite(savings_P) ? savings_P.toFixed(0) : '0'}
                   <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 3 }}>W</span>
                 </div>
-                <div style={{ fontSize: 12, color: '#000', marginTop: 4 }}>Energy Saved</div>
+                <div style={{ fontSize: 12, color: '#000', marginTop: 4 }}>{c.energySaved}</div>
               </div>
             </div>
           </div>
@@ -341,7 +345,7 @@ export default function CompareMonitoringPage() {
             return (
               <div style={{ borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa', padding: '12px 12px 4px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#000', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                  ⚡ Power Trend (W) — Before vs After
+                  ⚡ {c.powerTrend}
                 </div>
                 {hasData ? (
                   <ResponsiveContainer width="100%" height={160}>
@@ -354,8 +358,8 @@ export default function CompareMonitoringPage() {
                         formatter={(val: number) => [`${val} W`]}
                       />
                       <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                      <Line type="monotone" dataKey="before" name="Before (W)" stroke="#dc2626" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="after"  name="After (W)"  stroke="#059669" strokeWidth={2.5} dot={false} />
+                      <Line type="monotone" dataKey="before" name={c.beforeChart} stroke="#dc2626" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="after"  name={c.afterChart}  stroke="#059669" strokeWidth={2.5} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -365,8 +369,8 @@ export default function CompareMonitoringPage() {
                     color: '#94a3b8',
                   }}>
                     <div style={{ fontSize: 28 }}>📡</div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>รอแสดงข้อมูลเมื่อเชื่อมต่อ</div>
-                    <div style={{ fontSize: 11 }}>Waiting for live data…</div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{c.waitingTh}</div>
+                    <div style={{ fontSize: 11 }}>{c.waitingEn}</div>
                   </div>
                 )}
               </div>
@@ -378,10 +382,10 @@ export default function CompareMonitoringPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ background: '#f1f5f9' }}>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: '#000', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Parameter</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#dc2626', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Before</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#059669', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Current</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#2563eb', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>Savings</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: '#000', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>{c.parameter}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#dc2626', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>{c.before}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#059669', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>{c.current}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: '#2563eb', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.4px' }}>{c.savings}</th>
                 </tr>
               </thead>
               <tbody>
@@ -425,7 +429,7 @@ export default function CompareMonitoringPage() {
                 cursor: 'pointer',
               }}
             >
-              🔄 Refresh
+              🔄 {c.refresh}
             </button>
           </div>
 
@@ -439,12 +443,12 @@ export default function CompareMonitoringPage() {
       <div className="energy-hero mb-5">
         <div className="energy-hero-inner px-6 py-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white m-0">Compare Monitoring - Power Savings Analysis</h2>
-          <p className="text-sm text-emerald-100 mt-1 mb-0">Compare Power Before vs Current Metrics to analyze energy savings</p>
+          <h2 className="text-xl font-bold text-white m-0">{c.title}</h2>
+          <p className="text-sm text-emerald-100 mt-1 mb-0">{c.subtitle}</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" className="k-btn px-3 py-2 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30" onClick={() => router.push('/energy-dashboard/dashboard')}>Back</button>
-          <button type="button" className="k-btn px-3 py-2 rounded-lg bg-white text-emerald-800 font-semibold hover:bg-emerald-50" onClick={() => window.location.reload()}>Refresh</button>
+          <button type="button" className="k-btn px-3 py-2 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30" onClick={() => router.push('/energy-dashboard/dashboard')}>{c.back}</button>
+          <button type="button" className="k-btn px-3 py-2 rounded-lg bg-white text-emerald-800 font-semibold hover:bg-emerald-50" onClick={() => window.location.reload()}>{c.refresh}</button>
         </div>
         </div>
       </div>
@@ -453,7 +457,7 @@ export default function CompareMonitoringPage() {
       <section style={{ marginTop: 18, marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <label style={{ fontSize: 15, fontWeight: 600, color: '#000' }}>Site:</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: '#000' }}>{c.site}:</label>
             <select
               value={siteFilter}
               onChange={(e) => setSiteFilter(e.target.value)}
@@ -466,7 +470,7 @@ export default function CompareMonitoringPage() {
                 cursor: 'pointer'
               }}
             >
-              <option value="All">All Sites</option>
+              <option value="All">{c.allSites}</option>
               {uniqueSites.map(site => (
                 <option key={site} value={site}>{site}</option>
               ))}
@@ -474,7 +478,7 @@ export default function CompareMonitoringPage() {
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <label style={{ fontSize: 15, fontWeight: 600, color: '#000' }}>Series No:</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: '#000' }}>{c.seriesNo}:</label>
             <select
               value={seriesNoFilter}
               onChange={(e) => setSeriesNoFilter(e.target.value)}
@@ -487,7 +491,7 @@ export default function CompareMonitoringPage() {
                 cursor: 'pointer'
               }}
             >
-              <option value="All">All Series</option>
+              <option value="All">{c.allSeries}</option>
               {uniqueSeriesNos.map(seriesNo => (
                 <option key={seriesNo} value={seriesNo}>{seriesNo}</option>
               ))}
@@ -499,23 +503,23 @@ export default function CompareMonitoringPage() {
             color: '#000',
             marginLeft: 'auto'
           }}>
-            Showing {filteredGroups.length} of {groups.length} devices
+            {formatCompareDevices(c.showingDevices, filteredGroups.length, groups.length)}
           </div>
         </div>
       </section>
 
       <main style={{ marginTop: 0 }}>
         {loading ? (
-          <div>Loading…</div>
+          <div>{c.loading}</div>
         ) : error ? (
-          <div style={{ color: '#b91c1c' }}>Error: {error}</div>
+          <div style={{ color: '#b91c1c' }}>{c.errorPrefix}: {error}</div>
         ) : (
           <div>
             {rows.length === 0 ? (
-              <div style={{ padding: 12, textAlign: 'center' }}>No recent readings</div>
+              <div style={{ padding: 12, textAlign: 'center' }}>{c.noReadings}</div>
             ) : filteredGroups.length === 0 ? (
               <div style={{ padding: 12, textAlign: 'center', color: '#000' }}>
-                No devices match the selected filters
+                {c.noFilterMatch}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>

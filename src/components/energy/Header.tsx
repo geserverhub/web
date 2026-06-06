@@ -212,7 +212,7 @@ export default function Header() {
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
                   <div className="flex items-center gap-2">
                     <Bell className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-semibold text-gray-800">Notifications</span>
+                    <span className="text-sm font-semibold text-gray-800">{t('notifications') || 'Notifications'}</span>
                     {mounted && unreadCount > 0 && (
                       <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>
                     )}
@@ -221,7 +221,7 @@ export default function Header() {
                     {unreadCount > 0 && (
                       <button onClick={markAllRead} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50 transition">
                         <CheckCheck className="w-3.5 h-3.5" />
-                        Mark all read
+                        {t('markAllRead') || 'Mark all read'}
                       </button>
                     )}
                     <button onClick={() => setShowNotifications(false)} className="p-1 rounded hover:bg-gray-200 transition">
@@ -261,7 +261,7 @@ export default function Header() {
 
                 {/* Footer */}
                 <div className="px-4 py-2.5 border-t bg-gray-50">
-                  <a href="/energy-dashboard/notifications" className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">View all notifications →</a>
+                  <a href="/energy-dashboard/notifications" className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">{t('viewAllNotifications') || 'View all notifications →'}</a>
                 </div>
               </div>
             )}
@@ -273,7 +273,7 @@ export default function Header() {
             onClick={() => fetchNotifications()}
             disabled={loading}
             className="p-2.5 hover:bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-sm group disabled:opacity-50"
-            aria-label="Refresh"
+            aria-label={t('refresh') || 'Refresh'}
           >
             <RefreshCw className="w-5 h-5 text-gray-500 group-hover:text-emerald-600 group-hover:rotate-180 transition-all duration-500" />
           </button>

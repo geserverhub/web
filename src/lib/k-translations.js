@@ -885,7 +885,7 @@ const translationData = {
     overviewSubtitle: '등록된 모든 사이트의 실시간 미터 현황',
     addDevice: 'ADD METER',
     noDevicesFound: '등록된 미터가 없습니다',
-    monitor: '모니터',
+    monitor: '모니터링',
     currentMonitor: '실시간 전류',
     compareMonitoring: '비교 모니터링',
     meterSetting: '미터 설정',
@@ -901,6 +901,11 @@ const translationData = {
     energyQualityReport: '전류 분석 보고서',
     menuMonitoring: '에너지 모니터링',
     menuTools: '도구',
+
+    // Monitor
+    devicesMonitor: '모니터링',
+    markAllRead: '모두 읽음',
+    viewAllNotifications: '모든 알림 보기 →',
 
     // Kenergy Device Notifications
     deviceNotifications: '기기 알림',
@@ -1984,7 +1989,7 @@ const translationData = {
     overviewSubtitle: 'All registered devices across your sites',
     addDevice: 'ADD METER',
     noDevicesFound: 'No devices found',
-    monitor: 'Monitor',
+    monitor: 'Monitoring',
     currentMonitor: 'Real-time Current',
     compareMonitoring: 'Compare Monitoring',
     meterSetting: 'Meter Settings',
@@ -2000,6 +2005,11 @@ const translationData = {
     energyQualityReport: 'Current analysis report',
     menuMonitoring: 'Energy Monitoring',
     menuTools: 'Tools',
+
+    // Monitor
+    devicesMonitor: 'Monitoring',
+    markAllRead: 'Mark all read',
+    viewAllNotifications: 'View all notifications →',
 
     // Kenergy Device Notifications
     deviceNotifications: 'Device Notifications',
@@ -2254,7 +2264,9 @@ const translationData = {
     ago: '前',
 
     // Monitor
-    devicesMonitor: '电表监控',
+    devicesMonitor: '监控',
+    markAllRead: '全部标记已读',
+    viewAllNotifications: '查看所有通知 →',
     realTimeMonitoring: '实时监控',
 
     // Energy Dashboard
@@ -2579,7 +2591,9 @@ const translationData = {
     ago: 'trước',
 
     // Monitor
-    devicesMonitor: 'Giám sát đồng hồ',
+    devicesMonitor: 'Giám sát',
+    markAllRead: 'Đánh dấu đã đọc tất cả',
+    viewAllNotifications: 'Xem tất cả thông báo →',
     realTimeMonitoring: 'Giám sát thời gian thực',
 
     // Energy Dashboard
@@ -2865,7 +2879,9 @@ const translationData = {
     ago: 'ที่แล้ว',
 
     // Monitor
-    devicesMonitor: 'ติดตามมิเตอร์',
+    devicesMonitor: 'มอนิเตอร์',
+    markAllRead: 'อ่านทั้งหมดแล้ว',
+    viewAllNotifications: 'ดูการแจ้งเตือนทั้งหมด →',
     realTimeMonitoring: 'ติดตามแบบเรียลไทม์',
 
     // Energy Dashboard

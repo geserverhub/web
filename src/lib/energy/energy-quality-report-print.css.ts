@@ -97,10 +97,9 @@ body {
   page-break-after: always;
   break-after: page;
   margin-bottom: 0;
-  /* Fill the first page but stay safe for Letter paper too (printable ≈250mm)
-     and browser-added margins, so the bordered card never spills onto a blank
-     page. */
-  min-height: 238mm;
+  /* Fill the first printable page (A4 297mm − 11mm top − 18mm bottom ≈ 268mm),
+     kept under that to avoid spilling into a blank page. */
+  min-height: 262mm;
   display: flex;
   flex-direction: column;
 }
@@ -108,9 +107,9 @@ body {
 .sheet--toc {
   page-break-after: always;
   break-after: page;
-  margin-bottom: 0;
-  /* Safe for Letter (printable ≈247mm) + margin variance. */
-  min-height: 236mm;
+  margin-bottom: 3mm;
+  /* Fill the printable page (A4 297mm − 14mm top − 18mm bottom ≈ 265mm). */
+  min-height: 260mm;
   display: flex;
   flex-direction: column;
 }
@@ -703,8 +702,8 @@ body {
 }
 
 .doc-footer {
-  margin-top: 2.5mm;
-  padding: 3mm 3mm 1.5mm;
+  margin-top: 5mm;
+  padding: 4mm 3mm 2mm;
   border-top: 1.5pt solid var(--print-brand);
   text-align: center;
   font-size: 7.5pt;

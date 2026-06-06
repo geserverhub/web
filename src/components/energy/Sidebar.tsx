@@ -155,6 +155,11 @@ function isActive(pathname: string, item: NavItem): boolean {
 }
 
 function sectionLabel(sectionKey: string, locale: string, t: (k: string) => string): string {
+  const loc = locale.startsWith('cn') || locale.startsWith('zh') ? 'cn'
+    : locale.startsWith('vn') || locale.startsWith('vi') ? 'vn'
+    : locale.startsWith('ms') ? 'ms'
+    : locale;
+  if (sectionFallback[sectionKey]?.[loc]) return sectionFallback[sectionKey][loc];
   if (sectionFallback[sectionKey]?.[locale]) return sectionFallback[sectionKey][locale];
   if (sectionFallback[sectionKey]?.en) return sectionFallback[sectionKey].en;
   const translated = t(sectionKey);
@@ -163,6 +168,11 @@ function sectionLabel(sectionKey: string, locale: string, t: (k: string) => stri
 }
 
 function itemLabel(key: string, locale: string, t: (k: string) => string): string {
+  const loc = locale.startsWith('cn') || locale.startsWith('zh') ? 'cn'
+    : locale.startsWith('vn') || locale.startsWith('vi') ? 'vn'
+    : locale.startsWith('ms') ? 'ms'
+    : locale;
+  if (sectionFallback[key]?.[loc]) return sectionFallback[key][loc];
   if (sectionFallback[key]?.[locale]) return sectionFallback[key][locale];
   if (sectionFallback[key]?.en) return sectionFallback[key].en;
   const translated = t(key);
@@ -174,7 +184,15 @@ export default function Sidebar() {
   const { t, locale } = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const lang = ["th", "ko", "en"].includes(locale) ? locale : "th";
+  const lang = (() => {
+    const key = String(locale || 'th').toLowerCase();
+    if (key.startsWith('ko')) return 'ko';
+    if (key.startsWith('en')) return 'en';
+    if (key.startsWith('cn') || key.startsWith('zh')) return 'en';
+    if (key.startsWith('vn') || key.startsWith('vi')) return 'en';
+    if (key.startsWith('ms')) return 'en';
+    return 'th';
+  })();
   const company = companyNames[lang] ?? companyNames.th;
 
   const signOutLabel = (() => {

@@ -72,10 +72,74 @@ interface DashboardData {
   recentDevices: RecentDevice[]
 }
 
-const normalizeDeviceKey = (device: Pick<RecentDevice, 'deviceID' | 'deviceName'>) => {
-  const primaryKey = device.deviceID ?? device.deviceName ?? ''
-  return String(primaryKey).trim().toUpperCase()
+interface DevicesSettingRow {
+  deviceID?: number | string
+  deviceName?: string
+  GEsaveID?: string
+  customerName?: string
+  customerPhone?: string
+  customerAddress?: string
+  location?: string
+  connection?: 'ONLINE' | 'OFFLINE' | string
+  lastUpdate?: string | null
+  record_scope?: string
+  beforeMeterNo?: string
+  metricsMeterNo?: string
+  ipAddress?: string
 }
+
+const emptyRecentDevice = (row: DevicesSettingRow): RecentDevice => ({
+  deviceID: String(row.deviceID ?? ''),
+  deviceName: row.deviceName || '',
+  recordScope: row.record_scope || 'installed',
+  customerName: row.customerName,
+  customerPhone: row.customerPhone,
+  customerAddress: row.customerAddress,
+  GEsaveID: row.GEsaveID,
+  beforeMeterNo: row.beforeMeterNo,
+  metricsMeterNo: row.metricsMeterNo,
+  ipAddress: row.ipAddress,
+  location: row.location || '',
+  isOnline: row.connection === 'ONLINE',
+  lastUpdate: row.lastUpdate || '',
+  voltageLL: [null, null, null],
+  currentABC: [null, null, null],
+  beforeCurrentABC: [null, null, null],
+  avgCurrent: null,
+  avgBeforeCurrent: null,
+  imbalancePercent: null,
+})
+
+/** Same device registry as /devices-setting — enrich with dashboard telemetry when available. */
+const mergeDeviceRegistry = (
+  registry: DevicesSettingRow[],
+  statsDevices: RecentDevice[],
+): RecentDevice[] => {
+  const statsById = new Map(statsDevices.map((device) => [String(device.deviceID), device]))
+
+  return registry.map((row) => {
+    const stats = statsById.get(String(row.deviceID))
+    if (!stats) return emptyRecentDevice(row)
+
+    return {
+      ...stats,
+      deviceID: String(row.deviceID ?? stats.deviceID),
+      deviceName: row.deviceName || stats.deviceName,
+      GEsaveID: row.GEsaveID ?? stats.GEsaveID,
+      customerName: row.customerName ?? stats.customerName,
+      customerPhone: row.customerPhone ?? stats.customerPhone,
+      customerAddress: row.customerAddress ?? stats.customerAddress,
+      location: row.location || stats.location,
+      recordScope: row.record_scope || stats.recordScope,
+      beforeMeterNo: row.beforeMeterNo ?? stats.beforeMeterNo,
+      metricsMeterNo: row.metricsMeterNo ?? stats.metricsMeterNo,
+      ipAddress: row.ipAddress ?? stats.ipAddress,
+      isOnline: row.connection === 'ONLINE' || stats.isOnline,
+      lastUpdate: stats.lastUpdate || row.lastUpdate || '',
+    }
+  })
+}
+
 
 const normalizeLookupValue = (value: string | number | null | undefined) => {
   return String(value ?? '').trim().toUpperCase()
@@ -85,6 +149,16 @@ const getDeviceTimestamp = (device: Pick<RecentDevice, 'lastUpdate'>) => {
   if (!device.lastUpdate) return 0
   const timestamp = new Date(device.lastUpdate).getTime()
   return Number.isFinite(timestamp) ? timestamp : 0
+}
+
+const getDeviceActivityTimestamp = (
+  device: Pick<RecentDevice, 'lastUpdate' | 'beforeLastUpdate'>,
+) => {
+  const installed = getDeviceTimestamp(device)
+  if (!device.beforeLastUpdate) return installed
+  const before = new Date(device.beforeLastUpdate).getTime()
+  const beforeTs = Number.isFinite(before) ? before : 0
+  return Math.max(installed, beforeTs)
 }
 
 const isPreInstallScope = (scope?: string | null) => {
@@ -122,7 +196,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [nowStr, setNowStr] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [showAllDevices, setShowAllDevices] = useState(false)
+  const [showAllDevices, setShowAllDevices] = useState(true)
   const [showAllCurrentAnalysis, setShowAllCurrentAnalysis] = useState(false)
   const focusedDeviceParam = normalizeLookupValue(searchParams?.get('device'))
   const focusedGEsaveParam = normalizeLookupValue(
@@ -164,17 +238,43 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
-      // Show every meter in the database (all sites), not just the selected site.
-      const res = await fetch(`/api/ge-energy/dashboard-stats?site=all`)
-      const json = await res.json()
-      if (json.success) { setData(json.data); setError(null) }
-      else setError(json.error || 'Failed to load dashboard data')
+      const [registryRes, statsRes] = await Promise.all([
+        fetch('/api/ge-energy/devices-setting?site=all'),
+        fetch('/api/ge-energy/dashboard-stats?site=all'),
+      ])
+      const registryJson = await registryRes.json()
+      const statsJson = await statsRes.json()
+
+      if (!registryJson.success) {
+        setError(registryJson.error || 'Failed to load devices')
+        return
+      }
+      if (!statsJson.success) {
+        setError(statsJson.error || 'Failed to load dashboard stats')
+        return
+      }
+
+      const registry = (registryJson.devices || []) as DevicesSettingRow[]
+      const statsDevices = (statsJson.data?.recentDevices || []) as RecentDevice[]
+      const recentDevices = mergeDeviceRegistry(registry, statsDevices)
+      const onlineDevices = recentDevices.filter((device) => device.isOnline).length
+
+      setData({
+        stats: {
+          totalDevices: registry.length,
+          onlineDevices,
+          offlineDevices: registry.length - onlineDevices,
+          energySaved: statsJson.data?.stats?.energySaved ?? 0,
+        },
+        recentDevices,
+      })
+      setError(null)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Network error')
     } finally {
       setLoading(false)
     }
-  }, [selectedSite])
+  }, [])
 
   useEffect(() => {
     fetchDashboardData()
@@ -216,18 +316,6 @@ export default function DashboardPage() {
 
   const stats = data?.stats || { totalDevices: 0, onlineDevices: 0, offlineDevices: 0, energySaved: 0 }
   const recentDevices = data?.recentDevices || []
-  const uniqueRecentDevices = Array.from(
-    recentDevices.reduce((deviceMap, device) => {
-      const deviceKey = normalizeDeviceKey(device)
-      const existingDevice = deviceMap.get(deviceKey)
-
-      if (!existingDevice || getDeviceTimestamp(device) >= getDeviceTimestamp(existingDevice)) {
-        deviceMap.set(deviceKey, device)
-      }
-
-      return deviceMap
-    }, new Map<string, RecentDevice>()).values()
-  )
   const onlineRate = stats.totalDevices > 0 ? Math.round((stats.onlineDevices / stats.totalDevices) * 100) : 0
   const searchQuery = searchTerm.trim().toLowerCase()
   const dashboardCopy = {
@@ -746,7 +834,7 @@ export default function DashboardPage() {
   }
 
   const uniqueLocations = Array.from(
-    new Set(uniqueRecentDevices.map(d => d.location).filter(Boolean))
+    new Set(recentDevices.map(d => d.location).filter(Boolean))
   ).sort() as string[]
 
   const matchesFocusedDevice = (device: RecentDevice) => {
@@ -765,11 +853,10 @@ export default function DashboardPage() {
     return (device.location ?? '').toLowerCase() === searchQuery
   }
 
-  const searchedDevices = uniqueRecentDevices.filter(matchesSearch).filter(matchesFocusedDevice)
-  const filteredRecentDevices = searchedDevices.filter((device) => {
-    if (isPreInstallScope(device.recordScope)) return false
-    return Boolean(device.lastUpdate)
-  })
+  const searchedDevices = recentDevices.filter(matchesSearch).filter(matchesFocusedDevice)
+  // Same registry as /devices-setting — every device row, with or without telemetry.
+  const filteredRecentDevices = searchedDevices
+    .sort((a, b) => getDeviceActivityTimestamp(b) - getDeviceActivityTimestamp(a))
   const filteredCurrentAnalysisDevices = searchedDevices.filter((device) => {
     if (!isPreInstallScope(device.recordScope)) return false
     return Boolean(device.beforeLastUpdate || device.lastUpdate)

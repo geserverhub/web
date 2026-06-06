@@ -140,10 +140,94 @@ const labels = {
     langKo: '한국어',
     langEn: 'English',
   },
+  cn: {
+    title: '实时电流监控',
+    subtitle: '来自设备的实时电流 (A) 读数',
+    tagline: '智能能源监控系统',
+    customer: '客户',
+    device: '设备',
+    allCustomers: '全部客户',
+    selectDevice: '选择设备',
+    live: '实时',
+    offline: '离线',
+    lastUpdate: '最后更新',
+    refresh: '刷新',
+    download: '下载',
+    loading: '加载中…',
+    noDevice: '请选择设备以查看实时电流',
+    chartTitle: '电流趋势（最近 30 分钟）',
+    noChart: '暂无图表数据',
+    fullMonitor: '完整设备监控',
+    l1: 'L1 相',
+    l2: 'L2 相',
+    l3: 'L3 相',
+    avg: '三相平均',
+    errorLoad: '加载数据失败',
+    site: '站点',
+    langTh: 'ไทย',
+    langKo: '한국어',
+    langEn: 'English',
+  },
+  vn: {
+    title: 'Giam sat dong dien thoi gian thuc',
+    subtitle: 'Doc dong dien (A) truc tiep tu thiet bi',
+    tagline: 'He thong giam sat nang luong thong minh',
+    customer: 'Khach hang',
+    device: 'Thiet bi',
+    allCustomers: 'Tat ca khach hang',
+    selectDevice: 'Chon thiet bi',
+    live: 'Truc tiep',
+    offline: 'Ngoai tuyen',
+    lastUpdate: 'Cap nhat cuoi',
+    refresh: 'Lam moi',
+    download: 'Tai xuong',
+    loading: 'Dang tai…',
+    noDevice: 'Chon thiet bi de xem dong dien',
+    chartTitle: 'Xu huong dong dien (30 phut gan nhat)',
+    noChart: 'Chua co du lieu bieu do',
+    fullMonitor: 'Giam sat day du',
+    l1: 'Pha L1',
+    l2: 'Pha L2',
+    l3: 'Pha L3',
+    avg: 'Trung binh 3 pha',
+    errorLoad: 'Tai du lieu that bai',
+    site: 'Trang',
+    langTh: 'ไทย',
+    langKo: '한국어',
+    langEn: 'English',
+  },
+  ms: {
+    title: 'Pemantau Arus Masa Nyata',
+    subtitle: 'Bacaan arus (A) langsung dari peranti anda',
+    tagline: 'Sistem pemantauan tenaga pintar',
+    customer: 'Pelanggan',
+    device: 'Peranti',
+    allCustomers: 'Semua pelanggan',
+    selectDevice: 'Pilih peranti',
+    live: 'LANGSUNG',
+    offline: 'Luar talian',
+    lastUpdate: 'Kemas kini terakhir',
+    refresh: 'Muat semula',
+    download: 'Muat turun',
+    loading: 'Memuatkan…',
+    noDevice: 'Pilih peranti untuk melihat arus langsung',
+    chartTitle: 'Trend arus (30 min terakhir)',
+    noChart: 'Tiada data carta lagi',
+    fullMonitor: 'Pemantauan peranti penuh',
+    l1: 'Fasa L1',
+    l2: 'Fasa L2',
+    l3: 'Fasa L3',
+    avg: 'Purata 3 fasa',
+    errorLoad: 'Gagal memuatkan data',
+    site: 'Tapak',
+    langTh: 'ไทย',
+    langKo: '한국어',
+    langEn: 'English',
+  },
 };
 
 type LocaleKey = keyof typeof labels;
-const ENERGY_LOCALES: LocaleKey[] = ['th', 'ko', 'en'];
+const ENERGY_LOCALES: LocaleKey[] = ['th', 'ko', 'en', 'cn', 'vn', 'ms'];
 
 const CHART_COLORS = ['#15803d', '#22c55e', '#4ade80'];
 
@@ -154,7 +238,13 @@ function formatTimeLabel(val: string) {
 }
 
 function resolveLang(locale: string): LocaleKey {
-  return ENERGY_LOCALES.includes(locale as LocaleKey) ? (locale as LocaleKey) : 'th';
+  const key = String(locale || 'th').toLowerCase();
+  if (key.startsWith('ko')) return 'ko';
+  if (key.startsWith('en')) return 'en';
+  if (key.startsWith('cn') || key.startsWith('zh')) return 'cn';
+  if (key.startsWith('vn') || key.startsWith('vi')) return 'vn';
+  if (key.startsWith('ms')) return 'ms';
+  return 'th';
 }
 
 export default function CurrentMonitorPage() {

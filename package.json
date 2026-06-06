@@ -24,6 +24,7 @@
     "db:migrate": "node scripts/migrate-client-columns.mjs && node scripts/migrate-partner-product.mjs && node scripts/migrate-partner-person-financial.mjs",
     "db:migrate-file-converter": "node scripts/migrate-file-app-archive.mjs",
     "db:setup-energy": "node scripts/setup-ge-energy.mjs",
+    "db:ensure-pk-fks": "node scripts/ensure-energy-pk-fks.mjs",
     "db:setup-full": "node scripts/setup-full-database.mjs",
     "db:migrate-relations": "npx prisma generate && node scripts/apply-software-downloads-migration.mjs && node scripts/apply-full-hub-relations.mjs",
     "db:prisma-push": "node scripts/run-prisma-db-push.mjs",

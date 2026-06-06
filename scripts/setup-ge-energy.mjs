@@ -52,6 +52,7 @@ async function main() {
     '../prisma/migrate-energy-geserverhub.sql',
     '../prisma/migrate-ge-energy-app-extensions.sql',
     '../prisma/migrate-ge-energy-tech-orders.sql',
+    '../prisma/migrate-energy-pk-fks.sql',
   ]) {
     const sql = readFileSync(resolve(__dirname, file), 'utf8');
     console.log(`Applying ${file.replace('../prisma/', '')}…`);

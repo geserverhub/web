@@ -127,6 +127,12 @@ function buildChannel(
   }
 }
 
+function recordHasCh2Data(record: Record<string, unknown>): boolean {
+  return ['metrics_P', 'metrics_L1', 'metrics_L2', 'metrics_L3', 'metrics_kWh', 'metrics_THD'].some(
+    (col) => toNum(record[col]) != null,
+  )
+}
+
 function buildMonitoringPayload(
   record: Record<string, unknown>,
   columnSets: {
@@ -136,7 +142,7 @@ function buildMonitoringPayload(
   },
 ) {
   const scope = record.record_scope as RecordScope | undefined
-  const ch1Only = scope === 'pre_install'
+  const ch1Only = scope === 'pre_install' && !recordHasCh2Data(record)
   const ch1Voltage = columnSets.ch1VoltageCols.map((col) =>
     col ? toNum(record[col]) : null,
   )

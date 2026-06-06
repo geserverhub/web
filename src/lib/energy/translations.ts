@@ -864,7 +864,7 @@
     developer: '데이터 백업',
     dashboard: '대시보드',
     overview: '개요',
-    monitor: '모니터',
+    monitor: '모니터링',
     location: '위치',
     devicesSetting: '기기 설정',
     dashboardSetting: '대시보드 설정',
@@ -883,6 +883,9 @@
     recentDevices: '최근 기기',
     noDevices: '기기를 찾을 수 없습니다',
     viewAll: '전체 보기',
+
+    // Monitor
+    devicesMonitor: '모니터링',
 
     // Kenergy Device Notifications
     deviceNotifications: '기기 알림',
@@ -1896,7 +1899,7 @@
     developer: 'Data & Backup',
     dashboard: 'Dashboard',
     overview: 'Overview',
-    monitor: 'Monitor',
+    monitor: 'Monitoring',
     location: 'Location',
     devicesSetting: 'Device Settings',
     dashboardSetting: 'Dashboard Settings',
@@ -1915,6 +1918,9 @@
     recentDevices: 'Recent Devices',
     noDevices: 'No devices found',
     viewAll: 'View All',
+
+    // Monitor
+    devicesMonitor: 'Monitoring',
 
     // Kenergy Device Notifications
     deviceNotifications: 'Device Notifications',
@@ -2110,7 +2116,7 @@
     ago: '前',
 
     // Monitor
-    devicesMonitor: '电表监控',
+    devicesMonitor: '监控',
     realTimeMonitoring: '实时监控',
 
     // Energy Dashboard
@@ -2377,7 +2383,7 @@
     ago: 'trước',
 
     // Monitor
-    devicesMonitor: 'Giám sát đồng hồ',
+    devicesMonitor: 'Giám sát',
     realTimeMonitoring: 'Giám sát thời gian thực',
 
     // Energy Dashboard
@@ -2641,7 +2647,7 @@
     ago: 'ที่แล้ว',
 
     // Monitor
-    devicesMonitor: 'ติดตามมิเตอร์',
+    devicesMonitor: 'Monitoring',
     realTimeMonitoring: 'ติดตามแบบเรียลไทม์',
 
     // Energy Dashboard

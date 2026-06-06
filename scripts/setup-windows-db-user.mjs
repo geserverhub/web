@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootPassword = process.env.MYSQL_ROOT_PASSWORD || process.env.ROOT_PASSWORD || '';
 const appPassword = process.env.DB_PASSWORD || '2350400018644';
-const dbName = process.env.DB_NAME || process.env.DATABASE_URL?.match(/\/([^/?]+)(\?|$)/)?.[1] || 'geserverhub';
+const dbName = process.env.DB_NAME || process.env.DATABASE_URL?.match(/\/([^/?]+)(\?|$)/)?.[1] || 'goeunserverhub';
 
 if (!rootPassword) {
   console.error('Set MYSQL_ROOT_PASSWORD (Windows MySQL root password) first.');
