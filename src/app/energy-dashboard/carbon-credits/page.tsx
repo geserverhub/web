@@ -136,6 +136,8 @@ export default function CarbonCreditsPage() {
   const [allDevices, setAllDevices] = useState<DeviceOption[]>([]);
   const [meterSearch, setMeterSearch] = useState('');
   const [pickedIds, setPickedIds] = useState<Set<number>>(new Set());
+  /** Device IDs used for KPI / per-meter analysis after last Calculate (null = site-wide). */
+  const [activeScopeIds, setActiveScopeIds] = useState<number[] | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [printLocale, setPrintLocale] = useState<string>(locale);
   const [fxData, setFxData] = useState<{
@@ -188,26 +190,22 @@ export default function CarbonCreditsPage() {
     }
   }, [period]);
 
-  const fetchCarbonData = useCallback(async () => {
+  const fetchCarbonData = useCallback(async (scopeDeviceIds?: number[] | null) => {
     setLoading(true);
     setError(null);
     try {
-      const deviceParam = selectedDeviceId ? `&deviceId=${selectedDeviceId}` : '';
-      const res = await fetch(
-        `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${period}&locale=${locale}${deviceParam}`,
-        { cache: 'no-store' }
-      );
+      const ids =
+        scopeDeviceIds !== undefined
+          ? scopeDeviceIds
+          : activeScopeIds;
+      let url = `/api/ge-energy/ai-carbon-insights?site=${selectedSite}&period=${period}&locale=${locale}`;
+      if (ids && ids.length > 0) {
+        url += `&deviceIds=${ids.join(',')}`;
+      }
+      const res = await fetch(url, { cache: 'no-store' });
       const json = await res.json();
       if (json.success && json.data) {
         setData(json.data);
-        // Fetch per-device AI insights
-        if (json.data.topDevices && json.data.topDevices.length > 0) {
-          await Promise.all(
-            json.data.topDevices.map((device: any) =>
-              fetchDeviceAiInsights(device.deviceId)
-            )
-          );
-        }
       } else {
         setError(json.error || 'Failed to load carbon data');
       }
@@ -216,7 +214,7 @@ export default function CarbonCreditsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedSite, period, locale, selectedDeviceId]);
+  }, [selectedSite, period, locale, activeScopeIds]);
 
   const fetchDeviceAiInsights = useCallback(
     async (deviceId: number) => {
@@ -251,11 +249,21 @@ export default function CarbonCreditsPage() {
   );
 
   useEffect(() => {
-    fetchCarbonData();
-    fetchMeterTable();
+    if (meterTable.meters.length === 0) return;
+    const scopeSet = activeScopeIds ? new Set(activeScopeIds) : null;
+    const devices = meterTable.meters.filter(
+      (m) => !scopeSet || scopeSet.has(m.deviceId),
+    );
+    if (!devices.length) return;
+    void Promise.all(devices.map((m) => fetchDeviceAiInsights(m.deviceId)));
+  }, [meterTable.meters, activeScopeIds, fetchDeviceAiInsights]);
+
+  useEffect(() => {
+    fetchCarbonData(activeScopeIds);
+    fetchMeterTable(activeScopeIds ?? undefined);
     fetchExchangeRate();
     fetchAllDevices();
-  }, [fetchCarbonData, fetchMeterTable, fetchExchangeRate, fetchAllDevices]);
+  }, [fetchCarbonData, fetchMeterTable, fetchExchangeRate, fetchAllDevices, activeScopeIds]);
 
   const printCarbonReport = useCallback(() => {
     if (!data) return;
@@ -648,7 +656,75 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
 
   if (!data) return null;
 
-  const totalDevices = data.topDevices?.length || 0;
+  const displayScopeSet =
+    activeScopeIds && activeScopeIds.length > 0
+      ? new Set(activeScopeIds)
+      : pickedIds.size > 0
+        ? pickedIds
+        : null;
+  const analysisMeters = meterTable.meters.filter(
+    (m) => !displayScopeSet || displayScopeSet.has(m.deviceId),
+  );
+  const perDeviceCards =
+    analysisMeters.length > 0
+      ? analysisMeters.map((m) => ({
+          deviceId: m.deviceId,
+          deviceName: m.deviceName,
+          GEsaveID: m.GEsaveID,
+          energySavedKwh: m.energySavedKwh,
+          co2Kg: m.co2Kg,
+          carbonCreditsTonnes: m.carbonCreditsTonnes,
+        }))
+      : (data.topDevices || [])
+          .filter((d) => !displayScopeSet || displayScopeSet.has(Number(d.deviceId)))
+          .map((d) => ({
+            deviceId: Number(d.deviceId),
+            deviceName: String(d.deviceName || ''),
+            GEsaveID: String(d.GEsaveID || ''),
+            energySavedKwh: d.energySavedKwh,
+            co2Kg: d.co2Kg,
+            carbonCreditsTonnes: d.carbonCreditsTonnes,
+          }));
+
+  const creditsDenominator =
+    perDeviceCards.reduce((sum, d) => sum + d.carbonCreditsTonnes, 0) || 1;
+
+  const chipMeters = analysisMeters.length > 0 ? analysisMeters : meterTable.meters;
+
+  const focusedMeter =
+    selectedDeviceId != null
+      ? perDeviceCards.find((d) => d.deviceId === selectedDeviceId)
+      : null;
+
+  const displaySummary = focusedMeter
+    ? {
+        carbonCreditsTonnes: focusedMeter.carbonCreditsTonnes,
+        totalCo2Kg: focusedMeter.co2Kg,
+        totalEnergySavedKwh: focusedMeter.energySavedKwh,
+        estimatedValue:
+          data.summary.currency === 'KRW'
+            ? Math.round(focusedMeter.carbonCreditsTonnes * data.summary.creditPricePerTonne)
+            : Math.round(focusedMeter.carbonCreditsTonnes * data.summary.creditPricePerTonne),
+        currency: data.summary.currency,
+        creditPricePerTonne: data.summary.creditPricePerTonne,
+      }
+    : activeScopeIds && meterTable.totals
+      ? {
+          carbonCreditsTonnes: meterTable.totals.carbonCreditsTonnes,
+          totalCo2Kg: meterTable.totals.co2Kg,
+          totalEnergySavedKwh: meterTable.totals.energySavedKwh,
+          estimatedValue:
+            data.summary.currency === 'KRW'
+              ? meterTable.totals.estimatedValueKRW
+              : meterTable.totals.estimatedValueTHB,
+          currency: data.summary.currency,
+          creditPricePerTonne: data.summary.creditPricePerTonne,
+        }
+      : data.summary;
+
+  const tableScopeSet = displayScopeSet;
+
+  const totalDevices = perDeviceCards.length;
 
   return (
     <div className="cc-page">
@@ -712,7 +788,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
             >
               {L(locale, '📊 ทั้งหมด', '📊 All Meters', '📊 전체')}
             </button>
-            {meterTable.meters.map((m) => (
+            {chipMeters.map((m) => (
               <button
                 key={m.deviceId}
                 onClick={() => setSelectedDeviceId(m.deviceId === selectedDeviceId ? null : m.deviceId)}
@@ -735,7 +811,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
           <div className="cc-kpi-icon cc-icon-carbon">
             <Leaf className="w-6 h-6" />
           </div>
-          <p className="cc-kpi-val">{fmt(data.summary.carbonCreditsTonnes)}</p>
+          <p className="cc-kpi-val">{fmt(displaySummary.carbonCreditsTonnes)}</p>
           <p className="cc-kpi-label">{L(locale, 'คาร์บอนเครดิต', 'Carbon Credits', '탄소 크레딧')}</p>
           <p className="cc-kpi-unit">{L(locale, 'tCO₂e', 'tCO₂e', 'tCO₂e')}</p>
         </div>
@@ -743,7 +819,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
           <div className="cc-kpi-icon cc-icon-co2">
             <Zap className="w-6 h-6" />
           </div>
-          <p className="cc-kpi-val">{fmt(data.summary.totalCo2Kg)}</p>
+          <p className="cc-kpi-val">{fmt(displaySummary.totalCo2Kg)}</p>
           <p className="cc-kpi-label">{L(locale, 'CO₂ ลดลง', 'CO₂ Avoided', 'CO₂ 회피')}</p>
           <p className="cc-kpi-unit">kg CO₂</p>
         </div>
@@ -751,24 +827,24 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
           <div className="cc-kpi-icon cc-icon-value">
             <DollarSign className="w-6 h-6" />
           </div>
-          <p className="cc-kpi-val">{formatCurrency(data.summary.estimatedValue, data.summary.currency)}</p>
+          <p className="cc-kpi-val">{formatCurrency(displaySummary.estimatedValue, displaySummary.currency)}</p>
           {fxData.krwToThb ? (
             <p className="text-sm font-semibold text-amber-600 mt-0.5">
-              {data.summary.currency === 'KRW'
-                ? `≈ ฿${Math.round(data.summary.estimatedValue * fxData.krwToThb).toLocaleString()}`
-                : `≈ ₩${Math.round(data.summary.estimatedValue / fxData.krwToThb).toLocaleString()}`}
+              {displaySummary.currency === 'KRW'
+                ? `≈ ฿${Math.round(displaySummary.estimatedValue * fxData.krwToThb).toLocaleString()}`
+                : `≈ ₩${Math.round(displaySummary.estimatedValue / fxData.krwToThb).toLocaleString()}`}
             </p>
           ) : (
             <p className="text-xs text-gray-300 mt-0.5">...</p>
           )}
           <p className="cc-kpi-label">{L(locale, 'มูลค่า', 'Market Value', '시장 가치')}</p>
-          <p className="cc-kpi-unit">{data.summary.currency}</p>
+          <p className="cc-kpi-unit">{displaySummary.currency}</p>
         </div>
         <div className="cc-kpi-card">
           <div className="cc-kpi-icon cc-icon-energy">
             <TrendingDown className="w-6 h-6" />
           </div>
-          <p className="cc-kpi-val">{fmt(data.summary.totalEnergySavedKwh)}</p>
+          <p className="cc-kpi-val">{fmt(displaySummary.totalEnergySavedKwh)}</p>
           <p className="cc-kpi-label">{L(locale, 'ไฟฟ้าประหยัด', 'Energy Saved', '에너지 절감')}</p>
           <p className="cc-kpi-unit">kWh</p>
         </div>
@@ -885,7 +961,10 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
             <button
               onClick={() => {
                 setSelectedDeviceId(null);
-                fetchMeterTable(pickedIds.size > 0 ? Array.from(pickedIds) : undefined);
+                const ids = pickedIds.size > 0 ? Array.from(pickedIds) : null;
+                setActiveScopeIds(ids);
+                fetchMeterTable(ids ?? undefined);
+                fetchCarbonData(ids);
               }}
               disabled={meterTable.loading}
               className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition"
@@ -1030,7 +1109,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
               </thead>
               <tbody>
                 {meterTable.meters
-                  .filter((m) => (pickedIds.size === 0 ? true : pickedIds.has(m.deviceId)))
+                  .filter((m) => !tableScopeSet || tableScopeSet.has(m.deviceId))
                   .map((m) => {
                     const isSelected = selectedDeviceId === m.deviceId;
                     const hasTelemetry = (m.recordCount ?? 0) > 0 || m.energySavedKwh > 0;
@@ -1074,7 +1153,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                     );
                   })}
               </tbody>
-              {(selectedDeviceId === null && meterTable.totals && pickedIds.size !== 1) && (
+              {(selectedDeviceId === null && meterTable.totals && perDeviceCards.length !== 1) && (
                 <tfoot>
                   <tr className="border-t-2 border-emerald-200 bg-emerald-50">
                     <td className="py-3 px-3" colSpan={3}>
@@ -1231,19 +1310,40 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
       )}
 
       {/* Per-Device Breakdown */}
-      {data.topDevices && data.topDevices.length > 0 && (
+      {perDeviceCards.length > 0 && (
         <div className="cc-card">
           <h2 className="cc-card-title">
             {L(locale, 'การวิเคราะห์ต่อตัวมิเตอร์', 'Per-Device Analysis', '장치별 분석')} ({totalDevices})
+            {activeScopeIds && activeScopeIds.length > 0 && (
+              <span className="ml-2 text-sm font-normal text-emerald-600">
+                · {L(locale, 'ตามมิเตอร์ที่เลือก', 'selected meters', '선택한 미터')}
+              </span>
+            )}
           </h2>
           <div className="cc-devices-grid">
-            {data.topDevices.map((device) => {
-              const total = data.summary.carbonCreditsTonnes || 1;
-              const contribution = total > 0 ? (device.carbonCreditsTonnes / total) * 100 : 0;
+            {perDeviceCards.map((device) => {
+              const contribution =
+                creditsDenominator > 0
+                  ? (device.carbonCreditsTonnes / creditsDenominator) * 100
+                  : 0;
               const ai = deviceAiInsights[device.deviceId];
+              const isFocused = selectedDeviceId === device.deviceId;
 
               return (
-                <div key={device.deviceId} className="cc-device-card">
+                <div
+                  key={device.deviceId}
+                  className={`cc-device-card ${isFocused ? 'ring-2 ring-emerald-400' : ''}`}
+                  onClick={() =>
+                    setSelectedDeviceId(device.deviceId === selectedDeviceId ? null : device.deviceId)
+                  }
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      setSelectedDeviceId(device.deviceId === selectedDeviceId ? null : device.deviceId);
+                    }
+                  }}
+                >
                   <div className="cc-device-header">
                     <h3>{device.deviceName}</h3>
                     <p className="cc-device-id">{device.GEsaveID}</p>

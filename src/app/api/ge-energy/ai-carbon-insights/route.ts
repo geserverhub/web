@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
     const locale = searchParams.get('locale') || 'th';
     const userId = searchParams.get('userId');
     const deviceId = searchParams.get('deviceId');
+    const deviceIdsParam = searchParams.get('deviceIds');
     const validSites = ['thailand', 'korea', 'vietnam', 'malaysia'];
     const safeSite = validSites.includes(site) ? site : 'thailand';
     const pricing = getSiteCreditPricing(safeSite);
@@ -59,12 +60,21 @@ export async function GET(request: NextRequest) {
     }
 
     let whereClause = `WHERE pr.record_time >= DATE_SUB(NOW(), INTERVAL ${period} DAY)`;
-    const params: unknown[] = [`%${safeSite}%`];
-    whereClause += " AND LOWER(COALESCE(d.site, d.location, '')) LIKE ?";
+    const params: unknown[] = [];
 
-    if (deviceId) {
+    const parsedDeviceIds = deviceIdsParam
+      ? deviceIdsParam.split(',').map(Number).filter((n) => Number.isFinite(n) && n > 0)
+      : [];
+
+    if (parsedDeviceIds.length > 0) {
+      whereClause += ` AND d.deviceID IN (${parsedDeviceIds.map(() => '?').join(',')})`;
+      params.push(...parsedDeviceIds);
+    } else if (deviceId) {
       whereClause += ' AND pr.device_id = ?';
       params.push(deviceId);
+    } else {
+      params.push(`%${safeSite}%`);
+      whereClause += " AND LOWER(COALESCE(d.site, d.location, '')) LIKE ?";
     }
 
     const deviceColumns = await getDevicesColumnSet();
@@ -121,7 +131,7 @@ export async function GET(request: NextRequest) {
        ${whereClause}
        GROUP BY d.deviceID, d.deviceName, ${meterGroup}
        ORDER BY co2_kg DESC
-       LIMIT 8`,
+       ${parsedDeviceIds.length > 0 ? '' : 'LIMIT 8'}`,
       params
     )) as Row[];
 
