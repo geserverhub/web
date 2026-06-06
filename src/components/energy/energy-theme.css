@@ -375,3 +375,35 @@
     rgba(236, 253, 245, 0.8) 100%
   ) !important;
 }
+
+/* ── Readability overrides: high-contrast dark-green borders & text ──
+   Faint light-green/gray card borders and light-green text were hard to read,
+   so within the energy app we darken them to dark green. */
+.energy-app {
+  --eg-border: rgba(4, 120, 87, 0.42);
+  --eg-border-strong: rgba(4, 120, 87, 0.62);
+}
+
+/* Card / divider / input borders → visible dark green (emerald-700) */
+.energy-app .border-gray-100,
+.energy-app .border-gray-200,
+.energy-app .border-slate-100,
+.energy-app .border-slate-200,
+.energy-app .border-emerald-100,
+.energy-app .border-emerald-200,
+.energy-app .border-green-100,
+.energy-app .border-green-200 {
+  border-color: #047857 !important;
+}
+
+/* Light-green text → dark green (emerald-800) for legibility */
+.energy-app .text-emerald-200,
+.energy-app .text-emerald-300,
+.energy-app .text-emerald-400,
+.energy-app .text-emerald-500,
+.energy-app .text-green-200,
+.energy-app .text-green-300,
+.energy-app .text-green-400,
+.energy-app .text-green-500 {
+  color: #065f46 !important;
+}
