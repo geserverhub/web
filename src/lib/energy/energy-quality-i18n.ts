@@ -39,6 +39,7 @@ type EqStrings = {
   live: string;
   offline: string;
   lastUpdate: string;
+  recordingPeriod: string;
   refresh: string;
   loading: string;
   noMeter: string;
@@ -116,6 +117,7 @@ const th: EqStrings = {
   live: 'สด',
   offline: 'ออฟไลน์',
   lastUpdate: 'อัปเดตล่าสุด',
+  recordingPeriod: 'ช่วงเวลาบันทึก',
   refresh: 'รีเฟรช',
   loading: 'กำลังโหลด…',
   noMeter: 'กรุณาเลือกมิเตอร์เพื่อดูค่ากระแสไฟ',
@@ -194,6 +196,7 @@ const ko: EqStrings = {
   live: '실시간',
   offline: '오프라인',
   lastUpdate: '마지막 업데이트',
+  recordingPeriod: '기록 기간',
   refresh: '새로고침',
   loading: '로딩 중…',
   noMeter: '미터를 선택하면 전류를 볼 수 있습니다',
@@ -272,6 +275,7 @@ const en: EqStrings = {
   live: 'LIVE',
   offline: 'Offline',
   lastUpdate: 'Last update',
+  recordingPeriod: 'Recording period',
   refresh: 'Refresh',
   loading: 'Loading…',
   noMeter: 'Select a meter to view live current',
@@ -350,6 +354,7 @@ const cn: EqStrings = {
   live: '实时',
   offline: '离线',
   lastUpdate: '最后更新',
+  recordingPeriod: '记录时段',
   refresh: '刷新',
   loading: '加载中…',
   noMeter: '请选择电表查看实时电流',
@@ -428,6 +433,7 @@ const vn: EqStrings = {
   live: 'Trực tiếp',
   offline: 'Ngoại tuyến',
   lastUpdate: 'Cập nhật lần cuối',
+  recordingPeriod: 'Khoảng thời gian ghi',
   refresh: 'Làm mới',
   loading: 'Đang tải…',
   noMeter: 'Chọn đồng hồ để xem dòng điện',
@@ -506,6 +512,7 @@ const ms: EqStrings = {
   live: 'Langsung',
   offline: 'Luar talian',
   lastUpdate: 'Kemas kini terakhir',
+  recordingPeriod: 'Tempoh rakaman',
   refresh: 'Muat semula',
   loading: 'Memuatkan…',
   noMeter: 'Pilih meter untuk lihat arus langsung',

@@ -145,6 +145,7 @@ function EnergyQualityReportInner() {
   const [dbTablesReady, setDbTablesReady] = useState<boolean | null>(null);
   const [nextReportNumber, setNextReportNumber] = useState<string | null>(null);
   const [printing, setPrinting] = useState(false);
+  const [energySaverPrices, setEnergySaverPrices] = useState<{ kva: number; priceThb: number }[]>([]);
 
   const filteredDevices = useMemo(() => {
     if (!selectedLocation) return devices;
@@ -188,6 +189,7 @@ function EnergyQualityReportInner() {
       locale: reportLocale,
       livePending,
       noMeter,
+      energySaverPricesThb: energySaverPrices,
     });
     let doc = built;
     if (!noMeter && (dbCustomer || dbSite)) {
@@ -217,6 +219,7 @@ function EnergyQualityReportInner() {
     dbSite,
     rt,
     nextReportNumber,
+    energySaverPrices,
   ]);
 
   const canPrintReport = Boolean(
@@ -225,7 +228,8 @@ function EnergyQualityReportInner() {
 
   const fetchDevices = useCallback(async () => {
     try {
-      const res = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`, { cache: 'no-store' });
+      // Show meters from every site (incl. INPUT / pre_install meters), not just the selected site.
+      const res = await fetch(`/api/ge-energy/devices-setting?site=all`, { cache: 'no-store' });
       const json = await res.json();
       const rows = json.devices ?? json.data;
       if (!json.success || !Array.isArray(rows)) {
@@ -361,6 +365,27 @@ function EnergyQualityReportInner() {
   useEffect(() => {
     fetchDevices();
   }, [fetchDevices]);
+
+  // Energy Saver catalog (kVA → ex-VAT THB price) for sizing the investment.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/ge-energy/products?limit=100', { cache: 'no-store' });
+        const json = await res.json();
+        const rows = Array.isArray(json.products) ? json.products : [];
+        const prices = rows
+          .filter((p: { category?: string }) => (p.category || '').toLowerCase().includes('energy saver'))
+          .map((p: { capacity?: string | number; price?: number }) => ({
+            kva: Number(p.capacity),
+            priceThb: Number(p.price),
+          }))
+          .filter((p: { kva: number; priceThb: number }) => Number.isFinite(p.kva) && p.priceThb > 0);
+        setEnergySaverPrices(prices);
+      } catch {
+        setEnergySaverPrices([]);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!devices.length) return;

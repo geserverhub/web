@@ -637,6 +637,11 @@ export default function EnergyQualityPage() {
   const [metrics, setMetrics] = useState<MonitoringMetrics | null>(null);
   const [chartData, setChartData] = useState<Record<string, string | number>[]>([]);
   const [lastUpdate, setLastUpdate] = useState('');
+  const [recording, setRecording] = useState<{ start: string | null; end: string | null; count: number }>({
+    start: null,
+    end: null,
+    count: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -657,7 +662,8 @@ export default function EnergyQualityPage() {
 
   const fetchDevices = useCallback(async () => {
     try {
-      const res = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`, { cache: 'no-store' });
+      // Show meters from every site (incl. INPUT / pre_install meters), not just the selected site.
+      const res = await fetch(`/api/ge-energy/devices-setting?site=all`, { cache: 'no-store' });
       const json = await res.json();
       const rows = json.devices ?? json.data;
       if (!json.success || !Array.isArray(rows)) {
@@ -719,6 +725,14 @@ export default function EnergyQualityPage() {
           if (histVal != null && Number.isFinite(Number(histVal))) return Number(histVal);
           return null;
         });
+
+      if (json.success && json.data) {
+        setRecording({
+          start: json.data.recordingStart ?? null,
+          end: json.data.recordingEnd ?? null,
+          count: Number(json.data.recordingCount ?? 0),
+        });
+      }
 
       const fromHist = histJson.data?.stats;
       let nextMetrics: MonitoringMetrics | null = null;
@@ -809,6 +823,7 @@ export default function EnergyQualityPage() {
   useEffect(() => {
     if (!selectedDevice) {
       setIsLive(false);
+      setRecording({ start: null, end: null, count: 0 });
       return undefined;
     }
     fetchLiveMetrics();
@@ -993,6 +1008,28 @@ export default function EnergyQualityPage() {
               <div className="eq-device-strip-item">
                 <label>{ui.lastUpdate}</label>
                 <span>{lastUpdate || '—'}</span>
+              </div>
+              <div className="eq-device-strip-item">
+                <label>{ui.recordingPeriod}</label>
+                <span>
+                  {recording.start
+                    ? `${new Date(recording.start).toLocaleString()} – ${
+                        recording.end ? new Date(recording.end).toLocaleString() : '—'
+                      }`
+                    : '—'}
+                  {recording.start && recording.end ? (
+                    <small className="eq-device-strip-sub">
+                      {' '}
+                      ({Math.max(
+                        1,
+                        Math.ceil(
+                          (new Date(recording.end).getTime() - new Date(recording.start).getTime()) /
+                            86400000,
+                        ),
+                      )}d · {recording.count.toLocaleString()})
+                    </small>
+                  ) : null}
+                </span>
               </div>
               <div className="eq-device-strip-item">
                 <label>{ui.connection}</label>

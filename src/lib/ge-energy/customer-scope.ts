@@ -158,11 +158,16 @@ export function formatDeviceLocation(
   const raw = String(location || '').trim()
   const siteKey = normalizeSiteKey(site)
   if (siteKey === 'korea') {
+    // Collapse every Korea variant (Korea / KOREA / Republic (of) Korea /
+    // South Korea / 대한민국 / 한국 / Seongnam / Research Institute / empty)
+    // into one canonical location label.
     if (
       !raw ||
+      /korea/i.test(raw) ||
+      /대한민국/.test(raw) ||
+      /한국/.test(raw) ||
       /seongnam/i.test(raw) ||
-      /research\s*institute/i.test(raw) ||
-      /republic\s+of\s+korea/i.test(raw)
+      /research\s*institute/i.test(raw)
     ) {
       return 'KOREA'
     }

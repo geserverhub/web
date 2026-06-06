@@ -3,7 +3,11 @@ export type RecordScope = 'installed' | 'pre_install';
 /** Pre-install analysis is the default — meters read CH1 (before install) only. */
 export function normalizeRecordScope(scope?: string | null): RecordScope {
   const normalized = String(scope || '').trim().toLowerCase();
-  if (normalized === 'installed') return 'installed';
+  // 'in_out' meters measure both input + output → read the installed table
+  // (CH1 before + CH2 after), same data path as 'installed'.
+  if (normalized === 'installed' || normalized === 'in_out' || normalized === 'in-out') {
+    return 'installed';
+  }
   return 'pre_install';
 }
 

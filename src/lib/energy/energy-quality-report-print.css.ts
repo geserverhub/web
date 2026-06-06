@@ -97,12 +97,21 @@ body {
   page-break-after: always;
   break-after: page;
   margin-bottom: 0;
+  /* Fill the first printable page (A4 297mm − 11mm top − 18mm bottom ≈ 268mm),
+     kept under that to avoid spilling into a blank page. */
+  min-height: 262mm;
+  display: flex;
+  flex-direction: column;
 }
 
 .sheet--toc {
   page-break-after: always;
   break-after: page;
   margin-bottom: 3mm;
+  /* Fill the printable page (A4 297mm − 14mm top − 18mm bottom ≈ 265mm). */
+  min-height: 260mm;
+  display: flex;
+  flex-direction: column;
 }
 
 .print-logo {
@@ -126,6 +135,10 @@ body {
   margin-bottom: 0;
   background: #fff;
   box-shadow: 0 0.5mm 2mm rgba(2, 44, 34, 0.06);
+  /* Grow the cover card to fill the page; meta details settle at the bottom. */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .cover-band {
@@ -207,6 +220,9 @@ body {
   padding: 5mm 8mm 6mm;
   background: #fafafa;
   font-size: 8.25pt;
+  /* Push the detail block to the bottom of the grown cover card. */
+  margin-top: auto;
+  align-content: end;
 }
 
 .cover-meta dt {

@@ -467,7 +467,7 @@ const th: ReportStrings = {
   f_voltageSystem: 'ระบบแรงดัน',
   f_breakerSize: 'ขนาดเบรกเกอร์',
   f_recommendedInstallSize: 'ขนาดเครื่องที่แนะนำติดตั้ง',
-  measurementSizingHint: 'ประเมินจากกระแส Peak และโหลดจริง — สำหรับ GE Energy Tech Smart Power',
+  measurementSizingHint: 'ประเมินจากกระแส Peak และโหลดจริง — สำหรับ GE Energy Tech Smart Saving',
   f_resolution: 'ความละเอียดข้อมูล',
   f_totalRecords: 'จำนวนบันทึก',
   f_startDate: 'เริ่มวัด',
@@ -605,7 +605,7 @@ const th: ReportStrings = {
   f_transformer: 'หม้อแปลง',
   f_maintenance: 'การบำรุงรักษา',
   maintenanceNote: 'ตรวจ Thermographic หาก imbalance > 20%',
-  solutionApfc: 'GE Energy Tech Smart Power System',
+  solutionApfc: 'GE Energy Tech Smart Saving System',
   geSolutionCapabilities: 'ปรับแรงดัน · ปรับกระแส · ปรับเสถียร · เก็บกระแสไว้ใช้ภายหลัง',
   geCompareExecutiveTitle: 'เปรียบเทียบก่อนติดตั้ง — ระบบ GE Energy Tech',
   geCompareExecutiveDetail:
@@ -641,8 +641,8 @@ const th: ReportStrings = {
   geCompareConclusionDetail:
     'ก่อนติดตั้ง: {problem} — แนะนำ {solution} ({capabilities}) ประหยัด {saving}',
   investmentDefault: '200,000 บาท',
-  recApfcTitle: 'ติดตั้งระบบ GE Energy Tech Smart Power',
-  recApfcInvestTitle: 'ลงทุนระบบ GE Energy Tech Smart Power',
+  recApfcTitle: 'ติดตั้งระบบ GE Energy Tech Smart Saving',
+  recApfcInvestTitle: 'ลงทุนระบบ GE Energy Tech Smart Saving',
   recApfcDesc:
     'เปรียบเทียบก่อนติดตั้ง — ระบบปรับแรงดัน ปรับกระแส 3 เฟส ปรับเสถียรลดฮาร์มอนิก และเก็บกระแสไฟใช้ช่วง Peak/Off-peak',
   recRedistributeTitle: 'กระจายโหลด 3 เฟส',
@@ -929,7 +929,7 @@ const en: ReportStrings = {
   f_voltageSystem: 'Voltage System',
   f_breakerSize: 'Breaker size',
   f_recommendedInstallSize: 'Recommended install capacity',
-  measurementSizingHint: 'Estimated from peak current and measured load — for GE Energy Tech Smart Power',
+  measurementSizingHint: 'Estimated from peak current and measured load — for GE Energy Tech Smart Saving',
   f_resolution: 'Data Resolution',
   f_totalRecords: 'Total Records',
   f_startDate: 'Measurement Start',
@@ -1067,7 +1067,7 @@ const en: ReportStrings = {
   f_transformer: 'Transformer',
   f_maintenance: 'Maintenance',
   maintenanceNote: 'Thermographic inspection if imbalance > 20%',
-  solutionApfc: 'GE Energy Tech Smart Power System',
+  solutionApfc: 'GE Energy Tech Smart Saving System',
   geSolutionCapabilities: 'voltage · current · stability · stored energy',
   geCompareExecutiveTitle: 'Pre-install comparison — GE Energy Tech system',
   geCompareExecutiveDetail:
@@ -1103,8 +1103,8 @@ const en: ReportStrings = {
   geCompareConclusionDetail:
     'Before install: {problem} — recommend {solution} ({capabilities}) · save {saving}',
   investmentDefault: '200,000 THB',
-  recApfcTitle: 'Install GE Energy Tech Smart Power System',
-  recApfcInvestTitle: 'Invest in GE Energy Tech Smart Power',
+  recApfcTitle: 'Install GE Energy Tech Smart Saving System',
+  recApfcInvestTitle: 'Invest in GE Energy Tech Smart Saving',
   recApfcDesc:
     'Pre-install comparison — voltage regulation, 3-phase current balancing, stability/harmonic control, and stored energy for peak/off-peak use',
   recRedistributeTitle: 'Redistribute Three-Phase Load',

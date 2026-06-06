@@ -11,6 +11,7 @@ import {
   defaultReportInvestment,
   fmtReportMoney,
   reportKwhTariff,
+  priceInclVatFromThb,
 } from './energy-quality-currency';
 import {
   avgLineVoltage,
@@ -30,6 +31,8 @@ import { buildEnergyQualityReportId } from './energy-quality-report-id';
 import {
   formatBreakerSize,
   recommendGeEnergySaverKva,
+  priceForRecommendedKva,
+  type EnergySaverProduct,
 } from './energy-quality-equipment-sizing';
 
 export type RiskLevel = 'good' | 'warning' | 'critical';
@@ -90,6 +93,8 @@ export type BuildReportInput = {
   historyPeriod?: string;
   preparedBy?: string;
   locale: EqLocale;
+  /** Energy Saver catalog (kVA → ex-VAT THB price) used to size the investment. */
+  energySaverPricesThb?: EnergySaverProduct[];
 };
 
 export type ReportField = { label: string; value: string };
@@ -427,7 +432,6 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
   const hRisk = harmonicRisk(thdAvg, t);
 
   const kwhRate = reportKwhTariff(input.locale);
-  const investment = defaultReportInvestment(input.locale);
   const avgPowerKw = estimateActivePowerKw({
     avgCurrentA: avgI,
     powerFactor: pf,
@@ -547,6 +551,17 @@ export function buildEnergyQualityReport(input: BuildReportInput): EnergyQuality
   const breakerSizeDisplay = formatBreakerSize(peakVal) ?? '—';
   const recommendedInstallSize =
     recommendGeEnergySaverKva(peakKwForSizing, peakVal) ?? '—';
+
+  // Investment = real product price for the recommended kVA (ex-VAT THB → locale
+  // currency incl. local VAT). Falls back to the locale default if no catalog.
+  const productPriceThb = priceForRecommendedKva(
+    recommendedInstallSize,
+    input.energySaverPricesThb,
+  );
+  const investment =
+    productPriceThb != null
+      ? priceInclVatFromThb(productPriceThb, input.locale)
+      : defaultReportInvestment(input.locale);
 
   return {
     reportId,

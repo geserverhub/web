@@ -206,7 +206,7 @@ export async function PUT(req: NextRequest) {
   try {
     await ensureDevicesSchema()
     const body = await req.json()
-    const { deviceId, deviceName, location, owner, ipAddress, latitude, longitude, customerName, customerPhone, customerAddress, customerId } = body
+    const { deviceId, deviceName, location, owner, ipAddress, latitude, longitude, customerName, customerPhone, customerAddress, customerId, recordScope } = body
     const deviceColumns = await getDevicesColumnSet()
     const missingCustomerColumns: string[] = []
     const hasCustomerId = deviceColumns.has('customer_id')
@@ -268,6 +268,18 @@ export async function PUT(req: NextRequest) {
         params.push(customerAddress)
       } else {
         missingCustomerColumns.push('customerAddress')
+      }
+    }
+    if (recordScope !== undefined) {
+      if (deviceColumns.has('record_scope')) {
+        updates.push('record_scope = ?')
+        params.push(['pre_install', 'installed', 'in_out'].includes(recordScope) ? recordScope : 'installed')
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: 'Missing column record_scope in devices table',
+          hint: 'Add a record_scope column (e.g. ALTER TABLE devices ADD COLUMN record_scope VARCHAR(32) DEFAULT \'installed\')'
+        }, { status: 400 })
       }
     }
     if (customerId !== undefined && customerId !== null && customerId !== '') {
@@ -352,7 +364,8 @@ export async function POST(req: NextRequest) {
       passPhone,
       seriesNo,
       status,
-      customerId
+      customerId,
+      recordScope
     } = body
 
     if (!deviceName || !String(deviceName).trim()) {
@@ -510,6 +523,11 @@ export async function POST(req: NextRequest) {
       !hasCustomerId
     ) {
       missingColumns.push('customer_id')
+    }
+
+    if (deviceColumns.has('record_scope') && recordScope !== undefined) {
+      columns.push('record_scope')
+      values.push(['pre_install', 'installed', 'in_out'].includes(recordScope) ? recordScope : 'installed')
     }
 
     if (missingColumns.length > 0) {

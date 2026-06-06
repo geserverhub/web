@@ -32,7 +32,7 @@ interface Device {
   customerAddress?: string;
   location?: string;
   site?: string;
-  record_scope?: 'pre_install' | 'installed';
+  record_scope?: 'pre_install' | 'installed' | 'in_out';
   // momoge_cus fields
   mmgID?: number | null;
   meterID?: string | null;
@@ -123,12 +123,12 @@ export default function DevicesSettingPage() {
   const [creating, setCreating] = useState(false);
   const [createMsg, setCreateMsg] = useState<string | null>(null);
   const [clientReady, setClientReady] = useState(false);
-  const [installationType, setInstallationType] = useState<'pre_install' | 'installed'>('installed');
+  const [installationType, setInstallationType] = useState<'pre_install' | 'installed' | 'in_out'>('installed');
   const [addFormSite, setAddFormSite] = useState<'thailand' | 'korea'>('thailand');
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [mapPickerTarget, setMapPickerTarget] = useState<'add' | 'edit'>('add');
   const [editingRecordScope, setEditingRecordScope] = useState<number | null>(null);
-  const [selectedRecordScope, setSelectedRecordScope] = useState<'pre_install' | 'installed' | null>(null);
+  const [selectedRecordScope, setSelectedRecordScope] = useState<'pre_install' | 'installed' | 'in_out' | null>(null);
   const [updatingRecordScope, setUpdatingRecordScope] = useState(false);
   const [editMmgID, setEditMmgID] = useState<number | null>(null);
   const [editMeterID, setEditMeterID] = useState('');
@@ -577,7 +577,9 @@ export default function DevicesSettingPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/ge-energy/devices-setting?site=${selectedSite}`);
+      // Show every device across all sites (bound by deviceID PK), not just the
+      // currently selected site.
+      const response = await fetch(`/api/ge-energy/devices-setting?site=all`);
       const data = await response.json();
 
       if (data.success) {
@@ -591,7 +593,7 @@ export default function DevicesSettingPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedSite]);
+  }, []);
 
   // Fetch devices from API
   useEffect(() => {
@@ -718,6 +720,8 @@ export default function DevicesSettingPage() {
           preInstallDesc: 'Meter INPUT',
           installedLabel: 'มิเตอร์ OUTPUT',
           installedDesc: 'Meter OUTPUT',
+          inOutLabel: 'มิเตอร์ IN-OUT',
+          inOutDesc: 'Meter IN-OUT',
           customerSearchPlaceholder: 'ค้นหา ชื่อลูกค้า, เบอร์โทร, ที่อยู่...'
         };
       case 'ko':
@@ -805,6 +809,8 @@ export default function DevicesSettingPage() {
           preInstallDesc: 'Meter INPUT',
           installedLabel: '미터 OUTPUT',
           installedDesc: 'Meter OUTPUT',
+          inOutLabel: '미터 IN-OUT',
+          inOutDesc: 'Meter IN-OUT',
           customerSearchPlaceholder: '고객명, 전화, 주소 검색...'
         };
       default:
@@ -892,6 +898,8 @@ export default function DevicesSettingPage() {
           preInstallDesc: 'Meter INPUT',
           installedLabel: 'Meter OUTPUT',
           installedDesc: 'Meter OUTPUT',
+          inOutLabel: 'Meter IN-OUT',
+          inOutDesc: 'Meter IN-OUT',
           customerSearchPlaceholder: 'Search customer name, phone, address...'
         };
     }
@@ -1142,11 +1150,12 @@ export default function DevicesSettingPage() {
                             <div className="flex gap-2 items-center">
                               <select
                                 value={selectedRecordScope || device.record_scope || 'installed'}
-                                onChange={(e) => setSelectedRecordScope(e.target.value as 'pre_install' | 'installed')}
+                                onChange={(e) => setSelectedRecordScope(e.target.value as 'pre_install' | 'installed' | 'in_out')}
                                 className="px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500"
                               >
                                 <option value="pre_install">📝 {ui.preInstallLabel || 'Pre-Install'}</option>
                                 <option value="installed">✓ {ui.installedLabel || 'Installed'}</option>
+                                <option value="in_out">🔄 {ui.inOutLabel || 'IN-OUT'}</option>
                               </select>
                               <button
                                 onClick={updateRecordScope}
@@ -1170,9 +1179,11 @@ export default function DevicesSettingPage() {
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
                                 device.record_scope === 'pre_install'
                                   ? 'bg-blue-100 text-blue-700'
-                                  : 'bg-green-100 text-green-700'
+                                  : device.record_scope === 'in_out'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : 'bg-green-100 text-green-700'
                               }`}>
-                                {device.record_scope === 'pre_install' ? '📝' : '✓'} {device.record_scope === 'pre_install' ? (ui.preInstallLabel || 'Pre-Install') : (ui.installedLabel || 'Installed')}
+                                {device.record_scope === 'pre_install' ? '📝' : device.record_scope === 'in_out' ? '🔄' : '✓'} {device.record_scope === 'pre_install' ? (ui.preInstallLabel || 'Pre-Install') : device.record_scope === 'in_out' ? (ui.inOutLabel || 'IN-OUT') : (ui.installedLabel || 'Installed')}
                               </span>
                               <button
                                 onClick={() => {
@@ -1549,10 +1560,10 @@ export default function DevicesSettingPage() {
               {/* Installation Type Selection */}
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 space-y-3 border border-amber-200">
                 <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">{ui.installationTypeLabel} *</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition ${
-                    installationType === 'pre_install' 
-                      ? 'bg-blue-100 border-blue-500' 
+                    installationType === 'pre_install'
+                      ? 'bg-blue-100 border-blue-500'
                       : 'bg-white border-gray-200 hover:border-blue-300'
                   }`}>
                     <input
@@ -1560,7 +1571,7 @@ export default function DevicesSettingPage() {
                       name="installationType"
                       value="pre_install"
                       checked={installationType === 'pre_install'}
-                      onChange={(e) => setInstallationType(e.target.value as 'pre_install' | 'installed')}
+                      onChange={(e) => setInstallationType(e.target.value as 'pre_install' | 'installed' | 'in_out')}
                       className="w-4 h-4 accent-blue-600"
                     />
                     <div className="text-sm">
@@ -1569,8 +1580,8 @@ export default function DevicesSettingPage() {
                     </div>
                   </label>
                   <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition ${
-                    installationType === 'installed' 
-                      ? 'bg-green-100 border-green-500' 
+                    installationType === 'installed'
+                      ? 'bg-green-100 border-green-500'
                       : 'bg-white border-gray-200 hover:border-green-300'
                   }`}>
                     <input
@@ -1578,12 +1589,30 @@ export default function DevicesSettingPage() {
                       name="installationType"
                       value="installed"
                       checked={installationType === 'installed'}
-                      onChange={(e) => setInstallationType(e.target.value as 'pre_install' | 'installed')}
+                      onChange={(e) => setInstallationType(e.target.value as 'pre_install' | 'installed' | 'in_out')}
                       className="w-4 h-4 accent-green-600"
                     />
                     <div className="text-sm">
                       <p className="font-bold text-gray-800">{ui.installedLabel}</p>
                       <p className="text-xs text-gray-600">{ui.installedDesc}</p>
+                    </div>
+                  </label>
+                  <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition ${
+                    installationType === 'in_out'
+                      ? 'bg-purple-100 border-purple-500'
+                      : 'bg-white border-gray-200 hover:border-purple-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="installationType"
+                      value="in_out"
+                      checked={installationType === 'in_out'}
+                      onChange={(e) => setInstallationType(e.target.value as 'pre_install' | 'installed' | 'in_out')}
+                      className="w-4 h-4 accent-purple-600"
+                    />
+                    <div className="text-sm">
+                      <p className="font-bold text-gray-800">{ui.inOutLabel}</p>
+                      <p className="text-xs text-gray-600">{ui.inOutDesc}</p>
                     </div>
                   </label>
                 </div>

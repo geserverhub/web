@@ -195,16 +195,19 @@ async function fetchLatestRecord(deviceId: string, table: string, scope: RecordS
   const ch2L2 = pickCol(powerCols, ['metrics_L2'])
   const ch2L3 = pickCol(powerCols, ['metrics_L3'])
 
+  // Select raw column names (no alias): buildMonitoringPayload / readCh1Currents
+  // read the record by original column name (before_L1, metrics_L1, …), so
+  // aliasing here would silently null out voltage/current.
   const selectParts = ['device_id', 'record_time']
-  if (ch1V1) selectParts.push(`${ch1V1} AS ch1_v_L1`)
-  if (ch1V2) selectParts.push(`${ch1V2} AS ch1_v_L2`)
-  if (ch1V3) selectParts.push(`${ch1V3} AS ch1_v_L3`)
-  if (ch1I1) selectParts.push(`${ch1I1} AS ch1_i_L1`)
-  if (ch1I2) selectParts.push(`${ch1I2} AS ch1_i_L2`)
-  if (ch1I3) selectParts.push(`${ch1I3} AS ch1_i_L3`)
-  if (ch2L1) selectParts.push(`${ch2L1} AS ch2_L1`)
-  if (ch2L2) selectParts.push(`${ch2L2} AS ch2_L2`)
-  if (ch2L3) selectParts.push(`${ch2L3} AS ch2_L3`)
+  if (ch1V1) selectParts.push(ch1V1)
+  if (ch1V2) selectParts.push(ch1V2)
+  if (ch1V3) selectParts.push(ch1V3)
+  if (ch1I1) selectParts.push(ch1I1)
+  if (ch1I2) selectParts.push(ch1I2)
+  if (ch1I3) selectParts.push(ch1I3)
+  if (ch2L1) selectParts.push(ch2L1)
+  if (ch2L2) selectParts.push(ch2L2)
+  if (ch2L3) selectParts.push(ch2L3)
 
   for (const col of [
     'before_P', 'before_Q', 'before_S', 'before_PF', 'before_THD', 'before_F', 'before_kWh',
@@ -255,9 +258,21 @@ export async function GET(request: NextRequest) {
       const table = SCOPE_TO_TABLE[scope]
       const loaded = await fetchLatestRecord(deviceId, table, scope)
       if (loaded) {
+        // Recording span: first → latest record_time for this meter (real-time end).
+        const spanRows = await queryGe(
+          `SELECT MIN(record_time) AS first_rec, MAX(record_time) AS last_rec, COUNT(*) AS total
+           FROM ${table} WHERE device_id = ?`,
+          [deviceId]
+        )
+        const span = (spanRows[0] ?? {}) as { first_rec?: string | Date; last_rec?: string | Date; total?: number }
         return NextResponse.json({
           success: true,
-          data: buildMonitoringPayload(loaded.record, loaded),
+          data: {
+            ...buildMonitoringPayload(loaded.record, loaded),
+            recordingStart: span.first_rec ?? null,
+            recordingEnd: span.last_rec ?? null,
+            recordingCount: Number(span.total ?? 0),
+          },
           timestamp: new Date().toISOString(),
         })
       }

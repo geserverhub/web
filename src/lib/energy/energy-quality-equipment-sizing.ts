@@ -29,3 +29,31 @@ export function recommendGeEnergySaverKva(
   const kva = Math.ceil((base * 1.2) / 5) * 5;
   return `${Math.max(50, kva)} kVA`;
 }
+
+/** Energy Saver catalog entry: kVA capacity → ex-VAT price (THB). */
+export type EnergySaverProduct = { kva: number; priceThb: number };
+
+/** Numeric kVA from a recommendation string like "50 kVA". */
+export function parseKvaValue(recommended: string | null | undefined): number | null {
+  if (!recommended) return null;
+  const m = String(recommended).match(/([\d.]+)/);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Pick the ex-VAT THB price for the recommended kVA: smallest product whose
+ * capacity covers the requirement, else the largest available product.
+ */
+export function priceForRecommendedKva(
+  recommendedKva: string | null | undefined,
+  products: EnergySaverProduct[] | null | undefined,
+): number | null {
+  const kva = parseKvaValue(recommendedKva);
+  if (kva == null || !products || !products.length) return null;
+  const sorted = [...products].filter((p) => p.priceThb > 0).sort((a, b) => a.kva - b.kva);
+  if (!sorted.length) return null;
+  const match = sorted.find((p) => p.kva >= kva) ?? sorted[sorted.length - 1];
+  return match.priceThb;
+}

@@ -28,7 +28,9 @@ export function estimateMonthlyKwh(activePowerKw: number | null): number | null 
 
 /**
  * Monthly savings from GE Energy Tech (PF, peak, imbalance, stored energy).
- * Tuned so typical CH1 pre-install factory profile achieves payback ≤ 18 months.
+ * Conservative model: base 3% + PF correction + imbalance + peak-shaving.
+ * With investment taken from the real product price (per recommended kVA),
+ * a typical factory profile reaches payback ~11 months.
  */
 export function estimatePotentialSaving(input: {
   monthlyCost: number;
