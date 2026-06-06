@@ -77,6 +77,7 @@ interface MeterRow {
   ch2After: string;
   totalKwhCh1Before: number;
   totalKwhCh2After: number;
+  recordCount?: number;
   energySavedKwh: number;
   co2Kg: number;
   carbonCreditsTonnes: number;
@@ -882,7 +883,10 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
               {L(locale, 'เลือกมิเตอร์', 'Select Meters', '미터 선택')}
             </button>
             <button
-              onClick={() => fetchMeterTable(pickedIds.size > 0 ? Array.from(pickedIds) : undefined)}
+              onClick={() => {
+                setSelectedDeviceId(null);
+                fetchMeterTable(pickedIds.size > 0 ? Array.from(pickedIds) : undefined);
+              }}
               disabled={meterTable.loading}
               className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition"
             >
@@ -1026,9 +1030,10 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
               </thead>
               <tbody>
                 {meterTable.meters
-                  .filter((m) => selectedDeviceId === null || m.deviceId === selectedDeviceId)
+                  .filter((m) => (pickedIds.size === 0 ? true : pickedIds.has(m.deviceId)))
                   .map((m) => {
                     const isSelected = selectedDeviceId === m.deviceId;
+                    const hasTelemetry = (m.recordCount ?? 0) > 0 || m.energySavedKwh > 0;
                     const thbValue = fxData.krwToThb
                       ? Math.round(m.estimatedValueKRW * fxData.krwToThb)
                       : m.estimatedValueTHB;
@@ -1039,7 +1044,9 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                         className={`border-b border-gray-50 cursor-pointer transition-colors ${
                           isSelected
                             ? 'bg-emerald-50 border-emerald-100'
-                            : 'hover:bg-gray-50'
+                            : !hasTelemetry
+                              ? 'bg-gray-50/60 hover:bg-gray-50'
+                              : 'hover:bg-gray-50'
                         }`}
                       >
                         <td className="py-3 px-3 text-gray-400 font-mono">{m.rank}</td>
@@ -1047,6 +1054,11 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                           <span className={`font-semibold ${isSelected ? 'text-emerald-700' : 'text-gray-800'}`}>
                             {m.deviceName}
                           </span>
+                          {!hasTelemetry && (
+                            <p className="text-[10px] text-gray-400 mt-0.5">
+                              {L(locale, 'ไม่มีข้อมูลในช่วงที่เลือก', 'No data in selected period', '선택 기간 데이터 없음')}
+                            </p>
+                          )}
                         </td>
                         <td className="py-3 px-3 font-mono text-xs text-gray-500">{m.GEsaveID}</td>
                         <td className="py-3 px-3 text-center font-mono text-xs text-orange-700">{m.ch1Before}</td>
@@ -1062,7 +1074,7 @@ ${fxData.krwToThb ? `<p style="font-size:7.5pt;color:#000;text-align:right;margi
                     );
                   })}
               </tbody>
-              {(selectedDeviceId === null && meterTable.totals) && (
+              {(selectedDeviceId === null && meterTable.totals && pickedIds.size !== 1) && (
                 <tfoot>
                   <tr className="border-t-2 border-emerald-200 bg-emerald-50">
                     <td className="py-3 px-3" colSpan={3}>
