@@ -108,25 +108,40 @@ export function normalizeSiteKey(raw: string | null | undefined): string {
   return 'thailand'
 }
 
-/** Prefer site encoded in GEsaveID (GE-KR / GE-TH), then devices.site, then location. */
+/** Prefer the configured devices.site, then the GEsaveID prefix (GE-KR / GE-TH), then location. */
 export function resolveDeviceSite(
   site: string | null | undefined,
   meterId?: string | null | undefined,
   location?: string | null | undefined,
 ): string {
+  if (String(site || '').trim()) return normalizeSiteKey(site)
   const fromMeter = inferSiteFromMeterId(meterId)
   if (fromMeter) return fromMeter
-  if (String(site || '').trim()) return normalizeSiteKey(site)
   return normalizeSiteKey(location)
 }
 
-/** SQL expression: effective site from meter ID prefix or devices.site/location. */
+/** SQL: normalize a raw devices.site value to a canonical site key, else NULL. */
+function configuredSiteSql(deviceAlias: string): string {
+  const s = `LOWER(TRIM(${deviceAlias}.site))`
+  return `NULLIF(CASE
+      WHEN ${s} IN ('korea', 'kr', 'ko') THEN 'korea'
+      WHEN ${s} IN ('thailand', 'th') THEN 'thailand'
+      WHEN ${s} IN ('vietnam', 'vn') THEN 'vietnam'
+      WHEN ${s} IN ('malaysia', 'my', 'ms') THEN 'malaysia'
+      ELSE NULL
+    END, '')`
+}
+
+/** SQL expression: effective site — configured devices.site first, then meter-ID prefix, then location. */
 export function effectiveDeviceSiteSql(meterIdColumn: string | null, deviceAlias = 'd'): string {
+  const configured = configuredSiteSql(deviceAlias)
+  const locationFallback = `LOWER(COALESCE(${deviceAlias}.location, 'thailand'))`
   if (!meterIdColumn) {
-    return `LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand'))`
+    return `COALESCE(${configured}, ${locationFallback})`
   }
   const col = `UPPER(COALESCE(${deviceAlias}.${meterIdColumn}, ''))`
   return `COALESCE(
+    ${configured},
     NULLIF(CASE
       WHEN ${col} LIKE 'GE-KR-%' THEN 'korea'
       WHEN ${col} LIKE 'GE-TH-%' THEN 'thailand'
@@ -134,7 +149,7 @@ export function effectiveDeviceSiteSql(meterIdColumn: string | null, deviceAlias
       WHEN ${col} LIKE 'GE-MY-%' THEN 'malaysia'
       ELSE NULL
     END, NULL),
-    LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand'))
+    ${locationFallback}
   )`
 }
 
