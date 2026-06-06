@@ -557,6 +557,8 @@ ${fxKrwToThb ? `<p class="footnote">* THB ${t('คำนวณจากอัต
 <!-- ═══ 6. DECLARATION & SIGNATURES ═══ -->
 <div class="sec">6. ${t('คำรับรองและลายมือชื่อ', 'Declaration & Authorized Signatures', '선언 및 서명')}</div>
 <div class="decl">${declText}</div>
+<!-- extra spacing to move signature block down by ~3 lines -->
+<div style="height:60px"></div>
 <div class="sig-grid">
   <div class="sig">
     <div class="sig-lbl">${t('ผู้จัดทำรายงาน', 'Report Preparer', '보고서 작성자')}</div>
