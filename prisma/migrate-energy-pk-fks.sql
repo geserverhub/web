@@ -92,8 +92,8 @@ SET @has_cm = (
 SET @sql_cm = IF(@has_cm > 0,
   'UPDATE carbon_meters cm
    INNER JOIN devices d ON (
-     (cm.meterType = ''before'' AND d.beforeMeterNo IS NOT NULL AND d.beforeMeterNo = cm.meterNo)
-     OR (cm.meterType = ''metrics'' AND d.metricsMeterNo IS NOT NULL AND d.metricsMeterNo = cm.meterNo)
+     (cm.meterType = ''before'' AND d.beforeMeterNo IS NOT NULL AND d.beforeMeterNo COLLATE utf8mb4_unicode_ci = cm.meterNo)
+     OR (cm.meterType = ''metrics'' AND d.metricsMeterNo IS NOT NULL AND d.metricsMeterNo COLLATE utf8mb4_unicode_ci = cm.meterNo)
    )
    SET cm.deviceID = d.deviceID
    WHERE cm.deviceID IS NULL OR cm.deviceID <> d.deviceID',
