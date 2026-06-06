@@ -374,6 +374,7 @@ export function buildCarbonPrintHtml(options: {
 </head>
 <body>
 
+<div class="sheet">
 <!-- ═══ HEADER ═══ -->
 <div class="rpt-hdr">
   <div class="rpt-hdr-top">
@@ -451,7 +452,9 @@ export function buildCarbonPrintHtml(options: {
     </ul>
   </div>
 </div>
+</div>
 
+<div class="sheet">
 <!-- ═══ 2. METHODOLOGY ═══ -->
 <div class="sec">2. ${t('วิธีการคำนวณตามมาตรฐาน ISO 14064-2:2019', 'Calculation Methodology — ISO 14064-2:2019', '계산 방법론 — ISO 14064-2:2019')}</div>
 ${methodologyHtml}
@@ -477,9 +480,10 @@ ${methodologyHtml}
     </div>
   </div>
 </div>
+</div>
 
-<!-- ═══ 3. METER DETAIL DATA ═══ -->
-<div class="pb"></div>
+<div class="sheet sheet--meters">
+<div class="sheet__body">
 <div class="sec">3. ${t('ข้อมูลรายละเอียดต่อมิเตอร์', 'Detailed Data per Meter', '미터별 상세 데이터')}${pickedCount > 0 ? ` (${pickedCount} ${t('มิเตอร์', 'meters', '미터')})` : ''}</div>
 ${
   analysisMeters.length
@@ -509,6 +513,11 @@ ${fxKrwToThb ? `<p class="footnote">* THB ${t('คำนวณจากอัต
     : `<div class="warn">⚠️ ${t('ไม่มีข้อมูลมิเตอร์ — กด "คำนวณ" ก่อนพิมพ์', 'No meter data — press Calculate before printing', '미터 데이터 없음 — 인쇄 전 계산')}</div>`
 }
 
+</div>
+</div>
+
+<div class="sheet">
+<div class="sheet__body sheet__body--cert">
 <!-- ═══ 4. CERTIFICATION REQUIREMENTS ═══ -->
 <div class="sec">4. ${t('ข้อกำหนดการขอรับรองคาร์บอนเครดิต', 'Carbon Credit Certification Requirements', '탄소 크레딧 인증 요건')}</div>
 <div class="two-col">
@@ -534,9 +543,12 @@ ${fxKrwToThb ? `<p class="footnote">* THB ${t('คำนวณจากอัต
     ${checkItem(false, t('การตรวจสอบ KAU/KOC', '3rd party KAU/KOC verification', 'KAU/KOC 제3자 검증'))}
   </div>
 </div>
+</div>
+</div>
 
+<div class="sheet">
+<div class="sheet__body">
 <!-- ═══ 5. STANDARDS & REFERENCES ═══ -->
-<div class="pb"></div>
 <div class="sec">5. ${t('มาตรฐานอ้างอิงและการรับรอง', 'Standards & Certification References', '표준 및 인용 참고')}</div>
 <div class="cert-grid">${certGridHtml}</div>
 
@@ -573,6 +585,8 @@ ${fxKrwToThb ? `<p class="footnote">* THB ${t('คำนวณจากอัต
     <span>Report ID: <strong>${esc(reportId)}</strong> · ${esc(now)} · GE Energy Technology Co., Ltd.</span>
     <span>ISO 14064-2:2019 · T-VER · K-ETS · GHG Protocol · Gold Standard · UNFCCC CDM</span>
   </div>
+</div>
+</div>
 </div>
 </body></html>`;
 }

@@ -13,6 +13,39 @@ html, body {
   print-color-adjust: exact;
 }
 
+/* ── Print sheets (one logical page each) ── */
+.sheet {
+  box-sizing: border-box;
+  page-break-after: always;
+  break-after: page;
+  /* A4 297mm − 14mm top − 14mm bottom ≈ 269mm printable */
+  min-height: 265mm;
+  display: flex;
+  flex-direction: column;
+}
+.sheet:last-of-type {
+  page-break-after: auto;
+  break-after: auto;
+}
+.sheet__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.sheet__body--cert .two-col {
+  flex: 1 1 auto;
+  align-items: stretch;
+}
+.sheet__body--cert .checklist {
+  min-height: 100%;
+}
+.sheet--meters .leak-box,
+.sheet--meters .warn {
+  margin-top: auto;
+}
+.sheet > .sec:first-child,
+.sheet__body > .sec:first-child { margin-top: 0; }
+
 /* ── Header ── */
 .rpt-hdr {
   background: linear-gradient(135deg, #047857 0%, #059669 35%, #10b981 70%, #34d399 100%);
@@ -88,7 +121,7 @@ html, body {
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .info-box {
   border: 1.5px solid #93c5fd; border-radius: 8px;
-  padding: 12px 14px; background: #eff6ff; break-inside: avoid;
+  padding: 12px 14px; background: #eff6ff; break-inside: auto;
 }
 .info-box h4 { color: #1d4ed8; font-size: 9pt; font-weight: 900; margin-bottom: 7px; }
 .info-box ul { padding-left: 16px; font-size: 8.5pt; color: #111; line-height: 1.65; }
@@ -122,7 +155,10 @@ html, body {
 .step-ref { font-size: 7.5pt; color: #6b7280; margin-top: 4px; font-style: italic; }
 
 /* ── Data table (meters) ── */
-.data-tbl { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 10px; }
+.data-tbl { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 10px; break-inside: auto; }
+.data-tbl thead { display: table-header-group; }
+.data-tbl tfoot { display: table-footer-group; }
+.data-tbl tr { break-inside: avoid; break-after: auto; }
 .data-tbl th {
   background: linear-gradient(135deg, #047857, #059669);
   color: #fff; padding: 7px 6px; text-align: left;
@@ -160,7 +196,7 @@ html, body {
 /* ── Checklist / cert ── */
 .checklist {
   border: 1.5px solid #d1fae5; border-radius: 8px;
-  padding: 12px 14px; background: #f0fdf4; break-inside: avoid;
+  padding: 12px 14px; background: #f0fdf4; break-inside: auto;
 }
 .checklist h4 { color: #047857; font-size: 9pt; font-weight: 900; margin-bottom: 7px; }
 .check-item { display: flex; align-items: flex-start; gap: 7px; font-size: 8.5pt; margin-bottom: 5px; color: #111; }
@@ -174,15 +210,15 @@ html, body {
 
 .leak-box {
   border: 1.5px solid #fca5a5; border-radius: 8px;
-  padding: 10px 14px; background: #fef2f2; margin: 10px 0 14px; break-inside: avoid;
+  padding: 10px 14px; background: #fef2f2; margin: 10px 0 0; break-inside: auto;
 }
 .leak-box h4 { color: #dc2626; font-size: 9pt; font-weight: 900; margin-bottom: 5px; }
 .leak-box p { font-size: 8.5pt; color: #991b1b; line-height: 1.55; }
 
-.cert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.cert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; break-inside: auto; }
 .cert {
   border: 1.5px solid #bbf7d0; border-radius: 8px;
-  padding: 9px 10px; background: #fff; break-inside: avoid; font-size: 8pt;
+  padding: 9px 10px; background: #fff; break-inside: auto; font-size: 8pt;
 }
 .cert-ok { color: #059669; font-weight: 800; font-size: 7pt; margin-bottom: 2px; }
 .cert-org { font-weight: 900; color: #047857; font-size: 8.5pt; margin-bottom: 2px; }
@@ -190,8 +226,8 @@ html, body {
 .cert-url { font-size: 6.5pt; color: #2563eb; word-break: break-all; line-height: 1.35; }
 
 .rpt-footer-bar {
-  border-top: 1.5px solid #d1fae5; padding-top: 8px; margin-top: 16px;
-  font-size: 7pt; color: #374151;
+  border-top: 1.5px solid #d1fae5; padding-top: 8px; margin-top: auto;
+  font-size: 7pt; color: #374151; flex-shrink: 0;
 }
 .footer-lang { font-size: 7pt; color: #6b7280; margin-bottom: 4px; font-weight: 600; }
 .footer-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px; font-weight: 600; }
@@ -220,7 +256,7 @@ html, body {
   font-size: 7.5pt; color: #374151; font-weight: 600;
   display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px;
 }
-.pb { page-break-before: always; }
+.sec { break-after: avoid; page-break-after: avoid; }
 .warn { border: 1.5px solid #fde68a; border-radius: 8px; padding: 10px 14px; background: #fffbeb; font-size: 8.5pt; color: #92400e; font-weight: 600; margin-bottom: 10px; }
 `;
 
