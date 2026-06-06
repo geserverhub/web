@@ -169,6 +169,33 @@ html, body {
   border-radius: 3px; display: inline-flex; align-items: center; justify-content: center;
   font-size: 9pt; color: #10b981; font-weight: 900; flex-shrink: 0;
 }
+.check-box.pending { border-color: #9ca3af; color: #9ca3af; }
+.check-pending { color: #6b7280; }
+
+.leak-box {
+  border: 1.5px solid #fca5a5; border-radius: 8px;
+  padding: 10px 14px; background: #fef2f2; margin: 10px 0 14px; break-inside: avoid;
+}
+.leak-box h4 { color: #dc2626; font-size: 9pt; font-weight: 900; margin-bottom: 5px; }
+.leak-box p { font-size: 8.5pt; color: #991b1b; line-height: 1.55; }
+
+.cert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.cert {
+  border: 1.5px solid #bbf7d0; border-radius: 8px;
+  padding: 9px 10px; background: #fff; break-inside: avoid; font-size: 8pt;
+}
+.cert-ok { color: #059669; font-weight: 800; font-size: 7pt; margin-bottom: 2px; }
+.cert-org { font-weight: 900; color: #047857; font-size: 8.5pt; margin-bottom: 2px; }
+.cert-std { color: #111; font-size: 7.5pt; line-height: 1.4; margin-bottom: 3px; }
+.cert-url { font-size: 6.5pt; color: #2563eb; word-break: break-all; line-height: 1.35; }
+
+.rpt-footer-bar {
+  border-top: 1.5px solid #d1fae5; padding-top: 8px; margin-top: 16px;
+  font-size: 7pt; color: #374151;
+}
+.footer-lang { font-size: 7pt; color: #6b7280; margin-bottom: 4px; font-weight: 600; }
+.footer-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px; font-weight: 600; }
+
 .monitor-box {
   border: 1.5px solid #c7d2fe; border-radius: 8px;
   padding: 12px 14px; background: #eef2ff; margin-top: 10px; break-inside: avoid;

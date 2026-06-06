@@ -210,7 +210,6 @@ export function buildCarbonPrintHtml(options: {
     creditPricePerTonne,
     analysisMeters,
     perDeviceCards,
-    creditsDenominator,
     scopedTotals,
     meterTotals,
     scopeLabel,
@@ -296,25 +295,6 @@ export function buildCarbonPrintHtml(options: {
       </tr></tfoot>`
     : '';
 
-  const deviceCardsHtml = perDeviceCards
-    .map((device) => {
-      const share =
-        creditsDenominator > 0 ? (device.carbonCreditsTonnes / creditsDenominator) * 100 : 0;
-      return `<div class="dev-card">
-        <div class="dev-hdr">
-          <strong>${esc(device.deviceName)}</strong>
-          <span class="dev-id">${esc(device.GEsaveID || '—')}</span>
-        </div>
-        <div class="dev-stats">
-          <div><label>${t('ไฟประหยัด', 'Energy Saved', '에너지 절감')}</label><strong>${fmtReport(device.energySavedKwh)} kWh</strong></div>
-          <div><label>CO₂</label><strong>${fmtReport(device.co2Kg)} kg</strong></div>
-          <div><label>${t('คาร์บอนเครดิต', 'Carbon Credits', '탄소 크레딧')}</label><strong>${fmtReport(device.carbonCreditsTonnes)} tCO₂e</strong></div>
-          <div><label>${t('สัดส่วน', 'Share', '비율')}</label><strong>${fmtReport(share)}%</strong></div>
-        </div>
-      </div>`;
-    })
-    .join('');
-
   const methodologyHtml = ISO14064MethodologySteps.map((step) => {
     const title =
       printLocale === 'ko' ? step.titleKo : printLocale === 'th' ? step.titleTh : step.titleEn;
@@ -341,6 +321,48 @@ export function buildCarbonPrintHtml(options: {
   const fxRow = fxKrwToThb
     ? `<tr><td>${t('อัตราแลกเปลี่ยน KRW/THB (เรียลไทม์)', 'KRW/THB Exchange Rate (live)', 'KRW/THB 환율 (실시간)')}</td><td><strong>${fxKrwToThb.toFixed(6)}</strong></td><td>THB / 1 KRW</td><td>open.er-api.com</td></tr>`
     : '';
+
+  const langLabel =
+    printLocale === 'ko'
+      ? '한국어 · English · ไทย'
+      : printLocale === 'th'
+        ? 'ไทย · English · 한국어'
+        : 'English · 한국어 · ไทย';
+
+  const leakText = t(
+    'การรั่วไหลที่พิจารณา: ไม่พบการรั่วไหลที่มีนัยสำคัญ เนื่องจากโครงการเป็นการเพิ่มประสิทธิภาพพลังงานภายในขอบเขตเดิม ไม่มีการเพิ่มกำลังการผลิตหรือการเคลื่อนย้ายกิจกรรม (ISO 14064-2 §6.6)',
+    'Leakage considered: No significant leakage identified. The project involves energy efficiency improvement within the existing boundary, with no increase in production capacity or activity displacement (ISO 14064-2 §6.6).',
+    '누출 고려: 중요한 누출 없음. 프로젝트는 기존 경계 내 에너지 효율 개선이며 생산 용량 증가나 활동 이전 없음 (ISO 14064-2 §6.6).',
+  );
+
+  const certGridHtml = [
+    { ok: 'Standard', org: 'ISO', std: 'ISO 14064-2:2019 — GHG Accounting & Reporting', url: 'https://www.iso.org/standard/66454.html' },
+    { ok: 'Guideline', org: 'IPCC', std: '2006 IPCC Guidelines for National GHG Inventories', url: 'https://www.ipcc-nggip.iges.or.jp/public/2006gl/' },
+    { ok: t('ค่าแฟกเตอร์', 'Emission Factor', '배출 계수'), org: 'TGO / DEDE (Thailand)', std: 'Grid Emission Factor 2023 — 0.5135 kgCO₂/kWh', url: 'https://www.tgo.or.th/2020/index.php/th/ghg-factor' },
+    { ok: 'T-VER Program', org: 'TGO — Thailand', std: 'T-VER Standard v3.0 — Voluntary Emission Reduction', url: 'https://www.tgo.or.th/2020/index.php/th/tver-standard' },
+    { ok: 'K-ETS Market', org: 'KRX — Korea Exchange', std: 'Korea ETS (K-ETS) Carbon Market 2024', url: 'https://ets.krx.co.kr' },
+    { ok: 'Protocol', org: 'GHG Protocol / World Bank', std: 'GHG Protocol Corporate Standard & Carbon Pricing', url: 'https://ghgprotocol.org/corporate-standard' },
+    { ok: 'CDM Methodology', org: 'UNFCCC', std: 'CDM AMS-II.C / AMS-II.E (Energy Efficiency)', url: 'https://cdm.unfccc.int/methodologies/SSCmethodologies/approved' },
+    { ok: 'Gold Standard', org: 'Gold Standard Foundation', std: 'Gold Standard for the Global Goals (GS4GG)', url: GOLD_STANDARD_URLS.standard },
+    {
+      ok: t('อัตราแลกเปลี่ยน', 'Exchange Rate', '환율'),
+      org: 'open.er-api.com',
+      std: fxKrwToThb ? `Live KRW/THB — ${fxKrwToThb.toFixed(6)} THB/KRW` : 'Live KRW/THB',
+      url: 'https://open.er-api.com',
+    },
+  ]
+    .map(
+      (c) => `<div class="cert">
+      <div class="cert-ok">✓ ${esc(c.ok)}</div>
+      <div class="cert-org">${esc(c.org)}</div>
+      <div class="cert-std">${esc(c.std)}</div>
+      <div class="cert-url">${esc(c.url)}</div>
+    </div>`,
+    )
+    .join('');
+
+  const checkItem = (done: boolean, text: string) =>
+    `<div class="check-item"><span class="check-box${done ? '' : ' pending'}">${done ? '✓' : '□'}</span><span${done ? '' : ' class="check-pending"'}>${esc(text)}</span></div>`;
 
   return `<!DOCTYPE html>
 <html lang="${htmlLang}">
@@ -456,89 +478,101 @@ ${methodologyHtml}
   </div>
 </div>
 
-<!-- ═══ 3. PER-METER DATA ═══ -->
+<!-- ═══ 3. METER DETAIL DATA ═══ -->
 <div class="pb"></div>
-<div class="sec">3. ${t('ข้อมูลรายมิเตอร์', 'Per-Meter Device Data', '미터별 장치 데이터')}${pickedCount > 0 ? ` (${pickedCount} ${t('มิเตอร์', 'meters', '미터')})` : ''}</div>
+<div class="sec">3. ${t('ข้อมูลรายละเอียดต่อมิเตอร์', 'Detailed Data per Meter', '미터별 상세 데이터')}${pickedCount > 0 ? ` (${pickedCount} ${t('มิเตอร์', 'meters', '미터')})` : ''}</div>
 ${
   analysisMeters.length
     ? `<table class="data-tbl">
   <thead><tr>
-    <th>#</th><th>${t('อุปกรณ์', 'Device', '장치')}</th><th>Meter ID</th>
-    <th class="center">${t('CH1 ก่อน', 'CH1 Before', 'CH1 설치 전')}</th>
-    <th class="center">${t('CH2 หลัง', 'CH2 After', 'CH2 설치 후')}</th>
-    <th class="num">${t('kWh CH1', 'kWh CH1', 'kWh CH1')}</th>
-    <th class="num">${t('kWh CH2', 'kWh CH2', 'kWh CH2')}</th>
-    <th class="num">${t('ไฟประหยัด', 'Saved', '절감')}</th>
-    <th class="num">CO₂</th>
-    <th class="num">${t('เครดิต', 'Credits', '크레딧')}</th>
-    <th class="num">KRW</th>
-    <th class="num">THB</th>
+    <th>#</th>
+    <th>${t('อุปกรณ์', 'Device', '장치')}</th>
+    <th>Meter ID</th>
+    <th class="center">${t('CH1 ก่อนติดตั้ง', 'CH1 Before Install', 'CH1 설치 전')}</th>
+    <th class="center">${t('CH2 หลังติดตั้ง', 'CH2 After Install', 'CH2 설치 후')}</th>
+    <th class="num">${t('kWh CH1 ก่อน', 'Total kWh CH1 Before', 'CH1 설치 전 kWh')}</th>
+    <th class="num">${t('kWh CH2 หลัง', 'Total kWh CH2 After', 'CH2 설치 후 kWh')}</th>
+    <th class="num">${t('kWh ประหยัด', 'kWh Saved', '절감 kWh')}</th>
+    <th class="num">CO₂ (kg)</th>
+    <th class="num">${t('เครดิต', 'Credits', '크레딧')} (tCO₂e)</th>
+    <th class="num">${t('มูลค่า', 'Value', '가치')} (KRW)</th>
+    <th class="num">${t('มูลค่า', 'Value', '가치')} (THB)</th>
   </tr></thead>
   <tbody>${meterRowsHtml}</tbody>
   ${totalsFootHtml}
 </table>
-${fxKrwToThb ? `<p class="footnote">* THB ${t('คำนวณจากอัตราแลกเปลี่ยนสด', 'calculated from live rate', '실시간 환율 적용')}: 1 KRW = ${fxKrwToThb.toFixed(6)} THB</p>` : ''}`
+${fxKrwToThb ? `<p class="footnote">* THB ${t('คำนวณจากอัตราแลกเปลี่ยนสด', 'calculated from live rate', '실시간 환율 적용')}: 1 KRW = ${fxKrwToThb.toFixed(6)} THB (open.er-api.com)</p>` : ''}
+<div class="leak-box">
+  <h4>⚖️ ${t('การพิจารณาการรั่วไหล (Leakage Assessment) — ISO 14064-2 §6.6', 'Leakage Assessment — ISO 14064-2 §6.6', '누출 평가 — ISO 14064-2 §6.6')}</h4>
+  <p>${esc(leakText)}</p>
+</div>`
     : `<div class="warn">⚠️ ${t('ไม่มีข้อมูลมิเตอร์ — กด "คำนวณ" ก่อนพิมพ์', 'No meter data — press Calculate before printing', '미터 데이터 없음 — 인쇄 전 계산')}</div>`
 }
 
-<!-- ═══ 4. PER-DEVICE ANALYSIS ═══ -->
-${
-  perDeviceCards.length
-    ? `<div class="sec">4. ${t('การวิเคราะห์ต่อตัวมิเตอร์', 'Per-Meter Analysis', '미터별 분석')} (${perDeviceCards.length})</div>
-<div class="dev-grid">${deviceCardsHtml}</div>`
-    : ''
-}
-
-<!-- ═══ 5. CERTIFICATION ═══ -->
-<div class="pb"></div>
-<div class="sec">5. ${t('ข้อกำหนดการขอรับรองคาร์บอนเครดิต', 'Carbon Credit Certification Requirements', '탄소 크레딧 인증 요건')}</div>
+<!-- ═══ 4. CERTIFICATION REQUIREMENTS ═══ -->
+<div class="sec">4. ${t('ข้อกำหนดการขอรับรองคาร์บอนเครดิต', 'Carbon Credit Certification Requirements', '탄소 크레딧 인증 요건')}</div>
 <div class="two-col">
   <div class="checklist">
-    <h4>🇹🇭 T-VER (TGO Thailand)</h4>
-    <div class="check-item"><span class="check-box">✓</span><span>PDD / Monitoring Report</span></div>
-    <div class="check-item"><span class="check-box">✓</span><span>${t('รายงาน ISO 14064-2 ฉบับนี้', 'This ISO 14064-2 report', '이 ISO 14064-2 보고서')}</span></div>
-    <div class="check-item"><span class="check-box">✓</span><span>TGO/DEDE 2023 EF (0.5135)</span></div>
-    <div class="check-item"><span class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</span><span style="color:#6b7280">${t('การตรวจสอบโดย DOE/VVB', '3rd party DOE/VVB verification', 'DOE/VVB 제3자 검증')}</span></div>
+    <h4>🇹🇭 T-VER (TGO Thailand) — ${t('รายการตรวจสอบ', 'Submission Checklist', '제출 체크리스트')}</h4>
+    ${checkItem(true, 'PIN/PDD — Project Design Document')}
+    ${checkItem(true, t('เอกสารแสดงขอบเขตโครงการ', 'Project boundary documentation', '프로젝트 경계 문서'))}
+    ${checkItem(true, t('การพิสูจน์ Additionality', 'Additionality proof (UNFCCC Tool)', '추가성 증명 (UNFCCC 도구)'))}
+    ${checkItem(true, t('รายงานการตรวจวัด (Monitoring Report)', 'Monitoring Report with meter data', '미터 데이터 모니터링 보고서'))}
+    ${checkItem(true, t('ค่าแฟกเตอร์ TGO/DEDE ปี 2566', 'TGO/DEDE 2023 emission factor reference', 'TGO/DEDE 2023 배출 계수'))}
+    ${checkItem(true, t('รายงาน ISO 14064-2 ฉบับนี้', 'This ISO 14064-2 report', '이 ISO 14064-2 보고서'))}
+    ${checkItem(false, t('การตรวจสอบโดย DOE/VVB', '3rd party verification by DOE/VVB', 'DOE/VVB 제3자 검증'))}
+    ${checkItem(false, t('ยื่นผ่าน TGO Carbon Market Portal', 'Submit via TGO Carbon Market Portal', 'TGO Carbon Market Portal 제출'))}
   </div>
   <div class="checklist">
-    <h4>🇰🇷 K-ETS (KRX Korea)</h4>
-    <div class="check-item"><span class="check-box">✓</span><span>GHG Reduction Plan</span></div>
-    <div class="check-item"><span class="check-box">✓</span><span>${t('รายงาน ISO 14064-2 ฉบับนี้', 'This ISO 14064-2 report', '이 ISO 14064-2 보고서')}</span></div>
-    <div class="check-item"><span class="check-box">✓</span><span>${t('ผลการตรวจวัด Baseline & Actual', 'Baseline and actual measurement results', '기준선 및 실제 측정 결과')}</span></div>
-    <div class="check-item"><span class="check-box" style="border-color:#9ca3af;color:#9ca3af">□</span><span style="color:#6b7280">${t('ยื่นผ่าน KRX ETS', 'Register on KRX ETS', 'KRX ETS 등록')}</span></div>
+    <h4>🇰🇷 K-ETS (KRX Korea) — ${t('รายการตรวจสอบ', 'Submission Checklist', '제출 체크리스트')}</h4>
+    ${checkItem(true, t('แผนการลดก๊าซเรือนกระจก (GHG Reduction Plan)', 'GHG Reduction Plan (external offset)', '온실가스 감축 계획'))}
+    ${checkItem(true, t('เอกสารโครงการ KAU/KOC', 'KAU/KOC project documentation', 'KAU/KOC 프로젝트 문서'))}
+    ${checkItem(true, t('ผลการตรวจวัด Baseline & Actual', 'Baseline and actual measurement results', '기준선 및 실제 측정 결과'))}
+    ${checkItem(true, t('ค่าแฟกเตอร์ KEEI Korea 2023', 'KEEI Korea emission factor 2023', 'KEEI 한국 배출 계수 2023'))}
+    ${checkItem(true, t('รายงาน ISO 14064-2 ฉบับนี้', 'This ISO 14064-2 report', '이 ISO 14064-2 보고서'))}
+    ${checkItem(false, t('ยื่นผ่านระบบ GIR', 'Submit via Korea GIR system', '한국 GIR 시스템 제출'))}
+    ${checkItem(false, t('การตรวจสอบ KAU/KOC', '3rd party KAU/KOC verification', 'KAU/KOC 제3자 검증'))}
   </div>
 </div>
 
-<!-- ═══ 6. DECLARATION ═══ -->
+<!-- ═══ 5. STANDARDS & REFERENCES ═══ -->
+<div class="pb"></div>
+<div class="sec">5. ${t('มาตรฐานอ้างอิงและการรับรอง', 'Standards & Certification References', '표준 및 인용 참고')}</div>
+<div class="cert-grid">${certGridHtml}</div>
+
+<!-- ═══ 6. DECLARATION & SIGNATURES ═══ -->
 <div class="sec">6. ${t('คำรับรองและลายมือชื่อ', 'Declaration & Authorized Signatures', '선언 및 서명')}</div>
 <div class="decl">${declText}</div>
 <div class="sig-grid">
   <div class="sig">
     <div class="sig-lbl">${t('ผู้จัดทำรายงาน', 'Report Preparer', '보고서 작성자')}</div>
-    <div style="height:38px"></div>
+    <div style="height:40px"></div>
     <div class="sig-line">${t('ชื่อ', 'Name', '성명')}: ________________________________</div>
-    <div class="sig-line">${t('ตำแหน่ง', 'Title', '직책')}: ______________________________</div>
+    <div class="sig-line">${t('สังกัด', 'Affiliation', '소속')}: ______________________________</div>
     <div class="sig-line">${t('วันที่', 'Date', '날짜')}: ${now}</div>
   </div>
   <div class="sig">
-    <div class="sig-lbl">${t('ผู้ตรวจสอบอิสระ', 'Independent Verifier (DOE/VVB)', '독립 검증인 (DOE/VVB)')}</div>
-    <div style="height:38px"></div>
+    <div class="sig-lbl">${t('ผู้อนุมัติขั้นสุดท้าย (CEO/CTO)', 'Final Approver (CEO/CTO)', '최종 승인자 (CEO/CTO)')}</div>
+    <div style="height:40px"></div>
     <div class="sig-line">${t('ชื่อ', 'Name', '성명')}: ________________________________</div>
-    <div class="sig-line">${t('องค์กร', 'Organization', '기관')}: _____________________________</div>
+    <div class="sig-line">${t('บริษัท / ตราประทับ', 'Company / Official Seal', '기업 / 직인')}: _____________________</div>
     <div class="sig-line">${t('วันที่', 'Date', '날짜')}: ________________________________</div>
   </div>
   <div class="sig">
-    <div class="sig-lbl">${t('ผู้มีอำนาจลงนาม', 'Authorized Signatory', '승인 서명자')}</div>
-    <div style="height:38px"></div>
+    <div class="sig-lbl">${t('ผู้ตรวจสอบอิสระ (DOE/VVB)', 'Independent Verifier (DOE/VVB)', '승인 사무소 / 검증기관')}</div>
+    <div style="height:40px"></div>
     <div class="sig-line">${t('ชื่อ', 'Name', '성명')}: ________________________________</div>
-    <div class="sig-line">${t('ตำแหน่ง', 'Title', '직책')}: ______________________________</div>
+    <div class="sig-line">${t('ตำแหน่ง', 'Position', '직위')}: ______________________________</div>
     <div class="sig-line">${t('วันที่', 'Date', '날짜')}: ________________________________</div>
   </div>
 </div>
 
-<div class="rpt-footer">
-  <span>Report ID: <strong>${esc(reportId)}</strong> · ${esc(now)} · GE Energy Technology Co., Ltd.</span>
-  <span>ISO 14064-2:2019 · T-VER · K-ETS · GHG Protocol · Gold Standard · ${esc(GOLD_STANDARD_URLS.standardHost)}</span>
+<div class="rpt-footer-bar">
+  <div class="footer-lang">${t('ภาษารายงาน', 'Report language', '보고서 언어')}: ${esc(langLabel)} · ${t('จัดทำโดย', 'Prepared by', '작성')}: GE Energy Technology Co., Ltd.</div>
+  <div class="footer-row">
+    <span>Report ID: <strong>${esc(reportId)}</strong> · ${esc(now)} · GE Energy Technology Co., Ltd.</span>
+    <span>ISO 14064-2:2019 · T-VER · K-ETS · GHG Protocol · Gold Standard · UNFCCC CDM</span>
+  </div>
 </div>
 </body></html>`;
 }
