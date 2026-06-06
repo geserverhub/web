@@ -6,6 +6,7 @@ import { useLocale } from "@/lib/LocaleContext";
 import { formatCurrencyBySite, getCurrencyCodeBySite } from "@/lib/currency";
 import { ChevronDown, RefreshCw, Clock, Wifi, WifiOff, X, Zap, Activity, Gauge, Leaf, BarChart2, TrendingDown } from "lucide-react";
 import { getMonitorPageT, type MonitorPageStrings } from "@/lib/energy/monitor-page-i18n";
+import { normalizeCustomerDisplayName } from "@/lib/ge-energy/customer-display";
 import MonitorCard from "@/components/MonitorCard";
 import {
   AreaChart, Area, BarChart, Bar, LabelList,
@@ -23,10 +24,21 @@ interface Device {
 
 interface Customer {
   customerName: string;
+  customer_id?: number | null;
   site: string;
   deviceCount: number;
   deviceIds: string[];
   deviceNames: string[];
+}
+
+interface DeviceSettingsRecord {
+  deviceID?: number | string;
+  deviceName?: string;
+  location?: string;
+  customerName?: string;
+  customer_id?: number | null;
+  beforeMeterNo?: string;
+  metricsMeterNo?: string;
 }
 
 interface ChannelMetrics {
@@ -339,14 +351,27 @@ export default function MonitorPage() {
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
 
-  const fetchDevicesForCustomer = useCallback(async (customerName: string) => {
+  const fetchDevicesForCustomer = useCallback(async (customer: Customer) => {
     try {
       setDevicesLoading(true);
-      // Show every meter in the database (all sites), not just the selected site.
       const res = await fetch(`/api/ge-energy/devices-setting?site=all`);
       const json = await res.json();
       if (json.success) {
-        const customerDevices = (json.devices as DeviceSettingsRecord[]).filter((d) => d.customerName === customerName);
+        const allDevices = (json.devices as DeviceSettingsRecord[]) || [];
+        const idSet = new Set((customer.deviceIds || []).map(String));
+        const nameKey = normalizeCustomerDisplayName(customer.customerName).toLowerCase();
+        const customerId = customer.customer_id;
+
+        const customerDevices = allDevices.filter((d) => {
+          const deviceId = String(d.deviceID ?? '');
+          if (idSet.has(deviceId)) return true;
+          if (customerId != null && d.customer_id != null && Number(d.customer_id) === Number(customerId)) {
+            return true;
+          }
+          const deviceName = normalizeCustomerDisplayName(d.customerName, d.deviceName).toLowerCase();
+          return deviceName === nameKey;
+        });
+
         setDevices(customerDevices.map((d) => ({
           deviceID: String(d.deviceID ?? ''),
           deviceName: d.deviceName ?? '',
@@ -365,7 +390,7 @@ export default function MonitorPage() {
     } finally {
       setDevicesLoading(false);
     }
-  }, [selectedSite]);
+  }, []);
 
   const fetchMonitoringData = useCallback(async () => {
     if (!selectedDevice) return;
@@ -514,7 +539,7 @@ export default function MonitorPage() {
                     onClick={() => {
                       setSelectedCustomer(customer.customerName);
                       setShowCustomerDropdown(false);
-                      fetchDevicesForCustomer(customer.customerName);
+                      fetchDevicesForCustomer(customer);
                     }}
                     className={`w-full text-left px-4 py-2.5 hover:bg-green-50 transition-colors ${
                       selectedCustomer === customer.customerName ? 'bg-green-50 text-green-700' : 'text-gray-700'

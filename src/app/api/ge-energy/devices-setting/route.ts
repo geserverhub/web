@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
     const hasBeforeMeterNo = deviceColumns.has('beforeMeterNo')
     const hasMetricsMeterNo = deviceColumns.has('metricsMeterNo')
     const hasRecordScope = deviceColumns.has('record_scope')
+    const hasSeriesNo = deviceColumns.has('series_no')
     const meterIdCol = resolveMeterIdColumn(deviceColumns)
     const meterIdSelect = meterIdCol ? `d.${meterIdCol} AS GEsaveID` : 'NULL AS GEsaveID'
     const hasEqSites = await tableExists('eq_device_sites') && await tableExists('eq_sites')
@@ -104,6 +105,7 @@ export async function GET(req: NextRequest) {
       hasBeforeMeterNo ? 'd.beforeMeterNo,' : '',
       hasMetricsMeterNo ? 'd.metricsMeterNo,' : '',
       hasRecordScope ? 'd.record_scope,' : '',
+      hasSeriesNo ? 'd.series_no,' : '',
     ]
       .filter(Boolean)
       .join('\n        ')
@@ -116,6 +118,7 @@ export async function GET(req: NextRequest) {
       hasBeforeMeterNo ? 'd.beforeMeterNo,' : '',
       hasMetricsMeterNo ? 'd.metricsMeterNo,' : '',
       hasRecordScope ? 'd.record_scope,' : '',
+      hasSeriesNo ? 'd.series_no,' : '',
     ]
       .filter(Boolean)
       .join('\n               ')
@@ -157,6 +160,7 @@ export async function GET(req: NextRequest) {
       ${whereClause}
       GROUP BY d.deviceID, d.deviceName, ${meterIdCol ? `d.${meterIdCol},` : ''} d.U_email,
                ${customerGroupByFields}
+               ${hasSeriesNo ? 'd.series_no,' : ''}
                d.location, d.latitude, d.longitude, d.ipAddress, d.site, d.phone, d.created_at
                ${hasCustomerAddress ? ', d.customerAddress' : ''}
       ORDER BY d.deviceName ASC
@@ -171,6 +175,7 @@ export async function GET(req: NextRequest) {
       const rawLocation = String(d.installation_location || d.location || '').trim()
       return {
         ...d,
+        seriesNo: d.series_no ? String(d.series_no).trim() : undefined,
         customerName: d.customerName
           ? normalizeCustomerDisplayName(d.customerName as string, d.deviceName as string)
           : d.customerName,

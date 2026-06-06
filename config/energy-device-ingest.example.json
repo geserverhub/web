@@ -1,0 +1,230 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "GE Energy — device telemetry ingest config (current, voltage, power → MySQL)",
+    "descriptionTh": "ตั้งค่ารับค่ากระแส/แรงดัน/กำลังจากอุปกรณ์ แล้วบันทึกลง power_records",
+    "copyTo": "config/energy-device-ingest.json",
+    "relatedScripts": [
+      "npm run mqtt:bridge",
+      "npm run db:ensure-pk-fks"
+    ],
+    "relatedApi": [
+      "POST /api/ge-energy/power-record",
+      "GET  /api/ge-energy/device-connectivity",
+      "GET  /api/ge-energy/mqtt-settings"
+    ]
+  },
+
+  "database": {
+    "envFile": ".env.local",
+    "hostEnv": "DB_HOST",
+    "portEnv": "DB_PORT",
+    "userEnv": "DB_USER",
+    "passwordEnv": "DB_PASSWORD",
+    "nameEnv": "DB_NAME",
+    "defaultDatabase": "goeunserverhub",
+    "tables": {
+      "installed": "power_records",
+      "pre_install": "power_records_preinstall"
+    },
+    "deviceTable": "devices",
+    "connectivityTable": "device_connectivity",
+    "mqttSettingsTable": "mqtt_settings"
+  },
+
+  "ingest": {
+    "modes": ["mqtt", "http_api"],
+    "requireRegisteredDevice": true,
+    "skipDisabledDevices": true,
+    "updateConnectivityOnSave": true,
+    "defaultRecordScope": "installed",
+    "recordScopeValues": {
+      "installed": "หลังติดตั้ง GE → power_records",
+      "pre_install": "ก่อนติดตั้ง GE → power_records_preinstall"
+    },
+    "minPublishIntervalSec": 5,
+    "timestampFormat": "YYYY-MM-DD HH:mm:ss",
+    "timestampFields": ["record_time", "recordTime", "timestamp"]
+  },
+
+  "httpApi": {
+    "method": "POST",
+    "path": "/api/ge-energy/power-record",
+    "contentType": "application/json",
+    "baseUrlExample": "http://localhost:3005"
+  },
+
+  "mqtt": {
+    "bridgeCommand": "npm run mqtt:bridge",
+    "envOverrides": {
+      "MQTT_BRIDGE_HOST": "broker host (ถ้าไม่ใช้ mqtt_settings ใน DB)",
+      "MQTT_BRIDGE_PORT": "1883",
+      "MQTT_BRIDGE_USER": "username",
+      "MQTT_BRIDGE_PASS": "password",
+      "MQTT_BRIDGE_TOPIC": "ge/#",
+      "MQTT_BRIDGE_TOPIC_PREFIX": "ge",
+      "MQTT_BRIDGE_SITES": "thailand,korea"
+    },
+    "brokers": [
+      {
+        "site": "thailand",
+        "host": "mqtt.example.com",
+        "port": 1883,
+        "username": "ge_th",
+        "password": "CHANGE_ME",
+        "topicPrefix": "ge",
+        "subscribePattern": "ge/thailand/#",
+        "qos": 0
+      }
+    ],
+    "deviceLookupFields": ["device_id", "deviceId", "deviceID", "GEsaveID", "geID"]
+  },
+
+  "fieldMapping": {
+    "_note": "CH1=ก่อนติดตั้ง (before), CH2=หลังติดตั้ง (metrics/after)",
+    "deviceId": {
+      "dbColumn": "device_id",
+      "required": true,
+      "payloadFields": ["device_id", "deviceId", "deviceID"]
+    },
+    "deviceKey": {
+      "dbLookup": "devices.GEsaveID",
+      "payloadFields": ["GEsaveID", "geID", "geId"]
+    },
+    "recordTime": {
+      "dbColumn": "record_time",
+      "payloadFields": ["record_time", "recordTime", "timestamp"]
+    },
+    "recordScope": {
+      "dbColumn": "record_scope (payload only, resolves target table)",
+      "payloadFields": ["record_scope", "recordScope"],
+      "values": ["installed", "pre_install", "pre-install", "preinstall"]
+    },
+    "ch1_voltage_V": {
+      "dbColumns": ["before_L1", "before_L2", "before_L3"],
+      "unit": "V",
+      "payloadFields": ["before_L1", "before_L2", "before_L3"]
+    },
+    "ch1_current_A": {
+      "dbColumns": ["before_current_L1", "before_current_L2", "before_current_L3"],
+      "unit": "A",
+      "payloadFields": ["before_current_L1", "before_current_L2", "before_current_L3"],
+      "descriptionTh": "กระแส 3 เฟส ช่อง CH1 (มิเตอร์ก่อนติดตั้ง)"
+    },
+    "ch2_current_A": {
+      "dbColumns": ["metrics_L1", "metrics_L2", "metrics_L3"],
+      "unit": "A",
+      "payloadFields": ["metrics_L1", "metrics_L2", "metrics_L3", "after_L1", "after_L2", "after_L3"],
+      "descriptionTh": "กระแส 3 เฟส ช่อง CH2 (มิเตอร์หลังติดตั้ง) — เก็บในคอลัมน์ metrics_L*"
+    },
+    "ch1_power": {
+      "dbColumns": {
+        "active_kW": "before_P",
+        "reactive_kVAr": "before_Q",
+        "apparent_kVA": "before_S",
+        "powerFactor": "before_PF",
+        "thd_percent": "before_THD",
+        "frequency_Hz": "before_F",
+        "energy_kWh": "before_kWh"
+      },
+      "payloadPrefix": "before_"
+    },
+    "ch2_power": {
+      "dbColumns": {
+        "active_kW": "metrics_P",
+        "reactive_kVAr": "metrics_Q",
+        "apparent_kVA": "metrics_S",
+        "powerFactor": "metrics_PF",
+        "thd_percent": "metrics_THD",
+        "frequency_Hz": "metrics_F",
+        "energy_kWh": "metrics_kWh"
+      },
+      "payloadFields": ["metrics_*", "after_*"]
+    },
+    "meterNumbers": {
+      "before_meter_no": ["before_meter_no"],
+      "metrics_meter_no": ["metrics_meter_no"]
+    }
+  },
+
+  "gatewayDefaults": {
+    "gatewayModel": "T310",
+    "serialPort": "/dev/ttyS1",
+    "baudRate": 9600,
+    "parity": "none",
+    "dataBits": 8,
+    "stopBits": 1,
+    "slaveBefore": 1,
+    "slaveMetrics": 2,
+    "publishIntervalSec": 30,
+    "enabled": true
+  },
+
+  "devices": [
+    {
+      "device_id": 1,
+      "GEsaveID": "GE-TH-001",
+      "deviceName": "Meter Site A",
+      "site": "thailand",
+      "location": "Bangkok Plant",
+      "record_scope": "installed",
+      "beforeMeterNo": "MTR-BEFORE-001",
+      "metricsMeterNo": "MTR-AFTER-001",
+      "connectivity": {
+        "gateway_model": "T310",
+        "serial_port": "/dev/ttyS1",
+        "baud_rate": 9600,
+        "slave_before": 1,
+        "slave_metrics": 2,
+        "mqtt_topic": "ge/thailand/GE-TH-001/telemetry",
+        "publish_interval_sec": 30,
+        "enabled": true
+      }
+    }
+  ],
+
+  "samplePayload": {
+    "_comment": "ส่ง JSON นี้ทาง MQTT หรือ POST /api/ge-energy/power-record",
+    "device_id": 1,
+    "GEsaveID": "GE-TH-001",
+    "record_time": "2026-06-05 14:30:00",
+    "record_scope": "installed",
+    "before_meter_no": "MTR-BEFORE-001",
+    "metrics_meter_no": "MTR-AFTER-001",
+    "before_L1": 230.5,
+    "before_L2": 229.8,
+    "before_L3": 231.2,
+    "before_current_L1": 12.34,
+    "before_current_L2": 11.98,
+    "before_current_L3": 12.51,
+    "before_P": 8.25,
+    "before_Q": 1.2,
+    "before_S": 8.35,
+    "before_PF": 0.98,
+    "before_THD": 3.1,
+    "before_F": 50.0,
+    "before_kWh": 12345.6,
+    "metrics_L1": 11.85,
+    "metrics_L2": 11.42,
+    "metrics_L3": 12.08,
+    "metrics_P": 6.8,
+    "metrics_Q": 0.9,
+    "metrics_S": 6.9,
+    "metrics_PF": 0.99,
+    "metrics_THD": 1.6,
+    "metrics_F": 50.0,
+    "metrics_kWh": 12340.1
+  },
+
+  "samplePayloadCurrentOnly": {
+    "_comment": "ส่งเฉพาะกระแสก็ได้ — ระบบจะบันทึกเฉพาะฟิลด์ที่มีค่า",
+    "GEsaveID": "GE-TH-001",
+    "record_time": "2026-06-05 14:31:00",
+    "before_current_L1": 12.1,
+    "before_current_L2": 11.9,
+    "before_current_L3": 12.3,
+    "metrics_L1": 11.7,
+    "metrics_L2": 11.4,
+    "metrics_L3": 11.9
+  }
+}

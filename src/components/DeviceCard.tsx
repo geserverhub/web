@@ -1,17 +1,18 @@
 'use client';
 
 import { Zap, Wifi, WifiOff, Edit2, Clock } from 'lucide-react';
+import { useLocale } from '@/lib/LocaleContext';
 
-interface VoltageReadings {
-  ll1: number | null;
-  ll2: number | null;
-  ll3: number | null;
+interface PhaseReadings {
+  l1: number | null;
+  l2: number | null;
+  l3: number | null;
 }
 
 interface DeviceCardProps {
   deviceName: string;
   isOnline: boolean;
-  voltageReadings?: VoltageReadings;
+  currentReadings?: PhaseReadings;
   lastConnected?: string;
   onlineTime?: string;
   onEdit?: () => void;
@@ -20,11 +21,12 @@ interface DeviceCardProps {
 export default function DeviceCard({
   deviceName,
   isOnline,
-  voltageReadings,
+  currentReadings,
   lastConnected,
   onlineTime,
   onEdit,
 }: DeviceCardProps) {
+  const { t } = useLocale();
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
       {/* Header */}
@@ -51,17 +53,20 @@ export default function DeviceCard({
         </div>
       </div>
 
-      {/* Voltage readings */}
-      {voltageReadings && (
-        <div className="grid grid-cols-3 gap-2">
-          {(['ll1', 'll2', 'll3'] as const).map((key, i) => (
-            <div key={key} className="bg-gray-50 rounded-xl p-2 text-center">
-              <p className="text-xs text-gray-400 mb-0.5">L{i + 1}</p>
-              <p className="text-sm font-bold text-gray-700">
-                {voltageReadings[key] != null ? `${voltageReadings[key]?.toFixed(1)}V` : '—'}
-              </p>
-            </div>
-          ))}
+      {/* Phase current (A) from latest power_records */}
+      {currentReadings && (
+        <div>
+          <p className="text-xs text-gray-400 mb-1.5">{t('current') || 'Current'}</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(['l1', 'l2', 'l3'] as const).map((key, i) => (
+              <div key={key} className="bg-gray-50 rounded-xl p-2 text-center">
+                <p className="text-xs text-gray-400 mb-0.5">L{i + 1}</p>
+                <p className="text-sm font-bold text-gray-700">
+                  {currentReadings[key] != null ? `${currentReadings[key]!.toFixed(1)} A` : '—'}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -9,12 +9,41 @@ import { Plus, RefreshCw, Server, Wifi, WifiOff } from 'lucide-react';
 interface Device {
   deviceID: string;
   deviceName: string;
-  location: string;
-  status: string;
-  lastRecordTime: string | null;
-  before_L1?: number;
-  before_L2?: number;
-  before_L3?: number;
+  location: string | null;
+  isOnline: boolean;
+  lastUpdate: string | null;
+  currentReadings: {
+    l1: number | null;
+    l2: number | null;
+    l3: number | null;
+  };
+}
+
+type DashboardStatsDevice = {
+  deviceID: string;
+  deviceName: string;
+  location: string | null;
+  isOnline: boolean;
+  lastUpdate: string | null;
+  currentABC?: Array<number | null>;
+  beforeCurrentABC?: Array<number | null>;
+};
+
+function mapStatsDevice(device: DashboardStatsDevice): Device {
+  const ch2 = device.currentABC ?? [];
+  const ch1 = device.beforeCurrentABC ?? [];
+  return {
+    deviceID: device.deviceID,
+    deviceName: device.deviceName,
+    location: device.location,
+    isOnline: device.isOnline,
+    lastUpdate: device.lastUpdate,
+    currentReadings: {
+      l1: ch2[0] ?? ch1[0] ?? null,
+      l2: ch2[1] ?? ch1[1] ?? null,
+      l3: ch2[2] ?? ch1[2] ?? null,
+    },
+  };
 }
 
 export default function OverviewPage() {
@@ -27,11 +56,12 @@ export default function OverviewPage() {
   const fetchDevices = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/ge-energy/devices');
+      const res = await fetch('/api/ge-energy/dashboard-stats?site=all');
       const json = await res.json();
 
       if (json.success) {
-        setDevices(json.devices || []);
+        const recent = (json.data?.recentDevices ?? []) as DashboardStatsDevice[];
+        setDevices(recent.map(mapStatsDevice));
         setError(null);
       } else {
         setError(json.error || 'Failed to load devices');
@@ -67,7 +97,7 @@ export default function OverviewPage() {
     );
   }
 
-  const onlineCount = devices.filter(d => d.status === 'ON').length;
+  const onlineCount = devices.filter(d => d.isOnline).length;
   const offlineCount = devices.length - onlineCount;
 
   return (
@@ -120,19 +150,15 @@ export default function OverviewPage() {
       {devices.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {devices.map((device) => {
-            const isOnline = device.status === 'ON';
+            const isOnline = device.isOnline;
             return (
               <DeviceCard
                 key={device.deviceID}
                 deviceName={device.deviceName}
                 isOnline={isOnline}
-                voltageReadings={{
-                  ll1: device.before_L1 != null ? Number(device.before_L1) : null,
-                  ll2: device.before_L2 != null ? Number(device.before_L2) : null,
-                  ll3: device.before_L3 != null ? Number(device.before_L3) : null,
-                }}
-                lastConnected={device.lastRecordTime ? new Date(device.lastRecordTime).toLocaleString() : '-'}
-                onlineTime={isOnline && device.lastRecordTime ? calculateTimeAgo(device.lastRecordTime) : undefined}
+                currentReadings={device.currentReadings}
+                lastConnected={device.lastUpdate ? new Date(device.lastUpdate).toLocaleString() : '-'}
+                onlineTime={isOnline && device.lastUpdate ? calculateTimeAgo(device.lastUpdate) : undefined}
                 onEdit={() => handleEditDevice(device.deviceID)}
               />
             );

@@ -2836,6 +2836,7 @@ const translationData = {
     dashboard: 'แดชบอร์ด',
     overview: 'ภาพรวม',
     monitor: 'ติดตาม',
+    current: 'กระแสไฟ',
     currentMonitor: 'กระแสไฟเรียลไทม์',
     compareMonitoring: 'เปรียบเทียบการติดตาม',
     menuGreenEnergy: 'พลังงานสีเขียว',

@@ -3,6 +3,15 @@ import { queryGe } from '@/lib/mysql-ge'
 import { normalizeCustomerDisplayName } from '@/lib/ge-energy/customer-display'
 import { effectiveDeviceSiteSql, normalizeSiteKey } from '@/lib/ge-energy/customer-scope'
 import { getDevicesColumnSet, meterIdSelectSql, resolveMeterIdColumn } from '@/lib/ge-energy/devices-schema'
+import {
+  isLikelyVoltageReading,
+  pickCh1CurrentColumns,
+  pickCh1VoltageColumns,
+  pickCh2CurrentColumns,
+  readCh1Currents,
+  readCh2Currents,
+  toFiniteNumber,
+} from '@/lib/energy/power-record-fields'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -227,6 +236,11 @@ export async function GET(request: NextRequest) {
         ${selectOptionalDeviceColumn('customerPhone')},
         ${selectOptionalDeviceColumn('customerAddress')},
         ${selectOptionalDeviceColumn('series_no')},
+        COALESCE(
+          ${availableDeviceColumns.has('series_no') ? "NULLIF(TRIM(d.series_no), '')" : 'NULL'},
+          ${availableColumns.has('series_no') ? "NULLIF(TRIM(p_inst.series_no), '')" : 'NULL'},
+          ${availablePreinstallColumns.has('series_no') ? "NULLIF(TRIM(p_pre.series_no), '')" : 'NULL'}
+        ) AS resolved_series_no,
         ${selectOptionalDeviceColumn('metricsMeterNo')},
         ${selectOptionalDeviceColumn('beforeMeterNo')},
         ${selectOptionalDeviceColumn('location')},
@@ -287,21 +301,27 @@ export async function GET(request: NextRequest) {
       return Number.isFinite(numericValue) ? numericValue : null
     }
 
+    const powerMetricColumns = new Set([...availableColumns, ...availablePreinstallColumns])
+
     const devicesWithStatus = (recentDevices as RawRecentDevice[]).map((device: any) => {
       const lastUpdate = device.record_time ? new Date(device.record_time) : null
       const beforeLastUpdate = device.record_time_preinstall ? device.record_time_preinstall : null
       const now = new Date()
       const isOnline = lastUpdate && (now.getTime() - lastUpdate.getTime()) < 20 * 60 * 1000 // 20 minutes
-      const currentABC = [
-        toNullableNumber(device.metrics_L1),
-        toNullableNumber(device.metrics_L2),
-        toNullableNumber(device.metrics_L3)
+
+      const row = device as Record<string, unknown>
+      const vCols = pickCh1VoltageColumns(powerMetricColumns)
+      const c1Cols = pickCh1CurrentColumns(powerMetricColumns)
+      const c2Cols = pickCh2CurrentColumns(powerMetricColumns)
+      const beforeCurrentABC = readCh1Currents(row, c1Cols, vCols)
+      const currentABC = readCh2Currents(row, c2Cols)
+
+      const voltageLL = [
+        isLikelyVoltageReading(toFiniteNumber(device.before_L1)) ? toFiniteNumber(device.before_L1) : null,
+        isLikelyVoltageReading(toFiniteNumber(device.before_L2)) ? toFiniteNumber(device.before_L2) : null,
+        isLikelyVoltageReading(toFiniteNumber(device.before_L3)) ? toFiniteNumber(device.before_L3) : null,
       ]
-      const beforeCurrentABC = [
-        toNullableNumber(device.before_current_L1),
-        toNullableNumber(device.before_current_L2),
-        toNullableNumber(device.before_current_L3)
-      ]
+
       const validCurrents = currentABC.filter((value): value is number => value !== null)
       const validBeforeCurrents = beforeCurrentABC.filter((value): value is number => value !== null)
       const avgCurrent = validCurrents.length > 0
@@ -333,7 +353,7 @@ export async function GET(request: NextRequest) {
         customerNameEn: normalizeCustomerDisplayName(device.customerNameEn, device.deviceName),
         customerPhone: device.customerPhone,
         customerAddress: device.customerAddress,
-        seriesNo: device.series_no,
+        seriesNo: device.resolved_series_no || device.series_no,
         metricsMeterNo: device.metricsMeterNo,
         beforeMeterNo: device.beforeMeterNo,
         location: device.location,
@@ -342,13 +362,9 @@ export async function GET(request: NextRequest) {
         isOnline,
         lastUpdate: device.record_time,
         beforeLastUpdate: beforeLastUpdate,
-        voltageLL: [
-          toNullableNumber(device.before_L1),
-          toNullableNumber(device.before_L2),
-          toNullableNumber(device.before_L3)
-        ],
-        currentABC,
-        beforeCurrentABC,
+        voltageLL,
+        currentABC: [...currentABC],
+        beforeCurrentABC: [...beforeCurrentABC],
         avgCurrent,
         avgBeforeCurrent,
         currentReduction,

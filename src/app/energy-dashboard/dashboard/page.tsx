@@ -76,6 +76,7 @@ interface DevicesSettingRow {
   deviceID?: number | string
   deviceName?: string
   GEsaveID?: string
+  series_no?: string
   customerName?: string
   customerPhone?: string
   customerAddress?: string
@@ -88,6 +89,23 @@ interface DevicesSettingRow {
   ipAddress?: string
 }
 
+const resolveSeriesNo = (row: { seriesNo?: string; series_no?: string }) =>
+  String(row.seriesNo || row.series_no || '').trim() || undefined
+
+const deviceHasTelemetry = (device: RecentDevice) =>
+  Boolean(
+    device.lastUpdate ||
+    device.beforeLastUpdate ||
+    device.avgCurrent != null ||
+    device.avgBeforeCurrent != null ||
+    device.currentABC.some((v) => v != null) ||
+    device.beforeCurrentABC?.some((v) => v != null) ||
+    device.voltageLL.some((v) => v != null && v > 0),
+  )
+
+const fmtVolt = (v: number | null | undefined) =>
+  v != null && Number.isFinite(v) && v > 0 ? `${Number(v).toFixed(1)} V` : '--'
+
 const emptyRecentDevice = (row: DevicesSettingRow): RecentDevice => ({
   deviceID: String(row.deviceID ?? ''),
   deviceName: row.deviceName || '',
@@ -96,6 +114,7 @@ const emptyRecentDevice = (row: DevicesSettingRow): RecentDevice => ({
   customerPhone: row.customerPhone,
   customerAddress: row.customerAddress,
   GEsaveID: row.GEsaveID,
+  seriesNo: resolveSeriesNo(row),
   beforeMeterNo: row.beforeMeterNo,
   metricsMeterNo: row.metricsMeterNo,
   ipAddress: row.ipAddress,
@@ -126,6 +145,7 @@ const mergeDeviceRegistry = (
       deviceID: String(row.deviceID ?? stats.deviceID),
       deviceName: row.deviceName || stats.deviceName,
       GEsaveID: row.GEsaveID ?? stats.GEsaveID,
+      seriesNo: resolveSeriesNo(row) ?? stats.seriesNo,
       customerName: row.customerName ?? stats.customerName,
       customerPhone: row.customerPhone ?? stats.customerPhone,
       customerAddress: row.customerAddress ?? stats.customerAddress,
@@ -1271,10 +1291,12 @@ export default function DashboardPage() {
 
                         {/* Device info — always shown */}
                         <div className="space-y-0.5">
+                          {!deviceHasTelemetry(device) && (
                           <div className="flex flex-col items-center justify-center py-3 text-center">
                             <span className="text-2xl mb-1.5">🔌</span>
                             <span className="text-[10px] text-gray-400 font-semibold">{dashboardCopy.waitingMeter}</span>
                           </div>
+                          )}
                           <div className="rounded-lg bg-gray-50 border border-gray-100 divide-y divide-gray-100 overflow-hidden">
                             <div className="flex justify-between items-center px-2.5 py-1.5">
                               <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.modelLabel}</span>
@@ -1334,7 +1356,7 @@ export default function DashboardPage() {
                                 ].map((volt) => (
                                   <div key={volt.label} className={`rounded-xl border px-2.5 py-2 text-center ${volt.color}`}>
                                     <p className="text-[10px] font-bold mb-0.5">{volt.label}</p>
-                                    <p className="text-sm font-extrabold">{volt.value == null ? '0.0' : Number(volt.value).toFixed(1)} V</p>
+                                    <p className="text-sm font-extrabold">{fmtVolt(volt.value)}</p>
                                   </div>
                                 ))}
                               </div>
@@ -1389,10 +1411,12 @@ export default function DashboardPage() {
 
                         {/* Device info — always shown */}
                         <div className="space-y-0.5">
+                          {!deviceHasTelemetry(device) && (
                           <div className="flex flex-col items-center justify-center py-3 text-center">
                             <span className="text-2xl mb-1.5">📊</span>
                             <span className="text-[10px] text-gray-400 font-semibold">{dashboardCopy.waitingMeter}</span>
                           </div>
+                          )}
                           <div className="rounded-lg bg-gray-50 border border-gray-100 divide-y divide-gray-100 overflow-hidden">
                               <div className="flex justify-between items-center px-2.5 py-1.5">
                                 <span className="text-[10px] text-gray-400 font-medium">{dashboardCopy.meterNoLabel}</span>
@@ -1452,7 +1476,7 @@ export default function DashboardPage() {
                                   ].map((volt) => (
                                     <div key={volt.label} className={`rounded-xl border px-2.5 py-2 text-center ${volt.color}`}>
                                       <p className="text-[10px] font-bold mb-0.5">{volt.label}</p>
-                                      <p className="text-sm font-extrabold">{volt.value == null ? '0.0' : Number(volt.value).toFixed(1)} V</p>
+                                      <p className="text-sm font-extrabold">{fmtVolt(volt.value)}</p>
                                     </div>
                                   ))}
                                 </div>
@@ -1572,9 +1596,9 @@ export default function DashboardPage() {
               {visibleCurrentAnalysisDevices.map((device) => {
                 const balanceState = getBalanceState(device.imbalancePercent)
                 const phases = [
-                  { label: 'L1', value: device.currentABC[0], thd: device.thdABC?.[0], color: 'bg-orange-50 text-orange-700 border-orange-200' },
-                  { label: 'L2', value: device.currentABC[1], thd: device.thdABC?.[1], color: 'bg-blue-50 text-blue-700 border-blue-200' },
-                  { label: 'L3', value: device.currentABC[2], thd: device.thdABC?.[2], color: 'bg-violet-50 text-violet-700 border-violet-200' }
+                  { label: 'L1', value: device.beforeCurrentABC?.[0] ?? null, thd: device.beforeThd ?? null, color: 'bg-orange-50 text-orange-700 border-orange-200' },
+                  { label: 'L2', value: device.beforeCurrentABC?.[1] ?? null, thd: device.beforeThd ?? null, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                  { label: 'L3', value: device.beforeCurrentABC?.[2] ?? null, thd: device.beforeThd ?? null, color: 'bg-violet-50 text-violet-700 border-violet-200' }
                 ]
 
                 return (
@@ -1672,7 +1696,7 @@ export default function DashboardPage() {
                         ].map((volt) => (
                           <div key={volt.label} className={`rounded-xl border px-3 py-2.5 text-center ${volt.color}`}>
                             <p className="text-[10px] font-bold mb-1">{volt.label}</p>
-                            <p className="text-sm font-extrabold">{volt.value?.toFixed(1) || '0.0'} V</p>
+                            <p className="text-sm font-extrabold">{fmtVolt(volt.value)}</p>
                           </div>
                         ))}
                       </div>

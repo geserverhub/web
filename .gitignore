@@ -10,6 +10,9 @@ dist
 .env.local
 .env.*.local
 
+# Local device ingest config (may contain MQTT passwords)
+config/energy-device-ingest.json
+
 # Local backups and logs
 backups/
 *.log
