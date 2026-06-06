@@ -9,6 +9,9 @@ import { Plus, RefreshCw, Server, Wifi, WifiOff } from 'lucide-react';
 interface Device {
   deviceID: string;
   deviceName: string;
+  customerName: string | null;
+  geId: string | null;
+  seriesNo: string | null;
   location: string | null;
   isOnline: boolean;
   lastUpdate: string | null;
@@ -22,6 +25,10 @@ interface Device {
 type DashboardStatsDevice = {
   deviceID: string;
   deviceName: string;
+  customerName?: string | null;
+  customerNameEn?: string | null;
+  GEsaveID?: string | null;
+  seriesNo?: string | null;
   location: string | null;
   isOnline: boolean;
   lastUpdate: string | null;
@@ -32,10 +39,15 @@ type DashboardStatsDevice = {
 function mapStatsDevice(device: DashboardStatsDevice): Device {
   const ch2 = device.currentABC ?? [];
   const ch1 = device.beforeCurrentABC ?? [];
+  const customerName =
+    (device.customerName || device.customerNameEn || '').trim() || null;
   return {
     deviceID: device.deviceID,
     deviceName: device.deviceName,
-    location: device.location,
+    customerName,
+    geId: device.GEsaveID?.trim() || null,
+    seriesNo: device.seriesNo?.trim() || null,
+    location: device.location?.trim() || null,
     isOnline: device.isOnline,
     lastUpdate: device.lastUpdate,
     currentReadings: {
@@ -64,10 +76,10 @@ export default function OverviewPage() {
         setDevices(recent.map(mapStatsDevice));
         setError(null);
       } else {
-        setError(json.error || 'Failed to load devices');
+        setError(json.error || t('loadDevicesFailed'));
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Network error');
+      setError(err instanceof Error ? err.message : t('networkError'));
     } finally {
       setLoading(false);
     }
@@ -90,7 +102,7 @@ export default function OverviewPage() {
         <div className="h-36 bg-gradient-to-r from-slate-200 to-slate-100 rounded-3xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-52 bg-slate-100 rounded-2xl" />
+            <div key={i} className="h-72 bg-slate-100 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -108,16 +120,16 @@ export default function OverviewPage() {
         <div className="energy-hero-inner px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-              <Server className="w-3.5 h-3.5" /> {t('overviewCompanyBadge') || 'GE ENERGY TECH CO.,LTD'}
+              <Server className="w-3.5 h-3.5" /> {t('overviewCompanyBadge')}
             </div>
-            <h1 className="text-3xl font-black text-white mb-1">{t('devicesOverview') || 'METER WORKING LIVE'}</h1>
-            <p className="text-emerald-100 text-sm">{t('overviewSubtitle') || 'All registered devices across your sites'}</p>
+            <h1 className="text-3xl font-black text-white mb-1">{t('devicesOverview')}</h1>
+            <p className="text-emerald-100 text-sm">{t('overviewSubtitle')}</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {[
-              { icon: Server, val: deviceCount, label: 'Total', color: 'from-white/20 to-white/10' },
-              { icon: Wifi, val: onlineCount, label: 'Online', color: 'from-emerald-400/40 to-emerald-500/20' },
-              { icon: WifiOff, val: offlineCount, label: 'Offline', color: offlineCount > 0 ? 'from-red-400/40 to-red-500/20' : 'from-white/20 to-white/10' },
+              { icon: Server, val: deviceCount, label: t('total'), color: 'from-white/20 to-white/10' },
+              { icon: Wifi, val: onlineCount, label: t('online'), color: 'from-emerald-400/40 to-emerald-500/20' },
+              { icon: WifiOff, val: offlineCount, label: t('offline'), color: offlineCount > 0 ? 'from-red-400/40 to-red-500/20' : 'from-white/20 to-white/10' },
             ].map(kpi => (
               <div key={kpi.label} className={`flex flex-col items-center bg-gradient-to-br ${kpi.color} backdrop-blur-sm rounded-2xl px-5 py-3 min-w-[80px] border border-white/20`}>
                 <kpi.icon className="w-4 h-4 text-white/70 mb-1" />
@@ -126,13 +138,13 @@ export default function OverviewPage() {
               </div>
             ))}
             <div className="flex gap-2">
-              <button onClick={fetchDevices} title="Refresh"
+              <button onClick={fetchDevices} title={t('refresh')}
                 className="p-3 bg-white/15 hover:bg-white/25 rounded-xl border border-white/20 transition-all">
                 <RefreshCw className={`w-5 h-5 text-white ${loading ? 'animate-spin' : ''}`} />
               </button>
               <button onClick={() => router.push('/devices-setting')}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 font-bold text-sm rounded-xl hover:bg-emerald-50 transition-all shadow-md">
-                <Plus className="w-4 h-4" /> {t('addDevice') || 'ADD METER'}
+                <Plus className="w-4 h-4" /> {t('addDevice')}
               </button>
             </div>
           </div>
@@ -155,9 +167,13 @@ export default function OverviewPage() {
               <DeviceCard
                 key={device.deviceID}
                 deviceName={device.deviceName}
+                customerName={device.customerName}
+                geId={device.geId}
+                seriesNo={device.seriesNo}
+                location={device.location}
                 isOnline={isOnline}
                 currentReadings={device.currentReadings}
-                lastConnected={device.lastUpdate ? new Date(device.lastUpdate).toLocaleString() : '-'}
+                lastConnected={device.lastUpdate ? new Date(device.lastUpdate).toLocaleString() : t('notAvailable')}
                 onlineTime={isOnline && device.lastUpdate ? calculateTimeAgo(device.lastUpdate) : undefined}
                 onEdit={() => handleEditDevice(device.deviceID)}
               />
@@ -169,7 +185,7 @@ export default function OverviewPage() {
           <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Server className="w-7 h-7 text-gray-300" />
           </div>
-          <p className="text-gray-400 font-medium">{t('noDevicesFound') || 'No devices found'}</p>
+          <p className="text-gray-400 font-medium">{t('noDevicesFound')}</p>
         </div>
       )}
     </div>
