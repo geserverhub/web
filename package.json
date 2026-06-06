@@ -31,6 +31,7 @@
     "db:migrate-software-downloads": "node scripts/apply-software-downloads-migration.mjs",
     "db:setup-geet-orders": "node scripts/apply-ge-energy-tech-orders-schema.mjs",
     "db:migrate-energy-quality-report": "node scripts/apply-energy-quality-report-schema.mjs",
+    "db:migrate-carbon-credit-report": "node scripts/apply-carbon-credit-report-schema.mjs",
     "db:seed-energy-quality-report": "node scripts/seed-energy-quality-report-data.mjs",
     "db:import-meter-export": "node scripts/import-meter-parameter-export.mjs",
     "db:import-current-csv": "node scripts/import-current-csv.mjs",
