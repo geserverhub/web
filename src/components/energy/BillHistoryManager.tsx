@@ -34,6 +34,51 @@ function lastNMonths(n = 12) {
   return r.reverse()
 }
 
+const COPY: Record<string, Record<string, string>> = {
+  th: {
+    title: 'บันทึกข้อมูลบิลค่าไฟย้อนหลัง (12 เดือน)',
+    selectDevice: 'เลือกมิเตอร์',
+    selectCustomer: 'เลือกลูกค้า (เชื่อม)',
+    breakerSize: 'ขนาดเบรคเกอร์ (A)',
+    note: 'หมายเหตุ',
+    load: 'โหลด',
+    save: 'บันทึกประวัติ',
+    delete: 'ลบประวัติ',
+    loading: 'กำลังโหลด...',
+    colMonth: 'เดือน', colKwh: 'หน่วย (kWh)', colCost: 'ค่าไฟ', colPeakKw: 'พีค (kW)', colPeakCost: 'ค่าพีค',
+    msgSelectDevice: 'กรุณาเลือกมิเตอร์ก่อน', msgSaved: 'บันทึกแล้ว', msgDeleted: 'ลบแล้ว',
+    msgSaveFail: 'บันทึกไม่สำเร็จ', msgLoadFail: 'โหลดไม่สำเร็จ', msgDeleteFail: 'ลบไม่สำเร็จ',
+  },
+  ko: {
+    title: '전기요금 청구 내역 입력 (최근 12개월)',
+    selectDevice: '미터 선택',
+    selectCustomer: '고객 선택 (연결)',
+    breakerSize: '차단기 용량 (A)',
+    note: '비고',
+    load: '불러오기',
+    save: '내역 저장',
+    delete: '내역 삭제',
+    loading: '불러오는 중...',
+    colMonth: '월', colKwh: '사용량 (kWh)', colCost: '요금', colPeakKw: '피크 (kW)', colPeakCost: '피크 요금',
+    msgSelectDevice: '미터를 먼저 선택하세요', msgSaved: '저장됨', msgDeleted: '삭제됨',
+    msgSaveFail: '저장 실패', msgLoadFail: '불러오기 실패', msgDeleteFail: '삭제 실패',
+  },
+  en: {
+    title: 'Electricity bill history (last 12 months)',
+    selectDevice: 'Select meter',
+    selectCustomer: 'Select customer (link)',
+    breakerSize: 'Breaker size (A)',
+    note: 'Note',
+    load: 'Load',
+    save: 'Save history',
+    delete: 'Delete history',
+    loading: 'Loading...',
+    colMonth: 'Month', colKwh: 'kWh', colCost: 'Cost', colPeakKw: 'Peak kW', colPeakCost: 'Peak Cost',
+    msgSelectDevice: 'Select a device first', msgSaved: 'Saved', msgDeleted: 'Deleted',
+    msgSaveFail: 'Failed to save', msgLoadFail: 'Failed to load', msgDeleteFail: 'Failed to delete',
+  },
+}
+
 export default function BillHistoryManager({ site, locale }: { site: string; locale: string }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -46,17 +91,7 @@ export default function BillHistoryManager({ site, locale }: { site: string; loc
   const [rows, setRows] = useState<BillRow[]>(() => lastNMonths(12).map((m) => ({ billMonth: m, energyKwh: '', billCost: '', peakKw: '', peakCost: '' })))
   const [message, setMessage] = useState<string | null>(null)
 
-  const copy = useMemo(() => ({
-    title: 'บันทึกข้อมูลบิลค่าไฟย้อนหลัง (12 เดือน)',
-    selectDevice: 'เลือกมิเตอร์',
-    selectCustomer: 'เลือกลูกค้า (เชื่อม)',
-    breakerSize: 'ขนาดเบรคเกอร์ (A)',
-    note: 'หมายเหตุ',
-    load: 'โหลด',
-    save: 'บันทึกประวัติ',
-    delete: 'ลบประวัติ',
-    loading: 'กำลังโหลด...',
-  }), [])
+  const copy = COPY[locale] || COPY.en
 
   const loadDevicesAndCustomers = useCallback(async () => {
     try {
@@ -87,7 +122,7 @@ export default function BillHistoryManager({ site, locale }: { site: string; loc
       setLoading(true)
       const res = await fetch(`/api/ge-energy/bill-history?deviceId=${encodeURIComponent(id)}`, { cache: 'no-store' })
       const json = await res.json()
-      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to load bill history')
+      if (!res.ok || !json.success) throw new Error(json.error || copy.msgLoadFail)
       const bills = Array.isArray(json.bills) ? json.bills : []
       const map = new Map<string, any>(bills.map((b: any) => [String(b.billMonth).slice(0, 10), b]))
       const template = lastNMonths(12)
@@ -106,7 +141,7 @@ export default function BillHistoryManager({ site, locale }: { site: string; loc
       setMessage(null)
     } catch (err: any) {
       console.error(err)
-      setMessage(err?.message || 'Failed to load')
+      setMessage(err?.message || copy.msgLoadFail)
     } finally {
       setLoading(false)
     }
@@ -121,7 +156,7 @@ export default function BillHistoryManager({ site, locale }: { site: string; loc
   }
 
   const save = async () => {
-    if (!deviceId) { setMessage('Select a device first'); return }
+    if (!deviceId) { setMessage(copy.msgSelectDevice); return }
     try {
       setSaving(true)
       setMessage(null)
@@ -135,28 +170,28 @@ export default function BillHistoryManager({ site, locale }: { site: string; loc
       }
       const res = await fetch('/api/ge-energy/bill-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const json = await res.json()
-      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to save')
-      setMessage('Saved')
+      if (!res.ok || !json.success) throw new Error(json.error || copy.msgSaveFail)
+      setMessage(copy.msgSaved)
       await loadHistory(deviceId)
     } catch (err: any) {
-      setMessage(err?.message || 'Failed to save')
+      setMessage(err?.message || copy.msgSaveFail)
     } finally {
       setSaving(false)
     }
   }
 
   const removeAll = async () => {
-    if (!deviceId) { setMessage('Select a device first'); return }
+    if (!deviceId) { setMessage(copy.msgSelectDevice); return }
     try {
       setSaving(true)
       const res = await fetch(`/api/ge-energy/bill-history?deviceId=${encodeURIComponent(deviceId)}`, { method: 'DELETE' })
       const json = await res.json()
-      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to delete')
+      if (!res.ok || !json.success) throw new Error(json.error || copy.msgDeleteFail)
       setRows(lastNMonths(12).map((m) => ({ billMonth: m, energyKwh: '', billCost: '', peakKw: '', peakCost: '' })))
       setBreakerSizeAmp('')
-      setMessage('Deleted')
+      setMessage(copy.msgDeleted)
     } catch (err: any) {
-      setMessage(err?.message || 'Failed to delete')
+      setMessage(err?.message || copy.msgDeleteFail)
     } finally {
       setSaving(false)
     }
@@ -205,11 +240,11 @@ export default function BillHistoryManager({ site, locale }: { site: string; loc
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
-              <th className="text-left px-3 py-2">Month</th>
-              <th className="text-left px-3 py-2">kWh</th>
-              <th className="text-left px-3 py-2">Cost</th>
-              <th className="text-left px-3 py-2">Peak kW</th>
-              <th className="text-left px-3 py-2">Peak Cost</th>
+              <th className="text-left px-3 py-2">{copy.colMonth}</th>
+              <th className="text-left px-3 py-2">{copy.colKwh}</th>
+              <th className="text-left px-3 py-2">{copy.colCost}</th>
+              <th className="text-left px-3 py-2">{copy.colPeakKw}</th>
+              <th className="text-left px-3 py-2">{copy.colPeakCost}</th>
             </tr>
           </thead>
           <tbody>
