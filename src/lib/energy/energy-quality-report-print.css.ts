@@ -97,10 +97,10 @@ body {
   page-break-after: always;
   break-after: page;
   margin-bottom: 0;
-  /* Fill most of the first printable page (≈268mm) but keep a safety buffer so
-     the bordered card never spills past the bottom edge (browser print margins
-     vary), which would push it onto a blank page. */
-  min-height: 248mm;
+  /* Fill the first page but stay safe for Letter paper too (printable ≈250mm)
+     and browser-added margins, so the bordered card never spills onto a blank
+     page. */
+  min-height: 238mm;
   display: flex;
   flex-direction: column;
 }
@@ -109,8 +109,8 @@ body {
   page-break-after: always;
   break-after: page;
   margin-bottom: 0;
-  /* Printable height ≈265mm; keep a buffer to avoid bottom overflow. */
-  min-height: 246mm;
+  /* Safe for Letter (printable ≈247mm) + margin variance. */
+  min-height: 236mm;
   display: flex;
   flex-direction: column;
 }
@@ -703,8 +703,8 @@ body {
 }
 
 .doc-footer {
-  margin-top: 5mm;
-  padding: 4mm 3mm 2mm;
+  margin-top: 2.5mm;
+  padding: 3mm 3mm 1.5mm;
   border-top: 1.5pt solid var(--print-brand);
   text-align: center;
   font-size: 7.5pt;
