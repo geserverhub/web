@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link2, RefreshCw, Save, Trash2 } from 'lucide-react';
 import { useLocale } from '@/lib/LocaleContext';
 
@@ -124,7 +124,6 @@ export default function MeterBindingPage() {
   const [bindings, setBindings] = useState<Binding[]>([]);
 
   const [draftDevice, setDraftDevice] = useState<number | ''>('');
-  const [draftMeter, setDraftMeter] = useState<string>('');
   const [draftChannel, setDraftChannel] = useState<'ch1' | 'ch2'>('ch1');
   const [draftRole, setDraftRole] = useState<'input' | 'output'>('output');
 
@@ -151,13 +150,11 @@ export default function MeterBindingPage() {
     loadAll();
   }, []);
 
-  const meterMap = useMemo(
-    () => new Map(meters.map((m) => [String(m.meterID), meterLabel(m)])),
-    [meters]
-  );
 
   async function createBinding() {
-    if (!draftDevice || !draftMeter) return;
+    if (!draftDevice) return;
+    const selectedDevice = devices.find((d) => d.deviceID === Number(draftDevice));
+    const meterId = selectedDevice?.GEsaveID || String(draftDevice);
     setSaving(true);
     setError(null);
     try {
@@ -166,7 +163,7 @@ export default function MeterBindingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           deviceId: Number(draftDevice),
-          meterId: draftMeter,
+          meterId,
           meterChannel: draftChannel,
           meterRole: draftRole,
         }),
@@ -174,7 +171,6 @@ export default function MeterBindingPage() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Save failed');
       setDraftDevice('');
-      setDraftMeter('');
       setDraftChannel('ch1');
       setDraftRole('output');
       await loadAll();
@@ -268,7 +264,7 @@ export default function MeterBindingPage() {
           </button>
         </div>
         <p className="text-xs text-gray-500 mb-4">{t.movedNote}</p>
-        <div className="grid md:grid-cols-5 gap-3">
+        <div className="grid md:grid-cols-4 gap-3">
           <select
             value={draftRole}
             onChange={(e) => setDraftRole(e.target.value as 'input' | 'output')}
@@ -290,18 +286,6 @@ export default function MeterBindingPage() {
             ))}
           </select>
           <select
-            value={draftMeter}
-            onChange={(e) => setDraftMeter(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-xl bg-gray-50"
-          >
-            <option value="">{t.meter}</option>
-            {meters.map((m) => (
-              <option key={String(m.meterID)} value={String(m.meterID)}>
-                {meterLabel(m)}
-              </option>
-            ))}
-          </select>
-          <select
             value={draftChannel}
             onChange={(e) => setDraftChannel(e.target.value as 'ch1' | 'ch2')}
             className="px-3 py-2 border border-gray-200 rounded-xl bg-gray-50"
@@ -311,7 +295,7 @@ export default function MeterBindingPage() {
           </select>
           <button
             onClick={createBinding}
-            disabled={saving || !draftDevice || !draftMeter}
+            disabled={saving || !draftDevice}
             className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             <Save className="w-4 h-4" /> {t.save}
@@ -351,7 +335,6 @@ export default function MeterBindingPage() {
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">{t.role}</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">{t.channel}</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">{t.device}</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">{t.meter}</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">{t.action}</th>
               </tr>
             </thead>
@@ -392,19 +375,6 @@ export default function MeterBindingPage() {
                     </select>
                   </td>
                   <td className="px-3 py-2">
-                    <select
-                      value={String(editValue(b, 'meter_id'))}
-                      onChange={(e) => setEdit(b.id, 'meter_id', e.target.value)}
-                      className="px-2 py-1 border border-gray-200 rounded-lg text-sm w-full"
-                    >
-                      {meters.map((m) => (
-                        <option key={String(m.meterID)} value={String(m.meterID)}>
-                          {meterMap.get(String(m.meterID)) || String(m.meterID)}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
                     <div className="flex gap-2">
                       <button
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700"
@@ -425,7 +395,7 @@ export default function MeterBindingPage() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5} className="px-3 py-5 text-sm text-gray-400 text-center">{t.noData}</td>
+                  <td colSpan={4} className="px-3 py-5 text-sm text-gray-400 text-center">{t.noData}</td>
                 </tr>
               )}
             </tbody>
