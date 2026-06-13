@@ -228,6 +228,36 @@ async function columnExists(tableName: string, columnName: string) {
 let devicesClientIdEnsured = false
 let devicesClientIdAvailable = false
 
+let momogeUserIdEnsured = false
+let momogeUserIdAvailable = false
+
+/** Legacy DBs may lack momoge_cus.user_id — add column once. */
+async function ensureMomogeUserIdColumn() {
+  if (momogeUserIdEnsured) return momogeUserIdAvailable
+  try {
+    let hasColumn = await columnExists('momoge_cus', 'user_id')
+    if (!hasColumn) {
+      await queryGe(
+        `ALTER TABLE momoge_cus
+         ADD COLUMN user_id varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL`,
+      )
+      try {
+        await queryGe(`ALTER TABLE momoge_cus ADD INDEX idx_momoge_cus_user_id (user_id)`)
+      } catch {
+        /* index may already exist */
+      }
+      hasColumn = await columnExists('momoge_cus', 'user_id')
+    }
+    momogeUserIdAvailable = hasColumn
+  } catch (err) {
+    console.warn('[customer-scope] momoge_cus.user_id unavailable:', err)
+    momogeUserIdAvailable = false
+  } finally {
+    momogeUserIdEnsured = true
+  }
+  return momogeUserIdAvailable
+}
+
 /** Legacy DBs may lack devices.client_id — add column and backfill demo rows once. */
 async function ensureDevicesClientIdColumn() {
   if (devicesClientIdEnsured) return devicesClientIdAvailable
@@ -296,8 +326,8 @@ function pushDeviceIdentityConditions(
     params.push(username, username, username)
   }
   if (userId) {
-    conditions.push('(LOWER(TRIM(d.GEsaveID)) = LOWER(?) OR LOWER(TRIM(d.deviceName)) LIKE ?)')
-    params.push(userId, `%${userId}%`)
+    conditions.push('LOWER(TRIM(d.GEsaveID)) = LOWER(?)')
+    params.push(userId)
   }
 }
 
@@ -316,7 +346,7 @@ export async function resolveCustomerMeters(scope: CustomerScopeInput): Promise<
   await ensureDevicesClientIdColumn()
 
   const hasMomoge = await tableExists('momoge_cus')
-  const hasMomogeUserId = hasMomoge && (await columnExists('momoge_cus', 'user_id'))
+  const hasMomogeUserId = hasMomoge && (await ensureMomogeUserIdColumn())
   const hasDevicesClientId = devicesClientIdAvailable || (await columnExists('devices', 'client_id'))
   const hasCarbonLoc = await tableExists('carbon_locations')
   const hasCarbonMeter = await tableExists('carbon_meters')

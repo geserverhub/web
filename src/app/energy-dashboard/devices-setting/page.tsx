@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSite } from '@/lib/SiteContext';
 import { useLocale } from '@/lib/LocaleContext';
-import { Search, Edit2, Trash2, Settings, Server, Wifi, WifiOff, RefreshCw, X, Save, Phone, MapPin, User, Plus, Eye } from 'lucide-react';
+import { Search, Edit2, Trash2, Settings, Server, Wifi, WifiOff, RefreshCw, X, Save, Phone, MapPin, User, Plus, Eye, UserCheck, Link2, XCircle } from 'lucide-react';
 import GeocodeMapPickerModal from '@/components/energy/GeocodeMapPickerModal';
 
 interface Device {
@@ -135,10 +135,19 @@ export default function DevicesSettingPage() {
   const [editLocationID, setEditLocationID] = useState('');
   const [editSerailID, setEditSerailID] = useState('');
   const [editNameKR, setEditNameKR] = useState('');
+  const [editLinkedUserId, setEditLinkedUserId] = useState<string>('');
+  const [editLinkedUserDisplay, setEditLinkedUserDisplay] = useState('');
   const [addMeterID, setAddMeterID] = useState('');
   const [addLocationID, setAddLocationID] = useState('');
   const [addSerailID, setAddSerailID] = useState('');
   const [addNameKR, setAddNameKR] = useState('');
+  const [addLinkedUserId, setAddLinkedUserId] = useState<string>('');
+  const [addLinkedUserDisplay, setAddLinkedUserDisplay] = useState('');
+  // user search shared state
+  const [userSearchQ, setUserSearchQ] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<Array<{id: string; name: string | null; username: string | null; email: string | null}>>([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [userSearchTarget, setUserSearchTarget] = useState<'edit' | 'add' | null>(null);
   const [savingCusDirect, setSavingCusDirect] = useState(false);
   const [saveCusMsgDirect, setSaveCusMsgDirect] = useState<string | null>(null);
 
@@ -349,6 +358,8 @@ export default function DevicesSettingPage() {
     setSaveMsg(null);
     // Load existing momoge_cus record for this device
     setEditMmgID(null); setEditMeterID(''); setEditLocationID(''); setEditSerailID(''); setEditNameKR('');
+    setEditLinkedUserId(''); setEditLinkedUserDisplay('');
+    setUserSearchQ(''); setUserSearchResults([]); setUserSearchTarget(null);
     if (device.deviceID) {
       fetch(`/api/ge-energy/momoge-cus?deviceId=${device.deviceID}`)
         .then(r => r.json())
@@ -360,6 +371,18 @@ export default function DevicesSettingPage() {
             setEditLocationID(rec.LocationID ?? '');
             setEditSerailID(rec.serailID ?? '');
             setEditNameKR(rec.nameKR ?? '');
+            const uid = rec.user_id ? String(rec.user_id) : '';
+            setEditLinkedUserId(uid);
+            setEditLinkedUserDisplay(uid ? `User ID: ${uid}` : '');
+            if (uid) {
+              fetch(`/api/ge-energy/user-search?q=${encodeURIComponent(uid)}&limit=5`)
+                .then(r2 => r2.json())
+                .then(j2 => {
+                  const found = j2.users?.find((u: {id: string}) => String(u.id) === uid);
+                  if (found) setEditLinkedUserDisplay(`${found.name || found.username || found.email} (${uid})`);
+                })
+                .catch(() => {});
+            }
           }
         })
         .catch(() => {});
@@ -430,6 +453,7 @@ export default function DevicesSettingPage() {
           meterID: editMeterID || null,
           LocationID: editLocationID || null,
           serailID: editSerailID || editForm.seriesNo || null,
+          user_id: editLinkedUserId || null,
         };
         if (editMmgID) {
           await fetch('/api/ge-energy/momoge-cus', {
@@ -505,6 +529,8 @@ export default function DevicesSettingPage() {
     setCustomerResults([]);
     setCreateMsg(null);
     setAddMeterID(''); setAddLocationID(''); setAddSerailID(''); setAddNameKR('');
+    setAddLinkedUserId(''); setAddLinkedUserDisplay('');
+    setUserSearchQ(''); setUserSearchResults([]); setUserSearchTarget(null);
     setShowAddModal(true);
   }
 
@@ -555,6 +581,7 @@ export default function DevicesSettingPage() {
               meterID: addMeterID || null,
               LocationID: addLocationID || null,
               serailID: addSerailID || addForm.seriesNo || null,
+              user_id: addLinkedUserId || null,
             }),
           }).catch(() => {});
         }
@@ -608,6 +635,34 @@ export default function DevicesSettingPage() {
   );
 
   const onlineCount = devices.filter(d => d.connection === 'ONLINE').length;
+
+  async function searchUsers(q: string) {
+    if (!q.trim()) { setUserSearchResults([]); return; }
+    setUserSearchLoading(true);
+    try {
+      const res = await fetch(`/api/ge-energy/user-search?q=${encodeURIComponent(q)}&limit=10`);
+      const j = await res.json();
+      setUserSearchResults(Array.isArray(j.users) ? j.users : []);
+    } catch {
+      setUserSearchResults([]);
+    } finally {
+      setUserSearchLoading(false);
+    }
+  }
+
+  function selectLinkedUser(user: {id: string; name: string | null; username: string | null; email: string | null}, target: 'edit' | 'add') {
+    const display = `${user.name || user.username || user.email || ''} (ID: ${user.id})`;
+    if (target === 'edit') {
+      setEditLinkedUserId(String(user.id));
+      setEditLinkedUserDisplay(display);
+    } else {
+      setAddLinkedUserId(String(user.id));
+      setAddLinkedUserDisplay(display);
+    }
+    setUserSearchQ('');
+    setUserSearchResults([]);
+    setUserSearchTarget(null);
+  }
 
   // Avoid hydration mismatch: render a stable placeholder until the client mounts
   if (!clientReady) {
@@ -1469,6 +1524,46 @@ export default function DevicesSettingPage() {
                 {editMmgID && (
                   <p className="text-xs text-gray-400">mmgID: {editMmgID}</p>
                 )}
+                {/* Link to user account */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5" /> ผูกบัญชีลูกค้า (Customer Login)
+                  </label>
+                  {editLinkedUserId ? (
+                    <div className="flex items-center gap-2 px-2 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <Link2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="text-xs text-emerald-800 flex-1 truncate">{editLinkedUserDisplay}</span>
+                      <button type="button" onClick={() => { setEditLinkedUserId(''); setEditLinkedUserDisplay(''); }}
+                        className="text-gray-400 hover:text-red-500">
+                        <XCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        value={userSearchTarget === 'edit' ? userSearchQ : ''}
+                        onChange={e => { setUserSearchQ(e.target.value); setUserSearchTarget('edit'); searchUsers(e.target.value); }}
+                        onFocus={() => setUserSearchTarget('edit')}
+                        placeholder="ค้นหาชื่อ / อีเมล / username"
+                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      />
+                      {userSearchTarget === 'edit' && (userSearchLoading || userSearchResults.length > 0) && (
+                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {userSearchLoading && <p className="px-3 py-2 text-xs text-gray-400">กำลังค้นหา…</p>}
+                          {userSearchResults.map(u => (
+                            <button key={u.id} type="button"
+                              onClick={() => selectLinkedUser(u, 'edit')}
+                              className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 border-b border-gray-50 last:border-0">
+                              <span className="font-medium">{u.name || u.username || '—'}</span>
+                              <span className="text-gray-400 ml-1">{u.email}</span>
+                              <span className="text-gray-300 ml-1">ID:{u.id}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               {/* Device info */}
               <div className="space-y-3">
@@ -1847,6 +1942,46 @@ export default function DevicesSettingPage() {
                       className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
                       placeholder="SN-..." />
                   </div>
+                </div>
+                {/* Link to user account */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5" /> ผูกบัญชีลูกค้า (Customer Login)
+                  </label>
+                  {addLinkedUserId ? (
+                    <div className="flex items-center gap-2 px-2 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <Link2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="text-xs text-emerald-800 flex-1 truncate">{addLinkedUserDisplay}</span>
+                      <button type="button" onClick={() => { setAddLinkedUserId(''); setAddLinkedUserDisplay(''); }}
+                        className="text-gray-400 hover:text-red-500">
+                        <XCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        value={userSearchTarget === 'add' ? userSearchQ : ''}
+                        onChange={e => { setUserSearchQ(e.target.value); setUserSearchTarget('add'); searchUsers(e.target.value); }}
+                        onFocus={() => setUserSearchTarget('add')}
+                        placeholder="ค้นหาชื่อ / อีเมล / username"
+                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-400 outline-none"
+                      />
+                      {userSearchTarget === 'add' && (userSearchLoading || userSearchResults.length > 0) && (
+                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {userSearchLoading && <p className="px-3 py-2 text-xs text-gray-400">กำลังค้นหา…</p>}
+                          {userSearchResults.map(u => (
+                            <button key={u.id} type="button"
+                              onClick={() => selectLinkedUser(u, 'add')}
+                              className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 border-b border-gray-50 last:border-0">
+                              <span className="font-medium">{u.name || u.username || '—'}</span>
+                              <span className="text-gray-400 ml-1">{u.email}</span>
+                              <span className="text-gray-300 ml-1">ID:{u.id}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

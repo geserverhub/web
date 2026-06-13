@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         mc.address,
         mc.latitude,
         mc.longitude,
+        mc.user_id,
         mc.created_at,
         mc.updated_at,
         -- carbon_meters
@@ -94,17 +95,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       meterID, LocationID, serailID, device_id,
-      nameTH, nameEN, nameKR, phone, address, latitude, longitude,
+      nameTH, nameEN, nameKR, phone, address, latitude, longitude, user_id,
     } = body
 
     const result = await query(`
       INSERT INTO momoge_cus
-        (meterID, LocationID, serailID, device_id, nameTH, nameEN, nameKR, phone, address, latitude, longitude)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (meterID, LocationID, serailID, device_id, nameTH, nameEN, nameKR, phone, address, latitude, longitude, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       meterID || null, LocationID || null, serailID || null, device_id || null,
       nameTH || null, nameEN || null, nameKR || null, phone || null, address || null,
-      toDecimal(latitude), toDecimal(longitude),
+      toDecimal(latitude), toDecimal(longitude), user_id || null,
     ]) as unknown as { insertId: number }
 
     return NextResponse.json({ success: true, mmgID: result.insertId }, { status: 201 })
@@ -123,7 +124,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json()
     const {
       mmgID, meterID, LocationID, serailID, device_id,
-      nameTH, nameEN, nameKR, phone, address, latitude, longitude,
+      nameTH, nameEN, nameKR, phone, address, latitude, longitude, user_id,
     } = body
 
     if (!mmgID) {
@@ -134,12 +135,12 @@ export async function PUT(req: NextRequest) {
       UPDATE momoge_cus
       SET meterID=?, LocationID=?, serailID=?, device_id=?,
           nameTH=?, nameEN=?, nameKR=?, phone=?, address=?,
-          latitude=?, longitude=?, updated_at=NOW()
+          latitude=?, longitude=?, user_id=?, updated_at=NOW()
       WHERE mmgID=?
     `, [
       meterID || null, LocationID || null, serailID || null, device_id || null,
       nameTH || null, nameEN || null, nameKR || null, phone || null, address || null,
-      toDecimal(latitude), toDecimal(longitude), mmgID,
+      toDecimal(latitude), toDecimal(longitude), user_id || null, mmgID,
     ])
 
     return NextResponse.json({ success: true })
