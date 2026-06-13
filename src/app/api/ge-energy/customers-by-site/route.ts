@@ -35,12 +35,12 @@ export async function GET(req: NextRequest) {
     const siteFilter = deviceSiteFilterSql(site, meterIdCol)
 
     const customerKeyExpr = hasCustomerId
-      ? `COALESCE(CAST(d.customer_id AS CHAR), NULLIF(TRIM(d.customerName), ''))`
-      : `NULLIF(TRIM(d.customerName), '')`
+      ? `COALESCE(CAST(d.customer_id AS CHAR) COLLATE utf8mb4_unicode_ci, NULLIF(TRIM(d.customerName COLLATE utf8mb4_unicode_ci), ''))`
+      : `NULLIF(TRIM(d.customerName COLLATE utf8mb4_unicode_ci), '')`
 
     const nameExpr = hasEqCustomers
-      ? `COALESCE(NULLIF(TRIM(ec.customer_name), ''), NULLIF(TRIM(d.customerName), ''))`
-      : `NULLIF(TRIM(d.customerName), '')`
+      ? `COALESCE(NULLIF(TRIM(ec.customer_name COLLATE utf8mb4_unicode_ci), ''), NULLIF(TRIM(d.customerName COLLATE utf8mb4_unicode_ci), ''))`
+      : `NULLIF(TRIM(d.customerName COLLATE utf8mb4_unicode_ci), '')`
 
     // Customers visible on this site (at least one device here)
     const visibleRows = await queryGe(

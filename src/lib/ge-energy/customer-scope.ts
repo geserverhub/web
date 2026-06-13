@@ -123,7 +123,7 @@ export function resolveDeviceSite(
 /** SQL expression: effective site from meter ID prefix or devices.site/location. */
 export function effectiveDeviceSiteSql(meterIdColumn: string | null, deviceAlias = 'd'): string {
   if (!meterIdColumn) {
-    return `LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand'))`
+    return `LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand')) COLLATE utf8mb4_unicode_ci`
   }
   const col = `UPPER(COALESCE(${deviceAlias}.${meterIdColumn}, ''))`
   return `COALESCE(
@@ -133,8 +133,8 @@ export function effectiveDeviceSiteSql(meterIdColumn: string | null, deviceAlias
       WHEN ${col} LIKE 'GE-VN-%' THEN 'vietnam'
       WHEN ${col} LIKE 'GE-MY-%' THEN 'malaysia'
       ELSE NULL
-    END, NULL),
-    LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand'))
+    END, NULL) COLLATE utf8mb4_unicode_ci,
+    LOWER(COALESCE(${deviceAlias}.site, ${deviceAlias}.location, 'thailand')) COLLATE utf8mb4_unicode_ci
   )`
 }
 
