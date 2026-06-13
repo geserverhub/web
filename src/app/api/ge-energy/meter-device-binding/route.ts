@@ -80,6 +80,11 @@ export async function GET() {
       queryGeserverhub(
         `SELECT d.deviceID, d.deviceName, ${meterSelect}, d.location, d.site
          FROM devices d
+         WHERE (
+           SELECT COUNT(DISTINCT b.meter_role)
+           FROM ge_energy_meter_device_binding b
+           WHERE b.device_id = d.deviceID
+         ) < 2
          ORDER BY d.deviceName ASC`
       ),
       queryGeserverhub(
