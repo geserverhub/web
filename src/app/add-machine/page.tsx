@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Server } from 'lucide-react';
+import { ArrowLeft, Save, Server, Eye, EyeOff, Info } from 'lucide-react';
 import { useLocale } from '@/lib/LocaleContext';
 import EnergyLangSwitcher from '@/components/energy/EnergyLangSwitcher';
 import { addMachineT, resolveAddMachineLocale } from '@/lib/energy/add-machine-i18n';
@@ -30,6 +30,9 @@ export default function AddMachinePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [accountNote, setAccountNote] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [form, setForm] = useState({
     deviceName: '',
@@ -41,10 +44,10 @@ export default function AddMachinePage() {
     status: 'OK',
     beforeMeterNo: '1',
     metricsMeterNo: '2',
-    U_email: '',
-    P_email: '',
+    customerLoginEmail: '',
+    customerLoginPassword: '',
+    customerLoginPasswordConfirm: '',
     phone: '',
-    pass_phone: '',
     latitude: '',
     longitude: '',
     customerName: '',
@@ -63,17 +66,54 @@ export default function AddMachinePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setAccountNote('');
+
+    const email = form.customerLoginEmail.trim();
+    const pw = form.customerLoginPassword.trim();
+    const pw2 = form.customerLoginPasswordConfirm.trim();
+
+    if (email && pw && pw !== pw2) {
+      setError(ui.errorPasswordMismatch);
+      return;
+    }
+    if (email && !pw) {
+      setError(lang === 'th' ? 'กรุณากรอกพาสเวิร์ด' : lang === 'ko' ? '비밀번호를 입력하세요' : 'Please enter a password');
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch('/api/ge-energy/meter-seting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          deviceName: form.deviceName,
+          GEsaveID: form.GEsaveID,
+          series_no: form.series_no,
+          ipAddress: form.ipAddress,
+          location: form.location,
+          site: form.site,
+          status: form.status,
+          beforeMeterNo: form.beforeMeterNo,
+          metricsMeterNo: form.metricsMeterNo,
+          phone: form.phone,
+          latitude: form.latitude,
+          longitude: form.longitude,
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          customerAddress: form.customerAddress,
+          customerLoginEmail: form.customerLoginEmail || undefined,
+          customerLoginPassword: form.customerLoginPassword || undefined,
+        }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || ui.errorFailed);
+
+      if (data.accountStatus === 'created') setAccountNote(ui.customerLoginCreated);
+      else if (data.accountStatus === 'existing') setAccountNote(ui.customerLoginEmailDup);
+
       setSuccess(true);
-      setTimeout(() => router.push('/energy-dashboard/meter-seting'), 1200);
+      setTimeout(() => router.push('/energy-dashboard/meter-seting'), 1500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : ui.errorGeneric);
     } finally {
@@ -227,23 +267,77 @@ export default function AddMachinePage() {
             </div>
           </Section>
 
+          {/* ── Customer Login Account ── */}
           <Section title={ui.sectionOwner} subtitle={ui.sectionOwnerSub}>
+            {/* hint banner */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8,
+              background: '#eff6ff', border: '1px solid #bfdbfe',
+              borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+            }}>
+              <Info size={15} style={{ color: '#3b82f6', marginTop: 1, flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 12, color: '#1d4ed8', lineHeight: 1.5 }}>
+                {ui.customerLoginHint}
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={LABEL}>{ui.userEmail}</label>
-                <input className={INPUT} type="email" value={form.U_email} onChange={set('U_email')} placeholder="user@example.com" />
+              <div className="sm:col-span-2">
+                <label className={LABEL}>{ui.customerLoginEmail}</label>
+                <input
+                  className={INPUT}
+                  type="email"
+                  value={form.customerLoginEmail}
+                  onChange={set('customerLoginEmail')}
+                  placeholder="customer@example.com"
+                  autoComplete="off"
+                />
               </div>
               <div>
-                <label className={LABEL}>{ui.partnerEmail}</label>
-                <input className={INPUT} type="email" value={form.P_email} onChange={set('P_email')} placeholder="partner@example.com" />
+                <label className={LABEL}>{ui.customerLoginPassword}</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className={INPUT}
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.customerLoginPassword}
+                    onChange={set('customerLoginPassword')}
+                    placeholder={ui.phCustomerLoginPassword}
+                    autoComplete="new-password"
+                    style={{ paddingRight: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className={LABEL}>{ui.customerLoginPasswordConfirm}</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className={INPUT}
+                    type={showConfirm ? 'text' : 'password'}
+                    value={form.customerLoginPasswordConfirm}
+                    onChange={set('customerLoginPasswordConfirm')}
+                    placeholder={ui.phCustomerLoginPassword}
+                    autoComplete="new-password"
+                    style={{ paddingRight: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(v => !v)}
+                    style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}
+                  >
+                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className={LABEL}>{ui.phone}</label>
                 <input className={INPUT} value={form.phone} onChange={set('phone')} placeholder="+66 81 234 5678" />
-              </div>
-              <div>
-                <label className={LABEL}>{ui.passPhone}</label>
-                <input className={INPUT} value={form.pass_phone} onChange={set('pass_phone')} placeholder={ui.phPassPhone} />
               </div>
             </div>
           </Section>
@@ -286,52 +380,21 @@ export default function AddMachinePage() {
             }}
           >
             {error && (
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 200,
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  borderRadius: 10,
-                  padding: '10px 16px',
-                  color: '#dc2626',
-                  fontSize: 13,
-                }}
-              >
+              <div style={{ flex: 1, minWidth: 200, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 16px', color: '#dc2626', fontSize: 13 }}>
                 ❌ {error}
               </div>
             )}
             {success && (
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 200,
-                  background: '#f0fdf4',
-                  border: '1px solid #bbf7d0',
-                  borderRadius: 10,
-                  padding: '10px 16px',
-                  color: '#16a34a',
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
+              <div style={{ flex: 1, minWidth: 200, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 16px', color: '#16a34a', fontSize: 13, fontWeight: 700 }}>
                 ✅ {ui.success}
+                {accountNote && <div style={{ fontWeight: 400, marginTop: 4 }}>🔑 {accountNote}</div>}
               </div>
             )}
             {!error && !success && <div style={{ flex: 1 }} />}
             <button
               type="button"
               onClick={() => router.back()}
-              style={{
-                padding: '10px 22px',
-                borderRadius: 10,
-                border: '1px solid #d1d5db',
-                background: '#fff',
-                color: '#6b7280',
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: 'pointer',
-              }}
+              style={{ padding: '10px 22px', borderRadius: 10, border: '1px solid #d1d5db', background: '#fff', color: '#6b7280', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
             >
               {ui.cancel}
             </button>
@@ -339,16 +402,10 @@ export default function AddMachinePage() {
               type="submit"
               disabled={saving || success}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 28px',
-                borderRadius: 10,
-                border: 'none',
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 28px', borderRadius: 10, border: 'none',
                 background: saving || success ? '#6ee7b7' : 'linear-gradient(135deg,#059669,#047857)',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: 14,
+                color: '#fff', fontWeight: 700, fontSize: 14,
                 cursor: saving || success ? 'not-allowed' : 'pointer',
                 boxShadow: '0 4px 14px rgba(5,150,105,0.35)',
               }}
@@ -365,15 +422,7 @@ export default function AddMachinePage() {
 
 function Section({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 16,
-        border: '1px solid #d1fae5',
-        padding: '20px 24px',
-        marginBottom: 20,
-      }}
-    >
+    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #d1fae5', padding: '20px 24px', marginBottom: 20 }}>
       <div style={{ marginBottom: 18 }}>
         <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#064e3b' }}>{title}</h2>
         <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6b7280' }}>{subtitle}</p>

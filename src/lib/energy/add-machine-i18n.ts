@@ -1,4 +1,4 @@
-﻿export type AddMachineLocale = 'th' | 'ko' | 'en';
+export type AddMachineLocale = 'th' | 'ko' | 'en';
 
 export function resolveAddMachineLocale(locale: string): AddMachineLocale {
   if (locale === 'th' || locale === 'ko' || locale === 'en') return locale;
@@ -28,10 +28,13 @@ type Copy = {
   status: string;
   latitude: string;
   longitude: string;
-  userEmail: string;
-  partnerEmail: string;
+  customerLoginEmail: string;
+  customerLoginPassword: string;
+  customerLoginPasswordConfirm: string;
   phone: string;
-  passPhone: string;
+  customerLoginHint: string;
+  customerLoginEmailDup: string;
+  customerLoginCreated: string;
   customerName: string;
   customerPhone: string;
   customerAddress: string;
@@ -40,7 +43,7 @@ type Copy = {
   phGeId: string;
   phSeriesNo: string;
   phLocation: string;
-  phPassPhone: string;
+  phCustomerLoginPassword: string;
   phCustomerName: string;
   phCustomerPhone: string;
   phCustomerAddress: string;
@@ -55,6 +58,7 @@ type Copy = {
   success: string;
   errorGeneric: string;
   errorFailed: string;
+  errorPasswordMismatch: string;
 };
 
 const th: Copy = {
@@ -65,8 +69,8 @@ const th: Copy = {
   sectionDeviceSub: 'Device Information',
   sectionLocation: 'สถานที่และสถานะ',
   sectionLocationSub: 'Location & Status',
-  sectionOwner: 'ข้อมูลเจ้าของ / ติดต่อ',
-  sectionOwnerSub: 'Owner & Contact',
+  sectionOwner: 'บัญชีลูกค้า (Customer Login)',
+  sectionOwnerSub: 'สร้างบัญชีสำหรับล็อกอิน Customer Dashboard',
   sectionCustomer: 'ข้อมูลลูกค้า',
   sectionCustomerSub: 'Customer Info (Optional)',
   deviceName: 'ชื่ออุปกรณ์',
@@ -80,19 +84,22 @@ const th: Copy = {
   status: 'Status',
   latitude: 'Latitude',
   longitude: 'Longitude',
-  userEmail: 'User Email (U_email)',
-  partnerEmail: 'Partner Email (P_email)',
-  phone: 'Phone',
-  passPhone: 'Pass Phone',
-  customerName: 'Customer Name',
-  customerPhone: 'Customer Phone',
-  customerAddress: 'Customer Address',
+  customerLoginEmail: 'อีเมลล์ลูกค้า (ใช้ล็อกอิน)',
+  customerLoginPassword: 'พาสเวิร์ด',
+  customerLoginPasswordConfirm: 'ยืนยันพาสเวิร์ด',
+  phone: 'เบอร์โทร',
+  customerLoginHint: 'ลูกค้าใช้อีเมลล์และพาสเวิร์ดนี้ล็อกอินที่หน้า Customer Dashboard',
+  customerLoginEmailDup: 'อีเมลล์นี้มีบัญชีอยู่แล้ว — ระบบจะผูกมิเตอร์เข้าบัญชีเดิม',
+  customerLoginCreated: 'สร้างบัญชีลูกค้าสำเร็จ',
+  customerName: 'ชื่อลูกค้า',
+  customerPhone: 'เบอร์โทรลูกค้า',
+  customerAddress: 'ที่อยู่ลูกค้า',
   required: '*',
   phDeviceName: 'เช่น Energy Meter CT-01',
   phGeId: 'เช่น GE-2024-001',
   phSeriesNo: 'หมายเลขซีรีส์',
   phLocation: 'เช่น Bangkok, Thailand',
-  phPassPhone: 'รหัสผ่านโทรศัพท์',
+  phCustomerLoginPassword: 'อย่างน้อย 6 ตัวอักษร',
   phCustomerName: 'ชื่อลูกค้า',
   phCustomerPhone: 'เบอร์โทรลูกค้า',
   phCustomerAddress: 'ที่อยู่ลูกค้า',
@@ -107,6 +114,7 @@ const th: Copy = {
   success: 'เพิ่มอุปกรณ์สำเร็จ กำลังกลับไปหน้า Meter Setting...',
   errorGeneric: 'เกิดข้อผิดพลาด',
   errorFailed: 'ไม่สามารถเพิ่มอุปกรณ์ได้',
+  errorPasswordMismatch: 'พาสเวิร์ดไม่ตรงกัน',
 };
 
 const ko: Copy = {
@@ -117,8 +125,8 @@ const ko: Copy = {
   sectionDeviceSub: 'Device Information',
   sectionLocation: '위치 및 상태',
   sectionLocationSub: 'Location & Status',
-  sectionOwner: '소유자 / 연락처',
-  sectionOwnerSub: 'Owner & Contact',
+  sectionOwner: '고객 로그인 계정',
+  sectionOwnerSub: 'Customer Dashboard 로그인용 계정 생성',
   sectionCustomer: '고객 정보',
   sectionCustomerSub: 'Customer Info (Optional)',
   deviceName: '장치명',
@@ -132,19 +140,22 @@ const ko: Copy = {
   status: 'Status',
   latitude: 'Latitude',
   longitude: 'Longitude',
-  userEmail: 'User Email (U_email)',
-  partnerEmail: 'Partner Email (P_email)',
-  phone: 'Phone',
-  passPhone: 'Pass Phone',
-  customerName: 'Customer Name',
-  customerPhone: 'Customer Phone',
-  customerAddress: 'Customer Address',
+  customerLoginEmail: '고객 이메일 (로그인용)',
+  customerLoginPassword: '비밀번호',
+  customerLoginPasswordConfirm: '비밀번호 확인',
+  phone: '전화번호',
+  customerLoginHint: '고객은 이 이메일/비밀번호로 Customer Dashboard에 로그인합니다',
+  customerLoginEmailDup: '이미 존재하는 이메일 — 기존 계정에 미터가 연결됩니다',
+  customerLoginCreated: '고객 계정이 생성되었습니다',
+  customerName: '고객명',
+  customerPhone: '고객 전화번호',
+  customerAddress: '고객 주소',
   required: '*',
   phDeviceName: '예: Energy Meter CT-01',
   phGeId: '예: GE-2024-001',
   phSeriesNo: '시리얼 번호',
   phLocation: '예: Seoul, Korea',
-  phPassPhone: '전화 비밀번호',
+  phCustomerLoginPassword: '최소 6자 이상',
   phCustomerName: '고객명',
   phCustomerPhone: '고객 전화번호',
   phCustomerAddress: '고객 주소',
@@ -159,6 +170,7 @@ const ko: Copy = {
   success: '장치가 추가되었습니다. Meter Setting으로 이동합니다...',
   errorGeneric: '오류가 발생했습니다',
   errorFailed: '장치를 추가하지 못했습니다',
+  errorPasswordMismatch: '비밀번호가 일치하지 않습니다',
 };
 
 const en: Copy = {
@@ -169,8 +181,8 @@ const en: Copy = {
   sectionDeviceSub: 'Device Information',
   sectionLocation: 'Location & Status',
   sectionLocationSub: 'Location & Status',
-  sectionOwner: 'Owner & Contact',
-  sectionOwnerSub: 'Owner & Contact',
+  sectionOwner: 'Customer Login Account',
+  sectionOwnerSub: 'Create credentials for Customer Dashboard login',
   sectionCustomer: 'Customer Information',
   sectionCustomerSub: 'Customer Info (Optional)',
   deviceName: 'Device Name',
@@ -184,10 +196,13 @@ const en: Copy = {
   status: 'Status',
   latitude: 'Latitude',
   longitude: 'Longitude',
-  userEmail: 'User Email (U_email)',
-  partnerEmail: 'Partner Email (P_email)',
+  customerLoginEmail: 'Customer Email (login)',
+  customerLoginPassword: 'Password',
+  customerLoginPasswordConfirm: 'Confirm Password',
   phone: 'Phone',
-  passPhone: 'Pass Phone',
+  customerLoginHint: 'Customer uses this email & password to log in at Customer Dashboard',
+  customerLoginEmailDup: 'Email already exists — meter will be linked to the existing account',
+  customerLoginCreated: 'Customer account created',
   customerName: 'Customer Name',
   customerPhone: 'Customer Phone',
   customerAddress: 'Customer Address',
@@ -196,7 +211,7 @@ const en: Copy = {
   phGeId: 'e.g. GE-2024-001',
   phSeriesNo: 'Serial number',
   phLocation: 'e.g. Bangkok, Thailand',
-  phPassPhone: 'Phone password',
+  phCustomerLoginPassword: 'At least 6 characters',
   phCustomerName: 'Customer name',
   phCustomerPhone: 'Customer phone',
   phCustomerAddress: 'Customer address',
@@ -211,6 +226,7 @@ const en: Copy = {
   success: 'Device added successfully. Redirecting to Meter Setting...',
   errorGeneric: 'An error occurred',
   errorFailed: 'Failed to add device',
+  errorPasswordMismatch: 'Passwords do not match',
 };
 
 const catalog: Record<AddMachineLocale, Copy> = { th, ko, en };
