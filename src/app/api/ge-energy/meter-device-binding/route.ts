@@ -83,17 +83,19 @@ export async function GET() {
          ORDER BY d.deviceName ASC`
       ),
       queryGeserverhub(
-        `SELECT cm.meterID, cm.meterNo, cm.meterType
-         FROM carbon_meters cm
-         ORDER BY cm.meterNo ASC, cm.meterID ASC`
+        `SELECT COALESCE(d.GEsaveID, CAST(d.deviceID AS CHAR)) AS meterID,
+                d.GEsaveID AS meterNo,
+                d.deviceName AS meterType
+         FROM devices d
+         ORDER BY d.deviceName ASC`
       ),
       queryGeserverhub(
         `SELECT b.id, b.device_id, b.meter_id, b.meter_channel, b.meter_role, b.created_at, b.updated_at,
                 d.deviceName, ${meterSelect}, d.location,
-                cm.meterNo, cm.meterType
+                dm.GEsaveID AS meterNo, dm.deviceName AS meterType
          FROM ge_energy_meter_device_binding b
          LEFT JOIN devices d ON d.deviceID = b.device_id
-         LEFT JOIN carbon_meters cm ON CAST(cm.meterID AS CHAR) = b.meter_id
+         LEFT JOIN devices dm ON COALESCE(dm.GEsaveID, CAST(dm.deviceID AS CHAR)) = b.meter_id
          ORDER BY d.deviceName ASC, FIELD(b.meter_role, 'input','output') ASC`
       ),
     ]);
