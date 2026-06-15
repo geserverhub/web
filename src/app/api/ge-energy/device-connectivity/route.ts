@@ -48,7 +48,10 @@ function siteWhereClause(site: string): { sql: string; params: string[] } {
           : site === 'malaysia'
             ? '%Malaysia%'
             : `%${site}%`;
-  return { sql: 'd.location LIKE ?', params: [pattern] };
+  return {
+    sql: '(d.site = ? OR d.location LIKE ?)',
+    params: [site, pattern],
+  };
 }
 
 /**

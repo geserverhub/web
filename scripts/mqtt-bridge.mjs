@@ -395,6 +395,8 @@ async function main() {
         return;
       }
 
+      log('info', 'MQTT message', { topic, payload: raw });
+
       if (!raw || typeof raw !== 'object') return;
 
       try {

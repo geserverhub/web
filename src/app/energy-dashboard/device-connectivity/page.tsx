@@ -309,15 +309,11 @@ export default function DeviceConnectivityPage() {
   }, []);
 
   const loadAll = useCallback(async () => {
-    if (!user?.userId) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setStatus(null);
     try {
       const [mqttRes, devRes, bridgeRes] = await Promise.all([
-        fetch(`/api/ge-energy/mqtt-settings?userId=${user.userId}&site=${selectedSite}`),
+        fetch(`/api/ge-energy/mqtt-settings?userId=1&site=${selectedSite}`),
         fetch(`/api/ge-energy/device-connectivity?site=${selectedSite}`),
         fetch('/api/ge-energy/mqtt-bridge/status'),
       ]);
@@ -352,10 +348,6 @@ export default function DeviceConnectivityPage() {
   );
 
   async function saveMqttSettings() {
-    if (!user?.userId) {
-      setStatus({ type: 'error', message: ui.loginRequired });
-      return;
-    }
     setSavingMqtt(true);
     setStatus(null);
     try {
@@ -363,7 +355,7 @@ export default function DeviceConnectivityPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.userId,
+          userId: 1,
           site: selectedSite,
           ...mqtt,
         }),
