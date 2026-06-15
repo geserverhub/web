@@ -555,6 +555,10 @@ export default function PartnerDashboard() {
   const [broadcastHistory, setBroadcastHistory] = useState([]);
   const [broadcastHistoryLoading, setBroadcastHistoryLoading] = useState(false);
 
+  const [restoreState, setRestoreState] = useState(""); // "" | "loading" | "success" | "error"
+  const [restoreMsg, setRestoreMsg] = useState("");
+  const [latestBackup, setLatestBackup] = useState(null);
+
   const [partnerNames, setPartnerNames] = useState(() => {
     try { return JSON.parse(localStorage.getItem("partnerNames") || "{}"); } catch { return {}; }
   });
@@ -710,6 +714,41 @@ export default function PartnerDashboard() {
     if (!confirm(lang === "ko" ? "삭제하시겠습니까?" : "ยืนยันการลบ?")) return;
     await fetch(`/api/ge-energy/broadcast?id=${id}`, { method: "DELETE" });
     setBroadcastHistory(prev => prev.filter(b => b.id !== id));
+  }
+
+  async function handleRestore() {
+    const confirmed = confirm(
+      lang === "ko"
+        ? "⚠️ 최신 백업으로 데이터베이스를 복원하시겠습니까?\n현재 데이터가 모두 덮어씌워집니다!"
+        : "⚠️ กู้คืนฐานข้อมูลจาก Backup ล่าสุด?\nข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่!"
+    );
+    if (!confirmed) return;
+    setRestoreState("loading");
+    setRestoreMsg("");
+    try {
+      const res = await fetch("/api/backup/restore", { method: "POST" });
+      const d = await res.json();
+      if (d.success) {
+        setRestoreState("success");
+        setRestoreMsg(d.message || "กู้คืนสำเร็จ");
+        fetchData();
+      } else {
+        setRestoreState("error");
+        setRestoreMsg(d.message || "เกิดข้อผิดพลาด");
+      }
+    } catch (err) {
+      setRestoreState("error");
+      setRestoreMsg(err.message);
+    }
+    setTimeout(() => { setRestoreState(""); setRestoreMsg(""); }, 6000);
+  }
+
+  async function fetchLatestBackupInfo() {
+    try {
+      const res = await fetch("/api/backup/restore");
+      const d = await res.json();
+      if (d.success) setLatestBackup(d.latest);
+    } catch {}
   }
 
   async function handleAddTask(e) {
@@ -1170,7 +1209,33 @@ export default function PartnerDashboard() {
 
             {/* Partner income table */}
             <div style={S.section}>
-              <div style={S.sectionTitle}>{t.partnerIncomeTitle}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                <div style={S.sectionTitle}>{t.partnerIncomeTitle}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {restoreState === "success" && (
+                    <span style={{ color: "#4ade80", fontSize: 12 }}>✅ {restoreMsg}</span>
+                  )}
+                  {restoreState === "error" && (
+                    <span style={{ color: "#f87171", fontSize: 12 }}>❌ {restoreMsg}</span>
+                  )}
+                  <button
+                    onMouseEnter={() => { if (!latestBackup) fetchLatestBackupInfo(); }}
+                    title={latestBackup ? `Backup ล่าสุด: ${latestBackup.filename} (${latestBackup.created ? new Date(latestBackup.created).toLocaleString("th-TH") : ""})` : "กู้คืนฐานข้อมูลล่าสุด"}
+                    disabled={restoreState === "loading"}
+                    onClick={handleRestore}
+                    style={{
+                      background: restoreState === "loading" ? "#1e2130" : "#1e1a2e",
+                      border: "1px solid #6d28d9",
+                      color: restoreState === "loading" ? "#8b8fa8" : "#c4b5fd",
+                      borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700,
+                      cursor: restoreState === "loading" ? "not-allowed" : "pointer",
+                      display: "flex", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    {restoreState === "loading" ? "⏳ กำลังกู้คืน..." : "🗄️ กู้คืนฐานข้อมูลล่าสุด"}
+                  </button>
+                </div>
+              </div>
               {!partnerIncomeSummary || partnerIncomeSummary.length === 0 ? (
                 <div style={{ color: "#4a5070", fontSize: 13, padding: "12px 0" }}>{t.partnerIncomeNoData}</div>
               ) : (
