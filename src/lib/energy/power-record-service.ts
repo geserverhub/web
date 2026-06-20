@@ -26,6 +26,9 @@ export type PowerRecordPayload = {
   metrics_L1?: number;
   metrics_L2?: number;
   metrics_L3?: number;
+  metrics_current_L1?: number;
+  metrics_current_L2?: number;
+  metrics_current_L3?: number;
   metrics_kWh?: number;
   metrics_P?: number;
   metrics_Q?: number;
@@ -59,6 +62,9 @@ const OPTIONAL_FIELDS: (keyof PowerRecordPayload)[] = [
   'metrics_L1',
   'metrics_L2',
   'metrics_L3',
+  'metrics_current_L1',
+  'metrics_current_L2',
+  'metrics_current_L3',
   'metrics_kWh',
   'metrics_P',
   'metrics_Q',

@@ -81,6 +81,12 @@ const pool = mysql.createPool({
   waitForConnections: true,
 });
 
+// Force utf8mb4_unicode_ci on every new connection to prevent collation mismatch
+(pool as unknown as { pool: { on(e: string, cb: (c: { query(s: string): void }) => void): void } })
+  .pool.on('connection', (conn) => {
+    conn.query("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
+  });
+
 /** Run SQL against goeunserverhub (energy tables, feedback, tickets, etc.). */
 export async function queryGeserverhub(sql: string, values?: unknown[]): Promise<RowDataPacket[]> {
   const conn = await pool.getConnection();

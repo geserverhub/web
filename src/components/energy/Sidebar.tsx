@@ -32,6 +32,7 @@ import {
   Waves,
   ClipboardList,
   Receipt,
+  Inbox,
 } from "lucide-react";
 import "./energy-sidebar.css";
 
@@ -102,7 +103,10 @@ const menuSections: NavSection[] = [
   },
   {
     sectionKey: "menuTools",
-    items: [{ key: "developer", icon: Database, href: "/energy-dashboard/developer" }],
+    items: [
+      { key: "developer", icon: Database, href: "/energy-dashboard/developer" },
+      { key: "deviceIngest", icon: Inbox, href: "/energy-dashboard/device-ingest" },
+    ],
   },
   {
     sectionKey: "userSupports",
@@ -123,6 +127,7 @@ const sectionFallback: Record<string, Record<string, string>> = {
   energyQualityReport: { th: "รายงานการวิเคราะห์กระแสไฟ", en: "Current analysis report", ko: "전류 분석 보고서" },
   menuMonitoring: { th: "มอนิเตอร์พลังงาน", en: "Energy Monitoring", ko: "에너지 모니터링" },
   menuTools: { th: "เครื่องมือ", en: "Tools", ko: "도구" },
+  deviceIngest: { th: "บันทึกข้อมูล Gateway", en: "Gateway Ingest Log", ko: "게이트웨이 수신 로그" },
   configurations: { th: "การตั้งค่า", en: "Configurations", ko: "설정" },
   userSupports: { th: "สนับสนุนผู้ใช้", en: "User Supports", ko: "사용자 지원" },
   greenEnergyPortal: { th: "พอร์ทัลพลังงานสีเขียว", en: "Green Energy Portal", ko: "그린 에너지 포털" },
@@ -212,11 +217,11 @@ export default function Sidebar() {
       <div className="esb-brand">
         <Link href="/energy-dashboard/dashboard" className="esb-brand-link">
           <Image
-            src="/momoge/Logo-brand.png"
-            alt="GE Energy Tech"
-            width={160}
-            height={88}
-            className="esb-brand-logo"
+            src="/ge-energyTech/138568-transparent.png"
+            alt="GE Energy Tech Logo"
+            width={180}
+            height={122}
+            className="object-contain w-full max-w-[180px]"
             priority
           />
           <p className="esb-brand-name">{company}</p>

@@ -75,7 +75,7 @@ function fmt2(n: number | null | undefined): string {
 
 function fmtDate(d: string | null | undefined): string {
   if (!d) return '—';
-  return new Date(d).toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(d).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 export default function DeveloperPageContent({ embedded = false }: { embedded?: boolean }) {

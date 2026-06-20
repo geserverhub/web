@@ -1,0 +1,66 @@
+{
+  "device": {
+    "GEsaveID": "GE-TH-0001",
+    "deviceName": "GE Smart Power Meter",
+    "series_no": "GE2024010007",
+    "site": "thailand"
+  },
+  "serial": {
+    "port": "/dev/ttyS1",
+    "baud_rate": 9600,
+    "parity": "none",
+    "data_bits": 8,
+    "stop_bits": 1
+  },
+  "modbus": {
+    "ch1": {
+      "slave_id": 1,
+      "label": "before_meter"
+    },
+    "ch2": {
+      "slave_id": 2,
+      "label": "metrics_meter"
+    }
+  },
+  "http": {
+    "url": "https://strong-dory-enabled.ngrok-free.app/api/ge-energy/power-record",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "x-api-key": "ge_t310gateway2026"
+    },
+    "publish_interval_sec": 30,
+    "retry_on_fail": true,
+    "timeout_sec": 10
+  },
+  "payload_template": {
+    "GEsaveID": "GE-TH-0001",
+    "record_time": "{timestamp}",
+    "before_L1":         "{ch1_voltage_L1}",
+    "before_L2":         "{ch1_voltage_L2}",
+    "before_L3":         "{ch1_voltage_L3}",
+    "before_current_L1": "{ch1_current_L1}",
+    "before_current_L2": "{ch1_current_L2}",
+    "before_current_L3": "{ch1_current_L3}",
+    "before_kWh":        "{ch1_kWh}",
+    "before_P":          "{ch1_P}",
+    "before_Q":          "{ch1_Q}",
+    "before_S":          "{ch1_S}",
+    "before_PF":         "{ch1_PF}",
+    "before_THD":        "{ch1_THD}",
+    "before_F":          "{ch1_F}",
+    "metrics_L1":         "{ch2_voltage_L1}",
+    "metrics_L2":         "{ch2_voltage_L2}",
+    "metrics_L3":         "{ch2_voltage_L3}",
+    "metrics_current_L1": "{ch2_current_L1}",
+    "metrics_current_L2": "{ch2_current_L2}",
+    "metrics_current_L3": "{ch2_current_L3}",
+    "metrics_kWh":        "{ch2_kWh}",
+    "metrics_P":          "{ch2_P}",
+    "metrics_Q":          "{ch2_Q}",
+    "metrics_S":          "{ch2_S}",
+    "metrics_PF":         "{ch2_PF}",
+    "metrics_THD":        "{ch2_THD}",
+    "metrics_F":          "{ch2_F}"
+  }
+}

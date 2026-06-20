@@ -50,6 +50,52 @@ type ProductRow = {
   brand?: string | null;
 };
 
+/** Localised descriptions keyed by productID */
+const descI18n: Record<number, Record<string, string>> = {
+  1: {
+    th: 'เครื่องประหยัดพลังงานสำหรับโหลดเริ่มต้น',
+    en: 'Energy saver for starter loads',
+    ko: '초기 부하용 에너지 절약 장치',
+  },
+  2: {
+    th: 'เครื่องประหยัดพลังงานสำหรับร้านค้า/อาคารกลาง',
+    en: 'Energy saver for shops / medium buildings',
+    ko: '상점/중형 건물용 에너지 절약 장치',
+  },
+  3: {
+    th: 'เครื่องประหยัดพลังงานสำหรับโรงงานขนาดกลาง',
+    en: 'Energy saver for mid-size factories',
+    ko: '중소형 공장용 에너지 절약 장치',
+  },
+  4: {
+    th: 'เครื่องประหยัดพลังงานสำหรับโหลดสูง',
+    en: 'Energy saver for high loads',
+    ko: '고부하용 에너지 절약 장치',
+  },
+  5: {
+    th: 'ชุดเซ็นเซอร์ CT สำหรับการติดตามพลังงาน',
+    en: 'CT sensor kit for energy monitoring',
+    ko: '에너지 모니터링용 CT 센서 키트',
+  },
+  6: {
+    th: 'เกตเวย์ IoT สำหรับส่งข้อมูลขึ้นคลาวด์',
+    en: 'IoT gateway for cloud data transmission',
+    ko: '클라우드 데이터 전송용 IoT 게이트웨이',
+  },
+  7: {
+    th: 'มิเตอร์ไฟอัจฉริยะเชื่อมต่อแดชบอร์ดเรียลไทม์',
+    en: 'Smart power meter with real-time dashboard',
+    ko: '실시간 대시보드 연결 스마트 전력 미터',
+  },
+};
+
+function getDesc(p: ProductRow, lang: string): string {
+  const id = Number(p.id);
+  const map = descI18n[id];
+  if (map) return map[lang] ?? map.th ?? '';
+  return [p.brand, p.model, p.description].filter(Boolean).join(' · ') || '—';
+}
+
 export default function ProductsInfoContent() {
   const { locale } = useLocale();
   const { selectedSite } = useSite();
@@ -147,7 +193,7 @@ export default function ProductsInfoContent() {
                       {p.id != null ? String(p.id) : '—'}
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs">
-                      {[p.brand, p.model, p.description].filter(Boolean).join(' · ') || '—'}
+                      {getDesc(p, lang)}
                     </td>
                   </tr>
                 ))}

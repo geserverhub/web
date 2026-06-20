@@ -34,13 +34,6 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'userId is required'
-      }, { status: 400 })
-    }
-
     let sql = `
       SELECT
         id, ticket_id, subject, type, priority, status,
@@ -48,9 +41,14 @@ export async function GET(req: NextRequest) {
         TIMESTAMPDIFF(DAY, created_at, NOW()) as ageDays,
         TIMESTAMPDIFF(HOUR, created_at, NOW()) MOD 24 as ageHours
       FROM support_tickets
-      WHERE user_id = ?
+      WHERE 1=1
     `
-    const params: any[] = [userId]
+    const params: any[] = []
+
+    if (userId) {
+      sql += ' AND user_id = ?'
+      params.push(userId)
+    }
 
     if (status && status !== 'all') {
       sql += ' AND status = ?'

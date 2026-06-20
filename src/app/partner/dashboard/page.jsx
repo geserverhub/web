@@ -1207,36 +1207,9 @@ export default function PartnerDashboard() {
               </div>
             </div>
 
-            {/* Partner income table */}
             <div style={S.section}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-                <div style={S.sectionTitle}>{t.partnerIncomeTitle}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {restoreState === "success" && (
-                    <span style={{ color: "#4ade80", fontSize: 12 }}>✅ {restoreMsg}</span>
-                  )}
-                  {restoreState === "error" && (
-                    <span style={{ color: "#f87171", fontSize: 12 }}>❌ {restoreMsg}</span>
-                  )}
-                  <button
-                    onMouseEnter={() => { if (!latestBackup) fetchLatestBackupInfo(); }}
-                    title={latestBackup ? `Backup ล่าสุด: ${latestBackup.filename} (${latestBackup.created ? new Date(latestBackup.created).toLocaleString("th-TH") : ""})` : "กู้คืนฐานข้อมูลล่าสุด"}
-                    disabled={restoreState === "loading"}
-                    onClick={handleRestore}
-                    style={{
-                      background: restoreState === "loading" ? "#1e2130" : "#1e1a2e",
-                      border: "1px solid #6d28d9",
-                      color: restoreState === "loading" ? "#8b8fa8" : "#c4b5fd",
-                      borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700,
-                      cursor: restoreState === "loading" ? "not-allowed" : "pointer",
-                      display: "flex", alignItems: "center", gap: 6,
-                    }}
-                  >
-                    {restoreState === "loading" ? "⏳ กำลังกู้คืน..." : "🗄️ กู้คืนฐานข้อมูลล่าสุด"}
-                  </button>
-                </div>
-              </div>
-              {!partnerIncomeSummary || partnerIncomeSummary.length === 0 ? (
+            {/* Partner income table */}
+            {!partnerIncomeSummary || partnerIncomeSummary.length === 0 ? (
                 <div style={{ color: "#4a5070", fontSize: 13, padding: "12px 0" }}>{t.partnerIncomeNoData}</div>
               ) : (
                 <div style={{ background: "#16181f", border: "1px solid #1e2130", borderRadius: 12, overflow: "auto" }}>

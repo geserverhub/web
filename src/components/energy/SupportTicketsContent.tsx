@@ -101,7 +101,7 @@ export default function SupportTicketsContent() {
       if (res.ok) {
         const json = await res.json();
         const list = json?.tickets ?? json?.data ?? [];
-        if (Array.isArray(list) && list.length > 0) {
+        if (Array.isArray(list)) {
           setTickets(list);
           return;
         }
