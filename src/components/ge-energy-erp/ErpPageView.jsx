@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ERP_PAGE_UI } from '@/lib/erp-page-ui';
 import {
   labelFor,
@@ -83,12 +83,14 @@ export default function ErpPageView({
   const [rows, setRows] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [formData, setFormData] = useState({});
-  const dataApiPath = pageId
-    ? `/api/ge-energy-erp/data?pageId=${encodeURIComponent(pageId)}`
-    : '';
-  const dataApiHeaders = pageId
-    ? { ...erpApiHeaders(), 'x-erp-page-id': String(pageId) }
-    : erpApiHeaders();
+  const dataApiPath = useMemo(
+    () => (pageId ? `/api/ge-energy-erp/data?pageId=${encodeURIComponent(pageId)}` : ''),
+    [pageId]
+  );
+  const dataApiHeaders = useMemo(
+    () => (pageId ? { ...erpApiHeaders(), 'x-erp-page-id': String(pageId) } : erpApiHeaders()),
+    [pageId]
+  );
 
   const loadData = useCallback(async () => {
     if (
@@ -139,8 +141,15 @@ export default function ErpPageView({
     accessDenied,
   ]);
 
+  // Reset state immediately when page changes (no stale data flash)
   useEffect(() => {
+    setRows([]);
+    setMetrics(null);
+    setError('');
     setFormData({});
+  }, [pageId]);
+
+  useEffect(() => {
     loadData();
   }, [loadData]);
 

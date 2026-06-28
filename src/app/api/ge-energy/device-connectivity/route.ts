@@ -32,6 +32,9 @@ type ConnectivityRow = {
   enabled?: number | boolean;
   notes?: string | null;
   configured?: boolean;
+  last_seen_at?: string | null;
+  online_status?: number | null;
+  last_record_id?: number | null;
 };
 
 function siteWhereClause(site: string): { sql: string; params: string[] } {
@@ -93,6 +96,9 @@ export async function GET(req: NextRequest) {
           c.publish_interval_sec,
           c.enabled,
           c.notes,
+          c.last_seen_at,
+          c.online_status,
+          c.last_record_id,
           (c.id IS NOT NULL) AS configured
          FROM devices d
          LEFT JOIN device_connectivity c ON c.device_id = d.deviceID
@@ -135,6 +141,9 @@ export async function GET(req: NextRequest) {
         c.publish_interval_sec,
         c.enabled,
         c.notes,
+        c.last_seen_at,
+        c.online_status,
+        c.last_record_id,
         (c.id IS NOT NULL) AS configured
        FROM devices d
        LEFT JOIN device_connectivity c ON c.device_id = d.deviceID

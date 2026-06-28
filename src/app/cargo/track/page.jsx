@@ -401,7 +401,7 @@ export default function CargoTrackPage() {
                                 <div style={{ textAlign: "center", padding: "12px 0" }}>
                                   <div style={{ fontSize: 22, marginBottom: 6 }}>📞</div>
                                   <div style={{ fontSize: 13, color: "#4ade80", fontWeight: 700 }}>ติดต่อสอบถามราคา</div>
-                                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{brandName} · 010-8811-5565</div>
+                                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{brandName} · 095-389-9313</div>
                                 </div>
                               );
                               return (
@@ -670,7 +670,7 @@ export default function CargoTrackPage() {
                       จังหวัด กรุงเทพมหานคร 10510
                     </div>
                     <div style={{ marginTop: 8, fontSize: 13, color: "#facc15", fontWeight: 700 }}>
-                      📞 โทร. 010-8811-5565
+                      📞 โทร. 095-389-9313
                     </div>
                   </div>
                 )}

@@ -22,6 +22,21 @@ config({ path: resolve(__dirname, '../.env.local') });
 
 const DB_NAME = 'goeunserverhub';
 
+// In-memory dedup cache: key = "deviceId:recordTime" → prevents duplicate inserts
+// when multiple connections receive the same MQTT message simultaneously (different devices are independent)
+const dedupCache = new Map();
+function checkDuplicate(deviceId, recordTime) {
+  const key = `${deviceId}:${recordTime}`;
+  const now = Date.now();
+  if (dedupCache.has(key)) return true;
+  dedupCache.set(key, now);
+  // Purge entries older than 60 seconds
+  for (const [k, t] of dedupCache) {
+    if (now - t > 60000) dedupCache.delete(k);
+  }
+  return false;
+}
+
 function getDbConfig() {
   const url = process.env.DATABASE_URL;
   if (url?.startsWith('mysql://')) {
@@ -288,11 +303,17 @@ async function savePowerRecord(pool, body) {
     }
   }
 
+  // In-memory dedup: each device keyed independently — multiple devices processed concurrently
+  if (checkDuplicate(deviceId, recordTime)) {
+    return { ok: true, record_id: null, scope, targetTable, recordTime, duplicate: true };
+  }
+
+  // INSERT IGNORE as DB-level safety net for any remaining race
   const [result] = await pool.query(
-    `INSERT INTO ${targetTable} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
+    `INSERT IGNORE INTO ${targetTable} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
     values
   );
-  const recordId = result.insertId;
+  const recordId = result.insertId || null;
 
   // Update device_connectivity: last_seen_at + online_status
   await pool.query(
@@ -429,11 +450,11 @@ async function main() {
 
         const result = await savePowerRecord(pool, body);
         if (result.ok) {
-          log('info', 'Saved power record', {
-            deviceId,
-            record_id: result.record_id,
-            topic,
-          });
+          if (result.duplicate) {
+            log('debug', 'Duplicate message skipped', { deviceId, record_id: result.record_id, topic });
+          } else {
+            log('info', 'Saved power record', { deviceId, record_id: result.record_id, topic });
+          }
         } else {
           log('error', result.error, { deviceId, topic });
         }

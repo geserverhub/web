@@ -1,0 +1,97 @@
+{
+  "device": {
+    "GEsaveID": "GE-TH-0001",
+    "deviceName": "GE Smart Power Meter",
+    "series_no": "GE2024010007",
+    "site": "thailand"
+  },
+  "serial": {
+    "port": "/dev/ttyS1",
+    "baud_rate": 9600,
+    "parity": "none",
+    "data_bits": 8,
+    "stop_bits": 1
+  },
+  "modbus": {
+    "ch1": {
+      "slave_id": 1,
+      "label": "before_meter",
+      "registers": {
+        "voltage_L1": 0,
+        "voltage_L2": 2,
+        "voltage_L3": 4,
+        "current_L1": 6,
+        "current_L2": 8,
+        "current_L3": 10,
+        "kWh": 12,
+        "P": 14,
+        "Q": 16,
+        "S": 18,
+        "PF": 20,
+        "THD": 22,
+        "F": 24
+      }
+    },
+    "ch2": {
+      "slave_id": 2,
+      "label": "metrics_meter",
+      "registers": {
+        "voltage_L1": 0,
+        "voltage_L2": 2,
+        "voltage_L3": 4,
+        "current_L1": 6,
+        "current_L2": 8,
+        "current_L3": 10,
+        "kWh": 12,
+        "P": 14,
+        "Q": 16,
+        "S": 18,
+        "PF": 20,
+        "THD": 22,
+        "F": 24
+      }
+    }
+  },
+  "mqtt": {
+    "broker": "mqtt.ge-energytech.com",
+    "port": 1883,
+    "username": "gedevice",
+    "password": "geet010",
+    "topic": "ge/thailand/GE-TH-0001/telemetry",
+    "qos": 0,
+    "publish_interval_sec": 30,
+    "client_id": "t310-GE-TH-0001"
+  },
+  "payload": {
+    "format": "json",
+    "fields": {
+      "GEsaveID": "GE-TH-0001",
+      "ch1_L1":         "before_L1",
+      "ch1_L2":         "before_L2",
+      "ch1_L3":         "before_L3",
+      "ch1_current_L1": "before_current_L1",
+      "ch1_current_L2": "before_current_L2",
+      "ch1_current_L3": "before_current_L3",
+      "ch1_kWh":        "before_kWh",
+      "ch1_P":          "before_P",
+      "ch1_Q":          "before_Q",
+      "ch1_S":          "before_S",
+      "ch1_PF":         "before_PF",
+      "ch1_THD":        "before_THD",
+      "ch1_F":          "before_F",
+      "ch2_L1":         "metrics_L1",
+      "ch2_L2":         "metrics_L2",
+      "ch2_L3":         "metrics_L3",
+      "ch2_current_L1": "metrics_current_L1",
+      "ch2_current_L2": "metrics_current_L2",
+      "ch2_current_L3": "metrics_current_L3",
+      "ch2_kWh":        "metrics_kWh",
+      "ch2_P":          "metrics_P",
+      "ch2_Q":          "metrics_Q",
+      "ch2_S":          "metrics_S",
+      "ch2_PF":         "metrics_PF",
+      "ch2_THD":        "metrics_THD",
+      "ch2_F":          "metrics_F"
+    }
+  }
+}

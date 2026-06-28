@@ -57,6 +57,7 @@ function pickProductImage(product) {
 
 const translations = {
   th: {
+    backBtn: '← กลับเมนู',
     pageTitle: 'MOMOGE SPACE',
     pageSubtitle: 'สินค้าและสั่งซื้อออนไลน์',
     energyBadge: 'Smart Energy',
@@ -108,6 +109,7 @@ const translations = {
     noImage: 'ไม่มีรูป',
   },
   en: {
+    backBtn: '← Back to menu',
     pageTitle: 'MOMOGE SPACE',
     pageSubtitle: 'Products & online ordering',
     energyBadge: 'Smart Energy',

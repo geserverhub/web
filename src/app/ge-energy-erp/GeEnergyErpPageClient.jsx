@@ -216,6 +216,13 @@ export default function GeEnergyErpPageClient() {
             {dept.label}
           </button>
         ))}
+        <Link
+          href="/energy-dashboard-login"
+          className="geerp-dept-tab geerp-dept-tab--link"
+          style={{ marginLeft: 'auto' }}
+        >
+          ⚡ {t.energyDashboard}
+        </Link>
       </nav>
 
       {activeDeptNav ? (
@@ -235,7 +242,7 @@ export default function GeEnergyErpPageClient() {
 
       <main className="geerp-main">
         <ErpPageView
-          key={`${activeDept}-${activePage}-${lang}`}
+          key={lang}
           lang={lang}
           deptId={activeDept}
           deptLabel={activeDeptNav?.label || ''}

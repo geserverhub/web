@@ -239,6 +239,18 @@
   box-shadow: var(--geerp-focus);
 }
 
+.geerp-dept-tab--link {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
+  text-decoration: none;
+}
+.geerp-dept-tab--link:hover {
+  color: #6ee7b7;
+  background: rgba(52, 211, 153, 0.2);
+  border-color: rgba(52, 211, 153, 0.5);
+}
+
 /* ── Main content ────────────────────────────────────────────────────────── */
 .geerp-main {
   max-width: 1280px;

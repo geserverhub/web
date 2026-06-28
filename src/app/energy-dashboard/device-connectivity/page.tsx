@@ -63,10 +63,17 @@ type DeviceConnectivity = {
   enabled?: boolean | number;
   notes?: string | null;
   configured?: boolean | number;
+  last_seen_at?: string | null;
+  online_status?: number | null;
+  last_record_id?: number | null;
 };
 
 const COPY = {
   th: {
+    lastSeen: 'รับข้อมูลล่าสุด',
+    online: 'ออนไลน์',
+    offline: 'ออฟไลน์',
+    never: 'ยังไม่รับ',
     badge: 'การเชื่อมต่ออุปกรณ์',
     title: 'ตั้งค่าการเชื่อมต่อ Gateway / MQTT / RS485',
     subtitle: 'MQTT Broker, Gateway T310, Modbus RTU และการตั้งค่ารายอุปกรณ์',
@@ -123,6 +130,10 @@ const COPY = {
     bridgeSubscribe: 'Subscribe pattern',
   },
   en: {
+    lastSeen: 'Last seen',
+    online: 'Online',
+    offline: 'Offline',
+    never: 'Never',
     badge: 'Device connectivity',
     title: 'Gateway / MQTT / RS485 settings',
     subtitle: 'MQTT broker, T310 gateway defaults, Modbus RTU and per-device config',
@@ -178,6 +189,10 @@ const COPY = {
     bridgeSubscribe: 'Subscribe pattern',
   },
   ko: {
+    lastSeen: '마지막 수신',
+    online: '온라인',
+    offline: '오프라인',
+    never: '수신 없음',
     badge: '장치 연결',
     title: 'Gateway / MQTT / RS485 설정',
     subtitle: 'MQTT 브로커, T310 게이트웨이, Modbus RTU 및 장치별 설정',
@@ -258,14 +273,14 @@ const defaultMqtt = (): MqttSettings => ({
 
 function buildTopic(
   prefix: string,
-  site: string,
+  _site: string,
   deviceId: number,
   GEsaveID?: string,
   custom?: string | null
 ) {
   if (custom?.trim()) return custom.trim();
   const id = GEsaveID || String(deviceId);
-  return `${prefix}/${site}/${id}/telemetry`;
+  return `${prefix}/${id}`;
 }
 
 function buildPayloadPreview(deviceId: number, GEsaveID?: string) {
@@ -279,6 +294,22 @@ function buildPayloadPreview(deviceId: number, GEsaveID?: string) {
     null,
     2
   );
+}
+
+function fmtLastSeen(dt: string | null | undefined): string {
+  if (!dt) return '';
+  const diff = Date.now() - new Date(dt).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '< 1 min';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function isOnline(d: DeviceConnectivity): boolean {
+  if (!d.last_seen_at) return false;
+  return Date.now() - new Date(d.last_seen_at).getTime() < 10 * 60 * 1000; // 10 min
 }
 
 export default function DeviceConnectivityPage() {
@@ -707,6 +738,7 @@ export default function DeviceConnectivityPage() {
                 <th className="px-4 py-3">{ui.GEsaveID}</th>
                 <th className="px-4 py-3">{ui.slaves}</th>
                 <th className="px-4 py-3">{ui.topic}</th>
+                <th className="px-4 py-3">{ui.lastSeen}</th>
                 <th className="px-4 py-3">{ui.status}</th>
                 <th className="px-4 py-3">{ui.actions}</th>
               </tr>
@@ -714,13 +746,13 @@ export default function DeviceConnectivityPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                     …
                   </td>
                 </tr>
               ) : devices.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     {ui.noDevices}
                   </td>
                 </tr>
@@ -734,6 +766,8 @@ export default function DeviceConnectivityPage() {
                     d.mqtt_topic
                   );
                   const isOn = d.enabled !== 0 && d.enabled !== false;
+                  const online = isOnline(d);
+                  const lastSeen = fmtLastSeen(d.last_seen_at);
                   return (
                     <tr key={d.device_id} className="border-t border-gray-100 hover:bg-gray-50/80">
                       <td className="px-4 py-3 font-medium text-gray-900">
@@ -743,28 +777,28 @@ export default function DeviceConnectivityPage() {
                       <td className="px-4 py-3 text-xs">
                         {d.slave_before ?? d.beforeMeterNo ?? 1} / {d.slave_metrics ?? d.metricsMeterNo ?? 2}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600 max-w-[200px] truncate">
+                      <td className="px-4 py-3 font-mono text-xs text-gray-600 max-w-[180px] truncate">
                         {topic}
                       </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            d.configured
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}
-                        >
-                          {d.configured ? ui.configured : ui.notConfigured}
-                        </span>
-                        {d.configured && (
-                          <span
-                            className={`ml-1 inline-flex rounded-full px-2 py-0.5 text-xs ${
-                              isOn ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                            }`}
-                          >
-                            {isOn ? ui.enabled : ui.disabled}
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${online ? 'bg-emerald-500 animate-pulse' : d.last_seen_at ? 'bg-gray-300' : 'bg-gray-200'}`} />
+                          <span className="text-xs text-gray-500">
+                            {lastSeen || ui.never}
                           </span>
-                        )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${online ? 'bg-emerald-100 text-emerald-800' : d.configured ? 'bg-gray-100 text-gray-600' : 'bg-amber-100 text-amber-800'}`}>
+                            {online ? ui.online : d.configured ? ui.offline : ui.notConfigured}
+                          </span>
+                          {d.configured && (
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs ${isOn ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
+                              {isOn ? ui.enabled : ui.disabled}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <button

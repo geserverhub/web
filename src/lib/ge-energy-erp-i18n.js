@@ -1196,6 +1196,7 @@ export function getErpNav(lang) {
 
 export const ERP_DASHBOARD_COPY = {
   th: {
+    energyDashboard: 'Dashboard พลังงาน',
     tag: 'ระบบ ERP องค์กร',
     signOut: 'ออกจากระบบ',
     menu: 'เมนูหลัก',
@@ -1217,6 +1218,7 @@ export const ERP_DASHBOARD_COPY = {
     sampleValue: '—',
   },
   en: {
+    energyDashboard: 'Energy Dashboard',
     tag: 'Enterprise ERP',
     signOut: 'Sign out',
     menu: 'Main menu',
@@ -1238,6 +1240,7 @@ export const ERP_DASHBOARD_COPY = {
     sampleValue: '—',
   },
   ko: {
+    energyDashboard: '에너지 대시보드',
     tag: '기업 ERP',
     signOut: '로그아웃',
     menu: '메인 메뉴',
