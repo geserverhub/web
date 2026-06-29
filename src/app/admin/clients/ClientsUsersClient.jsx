@@ -1345,6 +1345,71 @@ export default function ClientsUsersClient({ session }) {
     win.document.close();
   };
 
+  const printCargoWarehouse = (f) => {
+    const dirLabel = f.direction === "TH_TO_KR" ? "🇹🇭 ไทย → เกาหลี 🇰🇷" : f.direction === "KR_TO_TH" ? "🇰🇷 เกาหลี → ไทย 🇹🇭" : "🚢 เกาหลี → ไทย (ทางเรือ) 🇹🇭";
+    const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+    const win = window.open("", "_blank");
+    if (!win) { showToast("กรุณาอนุญาต popup", false); return; }
+    win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<title>สลิปส่งโกดัง</title>
+<style>
+  @media print { .no-print { display:none!important; } body { margin:0; } }
+  body { font-family:'Noto Sans Thai',Arial,sans-serif; margin:0; padding:20px; background:#f1f5f9; color:#1a1a1a; }
+  .card { background:#fff; max-width:480px; margin:0 auto; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.12); overflow:hidden; }
+  .header { background:#1a1a0a; color:#facc15; padding:18px 24px; display:flex; align-items:center; gap:12px; }
+  .header h1 { margin:0; font-size:18px; font-weight:900; }
+  .header .sub { font-size:11px; color:#a3a38a; margin-top:2px; }
+  .body { padding:20px 24px; }
+  .section { margin-bottom:16px; }
+  .section-title { font-size:10px; font-weight:800; color:#94a3b8; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; }
+  .row { display:flex; gap:8px; margin-bottom:10px; }
+  .field { flex:1; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; }
+  .field .label { font-size:10px; color:#94a3b8; font-weight:700; margin-bottom:3px; }
+  .field .val { font-size:14px; font-weight:700; color:#1a1a1a; word-break:break-word; }
+  .field-full { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  .badge { display:inline-block; padding:4px 12px; border-radius:99px; font-size:12px; font-weight:700; background:#fef9c3; color:#92400e; }
+  .badge-dir { background:#0f1a0a; color:#facc15; padding:4px 14px; border-radius:99px; font-size:13px; font-weight:800; }
+  .passport { font-family:monospace; font-size:15px; font-weight:900; color:#1e40af; letter-spacing:.05em; }
+  .footer-bar { background:#f8fafc; border-top:2px solid #facc15; padding:10px 24px; font-size:10px; color:#94a3b8; display:flex; justify-content:space-between; }
+  .print-btn { display:block; width:calc(100% - 48px); margin:0 24px 16px; padding:11px; background:#facc15; border:none; border-radius:8px; font-size:14px; font-weight:800; cursor:pointer; }
+</style></head><body>
+<div class="card">
+  <div class="header">
+    <div>✈️</div>
+    <div><div class="sub">GE SERVER HUB · สลิปส่งโกดังขนส่ง</div><h1>ใบส่งสินค้าโกดัง</h1></div>
+  </div>
+  <div class="body">
+    <div class="no-print"><button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button></div>
+    <div class="section">
+      <div class="section-title">ผู้ส่ง</div>
+      <div class="row">
+        <div class="field"><div class="label">ชื่อผู้ส่ง</div><div class="val">${f.senderName || "—"}</div></div>
+        <div class="field"><div class="label">เบอร์ผู้ส่ง</div><div class="val">${f.senderPhone || "—"}</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">ผู้รับ</div>
+      <div class="row">
+        <div class="field"><div class="label">ชื่อผู้รับ</div><div class="val">${f.receiverName || "—"}</div></div>
+        <div class="field"><div class="label">เบอร์ผู้รับ</div><div class="val">${f.receiverPhone || "—"}</div></div>
+      </div>
+      ${f.receiverAddress ? `<div class="field-full"><div class="label">ที่อยู่ผู้รับ</div><div class="val">${f.receiverAddress}</div></div>` : ""}
+    </div>
+    <div class="section">
+      <div class="section-title">รายละเอียดการขนส่ง</div>
+      <div class="row">
+        <div class="field"><div class="label">เส้นทาง</div><div class="val"><span class="badge-dir">${dirLabel}</span></div></div>
+        <div class="field"><div class="label">สถานะ</div><div class="val"><span class="badge">${f.status || "—"}</span></div></div>
+      </div>
+      ${f.passportNo ? `<div class="field-full"><div class="label">เลขพาสปอร์ต / เลขศุลกากร</div><div class="val passport">${f.passportNo}</div></div>` : ""}
+    </div>
+  </div>
+  <div class="footer-bar"><span>พิมพ์: ${today}</span><span>© GE SERVER HUB · 095-389-9313</span></div>
+</div>
+</body></html>`);
+    win.document.close();
+  };
+
   const doPrint = () => {
     const items = getReportItems();
     const isInv = reportDataType === "invoice";
@@ -2962,6 +3027,7 @@ export default function ClientsUsersClient({ session }) {
                           <td style={{ padding: "8px 10px", color: "#64748b", fontSize: 11 }}>{new Date(o.createdAt).toLocaleDateString("th-TH")}</td>
                           <td style={{ padding: "8px 10px" }}><div style={{ display: "flex", gap: 5 }}>
                             <button style={S.btn("#1e2d3d", "#60a5fa")} onClick={() => { setEditCargoId(o.id); setCargoForm({ senderName: o.senderName || "", senderPhone: o.senderPhone || "", receiverName: o.receiverName || "", receiverPhone: o.receiverPhone || "", receiverAddress: o.receiverAddress || "", direction: o.direction || "TH_TO_KR", weightKg: o.weightKg || "", sizeNote: o.sizeNote || "", itemDesc: o.itemDesc || "", currency: o.currency || "THB", income: o.income || "", expense: o.expense || "", status: o.status || "รับพัสดุเข้าคลังแล้ว", trackingCode: o.trackingCode || "", passportNo: o.passportNo || "", notes: o.notes || "", shippedAt: o.shippedAt ? o.shippedAt.slice(0, 10) : "", deliveredAt: o.deliveredAt ? o.deliveredAt.slice(0, 10) : "" }); setCargoModal(true); }}>✏️</button>
+                            <button style={S.btn("#1a1a0a", "#facc15")} title="พิมพ์สลิปโกดัง" onClick={() => printCargoWarehouse(o)}>🖨️</button>
                             <button style={S.btn("#2a1f1f", "#f87171")} onClick={async () => { if (!confirm(`ลบ ${o.number}?`)) return; await fetch(`/api/admin/cargo/${o.id}`, { method: "DELETE" }); showToast("ลบแล้ว"); loadCargo(); }}>🗑️</button>
                           </div></td>
                         </tr>
@@ -3948,7 +4014,16 @@ export default function ClientsUsersClient({ session }) {
           <div style={{ background: "#16181f", borderRadius: 12, padding: 28, width: "100%", maxWidth: 560, border: "1px solid #2a2d3a", marginTop: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h5 style={{ margin: 0, color: "#facc15", fontSize: 16 }}>✈️ {editCargoId ? "แก้ไขรายการส่ง" : "เพิ่มรายการส่งสินค้า"}</h5>
-              <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setCargoModal(false)}>✕</button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  style={{ background: "#1a1a0a", border: "1px solid #ca8a04", color: "#facc15", borderRadius: 6, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
+                  onClick={() => printCargoWarehouse(cargoForm)}
+                  title="พิมพ์สลิปส่งโกดัง"
+                >
+                  🖨️ พิมพ์
+                </button>
+                <button style={{ background: "none", border: "none", color: "#8b8fa8", fontSize: 22, cursor: "pointer" }} onClick={() => setCargoModal(false)}>✕</button>
+              </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
@@ -3990,6 +4065,7 @@ export default function ClientsUsersClient({ session }) {
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+              <button style={{ background: "#1a1a0a", border: "1px solid #ca8a04", color: "#facc15", borderRadius: 6, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }} onClick={() => printCargoWarehouse(cargoForm)}>🖨️ พิมพ์สลิปโกดัง</button>
               <button style={S.btn("#1e2130", "#8b8fa8")} onClick={() => setCargoModal(false)}>ยกเลิก</button>
               <button style={{ ...S.btn("#1a1a0a", "#facc15"), fontWeight: 700 }} disabled={savingCargo} onClick={async () => {
                 if (!cargoForm.senderName || !cargoForm.receiverName) { showToast("กรุณาใส่ชื่อผู้ส่งและผู้รับ", false); return; }
