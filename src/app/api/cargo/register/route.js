@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-const CARGO_CLIENT_ID = "cmozi3vuj0000jhbm7hqvhdhe";
+const CARGO_CLIENT_ID = "cmqyzvsqj0000jhsa11kicccu";
 
 // POST /api/cargo/register
 // Body: { name, email, phone }

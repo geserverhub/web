@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-const CARGO_CLIENT_ID = "cmozi3vuj0000jhbm7hqvhdhe";
+const CARGO_CLIENT_ID = "cmqyzvsqj0000jhsa11kicccu";
 
 // GET /api/admin/cargo/customers
 export async function GET(req) {
