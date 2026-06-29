@@ -238,6 +238,7 @@ export default function ClientsUsersClient({ session }) {
   const [cargoInlineEdits, setCargoInlineEdits] = useState({});
   const [savingCargoInline, setSavingCargoInline] = useState({});
   const [cargoForm, setCargoForm] = useState({
+    number: "", createdAt: "",
     senderName: "", senderPhone: "", receiverName: "", receiverPhone: "",
     receiverAddress: "", direction: "TH_TO_KR", weightKg: "", sizeNote: "",
     itemDesc: "", currency: "THB", income: "", expense: "", status: "รับพัสดุเข้าคลังแล้ว",
@@ -1346,8 +1347,13 @@ export default function ClientsUsersClient({ session }) {
   };
 
   const printCargoWarehouse = (f) => {
-    const dirLabel = f.direction === "TH_TO_KR" ? "🇹🇭 ไทย → เกาหลี 🇰🇷" : f.direction === "KR_TO_TH" ? "🇰🇷 เกาหลี → ไทย 🇹🇭" : "🚢 เกาหลี → ไทย (ทางเรือ) 🇹🇭";
+    const dirLabel = f.direction === "TH_TO_KR"
+      ? `<span style="display:inline-flex;align-items:center;gap:6px"><span style="background:#A51931;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:4px">TH ไทย</span><span style="font-weight:800">→</span><span style="background:#003478;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:4px">KR 한국</span></span>`
+      : f.direction === "KR_TO_TH"
+      ? `<span style="display:inline-flex;align-items:center;gap:6px"><span style="background:#003478;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:4px">KR 한국</span><span style="font-weight:800">→</span><span style="background:#A51931;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:4px">TH ไทย</span></span>`
+      : `<span style="display:inline-flex;align-items:center;gap:6px"><span style="background:#003478;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:4px">KR 한국</span><span style="font-weight:800">→</span><span style="background:#A51931;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:4px">TH ไทย</span><span style="font-size:11px;color:#64748b">(ทางเรือ)</span></span>`;
     const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+    const orderDateStr = f.createdAt ? new Date(f.createdAt).toLocaleString("th-TH", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
     const win = window.open("", "_blank");
     if (!win) { showToast("กรุณาอนุญาต popup", false); return; }
     win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
@@ -1380,6 +1386,12 @@ export default function ClientsUsersClient({ session }) {
   </div>
   <div class="body">
     <div class="no-print"><button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button></div>
+    ${(f.number || f.createdAt) ? `<div class="section">
+      <div class="row">
+        ${f.number ? `<div class="field"><div class="label">เลขที่รายการ / 주문번호</div><div class="val" style="font-family:monospace;color:#1e40af">${f.number}</div></div>` : ""}
+        ${f.createdAt ? `<div class="field"><div class="label">วันที่-เวลา / 일시</div><div class="val" style="font-size:12px">${orderDateStr}</div></div>` : ""}
+      </div>
+    </div>` : ""}
     <div class="section">
       <div class="section-title">ผู้ส่ง</div>
       <div class="row">
@@ -1403,6 +1415,16 @@ export default function ClientsUsersClient({ session }) {
       </div>
       ${f.passportNo ? `<div class="field-full"><div class="label">เลขพาสปอร์ต / เลขศุลกากร</div><div class="val passport">${f.passportNo}</div></div>` : ""}
     </div>
+    ${(f.itemDesc || f.weightKg || f.sizeNote || f.notes) ? `
+    <div class="section">
+      <div class="section-title">📋 รายละเอียดสินค้า · 물품 내역</div>
+      ${f.itemDesc ? `<div class="field-full"><div class="val">${f.itemDesc}</div></div>` : ""}
+      ${(f.weightKg || f.sizeNote) ? `<div class="row">
+        ${f.weightKg ? `<div class="field"><div class="label">น้ำหนัก / 무게</div><div class="val">${f.weightKg} kg</div></div>` : ""}
+        ${f.sizeNote ? `<div class="field"><div class="label">ขนาด / 크기</div><div class="val">${f.sizeNote}</div></div>` : ""}
+      </div>` : ""}
+      ${f.notes ? `<div class="field-full"><div class="label">หมายเหตุ / 비고</div><div class="val" style="color:#64748b;font-size:13px">${f.notes}</div></div>` : ""}
+    </div>` : ""}
   </div>
   <div class="footer-bar"><span>พิมพ์: ${today}</span><span>© GE SERVER HUB · 095-389-9313</span></div>
 </div>
@@ -3026,7 +3048,7 @@ export default function ClientsUsersClient({ session }) {
                           <td style={{ padding: "8px 10px", color: "#8b8fa8", fontSize: 11 }}>{o.trackingCode || "—"}</td>
                           <td style={{ padding: "8px 10px", color: "#64748b", fontSize: 11 }}>{new Date(o.createdAt).toLocaleDateString("th-TH")}</td>
                           <td style={{ padding: "8px 10px" }}><div style={{ display: "flex", gap: 5 }}>
-                            <button style={S.btn("#1e2d3d", "#60a5fa")} onClick={() => { setEditCargoId(o.id); setCargoForm({ senderName: o.senderName || "", senderPhone: o.senderPhone || "", receiverName: o.receiverName || "", receiverPhone: o.receiverPhone || "", receiverAddress: o.receiverAddress || "", direction: o.direction || "TH_TO_KR", weightKg: o.weightKg || "", sizeNote: o.sizeNote || "", itemDesc: o.itemDesc || "", currency: o.currency || "THB", income: o.income || "", expense: o.expense || "", status: o.status || "รับพัสดุเข้าคลังแล้ว", trackingCode: o.trackingCode || "", passportNo: o.passportNo || "", notes: o.notes || "", shippedAt: o.shippedAt ? o.shippedAt.slice(0, 10) : "", deliveredAt: o.deliveredAt ? o.deliveredAt.slice(0, 10) : "" }); setCargoModal(true); }}>✏️</button>
+                            <button style={S.btn("#1e2d3d", "#60a5fa")} onClick={() => { setEditCargoId(o.id); setCargoForm({ number: o.number || "", createdAt: o.createdAt || "", senderName: o.senderName || "", senderPhone: o.senderPhone || "", receiverName: o.receiverName || "", receiverPhone: o.receiverPhone || "", receiverAddress: o.receiverAddress || "", direction: o.direction || "TH_TO_KR", weightKg: o.weightKg || "", sizeNote: o.sizeNote || "", itemDesc: o.itemDesc || "", currency: o.currency || "THB", income: o.income || "", expense: o.expense || "", status: o.status || "รับพัสดุเข้าคลังแล้ว", trackingCode: o.trackingCode || "", passportNo: o.passportNo || "", notes: o.notes || "", shippedAt: o.shippedAt ? o.shippedAt.slice(0, 10) : "", deliveredAt: o.deliveredAt ? o.deliveredAt.slice(0, 10) : "" }); setCargoModal(true); }}>✏️</button>
                             <button style={S.btn("#1a1a0a", "#facc15")} title="พิมพ์สลิปโกดัง" onClick={() => printCargoWarehouse(o)}>🖨️</button>
                             <button style={S.btn("#2a1f1f", "#f87171")} onClick={async () => { if (!confirm(`ลบ ${o.number}?`)) return; await fetch(`/api/admin/cargo/${o.id}`, { method: "DELETE" }); showToast("ลบแล้ว"); loadCargo(); }}>🗑️</button>
                           </div></td>
