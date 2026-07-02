@@ -237,6 +237,9 @@ export default function ClientsUsersClient({ session }) {
   const [cargoSubTab, setCargoSubTab] = useState("add");
   const [cargoInlineEdits, setCargoInlineEdits] = useState({});
   const [savingCargoInline, setSavingCargoInline] = useState({});
+  const [cargoTxs, setCargoTxs] = useState({});
+  const [cargoItemDraft, setCargoItemDraft] = useState({});
+  const [savingCargoItem, setSavingCargoItem] = useState({});
   const [cargoForm, setCargoForm] = useState({
     number: "", createdAt: "",
     senderName: "", senderPhone: "", receiverName: "", receiverPhone: "",
@@ -440,6 +443,13 @@ export default function ClientsUsersClient({ session }) {
     try {
       const d = await readJsonResponse(await fetch("/api/admin/cargo/customers"));
       setCargoCustomers(d.customers || []);
+    } catch { /* silent */ }
+  }, []);
+
+  const loadCargoTxs = useCallback(async (orderId) => {
+    try {
+      const d = await readJsonResponse(await fetch(`/api/admin/cargo/${orderId}/transactions`));
+      setCargoTxs(p => ({ ...p, [orderId]: d.transactions || [] }));
     } catch { /* silent */ }
   }, []);
 
@@ -1289,59 +1299,63 @@ export default function ClientsUsersClient({ session }) {
   };
 
   const printCargoInvoice = (o) => {
-    const dirLabel = o.direction === "TH_TO_KR" ? "🇹🇭 ไทย → เกาหลี 🇰🇷" : "🇰🇷 เกาหลี → ไทย 🇹🇭";
+    const dirLabel = o.direction === "TH_TO_KR" ? "TH ไทย → เกาหลี KR" : "KR เกาหลี → ไทย TH";
     const sym = o.currency === "KRW" ? "₩" : o.currency === "USD" ? "$" : "฿";
     const fmt = n => Number(n || 0).toLocaleString("th-TH");
-    const profit = Number(o.income || 0) - Number(o.expense || 0);
     const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) : "—";
+
+    // Build line-item rows from INCOME transactions (sale prices shown to customer)
+    const txs = (o.lineItems || []).filter(t => t.type === "INCOME" && t.receiptRef);
+    const incomeRows = txs.length > 0
+      ? txs.map(t => `<tr><td>${t.category || "—"}</td><td style="text-align:right;font-weight:700">${sym}${fmt(t.amount)}</td></tr>`).join("")
+      : `<tr><td>ค่าบริการขนส่ง</td><td style="text-align:right;font-weight:700">${sym}${fmt(o.income)}</td></tr>`;
+    const totalIncome = txs.length > 0 ? txs.reduce((s, t) => s + Number(t.amount), 0) : Number(o.income || 0);
+
     const win = window.open("", "_blank");
     if (!win) { showToast("กรุณาอนุญาต popup", false); return; }
     win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
-<title>ใบแจ้งค่าใช้จ่าย ${o.number}</title>
+<title>ใบแจ้งค่าบริการ ${o.number}</title>
 <style>
-  @media print { html { background:#fff; } .no-print { display:none; } }
-  html { background:#e8edf2; font-family:'Noto Sans Thai',sans-serif; margin:0; padding:20px; color-scheme:light; }
-  .paper { background:#fff; width:210mm; max-width:100%; margin:0 auto; padding:28mm 22mm; box-shadow:0 4px 32px rgba(0,0,0,.15); min-height:297mm; }
-  h1 { font-size:22px; font-weight:900; color:#1a1a1a; margin:0 0 4px; }
-  .sub { font-size:13px; color:#666; margin-bottom:24px; }
-  .divider { border:none; border-top:2px solid #facc15; margin:18px 0; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th { background:#fef9c3; padding:9px 12px; text-align:left; font-weight:700; border:1px solid #e2e8f0; }
-  td { padding:9px 12px; border:1px solid #e2e8f0; vertical-align:top; }
-  .label { font-size:11px; color:#64748b; font-weight:600; }
-  .val { font-size:14px; color:#1a1a1a; font-weight:600; }
-  .badge { display:inline-block; padding:3px 12px; border-radius:99px; font-size:12px; font-weight:700; background:#fef9c3; color:#92400e; }
-  .income { color:#15803d; font-weight:800; font-size:16px; }
-  .expense { color:#dc2626; font-weight:700; }
-  .profit { font-weight:900; font-size:18px; color:${profit >= 0 ? "#15803d" : "#dc2626"}; }
-  .footer { margin-top:40px; text-align:center; font-size:11px; color:#94a3b8; }
-  .print-btn { display:block; margin:16px auto; padding:10px 32px; background:#facc15; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
+  @page { size: A4 portrait; margin: 15mm 18mm; }
+  @media print { .no-print { display:none!important; } body { margin:0; padding:0; background:#fff; } }
+  * { box-sizing:border-box; }
+  body { font-family:'Noto Sans Thai',Arial,sans-serif; margin:0; padding:16px; background:#e8edf2; color:#1a1a1a; font-size:13px; }
+  .paper { background:#fff; width:210mm; max-width:100%; margin:0 auto; padding:16mm 18mm; box-shadow:0 4px 32px rgba(0,0,0,.15); }
+  h1 { font-size:20px; font-weight:900; color:#1a1a1a; margin:0 0 3px; }
+  .sub { font-size:12px; color:#666; margin-bottom:16px; }
+  .divider { border:none; border-top:2px solid #facc15; margin:12px 0; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { background:#fef9c3; padding:7px 10px; text-align:left; font-weight:700; border:1px solid #d1d5db; }
+  td { padding:7px 10px; border:1px solid #d1d5db; vertical-align:top; line-height:1.4; }
+  .total-row td { background:#fef9c3; font-weight:900; font-size:15px; color:#15803d; border-top:2px solid #facc15; }
+  .footer { margin-top:24px; text-align:center; font-size:10px; color:#94a3b8; }
+  .print-btn { display:block; margin:0 auto 14px; padding:9px 28px; background:#facc15; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
 </style></head><body>
 <div class="paper">
   <div class="no-print"><button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button></div>
-  <h1>✈️ ใบแจ้งค่าใช้จ่ายคาโก้</h1>
+  <h1>✈️ ใบแจ้งค่าบริการคาโก้</h1>
   <div class="sub">GE SERVER HUB · บริการส่งสินค้าไทย-เกาหลี ทางเครื่องบิน</div>
   <hr class="divider"/>
   <table style="margin-bottom:16px">
     <tr><th>เลขที่พัสดุ</th><td><strong style="font-family:monospace">${o.number}</strong></td><th>วันที่รับ</th><td>${dateStr}</td></tr>
     <tr><th>เส้นทาง</th><td colspan="3">${dirLabel}</td></tr>
-    <tr><th>ผู้ส่ง</th><td>${o.senderName}${o.senderPhone ? " · " + o.senderPhone : ""}</td><th>ผู้รับ</th><td>${o.receiverName}${o.receiverPhone ? " · " + o.receiverPhone : ""}</td></tr>
+    <tr><th>ผู้ส่ง</th><td>${o.senderName || "—"}${o.senderPhone ? " · " + o.senderPhone : ""}</td><th>ผู้รับ</th><td>${o.receiverName || "—"}${o.receiverPhone ? " · " + o.receiverPhone : ""}</td></tr>
     ${o.receiverAddress ? `<tr><th>ที่อยู่ผู้รับ</th><td colspan="3">${o.receiverAddress}</td></tr>` : ""}
     <tr><th>รายการสินค้า</th><td colspan="3">${o.itemDesc || "—"}</td></tr>
     <tr><th>น้ำหนัก</th><td>${o.weightKg ? o.weightKg + " kg" : "—"}</td><th>ขนาด/บรรจุ</th><td>${o.sizeNote || "—"}</td></tr>
     ${o.trackingCode ? `<tr><th>Tracking Code</th><td colspan="3" style="font-family:monospace">${o.trackingCode}</td></tr>` : ""}
+    ${o.passportNo ? `<tr><th>เลขพาสปอร์ต / เลขศุลกากร</th><td colspan="3" style="font-family:monospace">${o.passportNo}</td></tr>` : ""}
     ${o.notes ? `<tr><th>หมายเหตุ</th><td colspan="3">${o.notes}</td></tr>` : ""}
   </table>
   <hr class="divider"/>
   <table>
-    <tr><th style="width:33%">💰 รายรับ (ค่าส่งที่เก็บลูกค้า)</th><th style="width:33%">📤 ต้นทุน (ค่าส่งจริง)</th><th>กำไร</th></tr>
-    <tr>
-      <td class="income">${sym}${fmt(o.income)}</td>
-      <td class="expense">${sym}${fmt(o.expense)}</td>
-      <td class="profit">${sym}${fmt(profit)}</td>
-    </tr>
+    <thead><tr style="background:#fef9c3"><th style="width:70%">รายการที่เรียกเก็บเงินลูกค้า</th><th style="text-align:right">จำนวนเงิน</th></tr></thead>
+    <tbody>
+      ${incomeRows}
+      <tr class="total-row"><td style="text-align:right">รวมทั้งสิ้น</td><td style="text-align:right">${sym}${fmt(totalIncome)}</td></tr>
+    </tbody>
   </table>
-  <div class="footer">© GE SERVER HUB · พิมพ์เมื่อ ${new Date().toLocaleString("th-TH")}</div>
+  <div class="footer">© GE SERVER HUB · 095-389-9313 · พิมพ์เมื่อ ${new Date().toLocaleString("th-TH")}</div>
 </div></body></html>`);
     win.document.close();
   };
@@ -1359,8 +1373,10 @@ export default function ClientsUsersClient({ session }) {
     win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
 <title>สลิปส่งโกดัง</title>
 <style>
-  @media print { .no-print { display:none!important; } body { margin:0; } }
-  body { font-family:'Noto Sans Thai',Arial,sans-serif; margin:0; padding:20px; background:#f1f5f9; color:#1a1a1a; }
+  @page { size: A4 portrait; margin: 12mm 15mm; }
+  @media print { .no-print { display:none!important; } body { margin:0; padding:0; background:#fff; } .card { box-shadow:none; border-radius:0; max-width:100%; } }
+  * { box-sizing:border-box; }
+  body { font-family:'Noto Sans Thai',Arial,sans-serif; margin:0; padding:16px; background:#f1f5f9; color:#1a1a1a; }
   .card { background:#fff; max-width:480px; margin:0 auto; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.12); overflow:hidden; }
   .header { background:#1a1a0a; color:#facc15; padding:18px 24px; display:flex; align-items:center; gap:12px; }
   .header h1 { margin:0; font-size:18px; font-weight:900; }
@@ -3130,7 +3146,7 @@ export default function ClientsUsersClient({ session }) {
                           <span style={{ fontSize: 12, color: "#8b8fa8", marginLeft: 12 }}>{o.senderName} → {o.receiverName}</span>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
-                          <button onClick={() => printCargoInvoice({ ...o, ...(cargoInlineEdits[o.id] || {}) })} style={{ ...S.btn("#1a2a1a", "#4ade80"), padding: "7px 14px", fontSize: 12 }}>🖨️ พิมพ์ใบแจ้งหนี้</button>
+                          <button onClick={() => printCargoInvoice({ ...o, ...(cargoInlineEdits[o.id] || {}), lineItems: cargoTxs[o.id] || [] })} style={{ ...S.btn("#1a2a1a", "#4ade80"), padding: "7px 14px", fontSize: 12 }}>🖨️ พิมพ์ใบแจ้งหนี้</button>
                           <button disabled={!dirty || savingCargoInline[o.id]} style={{ ...S.btn(dirty ? "#1a1a0a" : "#1a1d27", dirty ? "#facc15" : "#64748b"), padding: "7px 14px", fontSize: 12, fontWeight: 700, border: dirty ? "1px solid #ca8a04" : "none" }}
                             onClick={async () => {
                               setSavingCargoInline(p => ({ ...p, [o.id]: true }));
@@ -3189,6 +3205,102 @@ export default function ClientsUsersClient({ session }) {
                           </div>
                         </div>
                       </div>
+
+                      {/* ── Line-item breakdown ── */}
+                      {(() => {
+                        const txs = cargoTxs[o.id];
+                        if (txs === undefined) {
+                          loadCargoTxs(o.id);
+                          return null;
+                        }
+                        // Group paired items by receiptRef
+                        const pairMap = {};
+                        for (const t of txs) {
+                          if (!t.receiptRef) continue;
+                          if (!pairMap[t.receiptRef]) pairMap[t.receiptRef] = { ref: t.receiptRef, category: t.category, cost: 0, sale: 0, id: t.id };
+                          if (t.type === "EXPENSE") { pairMap[t.receiptRef].cost = Number(t.amount); pairMap[t.receiptRef].id = t.id; }
+                          if (t.type === "INCOME") pairMap[t.receiptRef].sale = Number(t.amount);
+                        }
+                        const items = Object.values(pairMap);
+                        const draft = cargoItemDraft[o.id] || { category: "", cost: "", sale: "" };
+                        const setDraft = (fn) => setCargoItemDraft(p => ({ ...p, [o.id]: fn(p[o.id] || { category: "", cost: "", sale: "" }) }));
+                        return (
+                          <div style={{ marginTop: 14, borderTop: "1px solid #2a2d3a", paddingTop: 12 }}>
+                            <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 8 }}>📋 รายการทีละรายการ (ราคาทุน / ราคาขาย)</div>
+                            {items.length > 0 && (
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 10 }}>
+                                <thead>
+                                  <tr style={{ background: "#1a1d27" }}>
+                                    {["รายการ", "ราคาทุน", "ราคาขาย", "กำไร", ""].map((h, i) => (
+                                      <th key={i} style={{ padding: "6px 8px", textAlign: i > 0 ? "right" : "left", color: "#64748b", fontWeight: 600, fontSize: 11, borderBottom: "1px solid #2a2d3a" }}>{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {items.map(item => (
+                                    <tr key={item.ref} style={{ borderBottom: "1px solid #1e2130" }}>
+                                      <td style={{ padding: "6px 8px", color: "#e2e8f0" }}>{item.category || "—"}</td>
+                                      <td style={{ padding: "6px 8px", textAlign: "right", color: "#f87171" }}>{item.cost.toLocaleString()}</td>
+                                      <td style={{ padding: "6px 8px", textAlign: "right", color: "#4ade80" }}>{item.sale.toLocaleString()}</td>
+                                      <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: (item.sale - item.cost) >= 0 ? "#4ade80" : "#f87171" }}>
+                                        {(item.sale - item.cost) >= 0 ? "+" : ""}{(item.sale - item.cost).toLocaleString()}
+                                      </td>
+                                      <td style={{ padding: "6px 8px", textAlign: "right" }}>
+                                        <button style={{ ...S.btn("#2a1a1a", "#f87171"), padding: "2px 8px", fontSize: 11 }}
+                                          onClick={async () => {
+                                            await fetch(`/api/admin/cargo/${o.id}/transactions?txId=${item.id}`, { method: "DELETE" });
+                                            loadCargoTxs(o.id);
+                                            loadCargo();
+                                          }}>✕</button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                            {/* Add form */}
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-end" }}>
+                              <div style={{ flex: 2, minWidth: 120 }}>
+                                <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>ชื่อรายการ</div>
+                                <input style={{ ...S.input, fontSize: 12, padding: "6px 8px" }} placeholder="ค่ากล่องโฟม, ค่าขนส่ง..." value={draft.category} onChange={e => setDraft(p => ({ ...p, category: e.target.value }))} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 80 }}>
+                                <div style={{ fontSize: 10, color: "#f87171", marginBottom: 3 }}>ราคาทุน</div>
+                                <input style={{ ...S.input, fontSize: 12, padding: "6px 8px", borderColor: "#f8717144" }} type="number" min="0" placeholder="0" value={draft.cost} onChange={e => setDraft(p => ({ ...p, cost: e.target.value }))} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 80 }}>
+                                <div style={{ fontSize: 10, color: "#4ade80", marginBottom: 3 }}>ราคาขาย</div>
+                                <input style={{ ...S.input, fontSize: 12, padding: "6px 8px", borderColor: "#4ade8044" }} type="number" min="0" placeholder="0" value={draft.sale} onChange={e => setDraft(p => ({ ...p, sale: e.target.value }))} />
+                              </div>
+                              <button
+                                disabled={savingCargoItem[o.id] || !draft.category}
+                                style={{ ...S.btn("#1a1a0a", "#facc15"), padding: "6px 14px", fontSize: 12, fontWeight: 700, border: "1px solid #ca8a04", whiteSpace: "nowrap" }}
+                                onClick={async () => {
+                                  if (!draft.category) return;
+                                  setSavingCargoItem(p => ({ ...p, [o.id]: true }));
+                                  try {
+                                    const res = await fetch(`/api/admin/cargo/${o.id}/transactions`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ type: "ITEM", category: draft.category, costAmount: Number(draft.cost || 0), saleAmount: Number(draft.sale || 0), currency: o.currency || "THB" }),
+                                    });
+                                    if (res.ok) {
+                                      setDraft(() => ({ category: "", cost: "", sale: "" }));
+                                      loadCargoTxs(o.id);
+                                      loadCargo();
+                                    } else {
+                                      const d = await res.json();
+                                      showToast(d.error || "เพิ่มไม่สำเร็จ", false);
+                                    }
+                                  } finally { setSavingCargoItem(p => ({ ...p, [o.id]: false })); }
+                                }}
+                              >
+                                {savingCargoItem[o.id] ? "⏳" : "+ เพิ่ม"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

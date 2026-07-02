@@ -177,12 +177,18 @@ export async function POST(req) {
       return NextResponse.json({ error: "กรุณากรอกชื่อพาร์ทเนอร์" }, { status: 400 });
     }
     const prefix = { SALE: "SAL", EXPENSE: "EXP", REFUND: "REF", PROFIT_SHARE: "PSH", PARTNER_INVESTMENT: "PIN" }[txType] || "TXN";
-    const count = await prisma.partnerTransaction.count({ where: { type: txType } });
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
-    const number = `${prefix}${yyyy}${mm}${dd}-${String(count + 1).padStart(4, "0")}`;
+    const datePrefix = `${prefix}${yyyy}${mm}${dd}-`;
+    const last = await prisma.partnerTransaction.findFirst({
+      where: { number: { startsWith: datePrefix } },
+      orderBy: { number: "desc" },
+      select: { number: true },
+    });
+    const lastSeq = last ? parseInt(last.number.split("-")[1] || "0", 10) : 0;
+    const number = `${datePrefix}${String(lastSeq + 1).padStart(4, "0")}`;
 
     const tx = await prisma.partnerTransaction.create({
       data: {

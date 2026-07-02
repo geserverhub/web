@@ -42,27 +42,41 @@ export async function POST(req, { params }) {
     const body = await req.json();
     const { type, category, amount, currency, note, receiptRef } = body;
 
-    if (!type || !["INCOME", "EXPENSE"].includes(type)) {
-      return NextResponse.json({ error: "type must be INCOME or EXPENSE" }, { status: 400 });
-    }
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      return NextResponse.json({ error: "amount must be a positive number" }, { status: 400 });
+    if (!type || !["INCOME", "EXPENSE", "ITEM"].includes(type)) {
+      return NextResponse.json({ error: "type must be INCOME, EXPENSE or ITEM" }, { status: 400 });
     }
 
-    const tx = await prisma.cargoTransaction.create({
-      data: {
-        orderId: id,
-        type,
-        category: category || null,
-        amount: Number(amount),
-        currency: currency || "THB",
-        note: note || null,
-        receiptRef: receiptRef || null,
-        createdBy: session.user?.name || session.user?.email || "admin",
-      },
-    });
+    const by = session.user?.name || session.user?.email || "admin";
 
-    // Update running income/expense totals on the CargoOrder
+    if (type === "ITEM") {
+      // Store cost+sale as a paired EXPENSE+INCOME with shared receiptRef
+      const { costAmount, saleAmount } = body;
+      if ((!costAmount && !saleAmount) || isNaN(Number(costAmount || 0)) || isNaN(Number(saleAmount || 0))) {
+        return NextResponse.json({ error: "กรุณากรอก costAmount และ saleAmount" }, { status: 400 });
+      }
+      const ref = `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const cat = category || null;
+      const cur = currency || "THB";
+      await prisma.cargoTransaction.createMany({
+        data: [
+          { orderId: id, type: "EXPENSE", category: cat, amount: Number(costAmount || 0), currency: cur, receiptRef: ref, createdBy: by },
+          { orderId: id, type: "INCOME",  category: cat, amount: Number(saleAmount || 0), currency: cur, receiptRef: ref, createdBy: by },
+        ],
+      });
+    } else {
+      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+        return NextResponse.json({ error: "amount must be a positive number" }, { status: 400 });
+      }
+      await prisma.cargoTransaction.create({
+        data: {
+          orderId: id, type, category: category || null,
+          amount: Number(amount), currency: currency || "THB",
+          note: note || null, receiptRef: receiptRef || null, createdBy: by,
+        },
+      });
+    }
+
+    // Recalculate & update CargoOrder totals
     const agg = await prisma.cargoTransaction.groupBy({
       by: ["type"],
       where: { orderId: id },
@@ -75,7 +89,7 @@ export async function POST(req, { params }) {
       data: { income: Number(incomeTotal), expense: Number(expenseTotal) },
     });
 
-    return NextResponse.json({ transaction: tx }, { status: 201 });
+    return NextResponse.json({ ok: true }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -92,7 +106,13 @@ export async function DELETE(req, { params }) {
     const txId = searchParams.get("txId");
     if (!txId) return NextResponse.json({ error: "txId required" }, { status: 400 });
 
-    await prisma.cargoTransaction.delete({ where: { id: txId } });
+    // If paired item (has receiptRef), delete both records
+    const existing = await prisma.cargoTransaction.findUnique({ where: { id: txId }, select: { receiptRef: true } });
+    if (existing?.receiptRef) {
+      await prisma.cargoTransaction.deleteMany({ where: { orderId: id, receiptRef: existing.receiptRef } });
+    } else {
+      await prisma.cargoTransaction.delete({ where: { id: txId } });
+    }
 
     // Recalculate totals
     const agg = await prisma.cargoTransaction.groupBy({
