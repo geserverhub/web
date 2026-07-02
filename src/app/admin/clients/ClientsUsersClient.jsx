@@ -3217,13 +3217,13 @@ export default function ClientsUsersClient({ session }) {
                         const pairMap = {};
                         for (const t of txs) {
                           if (!t.receiptRef) continue;
-                          if (!pairMap[t.receiptRef]) pairMap[t.receiptRef] = { ref: t.receiptRef, category: t.category, cost: 0, sale: 0, id: t.id };
-                          if (t.type === "EXPENSE") { pairMap[t.receiptRef].cost = Number(t.amount); pairMap[t.receiptRef].id = t.id; }
-                          if (t.type === "INCOME") pairMap[t.receiptRef].sale = Number(t.amount);
+                          if (!pairMap[t.receiptRef]) pairMap[t.receiptRef] = { ref: t.receiptRef, category: t.category, note: t.note || null, cost: 0, sale: 0, id: t.id };
+                          if (t.type === "EXPENSE") { pairMap[t.receiptRef].cost = Number(t.amount); pairMap[t.receiptRef].id = t.id; if (t.note) pairMap[t.receiptRef].note = t.note; }
+                          if (t.type === "INCOME") { pairMap[t.receiptRef].sale = Number(t.amount); if (t.note) pairMap[t.receiptRef].note = t.note; }
                         }
                         const items = Object.values(pairMap);
-                        const draft = cargoItemDraft[o.id] || { category: "", cost: "", sale: "" };
-                        const setDraft = (fn) => setCargoItemDraft(p => ({ ...p, [o.id]: fn(p[o.id] || { category: "", cost: "", sale: "" }) }));
+                        const draft = cargoItemDraft[o.id] || { category: "", cost: "", sale: "", note: "" };
+                        const setDraft = (fn) => setCargoItemDraft(p => ({ ...p, [o.id]: fn(p[o.id] || { category: "", cost: "", sale: "", note: "" }) }));
                         return (
                           <div style={{ marginTop: 14, borderTop: "1px solid #2a2d3a", paddingTop: 12 }}>
                             <div style={{ fontSize: 11, color: "#8b8fa8", fontWeight: 700, marginBottom: 8 }}>📋 รายการทีละรายการ (ราคาทุน / ราคาขาย)</div>
@@ -3239,7 +3239,10 @@ export default function ClientsUsersClient({ session }) {
                                 <tbody>
                                   {items.map(item => (
                                     <tr key={item.ref} style={{ borderBottom: "1px solid #1e2130" }}>
-                                      <td style={{ padding: "6px 8px", color: "#e2e8f0" }}>{item.category || "—"}</td>
+                                      <td style={{ padding: "6px 8px", color: "#e2e8f0" }}>
+                                        {item.category || "—"}
+                                        {item.note && <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>📝 {item.note}</div>}
+                                      </td>
                                       <td style={{ padding: "6px 8px", textAlign: "right", color: "#f87171" }}>{item.cost.toLocaleString()}</td>
                                       <td style={{ padding: "6px 8px", textAlign: "right", color: "#4ade80" }}>{item.sale.toLocaleString()}</td>
                                       <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: (item.sale - item.cost) >= 0 ? "#4ade80" : "#f87171" }}>
@@ -3272,6 +3275,10 @@ export default function ClientsUsersClient({ session }) {
                                 <div style={{ fontSize: 10, color: "#4ade80", marginBottom: 3 }}>ราคาขาย</div>
                                 <input style={{ ...S.input, fontSize: 12, padding: "6px 8px", borderColor: "#4ade8044" }} type="number" min="0" placeholder="0" value={draft.sale} onChange={e => setDraft(p => ({ ...p, sale: e.target.value }))} />
                               </div>
+                              <div style={{ flex: 2, minWidth: 120 }}>
+                                <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>โน๊ต (แอดมิน)</div>
+                                <input style={{ ...S.input, fontSize: 12, padding: "6px 8px" }} placeholder="175*8, 240*8..." value={draft.note || ""} onChange={e => setDraft(p => ({ ...p, note: e.target.value }))} />
+                              </div>
                               <button
                                 disabled={savingCargoItem[o.id] || !draft.category}
                                 style={{ ...S.btn("#1a1a0a", "#facc15"), padding: "6px 14px", fontSize: 12, fontWeight: 700, border: "1px solid #ca8a04", whiteSpace: "nowrap" }}
@@ -3282,10 +3289,10 @@ export default function ClientsUsersClient({ session }) {
                                     const res = await fetch(`/api/admin/cargo/${o.id}/transactions`, {
                                       method: "POST",
                                       headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ type: "ITEM", category: draft.category, costAmount: Number(draft.cost || 0), saleAmount: Number(draft.sale || 0), currency: o.currency || "THB" }),
+                                      body: JSON.stringify({ type: "ITEM", category: draft.category, costAmount: Number(draft.cost || 0), saleAmount: Number(draft.sale || 0), currency: o.currency || "THB", note: draft.note || null }),
                                     });
                                     if (res.ok) {
-                                      setDraft(() => ({ category: "", cost: "", sale: "" }));
+                                      setDraft(() => ({ category: "", cost: "", sale: "", note: "" }));
                                       loadCargoTxs(o.id);
                                       loadCargo();
                                     } else {

@@ -57,10 +57,11 @@ export async function POST(req, { params }) {
       const ref = `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       const cat = category || null;
       const cur = currency || "THB";
+      const itemNote = body.note || null;
       await prisma.cargoTransaction.createMany({
         data: [
-          { orderId: id, type: "EXPENSE", category: cat, amount: Number(costAmount || 0), currency: cur, receiptRef: ref, createdBy: by },
-          { orderId: id, type: "INCOME",  category: cat, amount: Number(saleAmount || 0), currency: cur, receiptRef: ref, createdBy: by },
+          { orderId: id, type: "EXPENSE", category: cat, amount: Number(costAmount || 0), currency: cur, receiptRef: ref, createdBy: by, note: itemNote },
+          { orderId: id, type: "INCOME",  category: cat, amount: Number(saleAmount || 0), currency: cur, receiptRef: ref, createdBy: by, note: itemNote },
         ],
       });
     } else {
