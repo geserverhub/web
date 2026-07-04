@@ -1,6 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import { CHUNK_RECOVERY_INLINE_SCRIPT } from "@/lib/chunk-recovery";
+import AppRefreshNotice from "@/components/AppRefreshNotice";
 
 export const metadata = {
   title: "GE SERVER HUB",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_INLINE_SCRIPT }} />
+        <AppRefreshNotice />
         {children}
       </body>
     </html>

@@ -45,7 +45,7 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail: "/charoenthaimart/charoenthaimart-logomain.jpg",
     thumbnail_fit: "contain",
     contact_phone: "010-8766-4569",
-    system_url: "/charoenthaimart",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/charoenthaimart",
   },
   "ge-energy-tech": {
     thumbnail: "/ge-energyTech/138568.jpg",

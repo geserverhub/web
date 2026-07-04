@@ -223,7 +223,7 @@ export const fallbackClients = [
     contact_phone: "010-8766-4569",
     thumbnail: "/charoenthaimart/charoenthaimart-logomain.jpg",
     thumbnail_fit: "contain",
-    system_url: "/charoenthaimart",
+    system_url: "https://strong-dory-enabled.ngrok-free.app/charoenthaimart",
   },
 ];
 

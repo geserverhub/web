@@ -99,7 +99,7 @@ const desired = [
     contactPhone: "010-8766-4569",
     contactFax: null,
     logoUrl: "/charoenthaimart/charoenthaimart-logomain.jpg",
-    systemUrl: "/charoenthaimart",
+    systemUrl: "https://strong-dory-enabled.ngrok-free.app/charoenthaimart",
     sortOrder: 8,
   },
 ];
