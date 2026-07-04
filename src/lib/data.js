@@ -163,18 +163,6 @@ export const fallbackClients = [
     system_url: "https://spfoodskorea.com/",
   },
   {
-    id: 8,
-    name: "Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน",
-    slug: "mart-supermarket",
-    description: "Charoenthaimart Suwon — เจริญไทยมาร์ท ซูวอน อาหารไทย-เกาหลี",
-    status: "online",
-    contact_email: "",
-    contact_phone: "010-8766-4569",
-    thumbnail: "/charoenthaimart/charoenthaimart-logomain.jpg",
-    thumbnail_fit: "contain",
-    system_url: "/charoenthaimart",
-  },
-  {
     id: 9,
     name: "ระบบบริการดูแล บัญชีและภาษี",
     slug: "acc-tax",
@@ -224,6 +212,18 @@ export const fallbackClients = [
     thumbnail: "/ge-energyTech/138568.jpg",
     thumbnail_style: "photo",
     system_url: "https://www.ge-energytech.com",
+  },
+  {
+    id: 8,
+    name: "Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน",
+    slug: "mart-supermarket",
+    description: "เจริญไทยมาร์ท ซูวอน — ร้านสินค้าไทยในซูวอน เกาหลีใต้ 수원 태국 식품 슈퍼마켓",
+    status: "online",
+    contact_email: "",
+    contact_phone: "010-8766-4569",
+    thumbnail: "/charoenthaimart/charoenthaimart-logomain.jpg",
+    thumbnail_fit: "contain",
+    system_url: "/charoenthaimart",
   },
 ];
 

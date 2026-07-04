@@ -90,6 +90,18 @@ const desired = [
     systemUrl: "https://www.ge-energytech.com",
     sortOrder: 7,
   },
+  {
+    slug: "mart-supermarket",
+    name: "Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน",
+    description: "เจริญไทยมาร์ท ซูวอน — ร้านสินค้าไทยในซูวอน เกาหลีใต้ 수원 태국 식품 슈퍼마켓",
+    status: "ONLINE",
+    contactEmail: "",
+    contactPhone: "010-8766-4569",
+    contactFax: null,
+    logoUrl: "/charoenthaimart/charoenthaimart-logomain.jpg",
+    systemUrl: "/charoenthaimart",
+    sortOrder: 8,
+  },
 ];
 
 export async function GET() {
