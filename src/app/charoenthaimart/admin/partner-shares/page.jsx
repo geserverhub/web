@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 const nowMonth = new Date().toISOString().slice(0,7);
-const EMPTY = { period: nowMonth, partnerName: "", sharePercent: "", netProfit: "", note: "" };
+const EMPTY = { period: nowMonth, partnerName: "", sharePercent: "", netProfit: "", deductionAmount: "", deductionNote: "", note: "" };
 
 export default function CtmPartnerShares() {
   const [data, setData] = useState(null);
@@ -31,9 +31,11 @@ export default function CtmPartnerShares() {
     if (k === "period") loadSalesProfit(e.target.value);
   };
 
-  const shareAmount = form.netProfit && form.sharePercent
-    ? (Number(form.netProfit) * Number(form.sharePercent) / 100).toFixed(0)
-    : "0";
+  const baseShare = form.netProfit && form.sharePercent
+    ? Number(form.netProfit) * Number(form.sharePercent) / 100
+    : 0;
+  const deduction = Number(form.deductionAmount) || 0;
+  const netPayout = baseShare - deduction;
 
   const submit = async (e) => {
     e.preventDefault(); setSaving(true);
@@ -90,10 +92,23 @@ export default function CtmPartnerShares() {
               <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>กำไรสุทธิ (₩)*</label><input required type="number" value={form.netProfit} onChange={set("netProfit")} style={inp} /></div>
               <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>หมายเหตุ</label><input value={form.note} onChange={set("note")} style={inp} /></div>
             </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#b91c1c", display: "block", marginBottom: 3 }}>รายการหัก (₩)</label>
+                <input type="number" min="0" value={form.deductionAmount} onChange={set("deductionAmount")} style={{ ...inp, borderColor: form.deductionAmount && Number(form.deductionAmount) > 0 ? "#fca5a5" : undefined }} placeholder="0" />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#b91c1c", display: "block", marginBottom: 3 }}>เหตุผลที่หัก</label>
+                <input value={form.deductionNote} onChange={set("deductionNote")} style={inp} placeholder="เช่น หักเงินยืม, ค่าปรับ..." />
+              </div>
+            </div>
             {form.sharePercent && form.netProfit && (
-              <div style={{ background: "#fef3c7", borderRadius: 8, padding: "8px 14px", marginBottom: 10, fontSize: 13 }}>
-                ส่วนแบ่งที่ได้รับ: <strong style={{ color: "#b45309", fontSize: 15 }}>₩{fmt(shareAmount)}</strong>
-                <span style={{ color: "#9ca3af", marginLeft: 8 }}>({form.sharePercent}% × ₩{fmt(form.netProfit)})</span>
+              <div style={{ background: "#fef3c7", borderRadius: 8, padding: "10px 14px", marginBottom: 10, fontSize: 13 }}>
+                <div>ส่วนแบ่งขั้นต้น: <strong>₩{fmt(baseShare.toFixed(0))}</strong><span style={{ color: "#9ca3af", marginLeft: 8 }}>({form.sharePercent}% × ₩{fmt(form.netProfit)})</span></div>
+                {deduction > 0 && <div style={{ color: "#b91c1c", marginTop: 4 }}>หักออก: <strong>₩{fmt(deduction)}</strong>{form.deductionNote ? <span style={{ color: "#9ca3af", marginLeft: 6 }}>({form.deductionNote})</span> : null}</div>}
+                <div style={{ marginTop: 6, borderTop: "1px solid #fcd34d", paddingTop: 6 }}>
+                  จ่ายจริง: <strong style={{ color: "#b45309", fontSize: 16 }}>₩{fmt(netPayout.toFixed(0))}</strong>
+                </div>
               </div>
             )}
             <button type="submit" disabled={saving} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "8px 22px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
@@ -107,24 +122,32 @@ export default function CtmPartnerShares() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#fef3c7" }}>
-              {["งวด","ชื่อหุ้นส่วน","% หุ้น","กำไรสุทธิ","ส่วนแบ่งที่ได้","หมายเหตุ","ลบ"].map(h => (
+              {["งวด","ชื่อหุ้นส่วน","% หุ้น","กำไรสุทธิ","ส่วนแบ่งขั้นต้น","หักออก","จ่ายจริง","หมายเหตุ","ลบ"].map(h => (
                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {(!data?.shares || data.shares.length === 0) && <tr><td colSpan={7} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ไม่มีรายการ</td></tr>}
-            {data?.shares?.map((s, i) => (
-              <tr key={s.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
-                <td style={{ padding: "8px 12px", fontWeight: 600, color: "#374151" }}>{s.period}</td>
-                <td style={{ padding: "8px 12px", fontWeight: 700, color: "#1f2937" }}>{s.partnerName}</td>
-                <td style={{ padding: "8px 12px", color: "#374151" }}>{Number(s.sharePercent).toFixed(1)}%</td>
-                <td style={{ padding: "8px 12px", color: "#374151" }}>₩{fmt(s.netProfit)}</td>
-                <td style={{ padding: "8px 12px", fontWeight: 800, color: "#b45309", fontSize: 14 }}>₩{fmt(s.shareAmount)}</td>
-                <td style={{ padding: "8px 12px", color: "#9ca3af", fontSize: 12 }}>{s.note || "—"}</td>
-                <td style={{ padding: "8px 12px" }}><button onClick={() => del(s.id)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>ลบ</button></td>
-              </tr>
-            ))}
+            {(!data?.shares || data.shares.length === 0) && <tr><td colSpan={9} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ไม่มีรายการ</td></tr>}
+            {data?.shares?.map((s, i) => {
+              const gross = Number(s.shareAmount) + Number(s.deductionAmount || 0);
+              const ded = Number(s.deductionAmount || 0);
+              return (
+                <tr key={s.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                  <td style={{ padding: "8px 12px", fontWeight: 600, color: "#374151" }}>{s.period}</td>
+                  <td style={{ padding: "8px 12px", fontWeight: 700, color: "#1f2937" }}>{s.partnerName}</td>
+                  <td style={{ padding: "8px 12px", color: "#374151" }}>{Number(s.sharePercent).toFixed(1)}%</td>
+                  <td style={{ padding: "8px 12px", color: "#374151" }}>₩{fmt(s.netProfit)}</td>
+                  <td style={{ padding: "8px 12px", color: "#374151" }}>₩{fmt(gross)}</td>
+                  <td style={{ padding: "8px 12px", color: ded > 0 ? "#b91c1c" : "#9ca3af", fontSize: 12 }}>
+                    {ded > 0 ? <>-₩{fmt(ded)}{s.deductionNote ? <div style={{ fontSize: 11, color: "#9ca3af" }}>{s.deductionNote}</div> : null}</> : "—"}
+                  </td>
+                  <td style={{ padding: "8px 12px", fontWeight: 800, color: "#b45309", fontSize: 14 }}>₩{fmt(s.shareAmount)}</td>
+                  <td style={{ padding: "8px 12px", color: "#9ca3af", fontSize: 12 }}>{s.note || "—"}</td>
+                  <td style={{ padding: "8px 12px" }}><button onClick={() => del(s.id)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>ลบ</button></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

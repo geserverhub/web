@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { credentialsPortalLogin, waitForAuthSession, hardRedirect, portalLoginErrorMessage } from "@/lib/portal-login";
 
 const LANGS = [
   { key: "th",  label: "ไทย" },
@@ -24,27 +23,29 @@ function FlagSVG({ langKey, size = 22 }) {
   if (langKey === "ko") return (
     <svg width={size} height={h} viewBox="0 0 30 20" style={{ borderRadius: 2, display: "block", flexShrink: 0 }}>
       <rect width="30" height="20" fill="#fff"/>
-      {/* top-left trigram */}
-      <line x1="3" y1="3.5" x2="9" y2="3.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="3" y1="5.5" x2="5.5" y2="5.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="6.5" y1="5.5" x2="9" y2="5.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="3" y1="7.5" x2="9" y2="7.5" stroke="#000" strokeWidth="1.2"/>
-      {/* bottom-right trigram */}
-      <line x1="21" y1="12.5" x2="27" y2="12.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="21" y1="14.5" x2="27" y2="14.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="21" y1="16.5" x2="27" y2="16.5" stroke="#000" strokeWidth="1.2"/>
-      {/* top-right trigram */}
-      <line x1="21" y1="3.5" x2="27" y2="3.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="21" y1="5.5" x2="27" y2="5.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="21" y1="7.5" x2="23.5" y2="7.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="24.5" y1="7.5" x2="27" y2="7.5" stroke="#000" strokeWidth="1.2"/>
-      {/* bottom-left trigram */}
-      <line x1="3" y1="12.5" x2="5.5" y2="12.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="6.5" y1="12.5" x2="9" y2="12.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="3" y1="14.5" x2="5.5" y2="14.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="6.5" y1="14.5" x2="9" y2="14.5" stroke="#000" strokeWidth="1.2"/>
-      <line x1="3" y1="16.5" x2="9" y2="16.5" stroke="#000" strokeWidth="1.2"/>
-      {/* Taeguk circle */}
+      {/* 건 (Geon/Heaven) top-left: 3 solid lines */}
+      <line x1="2.5" y1="3" x2="8.5" y2="3" stroke="#000" strokeWidth="1.1"/>
+      <line x1="2.5" y1="5" x2="8.5" y2="5" stroke="#000" strokeWidth="1.1"/>
+      <line x1="2.5" y1="7" x2="8.5" y2="7" stroke="#000" strokeWidth="1.1"/>
+      {/* 이 (Ri/Fire) top-right: solid, broken, solid */}
+      <line x1="21.5" y1="3" x2="27.5" y2="3" stroke="#000" strokeWidth="1.1"/>
+      <line x1="21.5" y1="5" x2="23.8" y2="5" stroke="#000" strokeWidth="1.1"/>
+      <line x1="25.2" y1="5" x2="27.5" y2="5" stroke="#000" strokeWidth="1.1"/>
+      <line x1="21.5" y1="7" x2="27.5" y2="7" stroke="#000" strokeWidth="1.1"/>
+      {/* 감 (Gam/Water) bottom-left: broken, solid, broken */}
+      <line x1="2.5" y1="13" x2="4.8" y2="13" stroke="#000" strokeWidth="1.1"/>
+      <line x1="6.2" y1="13" x2="8.5" y2="13" stroke="#000" strokeWidth="1.1"/>
+      <line x1="2.5" y1="15" x2="8.5" y2="15" stroke="#000" strokeWidth="1.1"/>
+      <line x1="2.5" y1="17" x2="4.8" y2="17" stroke="#000" strokeWidth="1.1"/>
+      <line x1="6.2" y1="17" x2="8.5" y2="17" stroke="#000" strokeWidth="1.1"/>
+      {/* 곤 (Gon/Earth) bottom-right: 3 broken lines */}
+      <line x1="21.5" y1="13" x2="23.8" y2="13" stroke="#000" strokeWidth="1.1"/>
+      <line x1="25.2" y1="13" x2="27.5" y2="13" stroke="#000" strokeWidth="1.1"/>
+      <line x1="21.5" y1="15" x2="23.8" y2="15" stroke="#000" strokeWidth="1.1"/>
+      <line x1="25.2" y1="15" x2="27.5" y2="15" stroke="#000" strokeWidth="1.1"/>
+      <line x1="21.5" y1="17" x2="23.8" y2="17" stroke="#000" strokeWidth="1.1"/>
+      <line x1="25.2" y1="17" x2="27.5" y2="17" stroke="#000" strokeWidth="1.1"/>
+      {/* Taeguk */}
       <circle cx="15" cy="10" r="5" fill="#CD2E3A"/>
       <path d="M15 5 A2.5 2.5 0 0 1 15 10 A2.5 2.5 0 0 0 15 15 A5 5 0 0 1 15 5Z" fill="#0047A0"/>
       <circle cx="15" cy="7.5" r="1.25" fill="#CD2E3A"/>
@@ -92,7 +93,7 @@ const T = {
     deliveryText: "ส่งทั่วเกาหลี (전국 배달)",
     deliverySub: "20 กก. ราคา ₩6,000",
     aboutTitle: "เกี่ยวกับร้าน",
-    about: "เจริญไทยมาร์ท ซูวอน คือ ร้านขายของไทยในเกาหลีใต้ ตั้งอยู่ที่เมืองซูวอน จำหน่ายอาหารไทย เครื่องปรุงรส สินค้านำเข้าจากไทย และสินค้าเอเชียนหลากหลาย บริการจัดส่งทั่วเกาหลี น้ำหนัก 20 กก. ราคา ₩6,000 เปิดบริการทุกวัน 10:00 AM – 10:00 PM",
+    about: "แพลตฟอร์มแสดงสินค้า เพื่อกดสั่งซื้อ",
     callBtn: "📞 โทรติดต่อร้าน",
   },
   ko: {
@@ -146,42 +147,77 @@ const T = {
 };
 
 const ANNOUNCE = {
-  th: "🛒 เจริญไทยมาร์ท ซูวอน · ส่งทั่วเกาหลี 20กก. ₩6,000 · เปิดทุกวัน 10:00-22:00 · โทร 010-8766-4569 · LINE @486wfonl  |  ขายอาหารไทย เครื่องปรุงรส สินค้านำเข้าจากไทย  |  경기도 수원시 권선구 세권로 153(권선동)",
-  ko: "🛒 차로엔 타이 마트 수원 · 전국 배송 20kg ₩6,000 · 매일 10:00-22:00 영업 · 전화 010-8766-4569 · LINE @486wfonl  |  태국 식품·양념·수입 제품 전문  |  경기도 수원시 권선구 세권로 153(권선동)",
-  en: "🛒 Charoen Thai Mart Suwon · Nationwide delivery 20kg ₩6,000 · Open daily 10:00-22:00 · Call 010-8766-4569 · LINE @486wfonl  |  Thai food, seasonings, imported goods  |  153 Segwon-ro, Gwonseon-gu, Suwon",
-  zh: "🛒 차로엔泰国超市水原 · 全国配送 20kg ₩6,000 · 每日10:00-22:00营业 · 电话 010-8766-4569 · LINE @486wfonl  |  泰国食品 调味料 进口商品  |  경기도 수원시 권선구 세권로 153",
-  vi: "🛒 Charoen Thai Mart Suwon · Giao hàng toàn quốc 20kg ₩6,000 · Mở cửa 10:00-22:00 · Gọi 010-8766-4569 · LINE @486wfonl  |  Thực phẩm Thái, gia vị, hàng nhập khẩu  |  153 Segwon-ro, Gwonseon-gu, Suwon",
+  th: "🛒 เจริญไทยมาร์ท ซูวอน · ส่งทั่วเกาหลี 20กก. ₩6,000 · เปิดทุกวัน 10:00-22:00 · โทร 010-8766-4569  |  ขายอาหารไทย เครื่องปรุงรส สินค้านำเข้าจากไทย  |  경기도 수원시 권선구 세권로 153(권선동)",
+  ko: "🛒 차로엔 타이 마트 수원 · 전국 배송 20kg ₩6,000 · 매일 10:00-22:00 영업 · 전화 010-8766-4569  |  태국 식품·양념·수입 제품 전문  |  경기도 수원시 권선구 세권로 153(권선동)",
+  en: "🛒 Charoen Thai Mart Suwon · Nationwide delivery 20kg ₩6,000 · Open daily 10:00-22:00 · Call 010-8766-4569  |  Thai food, seasonings, imported goods  |  153 Segwon-ro, Gwonseon-gu, Suwon",
+  zh: "🛒 차로엔泰国超市水原 · 全国配送 20kg ₩6,000 · 每日10:00-22:00营业 · 电话 010-8766-4569  |  泰国食品 调味料 进口商品  |  경기도 수원시 권선구 세권로 153",
+  vi: "🛒 Charoen Thai Mart Suwon · Giao hàng toàn quốc 20kg ₩6,000 · Mở cửa 10:00-22:00 · Gọi 010-8766-4569  |  Thực phẩm Thái, gia vị, hàng nhập khẩu  |  153 Segwon-ro, Gwonseon-gu, Suwon",
 };
 
 export default function CharoenthaimartPage() {
   const [lang, setLang] = useState("th");
   const t = T[lang];
   const [promos, setPromos] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [logging, setLogging] = useState(false);
+  const [announce, setAnnounce] = useState(ANNOUNCE);
+
+  // Product catalog state
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [activeCat, setActiveCat] = useState("all");
+  const [likes, setLikes] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("ctm_likes") || "[]")); } catch { return new Set(); }
+  });
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
 
   useEffect(() => {
-    waitForAuthSession(4, 100).then((session) => {
-      const role = session?.user?.role;
-      if (role === "ADMIN" || role === "SUPER_ADMIN") setIsAdmin(true);
-    });
     fetch("/api/ctm/promotions/public").then(r => r.json()).then(d => setPromos(d.promotions || [])).catch(() => {});
+    fetch("/api/ctm/announcements").then(r => r.json()).then(d => {
+      if (d.announcements && Object.keys(d.announcements).length > 0) {
+        setAnnounce(a => ({ ...a, ...d.announcements }));
+      }
+    }).catch(() => {});
+    fetch("/api/ctm/products/public").then(r => r.json()).then(d => {
+      setProducts(d.products || []);
+      setCategories(d.categories || []);
+    }).catch(() => {});
   }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError(""); setLogging(true);
-    const result = await credentialsPortalLogin({ email, password, portal: "admin", callbackPath: "/charoenthaimart/admin" });
-    if (result.ok) {
-      hardRedirect("/charoenthaimart/admin");
-    } else {
-      setLoginError(portalLoginErrorMessage(result.error, "th"));
-      setLogging(false);
-    }
+  useEffect(() => {
+    fetch(`/api/ctm/products/public${activeCat !== "all" ? `?category=${encodeURIComponent(activeCat)}` : ""}`)
+      .then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => {});
+  }, [activeCat]);
+
+  const toggleLike = (id) => {
+    setLikes(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      localStorage.setItem("ctm_likes", JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const idx = prev.findIndex(x => x.id === product.id);
+      if (idx >= 0) { const n = [...prev]; n[idx] = { ...n[idx], qty: n[idx].qty + 1 }; return n; }
+      return [...prev, { id: product.id, name: product.name, price: Number(product.sellPrice), qty: 1, image: product.imageUrl, unit: product.unit }];
+    });
+    setShowCart(true);
+  };
+
+  const setCartQty = (id, qty) => {
+    if (qty <= 0) setCart(prev => prev.filter(x => x.id !== id));
+    else setCart(prev => prev.map(x => x.id === id ? { ...x, qty } : x));
+  };
+
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+
+  const orderViaLine = () => {
+    const items = cart.map(i => `• ${i.name} x${i.qty} = ₩${(i.price * i.qty).toLocaleString()}`).join("\n");
+    const msg = encodeURIComponent(`สั่งซื้อสินค้าเจริญไทยมาร์ท ซูวอน\n\n${items}\n\nรวม ₩${cartTotal.toLocaleString()}`);
+    window.open(`https://line.me/ti/p/@486wfonl`, "_blank");
   };
 
   return (
@@ -224,58 +260,11 @@ export default function CharoenthaimartPage() {
             </button>
           ))}
           <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 2px" }} />
-          {isAdmin ? (
-            <Link href="/charoenthaimart/admin" style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: 20, background: "#b45309", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-              ⚙️ Admin
-            </Link>
-          ) : (
-            <button onClick={() => setShowLogin(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: 20, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-              🔑 Admin Login
-            </button>
-          )}
+          <Link href="/charoenthaimart/login" style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: 20, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
+            ⚙️ Admin
+          </Link>
         </div>
       </nav>
-
-      {/* Admin Login Modal */}
-      {showLogin && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowLogin(false); }}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 32px", width: 380, maxWidth: "100%", boxShadow: "0 24px 64px rgba(0,0,0,.25)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
-              <div>
-                <div style={{ fontWeight: 800, fontSize: 14, color: "#92400e" }}>เจริญไทยมาร์ท ซูวอน</div>
-                <div style={{ fontSize: 11, color: "#b45309" }}>Admin Login</div>
-              </div>
-            </div>
-            {loginError && (
-              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "9px 12px", color: "#b91c1c", fontSize: 13, marginBottom: 14 }}>
-                {loginError}
-              </div>
-            )}
-            <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>อีเมล</label>
-                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} autoFocus placeholder="admin@example.com"
-                  style={{ width: "100%", border: "1px solid #e2e8f0", borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>รหัสผ่าน</label>
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                  style={{ width: "100%", border: "1px solid #e2e8f0", borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                <button type="submit" disabled={logging} style={{ flex: 1, background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontWeight: 700, fontSize: 14, cursor: logging ? "default" : "pointer", opacity: logging ? 0.7 : 1 }}>
-                  {logging ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-                </button>
-                <button type="button" onClick={() => setShowLogin(false)} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
-                  ยกเลิก
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Hero */}
       <div style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)", padding: "44px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, flexWrap: "wrap", overflow: "hidden", position: "relative" }}>
@@ -312,41 +301,27 @@ export default function CharoenthaimartPage() {
       <div style={{ background: "#1e3a8a", overflow: "hidden", padding: "11px 0", borderBottom: "2px solid #1d4ed8" }}>
         <div style={{ overflow: "hidden", width: "100%" }}>
           <span className="ctm-ticker" style={{ fontSize: 15, color: "#e0f2fe", fontWeight: 700, letterSpacing: "0.03em" }}>
-            <span style={{ paddingRight: 100 }}>{ANNOUNCE[lang]}</span>
-            <span style={{ paddingRight: 100 }}>{ANNOUNCE[lang]}</span>
+            <span style={{ paddingRight: 100 }}>{announce[lang]}</span>
+            <span style={{ paddingRight: 100 }}>{announce[lang]}</span>
           </span>
         </div>
       </div>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 24px 60px" }}>
-        {/* Info cards — compact */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 28 }}>
-          <InfoCard icon="📞" label={t.phoneLabel} compact>
-            <a href="tel:01087664569" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 700, fontSize: 15 }}>010-8766-4569</a>
-          </InfoCard>
-          <InfoCard icon="🕐" label={t.hoursLabel} compact>10:00 AM – 10:00 PM</InfoCard>
-          <InfoCard icon="📍" label={t.addressLabel} compact>경기도 수원시 권선구<br />세권로 153(권선동)</InfoCard>
-          <InfoCard icon="🚚" label={t.deliveryLabel} compact>
-            {t.deliveryText}<br />
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>{t.deliverySub}</span>
-          </InfoCard>
-          <InfoCard icon="💬" label="LINE" compact>
-            <a href="https://line.me/ti/p/@486wfonl" target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#06c755", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="#06c755"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.105.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-              @486wfonl
-            </a>
-          </InfoCard>
-        </div>
-
-        {/* FLASH SALE section */}
-        {promos.length > 0 && (
-          <section style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <span style={{ fontSize: 22 }}>🔥</span>
-              <h2 style={{ fontSize: 20, fontWeight: 900, color: "#dc2626", margin: 0, letterSpacing: "-0.01em" }}>FLASH SALE วันนี้</h2>
-              <span style={{ background: "#dc2626", color: "#fff", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 800 }}>{promos.length} รายการ</span>
+        {/* FLASH SALE section — always visible */}
+        <section style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <span style={{ fontSize: 22 }}>🔥</span>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: "#dc2626", margin: 0, letterSpacing: "-0.01em" }}>FLASH SALE วันนี้</h2>
+            {promos.length > 0 && <span style={{ background: "#dc2626", color: "#fff", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 800 }}>{promos.length} รายการ</span>}
+          </div>
+          {promos.length === 0 ? (
+            <div style={{ background: "#fff5f5", border: "2px dashed #fca5a5", borderRadius: 14, padding: "32px 20px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>🏷️</div>
+              <div style={{ fontWeight: 600, color: "#6b7280" }}>ติดตามสินค้าโปรโมชั่นเร็วๆ นี้</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>Coming soon · 준비 중 · 即将推出</div>
             </div>
+          ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 14 }}>
               {promos.map(promo => {
                 const discount = promo.product?.sellPrice
@@ -378,8 +353,8 @@ export default function CharoenthaimartPage() {
                 );
               })}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* About */}
         <section style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "24px 28px", marginBottom: 24, boxShadow: "0 1px 4px #0001" }}>
@@ -388,29 +363,58 @@ export default function CharoenthaimartPage() {
         </section>
 
         {/* Contact buttons */}
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 0 }}>
           <a href="tel:01087664569"
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #1d4ed8, #2563eb)", color: "#fff", padding: "13px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 4px 16px #2563eb40" }}>
             {t.callBtn}
           </a>
-          <a href="https://line.me/ti/p/@486wfonl" target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#06c755", color: "#fff", padding: "13px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 4px 16px #06c75540" }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.105.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-            LINE @486wfonl
-          </a>
         </div>
       </div>
-    </div>
-  );
-}
 
-function InfoCard({ icon, label, children, compact }) {
-  return (
-    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: compact ? "10px 14px" : "16px 20px", boxShadow: "0 1px 4px #0001" }}>
-      <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        {icon} {label}
-      </div>
-      <div style={{ color: "#1e293b", fontSize: 14, lineHeight: 1.6 }}>{children}</div>
+      {/* Footer: Map + Address + Copyright */}
+      <footer style={{ background: "#1e293b", color: "#cbd5e1" }}>
+        {/* Map */}
+        <div style={{ width: "100%", height: 320, overflow: "hidden" }}>
+          <iframe
+            src="https://maps.google.com/maps?q=경기도+수원시+권선구+세권로+153&output=embed&hl=th&z=16"
+            width="100%" height="320" style={{ border: 0, display: "block" }}
+            allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+            title="Charoen Thai Mart Suwon map"
+          />
+        </div>
+        {/* Address + info */}
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 24px 0" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 20, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: "#f1f5f9", marginBottom: 8 }}>เจริญไทยมาร์ท ซูวอน</div>
+              <div style={{ fontSize: 13, lineHeight: 2, color: "#94a3b8" }}>
+                📍 경기도 수원시 권선구 세권로 153(권선동)<br/>
+                📞 010-8766-4569<br/>
+                🕐 10:00 AM – 10:00 PM (ทุกวัน)
+              </div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#f1f5f9", marginBottom: 8 }}>ช่องทางติดต่อ</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <a href="https://www.facebook.com/thaimartsuwon" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", textDecoration: "none", fontSize: 13 }}>📘 Facebook: เจริญไทยมาร์ท ซูวอน</a>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#f1f5f9", marginBottom: 8 }}>บริการจัดส่ง</div>
+              <div style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.8 }}>
+                🚚 ส่งทั่วเกาหลี (전국 배달)<br/>
+                น้ำหนัก 20 กก. ราคา ₩6,000
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Copyright */}
+        <div style={{ borderTop: "1px solid #334155", padding: "16px 24px", textAlign: "center", fontSize: 12, color: "#64748b" }}>
+          © {new Date().getFullYear()} เจริญไทยมาร์ท ซูวอน · Charoen Thai Mart Suwon · 차로엔 타이 마트 수원. All rights reserved.
+          <span style={{ margin: "0 8px" }}>·</span>
+          <a href="/charoenthaimart/login" style={{ color: "#475569", textDecoration: "none" }}>Admin</a>
+        </div>
+      </footer>
     </div>
   );
 }

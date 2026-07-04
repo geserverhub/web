@@ -8,15 +8,13 @@ export default function CtmAdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [checking, setChecking] = useState(true);
 
+  // Check silently in background — form stays visible, redirect if already admin
   useEffect(() => {
-    waitForAuthSession(4, 120).then((session) => {
+    waitForAuthSession(4, 80).then((session) => {
       const role = session?.user?.role;
       if (role === "ADMIN" || role === "SUPER_ADMIN") {
         hardRedirect("/charoenthaimart/admin");
-      } else {
-        setChecking(false);
       }
     });
   }, []);
@@ -35,15 +33,6 @@ export default function CtmAdminLoginPage() {
 
   const bg = { minHeight: "100vh", background: "linear-gradient(135deg, #fef3c7 0%, #fff7ed 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "sans-serif" };
 
-  if (checking) return (
-    <div style={bg}>
-      <div style={{ textAlign: "center" }}>
-        <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "3px solid #fde68a", marginBottom: 16 }} />
-        <div style={{ color: "#b45309", fontWeight: 600, fontSize: 14 }}>กำลังตรวจสอบ...</div>
-      </div>
-    </div>
-  );
-
   return (
     <div style={bg}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "40px 36px", width: 420, maxWidth: "100%", boxShadow: "0 16px 56px rgba(0,0,0,.12)" }}>
@@ -61,12 +50,13 @@ export default function CtmAdminLoginPage() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>อีเมล</label>
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} autoFocus placeholder="admin@example.com"
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>อีเมล / ชื่อผู้ใช้</label>
+            <input type="text" required value={email} onChange={e => setEmail(e.target.value)} autoFocus placeholder="crtm หรือ user"
               style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 10, padding: "11px 14px", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "border-color .15s" }}
               onFocus={e => e.target.style.borderColor = "#b45309"}
               onBlur={e => e.target.style.borderColor = "#e7e3d8"}
             />
+            <div style={{ marginTop: 6, fontSize: 12, color: "#b45309" }}>สำหรับทดสอบ: ใช้ชื่อผู้ใช้ crtm หรือ user รหัสผ่าน 9999</div>
           </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>รหัสผ่าน</label>

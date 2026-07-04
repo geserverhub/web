@@ -10,6 +10,7 @@ import {
   isRoleAllowedForNextAuthPortal,
   NEXTAUTH_PORTAL_ROLES,
 } from "@/lib/login-portals";
+import { getCtmAdminFallbackUser } from "@/lib/charoenthaimart-login.mjs";
 
 export { NEXTAUTH_PORTAL_ROLES };
 
@@ -54,7 +55,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.log("[auth] authorize attempt:", identifier);
 
         try {
-          const user =
+          const fallbackUser = getCtmAdminFallbackUser(identifier, credentials.password);
+          const user = fallbackUser ??
             (await prisma.user.findUnique({ where: { email: identifier } })) ??
             (await prisma.user.findUnique({ where: { username: identifier } })) ??
             (await prisma.user.findFirst({ where: { name: identifier } }));

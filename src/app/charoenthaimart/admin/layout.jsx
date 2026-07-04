@@ -18,6 +18,7 @@ const MENU = [
   { href: "/charoenthaimart/admin/income-tax", label: "ภาษีรายได้กิจการ", icon: "🏦" },
   { href: "/charoenthaimart/admin/customers", label: "ลูกค้า", icon: "👥" },
   { href: "/charoenthaimart/admin/suppliers", label: "คู่ค้า", icon: "📦" },
+  { href: "/charoenthaimart/admin/announcements", label: "ป้ายประกาศ", icon: "📣" },
 ];
 
 function CtmAdminInner({ children }) {

@@ -976,16 +976,25 @@ model CtmWage {
   @@index([employeeName])
 }
 
+model CtmAnnouncement {
+  id        String   @id @default(cuid())
+  lang      String   @unique
+  text      String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
 model CtmPartnerShare {
-  id           String   @id @default(cuid())
-  period       String
-  partnerName  String
-  sharePercent Decimal  @db.Decimal(5, 2)
-  netProfit    Decimal  @db.Decimal(14, 2)
-  shareAmount  Decimal  @db.Decimal(14, 2)
-  note         String?  @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default(cuid())
+  period           String
+  partnerName      String
+  sharePercent     Decimal  @db.Decimal(5, 2)
+  netProfit        Decimal  @db.Decimal(14, 2)
+  shareAmount      Decimal  @db.Decimal(14, 2)
+  deductionAmount  Decimal  @default(0) @db.Decimal(14, 2)
+  deductionNote    String?  @db.Text
+  note             String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([period])
 }
