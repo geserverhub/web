@@ -206,7 +206,13 @@ export default function CtmExpenses() {
                       : <a href={e.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#1d4ed8", fontSize: 11, textDecoration: "underline" }}>📄 ดูไฟล์</a>
                   ) : <span style={{ color: "#d1d5db", fontSize: 11 }}>—</span>}
                 </td>
-                <td style={{ padding: "8px 12px" }}><button onClick={() => del(e.id)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>ลบ</button></td>
+                <td style={{ padding: "8px 12px" }}>
+                  <button onClick={() => del(e.id)} disabled={!!e.receiptUrl}
+                    title={e.receiptUrl ? "มีใบเสร็จแนบอยู่ ไม่สามารถลบได้" : ""}
+                    style={{ background: e.receiptUrl ? "#f3f4f6" : "#fef2f2", color: e.receiptUrl ? "#9ca3af" : "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: e.receiptUrl ? "not-allowed" : "pointer", fontSize: 12 }}>
+                    ลบ
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

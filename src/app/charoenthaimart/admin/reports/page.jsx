@@ -213,7 +213,8 @@ export default function ReportsPage() {
       } else if (reportType === "invoice") {
         const sales = custSales.filter(s => selectedSaleIds.has(s.id));
         const totalRevenue = sales.reduce((s, r) => s + Number(r.totalAmount), 0);
-        setData({ sales, totalRevenue });
+        const totalTax = sales.reduce((s, r) => s + Number(r.taxAmount), 0);
+        setData({ sales, totalRevenue, totalTax });
       } else if (reportType === "expenses") {
         const r = await fetch(`/api/ctm/expenses?${q}`);
         setData(await r.json());
@@ -314,13 +315,23 @@ export default function ReportsPage() {
                   </tbody>
                 </table>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 700, marginTop: 2 }}>
-                  <span>{t.subtotal}</span>
+                  <span>{t.grand}</span>
                   <span>₩{fmt(s.totalAmount)}</span>
                 </div>
               </div>
             ))}
 
-            <div style={{ borderTop: "1px dashed #9ca3af", paddingTop: 6, display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 13 }}>
+            <div style={{ borderTop: "1px dashed #9ca3af", paddingTop: 6, fontSize: 11 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                <span>{t.subtotal}</span>
+                <span>₩{fmt(data.totalRevenue - (data.totalTax || 0))}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                <span>{t.tax}</span>
+                <span>₩{fmt(data.totalTax || 0)}</span>
+              </div>
+            </div>
+            <div style={{ borderTop: "1px solid #374151", paddingTop: 6, display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 13 }}>
               <span>{t.totalDue}</span>
               <span>₩{fmt(data.totalRevenue)}</span>
             </div>

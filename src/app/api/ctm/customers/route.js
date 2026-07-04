@@ -7,7 +7,7 @@ function isAdmin(s) { return s?.user?.role === "ADMIN" || s?.user?.role === "SUP
 export async function GET() {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const customers = await prisma.ctmCustomer.findMany({ orderBy: { createdAt: "desc" } });
+  const customers = await prisma.ctmCustomer.findMany({ orderBy: { createdAt: "desc" }, include: { _count: { select: { sales: true } } } });
   return NextResponse.json({ customers });
 }
 

@@ -80,7 +80,7 @@ export default function CtmPartnerShares() {
       {/* Auto-calculated monthly share summary */}
       <div style={{ background: "#fff", border: "1px solid #e7e3d8", borderRadius: 12, padding: "20px 24px", marginBottom: 24 }}>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: "#374151", margin: "0 0 4px" }}>สรุปส่วนแบ่งกำไรอัตโนมัติรายเดือน</h2>
-        <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 16 }}>ยอดขาย − VAT 10% − ต้นทุน − ภาษีรายได้ตามกฎหมาย = ยอดคงเหลือ · ส่วนแบ่งหุ้นส่วน = 40% ของยอดคงเหลือ</div>
+        <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 16 }}>ยอดขาย − VAT 10% − ต้นทุน − ค่าใช้จ่าย − ภาษีรายได้ตามกฎหมาย = ยอดคงเหลือ · ส่วนแบ่งหุ้นส่วน = 40% ของยอดคงเหลือ</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 14 }}>
           {autoMonths.map(m => {
             const [bg, color] = SHARE_STATUS_COLOR[m.status] || ["#f3f4f6", "#374151"];
@@ -89,8 +89,8 @@ export default function CtmPartnerShares() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>{monthLabels[m.period.slice(5)]} {Number(m.period.slice(0,4)) + 543}</div>
                 <div style={{ fontSize: 11, color: "#9ca3af" }}>ยอดขาย</div>
                 <div style={{ fontSize: 13, color: "#374151", marginBottom: 4 }}>₩{fmt(m.totalRevenue)}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af" }}>− VAT / ต้นทุน / ภาษีรายได้</div>
-                <div style={{ fontSize: 12, color: "#b91c1c", marginBottom: 4 }}>−₩{fmt(m.vatAmount + m.totalCost + m.incomeTax)}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>− VAT / ต้นทุน / ค่าใช้จ่าย / ภาษีรายได้</div>
+                <div style={{ fontSize: 12, color: "#b91c1c", marginBottom: 4 }}>−₩{fmt(m.vatAmount + m.totalCost + m.totalExpense + m.incomeTax)}</div>
                 <div style={{ fontSize: 11, color: "#9ca3af" }}>ยอดคงเหลือ</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", marginBottom: 8 }}>₩{fmt(m.remaining)}</div>
                 <div style={{ fontSize: 11, color: "#9ca3af" }}>ส่วนแบ่งหุ้นส่วน (40%)</div>

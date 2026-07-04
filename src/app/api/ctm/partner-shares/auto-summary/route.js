@@ -44,16 +44,18 @@ export async function GET() {
 
   const buckets = getRecentMonthBuckets(6);
   const months = await Promise.all(buckets.map(async (b) => {
-    const [sales, recorded] = await Promise.all([
+    const [sales, expenses, recorded] = await Promise.all([
       prisma.ctmSale.findMany({ where: { saleDate: { gte: b.start, lt: b.end } }, include: { items: true } }),
+      prisma.ctmDailyExpense.findMany({ where: { date: { gte: b.start, lt: b.end } } }),
       prisma.ctmPartnerShare.findMany({ where: { period: b.key } }),
     ]);
     const totalRevenue = sales.reduce((s, r) => s + Number(r.totalAmount), 0);
     const totalTax = sales.reduce((s, r) => s + Number(r.taxAmount), 0);
     const totalCost = sales.reduce((s, r) => s + r.items.reduce((a, i) => a + Number(i.buyPrice) * i.quantity, 0), 0);
-    const afterCost = totalRevenue - totalTax - totalCost;
-    const incomeTax = calcProgressiveTax(afterCost);
-    const remaining = afterCost - incomeTax;
+    const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0);
+    const afterExpense = totalRevenue - totalTax - totalCost - totalExpense;
+    const incomeTax = calcProgressiveTax(afterExpense);
+    const remaining = afterExpense - incomeTax;
     const shareAmount = remaining * SHARE_RATE;
 
     const totalRecordedShare = recorded.reduce((s, r) => s + Number(r.shareAmount), 0);
@@ -61,7 +63,7 @@ export async function GET() {
 
     return {
       period: b.key,
-      totalRevenue, vatAmount: totalTax, totalCost, incomeTax, remaining,
+      totalRevenue, vatAmount: totalTax, totalCost, totalExpense, incomeTax, remaining,
       shareAmount, totalRecordedShare,
       pendingAmount,
       status: pendingAmount > 1 ? (totalRecordedShare > 0 ? "PARTIAL" : "PENDING") : "PAID",

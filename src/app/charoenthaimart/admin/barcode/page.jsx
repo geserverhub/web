@@ -38,7 +38,18 @@ function BarcodeScannerModal({ onDetected, onClose }) {
           html5Qrcode.stop().catch(() => {}).finally(() => onDetected(decodedText));
         },
         () => {}
-      ).catch(err => setError("ไม่สามารถเปิดกล้องได้: " + (err?.message || err)));
+      ).catch(err => {
+        const name = err?.name || "";
+        if (name === "NotFoundError" || name === "OverconstrainedError") {
+          setError("ไม่พบกล้องบนอุปกรณ์นี้ — โปรดใช้มือถือหรือแท็บเล็ตที่มีกล้อง");
+        } else if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+          setError("ไม่ได้รับอนุญาตให้ใช้กล้อง — โปรดอนุญาตการเข้าถึงกล้องในเบราว์เซอร์");
+        } else if (name === "NotReadableError") {
+          setError("ไม่สามารถเปิดกล้องได้ — กล้องอาจถูกใช้งานโดยแอปอื่นอยู่");
+        } else {
+          setError("ไม่สามารถเปิดกล้องได้: " + (err?.message || err));
+        }
+      });
     });
     return () => {
       stopped = true;
@@ -147,9 +158,9 @@ export default function CtmBarcode() {
     <style>
       body { font-family: sans-serif; margin: 0; background: #fff; }
       .page { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
-      .label { border: 1px solid #ccc; border-radius: 4px; padding: 6px 8px; text-align: center; page-break-inside: avoid; display: inline-block; }
-      .lname { font-size: 10px; font-weight: 700; margin-bottom: 2px; max-width: 160px; word-break: break-all; }
-      .bc { max-width: 160px; }
+      .label { border: 1px solid #ccc; border-radius: 4px; padding: 1mm 2mm; text-align: center; page-break-inside: avoid; display: inline-block; width: 20mm; box-sizing: border-box; }
+      .lname { font-size: 2.2mm; font-weight: 700; margin-bottom: 2px; max-width: 20mm; word-break: break-all; }
+      .bc { width: 20mm; height: auto; display: block; margin: 0 auto; }
       @media print { body { -webkit-print-color-adjust: exact; } }
     </style></head><body><div class="page">${itemsHtml}</div>
     <script>
