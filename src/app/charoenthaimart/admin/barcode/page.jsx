@@ -25,31 +25,40 @@ function BarcodeScannerModal({ onDetected, onClose }) {
 
   useEffect(() => {
     let stopped = false;
+
+    const showCameraError = (err) => {
+      const text = `${err?.name || ""} ${err?.message || ""} ${err}`;
+      if (/NotFoundError|OverconstrainedError|DevicesNotFound/i.test(text)) {
+        setError("ไม่พบกล้องบนอุปกรณ์นี้ — โปรดเปิดหน้านี้ด้วยมือถือหรือแท็บเล็ตที่มีกล้อง");
+      } else if (/NotAllowedError|PermissionDeniedError|Permission denied/i.test(text)) {
+        setError("ไม่ได้รับอนุญาตให้ใช้กล้อง — โปรดอนุญาตการเข้าถึงกล้องในเบราว์เซอร์");
+      } else if (/NotReadableError/i.test(text)) {
+        setError("ไม่สามารถเปิดกล้องได้ — กล้องอาจถูกใช้งานโดยแอปอื่นอยู่");
+      } else if (/mediaDevices|getUserMedia/i.test(text)) {
+        setError("เบราว์เซอร์นี้ไม่รองรับการเข้าถึงกล้อง (ต้องเปิดผ่าน HTTPS)");
+      } else {
+        setError("ไม่สามารถเปิดกล้องได้: " + (err?.message || err));
+      }
+    };
+
     loadHtml5Qrcode(() => {
       if (stopped) return;
-      const html5Qrcode = new window.Html5Qrcode("barcode-scanner-region");
-      scannerRef.current = html5Qrcode;
-      html5Qrcode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          if (stopped) return;
-          stopped = true;
-          html5Qrcode.stop().catch(() => {}).finally(() => onDetected(decodedText));
-        },
-        () => {}
-      ).catch(err => {
-        const name = err?.name || "";
-        if (name === "NotFoundError" || name === "OverconstrainedError") {
-          setError("ไม่พบกล้องบนอุปกรณ์นี้ — โปรดใช้มือถือหรือแท็บเล็ตที่มีกล้อง");
-        } else if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-          setError("ไม่ได้รับอนุญาตให้ใช้กล้อง — โปรดอนุญาตการเข้าถึงกล้องในเบราว์เซอร์");
-        } else if (name === "NotReadableError") {
-          setError("ไม่สามารถเปิดกล้องได้ — กล้องอาจถูกใช้งานโดยแอปอื่นอยู่");
-        } else {
-          setError("ไม่สามารถเปิดกล้องได้: " + (err?.message || err));
-        }
-      });
+      try {
+        const html5Qrcode = new window.Html5Qrcode("barcode-scanner-region");
+        scannerRef.current = html5Qrcode;
+        html5Qrcode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 150 } },
+          (decodedText) => {
+            if (stopped) return;
+            stopped = true;
+            html5Qrcode.stop().catch(() => {}).finally(() => onDetected(decodedText));
+          },
+          () => {}
+        ).catch(showCameraError);
+      } catch (err) {
+        showCameraError(err);
+      }
     });
     return () => {
       stopped = true;
@@ -158,14 +167,14 @@ export default function CtmBarcode() {
     <style>
       body { font-family: sans-serif; margin: 0; background: #fff; }
       .page { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
-      .label { border: 1px solid #ccc; border-radius: 4px; padding: 1mm 2mm; text-align: center; page-break-inside: avoid; display: inline-block; width: 20mm; box-sizing: border-box; }
-      .lname { font-size: 2.2mm; font-weight: 700; margin-bottom: 2px; max-width: 20mm; word-break: break-all; }
-      .bc { width: 20mm; height: auto; display: block; margin: 0 auto; }
+      .label { border: 1px solid #ccc; border-radius: 4px; padding: 1mm; text-align: center; page-break-inside: avoid; display: inline-block; width: 20mm; box-sizing: border-box; overflow: hidden; }
+      .lname { font-size: 2mm; line-height: 1.2; font-weight: 700; margin-bottom: 1mm; max-width: 100%; word-break: break-all; overflow: hidden; }
+      .bc { width: 100%; max-width: 100%; height: auto; display: block; margin: 0 auto; }
       @media print { body { -webkit-print-color-adjust: exact; } }
     </style></head><body><div class="page">${itemsHtml}</div>
     <script>
       document.querySelectorAll('.bc').forEach(function(el) {
-        try { JsBarcode(el, el.dataset.value, { format: el.dataset.format, displayValue: true, fontSize: 10, height: 50, margin: 4 }); } catch(e) {}
+        try { JsBarcode(el, el.dataset.value, { format: el.dataset.format, displayValue: true, fontSize: 10, height: 50, margin: 2 }); } catch(e) {}
       });
       setTimeout(function() { window.print(); window.close(); }, 600);
     <\/script></body></html>`);
@@ -355,7 +364,7 @@ export default function CtmBarcode() {
               const isSel = selected.includes(p.id);
               return (
                 <div key={p.id} onClick={() => p.barcode && toggle(p.id)} style={{ background: "#fff", border: `2px solid ${isSel ? "#b45309" : "#e7e3d8"}`, borderRadius: 10, padding: "12px", cursor: p.barcode ? "pointer" : "not-allowed", textAlign: "center", boxShadow: isSel ? "0 0 0 3px #fde68a" : "none", opacity: p.barcode ? 1 : 0.6, transition: "all .1s" }}>
-                  {p.imageUrl ? <img src={p.imageUrl} alt="" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, marginBottom: 6 }} /> : <div style={{ width: 56, height: 56, background: "#f3f4f6", borderRadius: 8, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📦</div>}
+                  {p.imageUrl ? <img src={p.imageUrl} alt="" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, display: "block", margin: "0 auto 6px" }} /> : <div style={{ width: 56, height: 56, background: "#f3f4f6", borderRadius: 8, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📦</div>}
                   <div style={{ fontWeight: 700, fontSize: 12, color: "#1f2937", marginBottom: 2 }}>{p.name}</div>
                   {p.barcode
                     ? <div style={{ fontFamily: "monospace", fontSize: 10, color: "#6b7280", background: "#f9fafb", borderRadius: 4, padding: "1px 4px", display: "inline-block", marginBottom: 4 }}>{p.barcode}</div>

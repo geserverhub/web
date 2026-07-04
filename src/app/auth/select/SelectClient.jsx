@@ -72,7 +72,7 @@ const PORTALS = [
   },
   {
     key: "ctm",
-    href: "/charoenthaimart/admin",
+    href: "/charoenthaimart/login",
     border: "#b45309",
     titleColor: "#fcd34d",
     badgeBg: "#78350f",
