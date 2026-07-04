@@ -41,7 +41,9 @@ export default function CtmBarcode() {
   const [format, setFormat] = useState("CODE128");
   const [showText, setShowText] = useState(true);
   const [copies, setCopies] = useState(1);
-  const [queue, setQueue] = useState([]); // list of { value, label, format, copies }
+  const [queue, setQueue] = useState([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Products tab
   const [products, setProducts] = useState([]);
@@ -50,9 +52,22 @@ export default function CtmBarcode() {
 
   useEffect(() => { loadProducts(); }, []);
 
-  const loadProducts = () => {
-    fetch(`/api/ctm/products${q ? `?q=${encodeURIComponent(q)}` : ""}`)
+  const loadProducts = (searchQ) => {
+    const sq = searchQ !== undefined ? searchQ : q;
+    fetch(`/api/ctm/products${sq ? `?q=${encodeURIComponent(sq)}` : ""}`)
       .then(r => r.json()).then(d => setProducts(d.products || []));
+  };
+
+  const filteredForCreate = products.filter(p => {
+    if (!productSearch) return true;
+    const s = productSearch.toLowerCase();
+    return p.name.toLowerCase().includes(s) || (p.barcode || "").includes(s) || (p.productCode || "").toLowerCase().includes(s);
+  });
+
+  const selectProduct = (p) => {
+    setSelectedProduct(p);
+    setBarcodeValue(p.barcode || p.productCode || "");
+    setBarcodeLabel(p.name);
   };
 
   const addToQueue = () => {
@@ -90,6 +105,17 @@ export default function CtmBarcode() {
 
   // Products tab print
   const toggle = (id) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+  const addSelectedProductsToQueue = () => {
+    const items = products.filter(p => selected.includes(p.id) && p.barcode).map(p => ({
+      value: p.barcode,
+      label: p.name,
+      format: "CODE128",
+      copies: 1,
+    }));
+    if (!items.length) return alert("โปรดเลือกสินค้าที่มีบาร์โค้ดเพื่อเพิ่มเข้าคิว");
+    setQueue(q => [...q, ...items]);
+  };
+
   const printProducts = () => {
     const items = products.filter(p => selected.includes(p.id) && p.barcode);
     if (!items.length) return alert("สินค้าที่เลือกต้องมีบาร์โค้ด");
@@ -112,18 +138,59 @@ export default function CtmBarcode() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {/* Left: form */}
           <div style={{ background: "#fff", border: "1px solid #e7e3d8", borderRadius: 12, padding: "20px 22px" }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#374151", marginBottom: 16 }}>กำหนดบาร์โค้ด</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#374151", marginBottom: 12 }}>เลือกสินค้า</div>
 
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ตัวเลข / ข้อความบาร์โค้ด *</label>
-              <input value={barcodeValue} onChange={e => setBarcodeValue(e.target.value)} placeholder="เช่น 8850999001234"
-                style={{ width: "100%", border: "1.5px solid #b45309", borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "monospace" }} />
+            {/* Product search */}
+            <input
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              placeholder="🔍 ค้นหาชื่อสินค้า, บาร์โค้ด, รหัส..."
+              style={{ width: "100%", border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 8 }}
+            />
+
+            {/* Product list */}
+            <div style={{ maxHeight: 210, overflowY: "auto", border: "1px solid #e7e3d8", borderRadius: 8, marginBottom: 12 }}>
+              {filteredForCreate.length === 0 && (
+                <div style={{ padding: 16, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>ไม่พบสินค้า</div>
+              )}
+              {filteredForCreate.map(p => {
+                const isSel = selectedProduct?.id === p.id;
+                const codeVal = p.barcode || p.productCode || "";
+                return (
+                  <div key={p.id} onClick={() => selectProduct(p)}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6", background: isSel ? "#fef3c7" : "#fff", borderLeft: isSel ? "3px solid #b45309" : "3px solid transparent", transition: "background .1s" }}>
+                    {p.imageUrl
+                      ? <img src={p.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 5, objectFit: "cover", flexShrink: 0 }} />
+                      : <div style={{ width: 32, height: 32, borderRadius: 5, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>📦</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: isSel ? 700 : 600, fontSize: 12, color: "#1f2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                      <div style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>
+                        {codeVal || <span style={{ color: "#f87171" }}>ไม่มีบาร์โค้ด</span>}
+                        {p.productCode && <span style={{ marginLeft: 4, color: "#b45309" }}> · {p.productCode}</span>}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#b45309", flexShrink: 0 }}>₩{Number(p.sellPrice).toLocaleString()}</div>
+                  </div>
+                );
+              })}
             </div>
 
+            {/* Selected summary */}
+            {selectedProduct && (
+              <div style={{ background: "#fef9c3", border: "1px solid #fcd34d", borderRadius: 8, padding: "8px 12px", marginBottom: 12, fontSize: 12 }}>
+                <span style={{ fontWeight: 700, color: "#92400e" }}>เลือก: </span>
+                <span style={{ color: "#374151" }}>{selectedProduct.name}</span>
+                {barcodeValue && <span style={{ fontFamily: "monospace", color: "#6b7280", marginLeft: 6 }}>({barcodeValue})</span>}
+                {!barcodeValue && <span style={{ color: "#f87171", marginLeft: 6 }}>⚠️ สินค้านี้ไม่มีบาร์โค้ด</span>}
+              </div>
+            )}
+
+            {/* Editable label */}
             <div style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ชื่อป้ายกำกับ</label>
-              <input value={barcodeLabel} onChange={e => setBarcodeLabel(e.target.value)} placeholder="ชื่อสินค้า หรือ คำอธิบาย (ไม่บังคับ)"
-                style={{ width: "100%", border: "1px solid #e7e3d8", borderRadius: 8, padding: "9px 12px", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+              <input value={barcodeLabel} onChange={e => setBarcodeLabel(e.target.value)} placeholder="ชื่อสินค้า หรือ คำอธิบาย"
+                style={{ width: "100%", border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
@@ -201,6 +268,9 @@ export default function CtmBarcode() {
             <button onClick={loadProducts} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>ค้นหา</button>
             <button onClick={() => setSelected(products.filter(p => p.barcode).map(p => p.id))} style={{ background: "#fff", color: "#374151", border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 }}>เลือกทั้งหมด</button>
             <button onClick={() => setSelected([])} style={{ background: "#fff", color: "#374151", border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 }}>ล้าง</button>
+            <button onClick={addSelectedProductsToQueue} disabled={selected.length === 0} style={{ background: selected.length ? "#10b981" : "#e5e7eb", color: selected.length ? "#fff" : "#9ca3af", border: "none", borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: selected.length ? "pointer" : "default" }}>
+              + เพิ่มคิวจากสินค้า {selected.length > 0 ? `(${selected.length})` : ""}
+            </button>
             <button onClick={printProducts} disabled={selected.length === 0} style={{ background: selected.length ? "#b45309" : "#e5e7eb", color: selected.length ? "#fff" : "#9ca3af", border: "none", borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: selected.length ? "pointer" : "default" }}>
               🖨️ พิมพ์ {selected.length > 0 ? `(${selected.length})` : ""}
             </button>

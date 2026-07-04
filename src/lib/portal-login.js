@@ -62,15 +62,16 @@ export function portalLoginErrorMessage(error, locale = 'th') {
 /**
  * Portal login via server API (avoids Auth.js CSRF issues in the browser).
  */
-export async function credentialsPortalLogin({ email, password, portal, callbackPath }) {
+export async function credentialsPortalLogin({ username, email, identifier, password, portal, callbackPath }) {
   void callbackPath;
+  const loginIdentifier = String(identifier || username || email || '').trim();
   try {
     const res = await fetchWithTimeout('/api/portal-login', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: String(email || '').trim(),
+        identifier: loginIdentifier,
         password: String(password || ''),
         portal: String(portal || ''),
       }),

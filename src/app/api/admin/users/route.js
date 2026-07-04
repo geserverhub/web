@@ -25,6 +25,7 @@ export async function GET(req) {
         username: true,
         email: true,
         role: true,
+        isActive: true,
         clientId: true,
         createdAt: true,
         client: { select: { id: true, name: true } },
@@ -84,6 +85,51 @@ export async function POST(req) {
     return NextResponse.json({ user }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/users]", err);
+    return NextResponse.json({ error: err.message || "เกิดข้อผิดพลาดในเซิร์ฟเวอร์" }, { status: 500 });
+  }
+}
+
+// PATCH /api/admin/users — update user (isActive, name, role, clientId, username, password)
+export async function PATCH(req) {
+  const session = await auth();
+  if (!isSuperAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  try {
+    const { id, isActive, name, role, clientId, username, password } = await req.json();
+    if (!id) return NextResponse.json({ error: "กรุณาระบุ id" }, { status: 400 });
+
+    const data = {};
+    if (isActive !== undefined) data.isActive = Boolean(isActive);
+    if (name !== undefined) data.name = name || null;
+    if (role !== undefined) data.role = role;
+    if (clientId !== undefined) data.clientId = clientId || null;
+    if (username !== undefined) data.username = username || null;
+    if (password) data.password = await bcrypt.hash(password, 12);
+
+    const user = await prisma.user.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, username: true, email: true, role: true, isActive: true, clientId: true, createdAt: true, client: { select: { id: true, name: true } } },
+    });
+    return NextResponse.json({ user });
+  } catch (err) {
+    console.error("[PATCH /api/admin/users]", err);
+    return NextResponse.json({ error: err.message || "เกิดข้อผิดพลาดในเซิร์ฟเวอร์" }, { status: 500 });
+  }
+}
+
+// DELETE /api/admin/users — delete user
+export async function DELETE(req) {
+  const session = await auth();
+  if (!isSuperAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "กรุณาระบุ id" }, { status: 400 });
+    await prisma.user.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/admin/users]", err);
     return NextResponse.json({ error: err.message || "เกิดข้อผิดพลาดในเซิร์ฟเวอร์" }, { status: 500 });
   }
 }

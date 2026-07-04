@@ -7,6 +7,8 @@ export default function CtmCustomers() {
   const [customers, setCustomers] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
+  const [editCode, setEditCode] = useState("");
+  const [nextCode, setNextCode] = useState("");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -15,8 +17,14 @@ export default function CtmCustomers() {
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const openAdd = () => { setForm(EMPTY); setEditId(null); setOpen(true); };
-  const openEdit = (c) => { setForm({ name: c.name || "", phone: c.phone || "", email: c.email || "", address: c.address || "", nationality: c.nationality || "", note: c.note || "" }); setEditId(c.id); setOpen(true); };
+  const openAdd = () => {
+    setForm(EMPTY); setEditId(null); setEditCode(""); setOpen(true);
+    fetch("/api/ctm/customers/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
+  };
+  const openEdit = (c) => {
+    setForm({ name: c.name || "", phone: c.phone || "", email: c.email || "", address: c.address || "", nationality: c.nationality || "", note: c.note || "" });
+    setEditId(c.id); setEditCode(c.customerCode || ""); setNextCode(""); setOpen(true);
+  };
 
   const submit = async (e) => {
     e.preventDefault(); setSaving(true);
@@ -45,7 +53,15 @@ export default function CtmCustomers() {
       {open && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", width: 500, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,.2)" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#374151", margin: "0 0 16px" }}>{editId ? "แก้ไขลูกค้า" : "เพิ่มลูกค้าใหม่"}</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#374151", margin: 0 }}>{editId ? "แก้ไขลูกค้า" : "เพิ่มลูกค้าใหม่"}</h2>
+              {(editCode || nextCode) && (
+                <span style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 8, padding: "3px 12px", fontFamily: "monospace", fontWeight: 800, fontSize: 14, color: "#b45309" }}>
+                  {editCode || nextCode}
+                  {!editId && <span style={{ fontSize: 10, color: "#a16207", marginLeft: 4 }}>(อัตโนมัติ)</span>}
+                </span>
+              )}
+            </div>
             <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>ชื่อ*</label><input required value={form.name} onChange={set("name")} style={inp} /></div>
@@ -78,15 +94,16 @@ export default function CtmCustomers() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#fef3c7" }}>
-              {["ชื่อ","เบอร์โทร","อีเมล","สัญชาติ","ที่อยู่","หมายเหตุ","จัดการ"].map(h => (
+              {["รหัส","ชื่อ","เบอร์โทร","อีเมล","สัญชาติ","ที่อยู่","หมายเหตุ","จัดการ"].map(h => (
                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {customers.length === 0 && <tr><td colSpan={7} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีลูกค้า</td></tr>}
+            {customers.length === 0 && <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีลูกค้า</td></tr>}
             {customers.map((c, i) => (
               <tr key={c.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700, color: "#b45309", fontSize: 12 }}>{c.customerCode || "—"}</td>
                 <td style={{ padding: "8px 12px", fontWeight: 600, color: "#1f2937" }}>{c.name}</td>
                 <td style={{ padding: "8px 12px", color: "#374151" }}>{c.phone || "—"}</td>
                 <td style={{ padding: "8px 12px", color: "#6b7280", fontSize: 12 }}>{c.email || "—"}</td>

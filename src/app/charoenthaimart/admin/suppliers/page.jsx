@@ -7,6 +7,8 @@ export default function CtmSuppliers() {
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
+  const [editCode, setEditCode] = useState("");
+  const [nextCode, setNextCode] = useState("");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -15,8 +17,14 @@ export default function CtmSuppliers() {
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const openAdd = () => { setForm(EMPTY); setEditId(null); setOpen(true); };
-  const openEdit = (s) => { setForm({ name: s.name || "", company: s.company || "", phone: s.phone || "", email: s.email || "", address: s.address || "", country: s.country || "", note: s.note || "" }); setEditId(s.id); setOpen(true); };
+  const openAdd = () => {
+    setForm(EMPTY); setEditId(null); setEditCode(""); setOpen(true);
+    fetch("/api/ctm/suppliers/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
+  };
+  const openEdit = (s) => {
+    setForm({ name: s.name || "", company: s.company || "", phone: s.phone || "", email: s.email || "", address: s.address || "", country: s.country || "", note: s.note || "" });
+    setEditId(s.id); setEditCode(s.supplierCode || ""); setNextCode(""); setOpen(true);
+  };
 
   const submit = async (e) => {
     e.preventDefault(); setSaving(true);
@@ -44,7 +52,15 @@ export default function CtmSuppliers() {
       {open && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", width: 520, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,.2)" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#374151", margin: "0 0 16px" }}>{editId ? "แก้ไขคู่ค้า" : "เพิ่มคู่ค้าใหม่"}</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#374151", margin: 0 }}>{editId ? "แก้ไขคู่ค้า" : "เพิ่มคู่ค้าใหม่"}</h2>
+              {(editCode || nextCode) && (
+                <span style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 8, padding: "3px 12px", fontFamily: "monospace", fontWeight: 800, fontSize: 14, color: "#b45309" }}>
+                  {editCode || nextCode}
+                  {!editId && <span style={{ fontSize: 10, color: "#a16207", marginLeft: 4 }}>(อัตโนมัติ)</span>}
+                </span>
+              )}
+            </div>
             <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>ชื่อผู้ติดต่อ*</label><input required value={form.name} onChange={set("name")} style={inp} /></div>
@@ -78,15 +94,16 @@ export default function CtmSuppliers() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#fef3c7" }}>
-              {["ชื่อ","บริษัท","เบอร์โทร","อีเมล","ประเทศ","ที่อยู่","จัดการ"].map(h => (
+              {["รหัส","ชื่อ","บริษัท","เบอร์โทร","อีเมล","ประเทศ","ที่อยู่","จัดการ"].map(h => (
                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {suppliers.length === 0 && <tr><td colSpan={7} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีคู่ค้า</td></tr>}
+            {suppliers.length === 0 && <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีคู่ค้า</td></tr>}
             {suppliers.map((s, i) => (
               <tr key={s.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700, color: "#b45309", fontSize: 12 }}>{s.supplierCode || "—"}</td>
                 <td style={{ padding: "8px 12px", fontWeight: 600, color: "#1f2937" }}>{s.name}</td>
                 <td style={{ padding: "8px 12px", color: "#374151" }}>{s.company || "—"}</td>
                 <td style={{ padding: "8px 12px", color: "#374151" }}>{s.phone || "—"}</td>

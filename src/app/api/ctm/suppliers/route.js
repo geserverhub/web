@@ -16,7 +16,16 @@ export async function POST(req) {
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { name, company, phone, email, address, country, note } = await req.json();
   if (!name) return NextResponse.json({ error: "กรุณากรอกชื่อ" }, { status: 400 });
-  const supplier = await prisma.ctmSupplier.create({ data: { name, company: company || null, phone: phone || null, email: email || null, address: address || null, country: country || null, note: note || null } });
+
+  const allCodes = await prisma.ctmSupplier.findMany({ where: { supplierCode: { not: null } }, select: { supplierCode: true } });
+  let maxNum = 0;
+  for (const s of allCodes) {
+    const m = s.supplierCode?.match(/^SUP(\d+)$/);
+    if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+  }
+  const supplierCode = `SUP${String(maxNum + 1).padStart(4, "0")}`;
+
+  const supplier = await prisma.ctmSupplier.create({ data: { supplierCode, name, company: company || null, phone: phone || null, email: email || null, address: address || null, country: country || null, note: note || null } });
   return NextResponse.json(supplier, { status: 201 });
 }
 

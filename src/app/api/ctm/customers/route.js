@@ -16,7 +16,16 @@ export async function POST(req) {
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { name, phone, email, address, nationality, note } = await req.json();
   if (!name) return NextResponse.json({ error: "กรุณากรอกชื่อ" }, { status: 400 });
-  const customer = await prisma.ctmCustomer.create({ data: { name, phone: phone || null, email: email || null, address: address || null, nationality: nationality || null, note: note || null } });
+
+  const allCodes = await prisma.ctmCustomer.findMany({ where: { customerCode: { not: null } }, select: { customerCode: true } });
+  let maxNum = 0;
+  for (const c of allCodes) {
+    const m = c.customerCode?.match(/^CUS(\d+)$/);
+    if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+  }
+  const customerCode = `CUS${String(maxNum + 1).padStart(4, "0")}`;
+
+  const customer = await prisma.ctmCustomer.create({ data: { customerCode, name, phone: phone || null, email: email || null, address: address || null, nationality: nationality || null, note: note || null } });
   return NextResponse.json(customer, { status: 201 });
 }
 

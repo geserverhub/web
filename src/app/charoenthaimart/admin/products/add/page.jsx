@@ -15,15 +15,23 @@ export default function CtmProductAdd() {
   const [categories, setCategories] = useState([]);
   const fileRef = useRef();
 
+  const [nextCode, setNextCode] = useState("");
+
   useEffect(() => {
     fetch("/api/ctm/categories").then(r => r.json()).then(d => setCategories(d.categories || [])).catch(() => {});
-    if (!editId) return;
-    fetch(`/api/ctm/products?q=`)
-      .then(r => r.json())
-      .then(d => {
-        const p = d.products?.find(x => x.id === editId);
-        if (p) setForm({ name: p.name || "", nameKo: p.nameKo || "", barcode: p.barcode || "", category: p.category || "", buyPrice: p.buyPrice || "", sellPrice: p.sellPrice || "", stock: p.stock ?? "0", unit: p.unit || "ชิ้น", imageUrl: p.imageUrl || "", description: p.description || "" });
-      });
+    if (editId) {
+      fetch(`/api/ctm/products?q=`)
+        .then(r => r.json())
+        .then(d => {
+          const p = d.products?.find(x => x.id === editId);
+          if (p) {
+            setForm({ name: p.name || "", nameKo: p.nameKo || "", barcode: p.barcode || "", category: p.category || "", buyPrice: p.buyPrice || "", sellPrice: p.sellPrice || "", stock: p.stock ?? "0", unit: p.unit || "ชิ้น", imageUrl: p.imageUrl || "", description: p.description || "" });
+            setNextCode(p.productCode || "");
+          }
+        });
+    } else {
+      fetch("/api/ctm/products/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
+    }
   }, [editId]);
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -55,6 +63,13 @@ export default function CtmProductAdd() {
   return (
     <div style={{ padding: "28px 32px", maxWidth: 640 }}>
       <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: "0 0 24px" }}>{editId ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}</h1>
+      {nextCode && (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 8, padding: "8px 16px", marginBottom: 8 }}>
+          <span style={{ fontSize: 12, color: "#92400e", fontWeight: 600 }}>รหัสสินค้า</span>
+          <span style={{ fontFamily: "monospace", fontWeight: 800, fontSize: 16, color: "#b45309", letterSpacing: 1 }}>{nextCode}</span>
+          {!editId && <span style={{ fontSize: 11, color: "#a16207" }}>(สร้างอัตโนมัติ)</span>}
+        </div>
+      )}
       {error && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", color: "#b91c1c", marginBottom: 16, fontSize: 13 }}>{error}</div>}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Image */}

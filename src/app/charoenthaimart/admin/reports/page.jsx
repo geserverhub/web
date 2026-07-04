@@ -1,0 +1,597 @@
+"use client";
+import { useState, useRef } from "react";
+
+const L = {
+  th: {
+    title: "ปริ้นรายงาน",
+    subtitle: "เลือกประเภทเอกสารและช่วงเวลา",
+    reportType: "ประเภทรายงาน",
+    period: "ช่วงเวลา",
+    month: "เดือน",
+    year: "ปี",
+    allTime: "ทั้งหมด",
+    loadPreview: "โหลดตัวอย่าง",
+    print: "🖨️ พิมพ์",
+    loading: "กำลังโหลด...",
+    noData: "ไม่มีข้อมูล",
+    store: "ร้านเจริญไทยมาร์ท ซูวอน",
+    total: "รวม",
+    subtotal: "ยอดก่อน VAT",
+    tax: "VAT 10%",
+    grand: "ยอดรวมสุทธิ",
+    profit: "กำไรขั้นต้น",
+    netProfit: "กำไรสุทธิ",
+    revenue: "ยอดขาย",
+    expense: "รายจ่าย",
+    date: "วันที่",
+    number: "เลขที่",
+    customer: "ลูกค้า",
+    items: "รายการ",
+    amount: "ยอดเงิน",
+    payment: "วิธีชำระ",
+    category: "หมวดหมู่",
+    description: "รายละเอียด",
+    note: "หมายเหตุ",
+    name: "ชื่อ",
+    phone: "โทร",
+    email: "อีเมล",
+    address: "ที่อยู่",
+    code: "รหัส",
+    barcode: "บาร์โค้ด",
+    price: "ราคา",
+    buyPrice: "ต้นทุน",
+    stock: "สต็อก",
+    unit: "หน่วย",
+    types: {
+      sales: "รายงานยอดขาย",
+      expenses: "รายงานรายจ่าย",
+      pnl: "รายงานกำไร-ขาดทุน",
+      products: "รายการสินค้า",
+      customers: "รายการลูกค้า",
+      suppliers: "รายการคู่ค้า",
+    },
+    generated: "พิมพ์เมื่อ",
+  },
+  ko: {
+    title: "보고서 인쇄",
+    subtitle: "문서 유형 및 기간 선택",
+    reportType: "보고서 유형",
+    period: "기간",
+    month: "월",
+    year: "연도",
+    allTime: "전체",
+    loadPreview: "미리보기",
+    print: "🖨️ 인쇄",
+    loading: "로딩 중...",
+    noData: "데이터 없음",
+    store: "จำหน่ายสินค้าไทย Suwon",
+    total: "합계",
+    subtotal: "공급가액",
+    tax: "부가세 10%",
+    grand: "합계금액",
+    profit: "매출총이익",
+    netProfit: "순이익",
+    revenue: "매출",
+    expense: "지출",
+    date: "날짜",
+    number: "번호",
+    customer: "고객",
+    items: "품목",
+    amount: "금액",
+    payment: "결제방법",
+    category: "분류",
+    description: "설명",
+    note: "비고",
+    name: "이름",
+    phone: "전화",
+    email: "이메일",
+    address: "주소",
+    code: "코드",
+    barcode: "바코드",
+    price: "판매가",
+    buyPrice: "원가",
+    stock: "재고",
+    unit: "단위",
+    types: {
+      sales: "매출 보고서",
+      expenses: "지출 보고서",
+      pnl: "손익 보고서",
+      products: "상품 목록",
+      customers: "고객 목록",
+      suppliers: "공급업체 목록",
+    },
+    generated: "출력일시",
+  },
+};
+
+const REPORT_TYPES = ["sales", "expenses", "pnl", "products", "customers", "suppliers"];
+const TYPE_ICON = { sales: "💰", expenses: "📋", pnl: "📈", products: "📦", customers: "👥", suppliers: "🤝" };
+const TYPE_COLOR = { sales: "#b45309", expenses: "#b91c1c", pnl: "#15803d", products: "#1d4ed8", customers: "#7c3aed", suppliers: "#0369a1" };
+
+function fmt(n) { return Number(n || 0).toLocaleString("ko-KR"); }
+function fmtDate(d, lang) {
+  const dt = new Date(d);
+  if (lang === "ko") return dt.toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
+  return dt.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "2-digit" });
+}
+function nowStr(lang) {
+  const now = new Date();
+  if (lang === "ko") return now.toLocaleString("ko-KR");
+  return now.toLocaleString("th-TH");
+}
+
+export default function ReportsPage() {
+  const [lang, setLang] = useState("th");
+  const [reportType, setReportType] = useState("sales");
+  const [periodType, setPeriodType] = useState("month");
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const printRef = useRef(null);
+  const t = L[lang];
+
+  const load = async () => {
+    setLoading(true);
+    setData(null);
+    try {
+      const q = periodType === "month" ? `month=${month}` : periodType === "year" ? `year=${year}` : "";
+      if (reportType === "sales") {
+        const r = await fetch(`/api/ctm/sales?${q}`);
+        setData(await r.json());
+      } else if (reportType === "expenses") {
+        const r = await fetch(`/api/ctm/expenses?${q}`);
+        setData(await r.json());
+      } else if (reportType === "pnl") {
+        const [sr, er] = await Promise.all([
+          fetch(`/api/ctm/sales?${q}`).then(r => r.json()),
+          fetch(`/api/ctm/expenses?${q}`).then(r => r.json()),
+        ]);
+        setData({ sales: sr, expenses: er });
+      } else if (reportType === "products") {
+        const r = await fetch(`/api/ctm/products`);
+        const d = await r.json();
+        setData(d);
+      } else if (reportType === "customers") {
+        const r = await fetch(`/api/ctm/customers`);
+        setData(await r.json());
+      } else if (reportType === "suppliers") {
+        const r = await fetch(`/api/ctm/suppliers`);
+        setData(await r.json());
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrint = () => window.print();
+
+  const periodLabel = () => {
+    if (periodType === "all") return t.allTime;
+    if (periodType === "year") return year;
+    const [y, m] = month.split("-");
+    const dt = new Date(Number(y), Number(m) - 1);
+    if (lang === "ko") return dt.toLocaleDateString("ko-KR", { year: "numeric", month: "long" });
+    return dt.toLocaleDateString("th-TH", { year: "numeric", month: "long" });
+  };
+
+  const cardBtn = (style = {}) => ({
+    border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: 13, transition: "all .15s",
+    ...style,
+  });
+
+  return (
+    <>
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #print-area, #print-area * { visibility: visible !important; }
+          #print-area { position: fixed; inset: 0; padding: 20px 28px; background: white; z-index: 9999; overflow: visible; font-family: 'TH Sarabun New', Sarabun, sans-serif; font-size: 12pt; }
+          #print-area table { border-collapse: collapse !important; width: 100% !important; }
+          #print-area th, #print-area td { border: 1px solid #374151 !important; }
+          #print-area .doc-header-border { border: 2px solid #374151 !important; }
+          #print-area .doc-title-box { border: 2px solid #374151 !important; background: #e5e7eb !important; }
+          #print-area .no-print { display: none !important; }
+        }
+        .rpt-type-btn:hover { opacity: .85; transform: translateY(-1px); }
+      `}</style>
+
+      <div style={{ display: "flex", height: "100vh", background: "#fafaf7", fontFamily: "sans-serif" }}>
+        {/* Settings panel */}
+        <div style={{ width: 260, background: "#fff", borderRight: "1px solid #e7e3d8", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 20, overflowY: "auto" }}>
+          {/* Header */}
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "#92400e" }}>{t.title}</div>
+            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{t.subtitle}</div>
+          </div>
+
+          {/* Language toggle */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>Language / ภาษา</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {[["th", "🇹🇭 ไทย"], ["ko", "🇰🇷 한국어"]].map(([l, label]) => (
+                <button key={l} onClick={() => setLang(l)} className="rpt-type-btn"
+                  style={cardBtn({ flex: 1, padding: "7px 4px", background: lang === l ? "#fef3c7" : "#f3f4f6", color: lang === l ? "#92400e" : "#6b7280", border: lang === l ? "1.5px solid #f59e0b" : "1.5px solid transparent", fontSize: 12 })}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Report type */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>{t.reportType}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {REPORT_TYPES.map(rt => (
+                <button key={rt} onClick={() => { setReportType(rt); setData(null); }} className="rpt-type-btn"
+                  style={cardBtn({
+                    display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", textAlign: "left",
+                    background: reportType === rt ? TYPE_COLOR[rt] : "#f9fafb",
+                    color: reportType === rt ? "#fff" : "#374141",
+                    border: reportType === rt ? "none" : "1px solid #e7e3d8",
+                  })}>
+                  <span style={{ fontSize: 16 }}>{TYPE_ICON[rt]}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>{t.types[rt]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Period */}
+          {(reportType === "sales" || reportType === "expenses" || reportType === "pnl") && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>{t.period}</div>
+              <div style={{ display: "flex", gap: 5, marginBottom: 10 }}>
+                {[["month", t.month], ["year", t.year], ["all", t.allTime]].map(([pt, label]) => (
+                  <button key={pt} onClick={() => setPeriodType(pt)} className="rpt-type-btn"
+                    style={cardBtn({ flex: 1, padding: "6px 4px", background: periodType === pt ? "#fef3c7" : "#f3f4f6", color: periodType === pt ? "#92400e" : "#6b7280", border: periodType === pt ? "1.5px solid #f59e0b" : "1.5px solid transparent", fontSize: 11 })}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {periodType === "month" && (
+                <input type="month" value={month} onChange={e => setMonth(e.target.value)}
+                  style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+              )}
+              {periodType === "year" && (
+                <select value={year} onChange={e => setYear(e.target.value)}
+                  style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box" }}>
+                  {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button onClick={load} disabled={loading}
+              style={cardBtn({ padding: "10px", background: "#b45309", color: "#fff", fontSize: 13, opacity: loading ? .7 : 1 })}>
+              {loading ? t.loading : t.loadPreview}
+            </button>
+            {data && (
+              <button onClick={handlePrint}
+                style={cardBtn({ padding: "10px", background: "linear-gradient(135deg,#1f2937,#374151)", color: "#fff", fontSize: 13 })}>
+                {t.print}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Preview area */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+          {!data && !loading && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60vh", gap: 16, color: "#9ca3af" }}>
+              <div style={{ fontSize: 64 }}>{TYPE_ICON[reportType]}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#374151" }}>{t.types[reportType]}</div>
+              <div style={{ fontSize: 13 }}>กด &ldquo;{t.loadPreview}&rdquo; เพื่อดูตัวอย่างรายงาน</div>
+            </div>
+          )}
+          {loading && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: "#9ca3af", fontSize: 15 }}>{t.loading}</div>
+          )}
+
+          {data && (
+            <div id="print-area" ref={printRef} style={{ background: "#fff", borderRadius: 12, padding: "28px 32px", boxShadow: "0 2px 12px rgba(0,0,0,.07)", maxWidth: 900, margin: "0 auto", fontFamily: "sans-serif" }}>
+              {/* Official document header */}
+              <div className="doc-header-border" style={{ border: "2px solid #374151", borderRadius: 4, padding: "16px 20px", marginBottom: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  {/* Left: Logo + company info */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "2px solid #b45309", flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: "#7f1d1d", lineHeight: 1.2 }}>ร้านเจริญไทยมาร์ท ซูวอน</div>
+                      <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>เจริญไทยมาร์ท · Charoen Thai Mart · 수원</div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>สินค้าไทยคุณภาพสูงในเกาหลีใต้</div>
+                    </div>
+                  </div>
+                  {/* Right: Doc ref info */}
+                  <div style={{ textAlign: "right", fontSize: 11, color: "#374151" }}>
+                    <div style={{ border: "1px solid #9ca3af", borderRadius: 4, padding: "6px 12px", display: "inline-block", marginBottom: 6 }}>
+                      <div style={{ fontWeight: 700 }}>เลขที่เอกสาร / Doc No.</div>
+                      <div style={{ fontFamily: "monospace", color: "#92400e", fontWeight: 800 }}>{`RPT-${reportType.toUpperCase()}-${Date.now().toString().slice(-6)}`}</div>
+                    </div>
+                    <div>{t.generated}: {nowStr(lang)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Title box */}
+              <div className="doc-title-box" style={{ background: "#1f2937", borderLeft: "2px solid #374151", borderRight: "2px solid #374151", borderBottom: "2px solid #374151", padding: "10px 20px", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#fff", letterSpacing: ".04em" }}>{t.types[reportType].toUpperCase()}</div>
+                <div style={{ fontSize: 13, color: "#d1d5db", fontWeight: 600 }}>{periodLabel()}</div>
+              </div>
+
+              {/* Report content */}
+              {reportType === "sales" && <SalesReport data={data} t={t} lang={lang} />}
+              {reportType === "expenses" && <ExpensesReport data={data} t={t} lang={lang} />}
+              {reportType === "pnl" && <PnlReport data={data} t={t} lang={lang} />}
+              {reportType === "products" && <ProductsReport data={data} t={t} lang={lang} />}
+              {reportType === "customers" && <CustomersReport data={data} t={t} lang={lang} />}
+              {reportType === "suppliers" && <SuppliersReport data={data} t={t} lang={lang} />}
+
+              {/* Signature area */}
+              <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, borderTop: "1px solid #e7e3d8", paddingTop: 24 }}>
+                {[lang === "ko" ? "작성자" : "ผู้จัดทำ", lang === "ko" ? "검토자" : "ผู้ตรวจสอบ", lang === "ko" ? "승인자" : "ผู้อนุมัติ"].map(label => (
+                  <div key={label} style={{ textAlign: "center" }}>
+                    <div style={{ borderBottom: "1px solid #374151", marginBottom: 6, height: 40 }} />
+                    <div style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>{label}</div>
+                    <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>วันที่ / 날짜: ____________</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 16, textAlign: "center", fontSize: 10, color: "#9ca3af", borderTop: "1px solid #f3f4f6", paddingTop: 10 }}>
+                เอกสารนี้จัดทำโดยระบบ GEserverhub · เจริญไทยมาร์ท ซูวอน · พิมพ์เมื่อ {nowStr(lang)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ---- Sub-report components ---- */
+
+function THead({ cols }) {
+  return (
+    <thead>
+      <tr style={{ background: "#1f2937" }}>
+        {cols.map((c, i) => (
+          <th key={i} style={{ padding: "7px 10px", textAlign: c.right ? "right" : "left", fontWeight: 700, color: "#fff", fontSize: 11, whiteSpace: "nowrap", border: "1px solid #374151" }}>{c.label}</th>
+        ))}
+      </tr>
+    </thead>
+  );
+}
+
+function TBody({ rows, cols, empty }) {
+  if (!rows || rows.length === 0) return <tbody><tr><td colSpan={cols.length} style={{ padding: 20, textAlign: "center", color: "#9ca3af", fontSize: 13, border: "1px solid #d1d5db" }}>{empty}</td></tr></tbody>;
+  return (
+    <tbody>
+      {rows.map((row, i) => (
+        <tr key={i} style={{ background: i % 2 ? "#f9fafb" : "#fff" }}>
+          {cols.map((c, j) => {
+            const color = typeof c.color === "function" ? c.color(row) : (c.color || "#374151");
+            return (
+              <td key={j} style={{ padding: "6px 10px", textAlign: c.right ? "right" : "left", fontSize: 12, color, fontWeight: c.bold ? 700 : 400, border: "1px solid #d1d5db" }}>
+                {c.render ? c.render(row, i) : row[c.key]}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </tbody>
+  );
+}
+
+function SummaryRow({ label, value, highlight }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #f3f4f6" }}>
+      <span style={{ fontSize: 13, color: "#374151" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: highlight ? 800 : 600, color: highlight ? "#b45309" : "#1f2937" }}>₩{fmt(value)}</span>
+    </div>
+  );
+}
+
+function SalesReport({ data, t, lang }) {
+  const sales = data.sales || [];
+  const cols = [
+    { label: "#", key: "seq", render: (_, i) => i + 1 },
+    { label: t.date, key: "saleDate", render: r => fmtDate(r.saleDate, lang) },
+    { label: t.number, key: "number" },
+    { label: t.customer, key: "customer", render: r => r.customer?.name || "—" },
+    { label: t.items, key: "items", right: true, render: r => r.items?.length || 0 },
+    { label: t.subtotal, key: "subtotal", right: true, render: r => `₩${fmt(Number(r.totalAmount) - Number(r.taxAmount))}` },
+    { label: t.tax, key: "taxAmount", right: true, render: r => `₩${fmt(r.taxAmount)}` },
+    { label: t.grand, key: "totalAmount", right: true, bold: true, render: r => `₩${fmt(r.totalAmount)}` },
+    { label: t.payment, key: "paymentType" },
+  ];
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: t.revenue, val: data.totalRevenue, color: "#b45309" },
+          { label: t.tax, val: data.totalTax, color: "#b91c1c" },
+          { label: t.profit, val: data.profit, color: "#15803d" },
+        ].map(s => (
+          <div key={s.label} style={{ background: "#fafaf7", border: "1px solid #e7e3d8", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600 }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: s.color }}>₩{fmt(s.val)}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={cols.map(c => ({ label: c.label, right: c.right }))} />
+          <TBody rows={sales} cols={[
+            { key: "seq", render: (_, i) => i + 1 },
+            { key: "saleDate", render: r => fmtDate(r.saleDate, lang) },
+            { key: "number" },
+            { key: "customer", render: r => r.customer?.name || "—" },
+            { key: "items", right: true, render: r => r.items?.length || 0 },
+            { key: "sub", right: true, render: r => `₩${fmt(Number(r.totalAmount) - Number(r.taxAmount))}` },
+            { key: "tax", right: true, render: r => `₩${fmt(r.taxAmount)}` },
+            { key: "total", right: true, bold: true, render: r => `₩${fmt(r.totalAmount)}` },
+            { key: "payment", render: r => r.paymentType },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ExpensesReport({ data, t }) {
+  const expenses = data.expenses || [];
+  const CAT_COLORS = { "ค่าเช่า":"#fee2e2","ค่าสาธารณูปโภค":"#fef9c3","ค่าวัตถุดิบ":"#dcfce7","ค่าขนส่ง":"#dbeafe","ค่าบรรจุภัณฑ์":"#ede9fe","ค่าโฆษณา":"#fce7f3","ค่าซ่อมบำรุง":"#ffedd5","ค่าใช้จ่ายทั่วไป":"#f1f5f9","อื่นๆ":"#f3f4f6" };
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 16, marginBottom: 20, alignItems: "center" }}>
+        <div style={{ background: "#fafaf7", border: "1px solid #e7e3d8", borderRadius: 10, padding: "12px 16px" }}>
+          <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600 }}>{t.total}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#b91c1c" }}>₩{fmt(data.total)}</div>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {Object.entries(data.byCategory || {}).sort((a,b) => b[1]-a[1]).map(([cat, amt]) => (
+            <div key={cat} style={{ background: CAT_COLORS[cat] || "#f3f4f6", borderRadius: 7, padding: "3px 10px", fontSize: 11, color: "#374151", fontWeight: 600 }}>
+              {cat}: ₩{fmt(amt)}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={[t.date, t.category, t.description, t.amount, t.payment, t.note].map((label, i) => ({ label, right: i === 3 }))} />
+          <TBody rows={expenses} cols={[
+            { key: "date", render: r => fmtDate(r.date, lang) },
+            { key: "category", render: r => <span style={{ background: CAT_COLORS[r.category] || "#f3f4f6", borderRadius: 5, padding: "1px 7px", fontSize: 11, fontWeight: 600 }}>{r.category}</span> },
+            { key: "description", render: r => r.description || "—" },
+            { key: "amount", right: true, bold: true, color: "#b91c1c", render: r => `₩${fmt(r.amount)}` },
+            { key: "paymentType" },
+            { key: "note", render: r => r.note || "—" },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function PnlReport({ data, t }) {
+  const revenue = data.sales?.totalRevenue || 0;
+  const tax = data.sales?.totalTax || 0;
+  const cost = data.sales?.totalCost || 0;
+  const grossProfit = data.sales?.profit || 0;
+  const totalExpense = data.expenses?.total || 0;
+  const netProfit = grossProfit - totalExpense;
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#374151", marginBottom: 12, paddingBottom: 6, borderBottom: "2px solid #fef3c7" }}>{t.revenue} / {t.expense}</div>
+          <SummaryRow label={t.revenue} value={revenue} />
+          <SummaryRow label={`  - ${t.tax}`} value={tax} />
+          <SummaryRow label={t.subtotal} value={revenue - tax} />
+          <SummaryRow label="  - ต้นทุนสินค้า" value={cost} />
+          <SummaryRow label={t.profit} value={grossProfit} />
+          <SummaryRow label={`  - ${t.expense}`} value={totalExpense} />
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", marginTop: 6, borderTop: "2px solid #92400e" }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "#374151" }}>{t.netProfit}</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: netProfit >= 0 ? "#15803d" : "#b91c1c" }}>₩{fmt(netProfit)}</span>
+          </div>
+        </div>
+        <div>
+          {/* Simple visual bar */}
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#374151", marginBottom: 12, paddingBottom: 6, borderBottom: "2px solid #fef3c7" }}>สรุปภาพรวม</div>
+          {[
+            { label: t.revenue, val: revenue, color: "#f59e0b" },
+            { label: t.expense, val: totalExpense, color: "#ef4444" },
+            { label: t.netProfit, val: Math.abs(netProfit), color: netProfit >= 0 ? "#16a34a" : "#b91c1c" },
+          ].map(({ label, val, color }) => {
+            const max = Math.max(revenue, totalExpense, Math.abs(netProfit), 1);
+            return (
+              <div key={label} style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>{label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color }}>{label === t.netProfit && netProfit < 0 ? "-" : ""}₩{fmt(val)}</span>
+                </div>
+                <div style={{ background: "#f3f4f6", borderRadius: 4, height: 10 }}>
+                  <div style={{ width: `${(val / max) * 100}%`, background: color, height: 10, borderRadius: 4 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductsReport({ data, t }) {
+  const products = data.products || [];
+  return (
+    <div>
+      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>จำนวนสินค้าทั้งหมด: <strong style={{ color: "#374151" }}>{products.length} รายการ</strong></div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={[t.code, t.barcode, t.name, "หมวดหมู่", t.price, t.buyPrice, t.stock, t.unit].map((label, i) => ({ label, right: i >= 4 }))} />
+          <TBody rows={products} cols={[
+            { key: "productCode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11, background: "#fef3c7", borderRadius: 4, padding: "1px 6px" }}>{r.productCode || "—"}</span> },
+            { key: "barcode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11 }}>{r.barcode || "—"}</span> },
+            { key: "name", bold: true },
+            { key: "category", render: r => r.category || "—" },
+            { key: "price", right: true, bold: true, color: "#b45309", render: r => `₩${fmt(r.price)}` },
+            { key: "buyPrice", right: true, color: "#b91c1c", render: r => `₩${fmt(r.buyPrice)}` },
+            { key: "stock", right: true, color: r => r.stock <= 5 ? "#b91c1c" : "#15803d", render: r => r.stock },
+            { key: "unit", render: r => r.unit || "—" },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CustomersReport({ data, t }) {
+  const customers = data.customers || [];
+  return (
+    <div>
+      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>จำนวนลูกค้า: <strong style={{ color: "#374151" }}>{customers.length} ราย</strong></div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={["#", t.code, t.name, t.phone, t.email, t.address, t.note].map(label => ({ label }))} />
+          <TBody rows={customers} cols={[
+            { key: "seq", render: (_, i) => i + 1 },
+            { key: "customerCode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11, background: "#e0f2fe", borderRadius: 4, padding: "1px 6px" }}>{r.customerCode || "—"}</span> },
+            { key: "name", bold: true },
+            { key: "phone", render: r => r.phone || "—" },
+            { key: "email", render: r => r.email || "—" },
+            { key: "address", render: r => r.address || "—" },
+            { key: "note", render: r => r.note || "—" },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function SuppliersReport({ data, t }) {
+  const suppliers = data.suppliers || [];
+  return (
+    <div>
+      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>จำนวนคู่ค้า: <strong style={{ color: "#374151" }}>{suppliers.length} ราย</strong></div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={["#", t.code, t.name, t.phone, t.email, t.address, t.note].map(label => ({ label }))} />
+          <TBody rows={suppliers} cols={[
+            { key: "seq", render: (_, i) => i + 1 },
+            { key: "supplierCode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11, background: "#fef3c7", borderRadius: 4, padding: "1px 6px" }}>{r.supplierCode || "—"}</span> },
+            { key: "name", bold: true },
+            { key: "phone", render: r => r.phone || "—" },
+            { key: "email", render: r => r.email || "—" },
+            { key: "address", render: r => r.address || "—" },
+            { key: "note", render: r => r.note || "—" },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+    </div>
+  );
+}

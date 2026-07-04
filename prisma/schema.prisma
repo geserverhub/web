@@ -16,6 +16,7 @@ model User {
   image         String?
   password      String?
   role          Role      @default(CLIENT)
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   clientId      String?
@@ -811,6 +812,7 @@ model ResortBooking {
 
 model CtmProduct {
   id          String   @id @default(cuid())
+  productCode String?  @unique
   barcode     String?  @unique
   name        String
   nameKo      String?
@@ -834,6 +836,7 @@ model CtmProduct {
 
 model CtmPromotion {
   id         String   @id @default(cuid())
+  promoCode  String?  @unique
   productId  String
   promoPrice Decimal  @db.Decimal(10, 2)
   label      String?
@@ -886,8 +889,9 @@ model CtmSaleItem {
 }
 
 model CtmCustomer {
-  id          String   @id @default(cuid())
-  name        String
+  id           String   @id @default(cuid())
+  customerCode String?  @unique
+  name         String
   phone       String?
   email       String?
   address     String?  @db.Text
@@ -902,8 +906,9 @@ model CtmCustomer {
 }
 
 model CtmSupplier {
-  id        String   @id @default(cuid())
-  name      String
+  id           String   @id @default(cuid())
+  supplierCode String?  @unique
+  name         String
   company   String?
   phone     String?
   email     String?
@@ -944,6 +949,28 @@ model CtmIncomeTax {
   @@index([status])
 }
 
+model CtmShipping {
+  id               String    @id @default(cuid())
+  invoiceNo        String
+  saleId           String?
+  type             String    @default("DELIVERY")
+  recipientName    String?
+  recipientPhone   String?
+  recipientAddress String?   @db.Text
+  trackingNo       String?
+  carrier          String?
+  status           String    @default("PENDING")
+  note             String?   @db.Text
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([invoiceNo])
+  @@index([status])
+  @@index([type])
+}
+
 model CtmDailyExpense {
   id          String   @id @default(cuid())
   date        DateTime @default(now())
@@ -952,6 +979,7 @@ model CtmDailyExpense {
   amount      Decimal  @db.Decimal(10, 2)
   paymentType String   @default("CASH")
   note        String?  @db.Text
+  receiptUrl  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

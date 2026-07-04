@@ -12,6 +12,7 @@ export default function CtmPromotions() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("active"); // "active" | "add"
+  const [nextCode, setNextCode] = useState("");
 
   const loadAll = () => {
     fetch("/api/ctm/products").then(r => r.json()).then(d => {
@@ -38,6 +39,14 @@ export default function CtmPromotions() {
   const handleSelect = (product) => {
     setSelected(product);
     setForm({ ...EMPTY_FORM, promoPrice: String(product.sellPrice) });
+    if (tab !== "add") {
+      fetch("/api/ctm/promotions/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
+    }
+    setTab("add");
+  };
+
+  const handleTabAdd = () => {
+    fetch("/api/ctm/promotions/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
     setTab("add");
   };
 
@@ -87,7 +96,7 @@ export default function CtmPromotions() {
       {/* Tab bar */}
       <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "2px solid #e7e3d8" }}>
         {[["active","โปรแอคทีฟ"],["all","โปรทั้งหมด"],["add","+ เพิ่มโปรใหม่"]].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{ padding: "8px 20px", border: "none", borderBottom: tab === key ? "2px solid #b45309" : "2px solid transparent", background: "none", fontWeight: tab === key ? 700 : 400, color: tab === key ? "#b45309" : "#6b7280", cursor: "pointer", fontSize: 13, marginBottom: -2 }}>
+          <button key={key} onClick={() => key === "add" ? handleTabAdd() : setTab(key)} style={{ padding: "8px 20px", border: "none", borderBottom: tab === key ? "2px solid #b45309" : "2px solid transparent", background: "none", fontWeight: tab === key ? 700 : 400, color: tab === key ? "#b45309" : "#6b7280", cursor: "pointer", fontSize: 13, marginBottom: -2 }}>
             {label}
           </button>
         ))}
@@ -118,15 +127,16 @@ export default function CtmPromotions() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#fef3c7" }}>
-                {["สินค้า","ราคาปกติ","ราคาโปร","ป้าย","หมดอายุ","สถานะ","จัดการ"].map(h => (
+                {["รหัส","สินค้า","ราคาปกติ","ราคาโปร","ป้าย","หมดอายุ","สถานะ","จัดการ"].map(h => (
                   <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {promotions.length === 0 && <tr><td colSpan={7} style={{ padding: 24, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีโปรโมชั่น</td></tr>}
+              {promotions.length === 0 && <tr><td colSpan={8} style={{ padding: 24, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีโปรโมชั่น</td></tr>}
               {promotions.map((promo, i) => (
                 <tr key={promo.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700, color: "#b45309", fontSize: 12 }}>{promo.promoCode || "—"}</td>
                   <td style={{ padding: "8px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       {promo.product?.imageUrl ? <img src={promo.product.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover" }} /> : <div style={{ width: 32, height: 32, background: "#f3f4f6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>📦</div>}
@@ -184,7 +194,14 @@ export default function CtmPromotions() {
 
           {/* Promo form */}
           <div style={{ background: "#fff", border: "1.5px solid #e7e3d8", borderRadius: 14, padding: "20px 22px", position: "sticky", top: 20 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#374151", margin: "0 0 16px" }}>ตั้งค่าโปรโมชั่น</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: "#374151", margin: 0 }}>ตั้งค่าโปรโมชั่น</h2>
+              {nextCode && (
+                <span style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 8, padding: "3px 12px", fontFamily: "monospace", fontWeight: 800, fontSize: 13, color: "#b45309" }}>
+                  {nextCode}<span style={{ fontSize: 9, color: "#a16207", marginLeft: 4 }}>(อัตโนมัติ)</span>
+                </span>
+              )}
+            </div>
             {!selected ? (
               <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>👈</div>

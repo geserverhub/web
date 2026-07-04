@@ -49,7 +49,7 @@ export async function POST(req) {
   if (!items?.length) return NextResponse.json({ error: "ต้องมีรายการสินค้า" }, { status: 400 });
 
   const now = new Date();
-  const prefix = `CTM${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-`;
+  const prefix = `INV${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-`;
   const last = await prisma.ctmSale.findFirst({ where: { number: { startsWith: prefix } }, orderBy: { number: "desc" }, select: { number: true } });
   const seq = last ? parseInt(last.number.split("-")[1] || "0", 10) : 0;
   const number = `${prefix}${String(seq + 1).padStart(4, "0")}`;

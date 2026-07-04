@@ -2621,16 +2621,16 @@ export default function ClientsUsersClient({ session }) {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
-                    {["ชื่อ", "Username", "Password", "Email", "Role", "บริษัท", "สร้างเมื่อ", ""].map(h => (
+                    {["ชื่อ", "Username", "Password", "Email", "Role", "บริษัท", "สถานะล็อกอิน", "สร้างเมื่อ", ""].map(h => (
                       <th key={h} style={S.th}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>กำลังโหลด...</td></tr>
+                    <tr><td colSpan={9} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>กำลังโหลด...</td></tr>
                   ) : filteredUsers.length === 0 ? (
-                    <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>ยังไม่มี User</td></tr>
+                    <tr><td colSpan={9} style={{ ...S.td, textAlign: "center", color: "#8b8fa8", padding: 40 }}>ยังไม่มี User</td></tr>
                   ) : filteredUsers.map(u => {
                     const rb = ROLE_BADGE[u.role] || ROLE_BADGE.CLIENT;
                     return (
@@ -2686,6 +2686,28 @@ export default function ClientsUsersClient({ session }) {
                           <span style={{ background: rb.bg, color: rb.color, borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{rb.label}</span>
                         </td>
                         <td style={S.td}>{u.client ? <span style={{ color: "#7eb8f7" }}>{u.client.name}</span> : <span style={{ color: "#4a5070" }}>— ยังไม่ผูก —</span>}</td>
+                        <td style={S.td}>
+                          <button
+                            onClick={async () => {
+                              const newVal = !u.isActive;
+                              try {
+                                await readJsonResponse(await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id, isActive: newVal }) }));
+                                setUsers(prev => prev.map(x => x.id === u.id ? { ...x, isActive: newVal } : x));
+                                showToast(newVal ? "เปิดการเข้าใช้งานแล้ว" : "ปิดการเข้าใช้งานแล้ว");
+                              } catch (err) { showToast(err.message, false); }
+                            }}
+                            disabled={u.id === session.user.id}
+                            title={u.isActive !== false ? "คลิกเพื่อปิดการเข้าสู่ระบบ" : "คลิกเพื่อเปิดการเข้าสู่ระบบ"}
+                            style={{
+                              background: u.isActive !== false ? "#14532d" : "#4a0707",
+                              color: u.isActive !== false ? "#4ade80" : "#f87171",
+                              border: `1.5px solid ${u.isActive !== false ? "#16a34a" : "#b91c1c"}`,
+                              borderRadius: 8, padding: "4px 12px", fontWeight: 700, fontSize: 12, cursor: u.id === session.user.id ? "default" : "pointer",
+                              opacity: u.id === session.user.id ? 0.5 : 1,
+                            }}>
+                            {u.isActive !== false ? "✅ เปิดอยู่" : "🚫 ปิดอยู่"}
+                          </button>
+                        </td>
                         <td style={{ ...S.td, color: "#8b8fa8", fontSize: 12 }}>{new Date(u.createdAt).toLocaleDateString("th-TH")}</td>
                         <td style={S.td}>
                           <div style={{ display: "flex", gap: 6 }}>
@@ -5047,11 +5069,28 @@ export default function ClientsUsersClient({ session }) {
                   )}
                 </div>
                 {clientForm.logoUrl && (
-                  <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 12 }}>
-                    <img src={clientForm.logoUrl} alt={clientForm.name || "logo"} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 10, border: "1px solid #2a2d3a" }} />
-                    <div style={{ display: "grid", gap: 4 }}>
-                      <span style={{ fontSize: 12, color: "#8b8fa8" }}>ตัวอย่างโลโก้บนหัวบิล</span>
-                      <code style={{ fontSize: 11, color: "#67e8f9" }}>{clientForm.logoUrl}</code>
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 80, height: 80, borderRadius: 12, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #3b4160", overflow: "hidden", flexShrink: 0 }}>
+                        <img
+                          src={`${clientForm.logoUrl}?_=${Date.now()}`}
+                          alt={clientForm.name || "logo"}
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                          onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+                        />
+                        <div style={{ display: "none", flexDirection: "column", alignItems: "center", gap: 4, padding: 6 }}>
+                          <span style={{ fontSize: 22 }}>🖼️</span>
+                          <span style={{ fontSize: 9, color: "#ef4444", textAlign: "center" }}>โหลดไม่ได้</span>
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <span style={{ fontSize: 12, color: "#8b8fa8" }}>ตัวอย่างโลโก้บนหัวบิล</span>
+                        <code style={{ fontSize: 11, color: "#67e8f9", wordBreak: "break-all" }}>{clientForm.logoUrl}</code>
+                        <a href={clientForm.logoUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 11, color: "#4ade80", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          🔗 เปิดรูปในแท็บใหม่
+                        </a>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -5248,7 +5287,11 @@ export default function ClientsUsersClient({ session }) {
                   {issuer ? (
                     <div style={{ display: "grid", gap: 6 }}>
                       {issuer.logoUrl && (
-                        <img src={issuer.logoUrl} alt={issuer.name} style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 12, border: "1px solid #2a2d3a" }} />
+                        <div style={{ width: 72, height: 72, borderRadius: 12, background: "#fff", border: "1px solid #3b4160", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <img src={`${issuer.logoUrl}?_=1`} alt={issuer.name} style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                            onError={e => { e.target.style.display = "none"; }}
+                          />
+                        </div>
                       )}
                       <div style={{ fontSize: 18, fontWeight: 700, color: "#e8eaf0" }}>{issuer.name}</div>
                       {issuer.address && <div style={{ color: "#8b8fa8", fontSize: 13, whiteSpace: "pre-wrap" }}>{issuer.address}</div>}

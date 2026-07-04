@@ -23,9 +23,18 @@ export async function POST(req) {
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { productId, promoPrice, label, note, endDate } = await req.json();
   if (!productId || !promoPrice) return NextResponse.json({ error: "กรุณาระบุสินค้าและราคาโปร" }, { status: 400 });
+  const allCodes = await prisma.ctmPromotion.findMany({ where: { promoCode: { not: null } }, select: { promoCode: true } });
+  let maxNum = 0;
+  for (const c of allCodes) {
+    const m = c.promoCode?.match(/^PRO(\d+)$/);
+    if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+  }
+  const promoCode = `PRO${String(maxNum + 1).padStart(4, "0")}`;
+
   const promo = await prisma.ctmPromotion.create({
     data: {
       id: require("crypto").randomBytes(12).toString("hex"),
+      promoCode,
       productId,
       promoPrice: Number(promoPrice),
       label: label || null,

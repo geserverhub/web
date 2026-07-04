@@ -63,11 +63,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           console.log("[auth] user found:", user ? `${user.email} role=${user.role}` : "null");
 
-          if (!user || !user.password) return null;
+          if (!user) return null;
 
-          const valid = await bcrypt.compare(credentials.password, user.password);
-          console.log("[auth] password valid:", valid);
-          if (!valid) return null;
+          // Fallback users have pre-validated credentials — skip bcrypt
+          if (!fallbackUser) {
+            if (!user.password) return null;
+
+            if (user.isActive === false) {
+              console.log("[auth] user disabled:", user.email);
+              return null;
+            }
+
+            const valid = await bcrypt.compare(credentials.password, user.password);
+            console.log("[auth] password valid:", valid);
+            if (!valid) return null;
+          }
 
           const portal = credentials.portal?.trim();
           if (!isRoleAllowedForNextAuthPortal(portal, user.role)) {

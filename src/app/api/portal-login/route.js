@@ -9,16 +9,16 @@ export const dynamic = 'force-dynamic';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const email = String(body.email || '').trim();
+    const identifier = String(body.identifier || body.username || body.email || '').trim();
     const password = String(body.password || '');
     const portal = String(body.portal || '').trim();
 
-    if (!email || !password || !portal) {
+    if (!identifier || !password || !portal) {
       return NextResponse.json({ ok: false, error: 'missing_fields' }, { status: 400 });
     }
 
     const result = await signIn('credentials', {
-      email,
+      email: identifier,
       password,
       portal,
       redirect: false,

@@ -24,10 +24,10 @@ export async function GET(req) {
 export async function POST(req) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const { date, category, description, amount, paymentType, note } = await req.json();
+  const { date, category, description, amount, paymentType, note, receiptUrl } = await req.json();
   if (!category || !amount) return NextResponse.json({ error: "กรุณากรอกข้อมูลให้ครบ" }, { status: 400 });
   const expense = await prisma.ctmDailyExpense.create({
-    data: { id: require("crypto").randomBytes(12).toString("hex"), date: date ? new Date(date) : new Date(), category, description: description || null, amount: Number(amount), paymentType: paymentType || "CASH", note: note || null },
+    data: { id: require("crypto").randomBytes(12).toString("hex"), date: date ? new Date(date) : new Date(), category, description: description || null, amount: Number(amount), paymentType: paymentType || "CASH", note: note || null, receiptUrl: receiptUrl || null },
   });
   return NextResponse.json(expense, { status: 201 });
 }

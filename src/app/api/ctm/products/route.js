@@ -22,8 +22,17 @@ export async function POST(req) {
   const body = await req.json();
   const { name, nameKo, barcode, category, buyPrice, sellPrice, stock, unit, imageUrl, description } = body;
   if (!name || !buyPrice || !sellPrice) return NextResponse.json({ error: "กรุณากรอกข้อมูลให้ครบ" }, { status: 400 });
+
+  const allCodes = await prisma.ctmProduct.findMany({ where: { productCode: { not: null } }, select: { productCode: true } });
+  let maxNum = 0;
+  for (const p of allCodes) {
+    const m = p.productCode?.match(/^CTM(\d+)$/);
+    if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+  }
+  const productCode = `CTM${String(maxNum + 1).padStart(4, "0")}`;
+
   const product = await prisma.ctmProduct.create({
-    data: { name, nameKo: nameKo || null, barcode: barcode || null, category: category || null, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), stock: Number(stock || 0), unit: unit || "ชิ้น", imageUrl: imageUrl || null, description: description || null },
+    data: { productCode, name, nameKo: nameKo || null, barcode: barcode || null, category: category || null, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), stock: Number(stock || 0), unit: unit || "ชิ้น", imageUrl: imageUrl || null, description: description || null },
   });
   return NextResponse.json(product, { status: 201 });
 }

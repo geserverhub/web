@@ -1,29 +1,24 @@
 "use client";
-import { useEffect, useState } from "react";
-import { credentialsPortalLogin, waitForAuthSession, hardRedirect, portalLoginErrorMessage } from "@/lib/portal-login";
+import { useState } from "react";
+import { credentialsPortalLogin, portalLoginErrorMessage, waitForAuthSession, hardRedirect } from "@/lib/portal-login";
 
 export default function CtmAdminLoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
-  // Check silently in background — form stays visible, redirect if already admin
-  useEffect(() => {
-    waitForAuthSession(4, 80).then((session) => {
-      const role = session?.user?.role;
-      if (role === "ADMIN" || role === "SUPER_ADMIN") {
-        hardRedirect("/charoenthaimart/admin");
-      }
-    });
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); setLoading(true);
-    const result = await credentialsPortalLogin({ email, password, portal: "admin", callbackPath: "/charoenthaimart/admin" });
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    const result = await credentialsPortalLogin({ username, password, portal: "admin", callbackPath: "/charoenthaimart/admin" });
     if (result.ok) {
+      setSuccess("เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ...");
+      await waitForAuthSession(6, 150);
       hardRedirect("/charoenthaimart/admin");
     } else {
       setError(portalLoginErrorMessage(result.error, "th"));
@@ -36,8 +31,8 @@ export default function CtmAdminLoginPage() {
   return (
     <div style={bg}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "40px 36px", width: 420, maxWidth: "100%", boxShadow: "0 16px 56px rgba(0,0,0,.12)" }}>
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #fde68a", marginBottom: 12, boxShadow: "0 4px 14px #b4530930" }} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: 28 }}>
+          <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ display: "block", width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #fde68a", margin: "0 0 12px", boxShadow: "0 4px 14px #b4530930" }} />
           <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: "0 0 4px" }}>เจริญไทยมาร์ท ซูวอน</h1>
           <p style={{ fontSize: 13, color: "#b45309", margin: 0, fontWeight: 600 }}>ระบบหลังบ้าน · Admin Login</p>
         </div>
@@ -47,21 +42,25 @@ export default function CtmAdminLoginPage() {
             {error}
           </div>
         )}
+        {success && (
+          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 10, padding: "10px 14px", color: "#047857", fontSize: 13, marginBottom: 18 }}>
+            {success}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <form onSubmit={handleSubmit} autoComplete="off" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>อีเมล / ชื่อผู้ใช้</label>
-            <input type="text" required value={email} onChange={e => setEmail(e.target.value)} autoFocus placeholder="crtm หรือ user"
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>ชื่อผู้ใช้</label>
+            <input type="text" required value={username} onChange={e => setUsername(e.target.value)} autoFocus placeholder="ชื่อผู้ใช้" autoComplete="off"
               style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 10, padding: "11px 14px", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "border-color .15s" }}
               onFocus={e => e.target.style.borderColor = "#b45309"}
               onBlur={e => e.target.style.borderColor = "#e7e3d8"}
             />
-            <div style={{ marginTop: 6, fontSize: 12, color: "#b45309" }}>สำหรับทดสอบ: ใช้ชื่อผู้ใช้ crtm หรือ user รหัสผ่าน 9999</div>
           </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>รหัสผ่าน</label>
             <div style={{ position: "relative" }}>
-              <input type={showPw ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
+              <input type={showPw ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password"
                 style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 10, padding: "11px 44px 11px 14px", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "border-color .15s" }}
                 onFocus={e => e.target.style.borderColor = "#b45309"}
                 onBlur={e => e.target.style.borderColor = "#e7e3d8"}

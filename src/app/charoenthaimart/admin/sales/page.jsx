@@ -21,6 +21,7 @@ export default function CtmSales() {
   const [expanded, setExpanded] = useState({});
 
   const [showAdd, setShowAdd] = useState(false);
+  const [nextInv, setNextInv] = useState("");
   const [products, setProducts] = useState([]);
   const [promos, setPromos] = useState({});
   const [cart, setCart] = useState([]);
@@ -41,11 +42,13 @@ export default function CtmSales() {
   useEffect(() => { load(); }, [load]);
 
   const openAdd = async () => {
-    setCart([]); setPSearch(""); setBarcodeVal(""); setPayType("CASH"); setSaleNote("");
-    const [pr, pm] = await Promise.all([
+    setCart([]); setPSearch(""); setBarcodeVal(""); setPayType("CASH"); setSaleNote(""); setNextInv("");
+    const [pr, pm, nc] = await Promise.all([
       fetch("/api/ctm/products").then(r => r.json()),
       fetch("/api/ctm/promotions/public").then(r => r.json()),
+      fetch("/api/ctm/sales/nextcode").then(r => r.json()).catch(() => ({})),
     ]);
+    setNextInv(nc.code || "");
     setProducts((pr.products || []).filter(p => p.isActive));
     const promoMap = {};
     (pm.promotions || []).forEach(p => { promoMap[p.productId] = p; });
@@ -212,7 +215,15 @@ export default function CtmSales() {
           <div style={{ background: "#fff", width: "100%", maxWidth: 1100, borderRadius: 16, display: "flex", height: "92vh", overflow: "hidden", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,.25)" }}>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e7e3d8", background: "#fef3c7", flexShrink: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#92400e" }}>เพิ่มรายการขาย</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#92400e" }}>เพิ่มรายการขาย</h2>
+                {nextInv && (
+                  <span style={{ background: "#fff", border: "1px solid #fcd34d", borderRadius: 8, padding: "3px 12px", fontFamily: "monospace", fontWeight: 800, fontSize: 13, color: "#b45309" }}>
+                    {nextInv}
+                    <span style={{ fontSize: 9, color: "#a16207", marginLeft: 4 }}>(อัตโนมัติ)</span>
+                  </span>
+                )}
+              </div>
               <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#9ca3af", lineHeight: 1 }}>✕</button>
             </div>
 

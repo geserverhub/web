@@ -36,17 +36,18 @@ export default function CtmProducts() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#fef3c7" }}>
-                {["รูป","บาร์โค้ด","ชื่อสินค้า","หมวด","ราคาทุน","ราคาขาย","สต็อก","จัดการ"].map(h => (
+                {["รหัส","รูป","บาร์โค้ด","ชื่อสินค้า","หมวด","ราคาทุน","ราคาขาย","สต็อก","จัดการ"].map(h => (
                   <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {products.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ไม่พบสินค้า</td></tr>
+                <tr><td colSpan={9} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ไม่พบสินค้า</td></tr>
               )}
               {products.map((p, i) => (
                 <tr key={p.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700, color: "#b45309", fontSize: 12 }}>{p.productCode || "—"}</td>
                   <td style={{ padding: "8px 12px" }}>
                     {p.imageUrl ? <img src={p.imageUrl} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: "cover" }} /> : <div style={{ width: 36, height: 36, borderRadius: 6, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", color: "#d1d5db", fontSize: 18 }}>📦</div>}
                   </td>
