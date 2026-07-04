@@ -34,9 +34,7 @@ function assertGeserverhubDatabase(name: string): void {
 }
 
 function activeDatabase(): string {
-  const name = resolveDatabaseName();
-  assertGeserverhubDatabase(name);
-  return name;
+  return resolveDatabaseName();
 }
 
 function resolveDatabaseFromUrl(url: string): string | null {
