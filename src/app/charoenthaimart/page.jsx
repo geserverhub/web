@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { credentialsPortalLogin, waitForAuthSession, hardRedirect, portalLoginErrorMessage } from "@/lib/portal-login";
 
 const LANGS = [
   { key: "th",  label: "ไทย" },
@@ -155,6 +156,31 @@ const ANNOUNCE = {
 export default function CharoenthaimartPage() {
   const [lang, setLang] = useState("th");
   const t = T[lang];
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [logging, setLogging] = useState(false);
+
+  useEffect(() => {
+    waitForAuthSession(4, 100).then((session) => {
+      const role = session?.user?.role;
+      if (role === "ADMIN" || role === "SUPER_ADMIN") setIsAdmin(true);
+    });
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError(""); setLogging(true);
+    const result = await credentialsPortalLogin({ email, password, portal: "admin", callbackPath: "/charoenthaimart/admin" });
+    if (result.ok) {
+      hardRedirect("/charoenthaimart/admin");
+    } else {
+      setLoginError(portalLoginErrorMessage(result.error, "th"));
+      setLogging(false);
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", color: "#1e293b", fontFamily: "sans-serif" }}>
@@ -169,8 +195,8 @@ export default function CharoenthaimartPage() {
         <Link href="/" style={{ color: "#64748b", textDecoration: "none", fontSize: 14, fontWeight: 500 }}>
           ← GEserverhub
         </Link>
-        {/* Language switcher */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {/* Language switcher + admin button */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           {LANGS.map((l) => (
             <button
               key={l.key}
@@ -195,8 +221,59 @@ export default function CharoenthaimartPage() {
               {l.label}
             </button>
           ))}
+          <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 2px" }} />
+          {isAdmin ? (
+            <Link href="/charoenthaimart/admin" style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: 20, background: "#b45309", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+              ⚙️ Admin
+            </Link>
+          ) : (
+            <button onClick={() => setShowLogin(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: 20, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              🔑 Admin Login
+            </button>
+          )}
         </div>
       </nav>
+
+      {/* Admin Login Modal */}
+      {showLogin && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowLogin(false); }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 32px", width: 380, maxWidth: "100%", boxShadow: "0 24px 64px rgba(0,0,0,.25)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 14, color: "#92400e" }}>เจริญไทยมาร์ท ซูวอน</div>
+                <div style={{ fontSize: 11, color: "#b45309" }}>Admin Login</div>
+              </div>
+            </div>
+            {loginError && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "9px 12px", color: "#b91c1c", fontSize: 13, marginBottom: 14 }}>
+                {loginError}
+              </div>
+            )}
+            <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>อีเมล</label>
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} autoFocus placeholder="admin@example.com"
+                  style={{ width: "100%", border: "1px solid #e2e8f0", borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>รหัสผ่าน</label>
+                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
+                  style={{ width: "100%", border: "1px solid #e2e8f0", borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                <button type="submit" disabled={logging} style={{ flex: 1, background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontWeight: 700, fontSize: 14, cursor: logging ? "default" : "pointer", opacity: logging ? 0.7 : 1 }}>
+                  {logging ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+                </button>
+                <button type="button" onClick={() => setShowLogin(false)} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                  ยกเลิก
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <div style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)", padding: "36px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap", overflow: "hidden", position: "relative" }}>
