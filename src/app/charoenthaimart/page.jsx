@@ -276,22 +276,22 @@ export default function CharoenthaimartPage() {
       )}
 
       {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)", padding: "36px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap", overflow: "hidden", position: "relative" }}>
+      <div style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)", padding: "44px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, flexWrap: "wrap", overflow: "hidden", position: "relative" }}>
         {/* Left: logo + text */}
-        <div style={{ display: "flex", alignItems: "center", gap: 24, flex: "1 1 280px", minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 28, flex: "1 1 320px", minWidth: 0 }}>
           <img
             src="/charoenthaimart/charoenthaimart-logo.jpg"
             alt="เจริญไทยมาร์ท ซูวอน"
-            style={{ width: 110, height: 110, borderRadius: "50%", objectFit: "cover", border: "4px solid #fff", flexShrink: 0, boxShadow: "0 4px 20px #0004" }}
+            style={{ width: 130, height: 130, borderRadius: "50%", objectFit: "cover", border: "4px solid #fff", flexShrink: 0, boxShadow: "0 6px 24px #0005" }}
           />
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, color: "#fff", lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: 38, fontWeight: 900, margin: 0, color: "#fff", lineHeight: 1.15, textShadow: "0 2px 8px #0003" }}>
               เจริญไทยมาร์ท ซูวอน
             </h1>
-            <p style={{ fontSize: 12, color: "#bfdbfe", margin: "4px 0 0", fontWeight: 600, letterSpacing: "0.03em" }}>
+            <p style={{ fontSize: 15, color: "#bfdbfe", margin: "6px 0 0", fontWeight: 700, letterSpacing: "0.04em" }}>
               차로엔 타이 마트 수원 · CHAROEN THAI MART SUWON
             </p>
-            <p style={{ fontSize: 13, color: "#dbeafe", margin: "8px 0 0" }}>
+            <p style={{ fontSize: 15, color: "#dbeafe", margin: "10px 0 0", lineHeight: 1.5 }}>
               {t.subtitle}
             </p>
           </div>
@@ -307,11 +307,11 @@ export default function CharoenthaimartPage() {
       </div>
 
       {/* Scrolling announcement ticker */}
-      <div style={{ background: "#1e40af", overflow: "hidden", padding: "8px 0", borderBottom: "2px solid #1d4ed8" }}>
+      <div style={{ background: "#1e3a8a", overflow: "hidden", padding: "11px 0", borderBottom: "2px solid #1d4ed8" }}>
         <div style={{ overflow: "hidden", width: "100%" }}>
-          <span className="ctm-ticker" style={{ fontSize: 13, color: "#bfdbfe", fontWeight: 600, letterSpacing: "0.02em" }}>
-            <span style={{ paddingRight: 80 }}>{ANNOUNCE[lang]}</span>
-            <span style={{ paddingRight: 80 }}>{ANNOUNCE[lang]}</span>
+          <span className="ctm-ticker" style={{ fontSize: 15, color: "#e0f2fe", fontWeight: 700, letterSpacing: "0.03em" }}>
+            <span style={{ paddingRight: 100 }}>{ANNOUNCE[lang]}</span>
+            <span style={{ paddingRight: 100 }}>{ANNOUNCE[lang]}</span>
           </span>
         </div>
       </div>
