@@ -218,7 +218,7 @@ export const translations = {
         description: "ส.ภาวิณีร์ อีสานฟู้ดส์ ผู้ผลิตและจำหน่าย นำเข้า-ส่งออก อาหารแปรรูป อาหารแช่แข็ง ผู้ผลิตอาหารไทยแปรรูปที่ได้มาตรฐานเจ้าเดียวในเกาหลี",
       },
       "mart-supermarket": {
-        name: "เจริญไทยมาร์ท ซูวอน | Charoenthaimart Suwon",
+        name: "Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน",
         description: "เจริญไทยมาร์ท ซูวอน — Charoenthaimart Suwon",
       },
       "acc-tax": {

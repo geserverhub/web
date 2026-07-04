@@ -164,7 +164,7 @@ export const fallbackClients = [
   },
   {
     id: 8,
-    name: "เจริญไทยมาร์ท ซูวอน",
+    name: "Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน",
     slug: "mart-supermarket",
     description: "Charoenthaimart Suwon — เจริญไทยมาร์ท ซูวอน อาหารไทย-เกาหลี",
     status: "online",

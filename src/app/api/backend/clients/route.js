@@ -41,6 +41,7 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail_style: "photo",
   },
   "mart-supermarket": {
+    name: "Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน",
     thumbnail: "/charoenthaimart/charoenthaimart-logomain.jpg",
     thumbnail_fit: "contain",
     contact_phone: "010-8766-4569",

@@ -93,7 +93,7 @@ const T = {
     deliveryText: "ส่งทั่วเกาหลี (전국 배달)",
     deliverySub: "20 กก. ราคา ₩6,000",
     aboutTitle: "เกี่ยวกับร้าน",
-    about: "แพลตฟอร์มแสดงสินค้า เพื่อกดสั่งซื้อ",
+    about: "ช้อปปิ้ง แสดงสินค้า เป็นหมวดหมูสั่งซื้อได้",
     callBtn: "📞 โทรติดต่อร้าน",
   },
   ko: {
@@ -214,11 +214,6 @@ export default function CharoenthaimartPage() {
   const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
-  const orderViaLine = () => {
-    const items = cart.map(i => `• ${i.name} x${i.qty} = ₩${(i.price * i.qty).toLocaleString()}`).join("\n");
-    const msg = encodeURIComponent(`สั่งซื้อสินค้าเจริญไทยมาร์ท ซูวอน\n\n${items}\n\nรวม ₩${cartTotal.toLocaleString()}`);
-    window.open(`https://line.me/ti/p/@486wfonl`, "_blank");
-  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", color: "#1e293b", fontFamily: "sans-serif" }}>
@@ -230,8 +225,9 @@ export default function CharoenthaimartPage() {
 
       {/* Top nav */}
       <nav style={{ background: "#fff", padding: "12px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, boxShadow: "0 1px 4px #0001" }}>
-        <Link href="/" style={{ color: "#64748b", textDecoration: "none", fontSize: 14, fontWeight: 500 }}>
-          ← GEserverhub
+        <Link href="/charoenthaimart" style={{ display: "inline-flex", alignItems: "center", gap: 10, color: "#111827", textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
+          <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="Charoen Thai Mart Suwon" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
+          <span>เจริญไทยมาร์ท ซูวอน</span>
         </Link>
         {/* Language switcher + admin button */}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -362,13 +358,26 @@ export default function CharoenthaimartPage() {
           <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>{t.about}</p>
         </section>
 
-        {/* Contact buttons */}
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 0 }}>
-          <a href="tel:01087664569"
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #1d4ed8, #2563eb)", color: "#fff", padding: "13px 32px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 4px 16px #2563eb40" }}>
-            {t.callBtn}
-          </a>
-        </div>
+        {/* CTA panel */}
+        <section style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 16, padding: "28px 24px", marginBottom: 24, boxShadow: "0 10px 28px rgba(59,130,246,.12)" }}>
+          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#1e3a8a" }}>Charoenthaimart Suwon | เจริญไทยมาร์ท ซูวอน</h2>
+              <p style={{ margin: "12px 0 0", color: "#1e293b", lineHeight: 1.75 }}>
+                ช้อปสินค้าไทย-เอเชียจากร้านเจริญไทยมาร์ท ซูวอนในซูวอน พร้อมบริการส่งทั่วเกาหลี 20 กก. ราคา ₩6,000.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+              <a href="tel:01087664569" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, background: "#1d4ed8", color: "#fff", padding: "14px 22px", borderRadius: 14, fontWeight: 700, fontSize: 14, textDecoration: "none", boxShadow: "0 8px 24px rgba(59,130,246,.22)" }}>
+                {t.callBtn}
+              </a>
+              <a href="https://www.facebook.com/thaimartsuwon" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, background: "#2563eb", color: "#fff", padding: "14px 22px", borderRadius: 14, fontWeight: 700, fontSize: 14, textDecoration: "none", boxShadow: "0 8px 24px rgba(37,99,235,.22)" }}>
+                📘 Facebook
+              </a>
+            </div>
+          </div>
+        </section>
+
       </div>
 
       {/* Footer: Map + Address + Copyright */}
