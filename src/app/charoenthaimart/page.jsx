@@ -77,9 +77,10 @@ function FlagSVG({ langKey, size = 22 }) {
 const T = {
   th: {
     subtitle: "ร้านขายของไทยในเกาหลี · อาหาร เครื่องปรุง สินค้านำเข้า",
-    flashSale: "🔥 FLASH SALE วันนี้", items: "รายการ",
-    allProducts: "สินค้าทั้งหมด", allCat: "🛍️ ทั้งหมด", noProducts: "ไม่มีสินค้าในหมวดนี้",
+    flashSale: "🔥 FLASH SALE โปรโมชั่นและกิจกรรมวันนี้", items: "รายการ",
+    allProducts: "FLASH SALE โปรโมชั่นและกิจกรรมวันนี้", allCat: "🛍️ ทั้งหมด", noProducts: "ไม่มีสินค้าในหมวดนี้ในตอนนี้",
     addCart: "+ ใส่ตะกร้า", inCart: "ในตะกร้า",
+    viewProductsCta: "เยี่ยมชมสินค้าของเรา",
     cartTitle: "ตะกร้าสินค้า", emptyCart: "ไม่มีสินค้าในตะกร้า",
     total: "รวมทั้งหมด", orderLine: "💬 สั่งซื้อผ่าน LINE",
     deliveryNote: "LINE @486wfonl · ส่งทั่วเกาหลี 20กก. ₩6,000",
@@ -92,6 +93,7 @@ const T = {
     flashSale: "🔥 오늘의 FLASH SALE", items: "개",
     allProducts: "전체 상품", allCat: "🛍️ 전체", noProducts: "이 카테고리에 상품이 없습니다",
     addCart: "+ 장바구니 담기", inCart: "담음",
+    viewProductsCta: "우리 상품 구경하기",
     cartTitle: "장바구니", emptyCart: "장바구니가 비어 있습니다",
     total: "합계", orderLine: "💬 LINE으로 주문",
     deliveryNote: "LINE @486wfonl · 전국 배송 20kg ₩6,000",
@@ -104,6 +106,7 @@ const T = {
     flashSale: "🔥 FLASH SALE Today", items: "items",
     allProducts: "All Products", allCat: "🛍️ All", noProducts: "No products in this category",
     addCart: "+ Add to cart", inCart: "in cart",
+    viewProductsCta: "Explore our products",
     cartTitle: "Shopping Cart", emptyCart: "Your cart is empty",
     total: "Total", orderLine: "💬 Order via LINE",
     deliveryNote: "LINE @486wfonl · Nationwide 20kg ₩6,000",
@@ -116,6 +119,7 @@ const T = {
     flashSale: "🔥 今日 FLASH SALE", items: "件",
     allProducts: "全部商品", allCat: "🛍️ 全部", noProducts: "此分类暂无商品",
     addCart: "+ 加入购物车", inCart: "已加入",
+    viewProductsCta: "浏览我们的商品",
     cartTitle: "购物车", emptyCart: "购物车为空",
     total: "总计", orderLine: "💬 通过LINE订购",
     deliveryNote: "LINE @486wfonl · 全国配送 20kg ₩6,000",
@@ -128,6 +132,7 @@ const T = {
     flashSale: "🔥 FLASH SALE Hôm nay", items: "sản phẩm",
     allProducts: "Tất cả sản phẩm", allCat: "🛍️ Tất cả", noProducts: "Không có sản phẩm trong danh mục này",
     addCart: "+ Thêm vào giỏ", inCart: "trong giỏ",
+    viewProductsCta: "Khám phá sản phẩm của chúng tôi",
     cartTitle: "Giỏ hàng", emptyCart: "Giỏ hàng trống",
     total: "Tổng cộng", orderLine: "💬 Đặt hàng qua LINE",
     deliveryNote: "LINE @486wfonl · Toàn quốc 20kg ₩6,000",
@@ -346,13 +351,20 @@ export default function CharoenthaimartPage() {
         {/* Product Catalog */}
         <section>
           {/* Section title */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ background: "linear-gradient(135deg,#92400e,#b45309)", borderRadius: 10, padding: "6px 16px", display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 18 }}>🛒</span>
-              <h2 style={{ fontSize: 17, fontWeight: 900, color: "#fff", margin: 0 }}>{t.allProducts}</h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ background: "linear-gradient(135deg,#92400e,#b45309)", borderRadius: 10, padding: "6px 16px", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🛒</span>
+                <h2 style={{ fontSize: 17, fontWeight: 900, color: "#fff", margin: 0 }}>{t.allProducts}</h2>
+              </div>
+              {products.length > 0 && <span style={{ background: "#92400e", color: "#fde68a", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 800, border: "1px solid #b45309" }}>{products.length} {t.items}</span>}
             </div>
-            {products.length > 0 && <span style={{ background: "#92400e", color: "#fde68a", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 800, border: "1px solid #b45309" }}>{products.length} {t.items}</span>}
+            <Link href="/charoenthaimart/shop" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff7ed", color: "#b45309", border: "1px solid #fdba74", borderRadius: 999, padding: "8px 14px", fontWeight: 800, fontSize: 13, textDecoration: "none", boxShadow: "0 2px 8px rgba(180,83,9,.12)" }}>
+              <span>🛍️</span>
+              {t.viewProductsCta ?? "เยี่ยมชมสินค้าของเรา"}
+            </Link>
           </div>
+          <div style={{ color: "#7c2d12", fontSize: 13, fontWeight: 700, marginBottom: 18 }}>โปรโมชั่นและกิจกรรมวันนี้ · สินค้าไทยคุณภาพจากเจริญไทยมาร์ท</div>
 
           {/* Category tabs */}
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6, marginBottom: 22, scrollbarWidth: "none" }}>
@@ -394,9 +406,26 @@ export default function CharoenthaimartPage() {
               </div>
             ))}
             {products.length === 0 && (
-              <div style={{ gridColumn: "1/-1", textAlign: "center", color: "#9ca3af", padding: "64px 0" }}>
-                <div style={{ fontSize: 52, marginBottom: 12 }}>📦</div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{t.noProducts}</div>
+              <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "56px 24px" }}>
+                <div style={{ fontSize: 56, marginBottom: 16 }}>🛍️</div>
+                <div style={{ fontWeight: 900, fontSize: 22, color: "#b45309", letterSpacing: 3, marginBottom: 6 }}>COMING SOON</div>
+                <div style={{ color: "#9ca3af", fontSize: 13, marginBottom: 28 }}>สินค้าในหมวดนี้กำลังจะมาเร็วๆ นี้</div>
+                <a
+                  href="/charoenthaimart/shop"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 12,
+                    background: "linear-gradient(135deg,#b45309,#d97706)",
+                    color: "#fff", textDecoration: "none",
+                    borderRadius: 999, padding: "16px 36px",
+                    fontWeight: 900, fontSize: 18,
+                    boxShadow: "0 6px 28px rgba(180,83,9,.45)",
+                    letterSpacing: 0.5,
+                    transition: "transform .15s",
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>🛍️</span>
+                  เยี่ยมชมสินค้าของเรา
+                </a>
               </div>
             )}
           </div>
