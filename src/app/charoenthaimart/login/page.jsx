@@ -80,7 +80,6 @@ export default function CtmAdminLoginPage() {
 
         <div style={{ marginTop: 20, textAlign: "center", display: "flex", justifyContent: "center", gap: 16 }}>
           <a href="/charoenthaimart" style={{ fontSize: 13, color: "#b45309", textDecoration: "none", fontWeight: 600 }}>← หน้าร้าน</a>
-          <a href="/auth/select" style={{ fontSize: 13, color: "#9ca3af", textDecoration: "none" }}>เมนูหลัก</a>
         </div>
       </div>
     </div>

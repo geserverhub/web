@@ -12,35 +12,35 @@ const T = {
     heroTitle: "สินค้าของเราในเจริญไทยมาร์ท",
     heroDesc: "เลือกซื้ออาหารไทย เครื่องปรุงรส และของฝากคุณภาพจากไทยที่พร้อมส่งถึงเกาหลีอย่างสะดวกสบาย",
     totalLabel: "สินค้าทั้งหมด", items: "รายการ", loading: "กำลังโหลด...", noProducts: "ยังไม่มีสินค้าในระบบ",
-    allCat: "🛍️ ทั้งหมด", outOfStock: "สินค้าหมด", addCart: "+ ใส่ตะกร้า", inCart: "ในตะกร้า",
+    allCat: "🛍️ ทั้งหมด", outOfStock: "สินค้าหมด", addCart: "+ ใส่ตะกร้า", inCart: "ในตะกร้า", unit: "ชิ้น",
   },
   ko: {
     back: "← 차로엔 타이 마트로 돌아가기", tag: "Thai Market Collection",
     heroTitle: "차로엔 타이 마트의 상품",
     heroDesc: "태국 음식, 조미료, 고품질 태국 선물을 한국으로 편리하게 배송받으세요",
     totalLabel: "전체 상품", items: "개", loading: "로딩 중...", noProducts: "아직 등록된 상품이 없습니다",
-    allCat: "🛍️ 전체", outOfStock: "품절", addCart: "+ 장바구니 담기", inCart: "담음",
+    allCat: "🛍️ 전체", outOfStock: "품절", addCart: "+ 장바구니 담기", inCart: "담음", unit: "개",
   },
   en: {
     back: "← Back to Charoen Thai Mart", tag: "Thai Market Collection",
     heroTitle: "Our Products at Charoen Thai Mart",
     heroDesc: "Shop Thai food, seasonings, and quality Thai gifts delivered conveniently across Korea",
     totalLabel: "Total Products", items: "items", loading: "Loading...", noProducts: "No products yet",
-    allCat: "🛍️ All", outOfStock: "Out of stock", addCart: "+ Add to cart", inCart: "in cart",
+    allCat: "🛍️ All", outOfStock: "Out of stock", addCart: "+ Add to cart", inCart: "in cart", unit: "pcs",
   },
   zh: {
     back: "← 返回Charoen Thai Mart", tag: "Thai Market Collection",
     heroTitle: "Charoen Thai Mart 的商品",
     heroDesc: "选购泰国食品、调味料和优质泰国礼品，便捷配送至韩国各地",
     totalLabel: "全部商品", items: "件", loading: "加载中...", noProducts: "暂无商品",
-    allCat: "🛍️ 全部", outOfStock: "缺货", addCart: "+ 加入购物车", inCart: "已加入",
+    allCat: "🛍️ 全部", outOfStock: "缺货", addCart: "+ 加入购物车", inCart: "已加入", unit: "件",
   },
   vi: {
     back: "← Quay lại Charoen Thai Mart", tag: "Thai Market Collection",
     heroTitle: "Sản phẩm của chúng tôi tại Charoen Thai Mart",
     heroDesc: "Chọn mua thực phẩm Thái, gia vị và quà tặng Thái chất lượng, giao hàng thuận tiện khắp Hàn Quốc",
     totalLabel: "Tổng sản phẩm", items: "sản phẩm", loading: "Đang tải...", noProducts: "Chưa có sản phẩm",
-    allCat: "🛍️ Tất cả", outOfStock: "Hết hàng", addCart: "+ Thêm vào giỏ", inCart: "trong giỏ",
+    allCat: "🛍️ Tất cả", outOfStock: "Hết hàng", addCart: "+ Thêm vào giỏ", inCart: "trong giỏ", unit: "cái",
   },
 };
 
@@ -178,7 +178,7 @@ export default function CharoenthaimartShopPage() {
                     </div>
                     <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 6, alignItems: "center", marginBottom: 6 }}>
-                        <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 999, padding: "2px 8px", fontSize: 10, fontWeight: 800 }}>{product.unit || "ชิ้น"}</span>
+                        <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 999, padding: "2px 8px", fontSize: 10, fontWeight: 800 }}>{product.unit || t.unit}</span>
                         <span style={{ fontSize: 15, fontWeight: 900, color: "#b45309" }}>₩{Number(product.sellPrice).toLocaleString("ko-KR")}</span>
                       </div>
                       <h3 style={{ fontSize: 13, fontWeight: 700, margin: "0 0 2px", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{product.name}</h3>
@@ -210,7 +210,7 @@ export default function CharoenthaimartShopPage() {
         </button>
       )}
 
-      <CartDrawer cart={cart} setCartQty={setCartQty} showCart={showCart} setShowCart={setShowCart} theme="orange" />
+      <CartDrawer cart={cart} setCartQty={setCartQty} showCart={showCart} setShowCart={setShowCart} theme="orange" lang={lang} />
     </main>
   );
 }

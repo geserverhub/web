@@ -397,7 +397,7 @@ export default function CharoenthaimartPage() {
         </button>
       )}
 
-      <CartDrawer cart={cart} setCartQty={setCartQty} showCart={showCart} setShowCart={setShowCart} theme="green" />
+      <CartDrawer cart={cart} setCartQty={setCartQty} showCart={showCart} setShowCart={setShowCart} theme="green" lang={lang} />
 
       {/* Footer: Map + Address + Copyright */}
       <footer style={{ background: "#1e293b", color: "#cbd5e1" }}>
