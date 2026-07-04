@@ -13,6 +13,7 @@ const LANGS = {
     partner: { label: "พอร์ทัลพาร์ทเนอร์", desc: "ดูรายงานยอดขายและบัญชีของบริษัท" },
     classroom: { label: "ห้องเรียนออนไลน์", desc: "เรียนออนไลน์ — วิดีโอ เอกสาร และตารางเรียน" },
     erp: { label: "ระบบ ERP", desc: "GE ENERGY TECH — บัญชี สต็อก การเงิน และรายงานองค์กร" },
+    ctm: { label: "เจริญไทยมาร์ท ซูวอน", desc: "หลังบ้านร้านค้า — สินค้า บาร์โค้ด ยอดขาย กำไร/ขาดทุน ภาษี ลูกค้า คู่ค้า" },
     back: "← กลับหน้าหลัก",
   },
   en: {
@@ -25,6 +26,7 @@ const LANGS = {
     partner: { label: "Partner Portal", desc: "Sales reports and company accounts" },
     classroom: { label: "Online Classroom", desc: "E-learning — videos, materials and schedule" },
     erp: { label: "ERP System", desc: "GE ENERGY TECH — accounting, inventory, finance and reports" },
+    ctm: { label: "Charoenthaimart Suwon", desc: "Store back-office — products, barcode, sales, profit/loss, tax, customers, suppliers" },
     back: "← Back to Home",
   },
   ko: {
@@ -37,6 +39,7 @@ const LANGS = {
     partner: { label: "파트너 포털", desc: "판매 보고서 및 회사 계정" },
     classroom: { label: "온라인 강의실", desc: "이러닝 — 동영상, 자료 및 일정" },
     erp: { label: "ERP 시스템", desc: "GE ENERGY TECH — 회계, 재고, 재무 및 보고서" },
+    ctm: { label: "차로엔 타이 마트 수원", desc: "매장 백오피스 — 상품, 바코드, 매출, 손익, 세금, 고객, 공급업체" },
     back: "← 홈으로 돌아가기",
   },
 };
@@ -66,6 +69,16 @@ const PORTALS = [
     badgeColor: "#d1d5db",
     badge: "ERP",
     icon: "🏢",
+  },
+  {
+    key: "ctm",
+    href: "/charoenthaimart/admin",
+    border: "#b45309",
+    titleColor: "#fcd34d",
+    badgeBg: "#78350f",
+    badgeColor: "#fde68a",
+    badge: "CTM · MART",
+    icon: "🛒",
   },
 ];
 

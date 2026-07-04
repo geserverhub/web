@@ -1,0 +1,29 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+
+function isAdmin(s) { return s?.user?.role === "ADMIN" || s?.user?.role === "SUPER_ADMIN"; }
+
+export async function GET(req) {
+  const session = await auth();
+  if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { searchParams } = new URL(req.url);
+  const q = searchParams.get("q") || "";
+  const products = await prisma.ctmProduct.findMany({
+    where: q ? { OR: [{ name: { contains: q } }, { barcode: { contains: q } }, { category: { contains: q } }] } : {},
+    orderBy: { createdAt: "desc" },
+  });
+  return NextResponse.json({ products });
+}
+
+export async function POST(req) {
+  const session = await auth();
+  if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const body = await req.json();
+  const { name, nameKo, barcode, category, buyPrice, sellPrice, stock, unit, imageUrl, description } = body;
+  if (!name || !buyPrice || !sellPrice) return NextResponse.json({ error: "กรุณากรอกข้อมูลให้ครบ" }, { status: 400 });
+  const product = await prisma.ctmProduct.create({
+    data: { name, nameKo: nameKo || null, barcode: barcode || null, category: category || null, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), stock: Number(stock || 0), unit: unit || "ชิ้น", imageUrl: imageUrl || null, description: description || null },
+  });
+  return NextResponse.json(product, { status: 201 });
+}

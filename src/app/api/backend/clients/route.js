@@ -40,6 +40,12 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail_fit: "contain",
     thumbnail_style: "photo",
   },
+  "mart-supermarket": {
+    thumbnail: "/charoenthaimart/charoenthaimart-logomain.jpg",
+    thumbnail_fit: "contain",
+    contact_phone: "010-8766-4569",
+    system_url: "/charoenthaimart",
+  },
   "ge-energy-tech": {
     thumbnail: "/ge-energyTech/138568.jpg",
     thumbnail_style: "photo",
