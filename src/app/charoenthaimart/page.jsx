@@ -144,12 +144,25 @@ const T = {
   },
 };
 
+const ANNOUNCE = {
+  th: "🛒 เจริญไทยมาร์ท ซูวอน · ส่งทั่วเกาหลี 20กก. ₩6,000 · เปิดทุกวัน 10:00-22:00 · โทร 010-8766-4569  |  ขายอาหารไทย เครื่องปรุงรส สินค้านำเข้าจากไทย  |  경기도 수원시 권선구 세권로 153(권선동)",
+  ko: "🛒 차로엔 타이 마트 수원 · 전국 배송 20kg ₩6,000 · 매일 10:00-22:00 영업 · 전화 010-8766-4569  |  태국 식품·양념·수입 제품 전문  |  경기도 수원시 권선구 세권로 153(권선동)",
+  en: "🛒 Charoen Thai Mart Suwon · Nationwide delivery 20kg ₩6,000 · Open daily 10:00-22:00 · Call 010-8766-4569  |  Thai food, seasonings, imported goods  |  153 Segwon-ro, Gwonseon-gu, Suwon",
+  zh: "🛒 차로엔泰国超市水原 · 全国配送 20kg ₩6,000 · 每日10:00-22:00营业 · 电话 010-8766-4569  |  泰国食品 调味料 进口商品  |  경기도 수원시 권선구 세권로 153",
+  vi: "🛒 Charoen Thai Mart Suwon · Giao hàng toàn quốc 20kg ₩6,000 · Mở cửa 10:00-22:00 · Gọi 010-8766-4569  |  Thực phẩm Thái, gia vị, hàng nhập khẩu  |  153 Segwon-ro, Gwonseon-gu, Suwon",
+};
+
 export default function CharoenthaimartPage() {
   const [lang, setLang] = useState("th");
   const t = T[lang];
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", color: "#1e293b", fontFamily: "sans-serif" }}>
+      <style>{`
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ctm-ticker { animation: marquee 30s linear infinite; display: inline-flex; gap: 0; white-space: nowrap; }
+        .ctm-ticker:hover { animation-play-state: paused; }
+      `}</style>
 
       {/* Top nav */}
       <nav style={{ background: "#fff", padding: "12px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, boxShadow: "0 1px 4px #0001" }}>
@@ -207,12 +220,22 @@ export default function CharoenthaimartPage() {
           </div>
         </div>
         {/* Right: shop photo */}
-        <div style={{ flex: "0 0 auto", borderRadius: 14, overflow: "hidden", boxShadow: "0 6px 24px #0005", border: "3px solid #ffffff30" }}>
+        <div style={{ flex: "0 0 auto", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px #0006", border: "3px solid #ffffff40" }}>
           <img
             src="/charoenthaimart/charoenthaimart-shop.jpg"
             alt="Charoen Thai Mart Suwon shop"
-            style={{ width: 260, height: 160, objectFit: "cover", display: "block" }}
+            style={{ width: 360, height: 240, objectFit: "cover", display: "block" }}
           />
+        </div>
+      </div>
+
+      {/* Scrolling announcement ticker */}
+      <div style={{ background: "#1e40af", overflow: "hidden", padding: "8px 0", borderBottom: "2px solid #1d4ed8" }}>
+        <div style={{ overflow: "hidden", width: "100%" }}>
+          <span className="ctm-ticker" style={{ fontSize: 13, color: "#bfdbfe", fontWeight: 600, letterSpacing: "0.02em" }}>
+            <span style={{ paddingRight: 80 }}>{ANNOUNCE[lang]}</span>
+            <span style={{ paddingRight: 80 }}>{ANNOUNCE[lang]}</span>
+          </span>
         </div>
       </div>
 
