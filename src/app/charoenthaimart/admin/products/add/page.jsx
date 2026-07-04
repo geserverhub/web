@@ -12,9 +12,11 @@ export default function CtmProductAdd() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState([]);
   const fileRef = useRef();
 
   useEffect(() => {
+    fetch("/api/ctm/categories").then(r => r.json()).then(d => setCategories(d.categories || [])).catch(() => {});
     if (!editId) return;
     fetch(`/api/ctm/products?q=`)
       .then(r => r.json())
@@ -68,7 +70,23 @@ export default function CtmProductAdd() {
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ชื่อสินค้า (ไทย)*</label><input required value={form.name} onChange={set("name")} style={inp} /></div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ชื่อสินค้า (เกาหลี)</label><input value={form.nameKo} onChange={set("nameKo")} style={inp} /></div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>บาร์โค้ด</label><input value={form.barcode} onChange={set("barcode")} style={inp} /></div>
-          <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>หมวดหมู่</label><input value={form.category} onChange={set("category")} style={inp} placeholder="เช่น อาหาร เครื่องดื่ม" /></div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>หมวดหมู่</label>
+            <input list="ctm-categories" value={form.category} onChange={set("category")} style={inp} placeholder="พิมพ์หรือเลือกหมวดหมู่" />
+            <datalist id="ctm-categories">
+              {categories.map(c => <option key={c} value={c} />)}
+            </datalist>
+            {categories.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                {categories.map(c => (
+                  <button key={c} type="button" onClick={() => setForm(f => ({ ...f, category: c }))}
+                    style={{ background: form.category === c ? "#fef3c7" : "#f3f4f6", border: `1px solid ${form.category === c ? "#b45309" : "#e5e7eb"}`, borderRadius: 20, padding: "2px 10px", fontSize: 11, color: form.category === c ? "#b45309" : "#374151", cursor: "pointer", fontWeight: form.category === c ? 700 : 400 }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ราคาทุน (₩)*</label><input required type="number" min="0" value={form.buyPrice} onChange={set("buyPrice")} style={inp} /></div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ราคาขาย (₩)*</label><input required type="number" min="0" value={form.sellPrice} onChange={set("sellPrice")} style={inp} /></div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>สต็อก</label><input type="number" min="0" value={form.stock} onChange={set("stock")} style={inp} /></div>

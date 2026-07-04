@@ -825,10 +825,29 @@ model CtmProduct {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  saleItems CtmSaleItem[]
+  saleItems  CtmSaleItem[]
+  promotions CtmPromotion[]
 
   @@index([barcode])
   @@index([category])
+}
+
+model CtmPromotion {
+  id         String   @id @default(cuid())
+  productId  String
+  promoPrice Decimal  @db.Decimal(10, 2)
+  label      String?
+  note       String?
+  isActive   Boolean  @default(true)
+  startDate  DateTime @default(now())
+  endDate    DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product CtmProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([isActive])
 }
 
 model CtmSale {

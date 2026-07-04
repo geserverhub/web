@@ -7,6 +7,7 @@ import { useEffect } from "react";
 const MENU = [
   { href: "/charoenthaimart/admin", label: "แดชบอร์ด", icon: "📊", exact: true },
   { href: "/charoenthaimart/admin/products", label: "สินค้า", icon: "📦" },
+  { href: "/charoenthaimart/admin/promotions", label: "สินค้าจัดโปรวันนี้", icon: "🏷️" },
   { href: "/charoenthaimart/admin/barcode", label: "บาร์โค้ด", icon: "🔖" },
   { href: "/charoenthaimart/admin/sales", label: "ยอดขาย", icon: "💰" },
   { href: "/charoenthaimart/admin/finance", label: "กำไร/ขาดทุน", icon: "📈" },
