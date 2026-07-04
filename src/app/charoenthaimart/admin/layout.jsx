@@ -7,13 +7,17 @@ import { useEffect } from "react";
 const MENU = [
   { href: "/charoenthaimart/admin", label: "แดชบอร์ด", icon: "📊", exact: true },
   { href: "/charoenthaimart/admin/products", label: "สินค้า", icon: "📦" },
-  { href: "/charoenthaimart/admin/promotions", label: "สินค้าจัดโปรวันนี้", icon: "🏷️" },
+  { href: "/charoenthaimart/admin/promotions", label: "สินค้าจัดโปร", icon: "🏷️" },
   { href: "/charoenthaimart/admin/barcode", label: "บาร์โค้ด", icon: "🔖" },
   { href: "/charoenthaimart/admin/sales", label: "ยอดขาย", icon: "💰" },
   { href: "/charoenthaimart/admin/finance", label: "กำไร/ขาดทุน", icon: "📈" },
-  { href: "/charoenthaimart/admin/tax", label: "บัญชีภาษี", icon: "🧾" },
+  { href: "/charoenthaimart/admin/expenses", label: "รายจ่ายประจำวัน", icon: "📋" },
+  { href: "/charoenthaimart/admin/wages", label: "ค่าแรงพนักงาน", icon: "👷" },
+  { href: "/charoenthaimart/admin/partner-shares", label: "ส่วนแบ่งหุ้นส่วน", icon: "🤝" },
+  { href: "/charoenthaimart/admin/tax", label: "บัญชีภาษี VAT", icon: "🧾" },
+  { href: "/charoenthaimart/admin/income-tax", label: "ภาษีรายได้กิจการ", icon: "🏦" },
   { href: "/charoenthaimart/admin/customers", label: "ลูกค้า", icon: "👥" },
-  { href: "/charoenthaimart/admin/suppliers", label: "คู่ค้า", icon: "🤝" },
+  { href: "/charoenthaimart/admin/suppliers", label: "คู่ค้า", icon: "📦" },
 ];
 
 function CtmAdminInner({ children }) {
@@ -22,7 +26,7 @@ function CtmAdminInner({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace("/admin/login");
+    if (status === "unauthenticated") router.replace("/charoenthaimart/login");
     else if (status === "authenticated") {
       const role = session?.user?.role;
       if (role !== "ADMIN" && role !== "SUPER_ADMIN") router.replace("/");

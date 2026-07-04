@@ -927,3 +927,65 @@ model CtmTaxRecord {
 
   @@index([status])
 }
+
+model CtmIncomeTax {
+  id            String   @id @default(cuid())
+  year          String
+  totalRevenue  Decimal  @db.Decimal(14, 2)
+  taxableIncome Decimal  @db.Decimal(14, 2)
+  taxRate       Decimal  @default(0.20) @db.Decimal(5, 4)
+  taxAmount     Decimal  @db.Decimal(14, 2)
+  status        String   @default("DRAFT")
+  note          String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([year])
+  @@index([status])
+}
+
+model CtmDailyExpense {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  category    String
+  description String?
+  amount      Decimal  @db.Decimal(10, 2)
+  paymentType String   @default("CASH")
+  note        String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([category])
+}
+
+model CtmWage {
+  id            String   @id @default(cuid())
+  period        String
+  employeeName  String
+  baseSalary    Decimal  @db.Decimal(10, 2)
+  overtimeHours Decimal  @default(0) @db.Decimal(6, 2)
+  overtimePay   Decimal  @default(0) @db.Decimal(10, 2)
+  bonus         Decimal  @default(0) @db.Decimal(10, 2)
+  totalPay      Decimal  @db.Decimal(10, 2)
+  note          String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([period])
+  @@index([employeeName])
+}
+
+model CtmPartnerShare {
+  id           String   @id @default(cuid())
+  period       String
+  partnerName  String
+  sharePercent Decimal  @db.Decimal(5, 2)
+  netProfit    Decimal  @db.Decimal(14, 2)
+  shareAmount  Decimal  @db.Decimal(14, 2)
+  note         String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([period])
+}
