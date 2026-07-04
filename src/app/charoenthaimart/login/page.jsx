@@ -8,11 +8,16 @@ export default function CtmAdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    waitForAuthSession(5, 100).then((session) => {
+    waitForAuthSession(4, 120).then((session) => {
       const role = session?.user?.role;
-      if (role === "ADMIN" || role === "SUPER_ADMIN") hardRedirect("/charoenthaimart/admin");
+      if (role === "ADMIN" || role === "SUPER_ADMIN") {
+        hardRedirect("/charoenthaimart/admin");
+      } else {
+        setChecking(false);
+      }
     });
   }, []);
 
@@ -28,10 +33,20 @@ export default function CtmAdminLoginPage() {
     }
   };
 
+  const bg = { minHeight: "100vh", background: "linear-gradient(135deg, #fef3c7 0%, #fff7ed 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "sans-serif" };
+
+  if (checking) return (
+    <div style={bg}>
+      <div style={{ textAlign: "center" }}>
+        <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "3px solid #fde68a", marginBottom: 16 }} />
+        <div style={{ color: "#b45309", fontWeight: 600, fontSize: 14 }}>กำลังตรวจสอบ...</div>
+      </div>
+    </div>
+  );
+
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef3c7 0%, #fff7ed 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "sans-serif" }}>
+    <div style={bg}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "40px 36px", width: 420, maxWidth: "100%", boxShadow: "0 16px 56px rgba(0,0,0,.12)" }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #fde68a", marginBottom: 12, boxShadow: "0 4px 14px #b4530930" }} />
           <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: "0 0 4px" }}>เจริญไทยมาร์ท ซูวอน</h1>
