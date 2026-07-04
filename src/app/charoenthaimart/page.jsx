@@ -2,85 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-const LANGS = [
-  { key: "th",  label: "ไทย" },
-  { key: "ko",  label: "한국어" },
-  { key: "en",  label: "English" },
-  { key: "zh",  label: "中文" },
-  { key: "vi",  label: "Tiếng Việt" },
-];
-
-function FlagSVG({ langKey, size = 22 }) {
-  const h = Math.round(size * 0.67);
-  if (langKey === "th") return (
-    <svg width={size} height={h} viewBox="0 0 30 20" style={{ borderRadius: 2, display: "block", flexShrink: 0 }}>
-      <rect width="30" height="20" fill="#A51931"/>
-      <rect y="3.33" width="30" height="13.34" fill="#F4F5F8"/>
-      <rect y="6.67" width="30" height="6.66" fill="#2D2A4A"/>
-    </svg>
-  );
-  if (langKey === "ko") {
-    const S = { stroke: "#000", strokeWidth: "1.3" };
-    const solid = (y) => <line x1="-3.8" y1={y} x2="3.8" y2={y} {...S}/>;
-    const broken = (y) => <><line x1="-3.8" y1={y} x2="-0.8" y2={y} {...S}/><line x1="0.8" y1={y} x2="3.8" y2={y} {...S}/></>;
-    return (
-      <svg width={size} height={h} viewBox="0 0 30 20" style={{ borderRadius: 2, display: "block", flexShrink: 0 }}>
-        <rect width="30" height="20" fill="#fff"/>
-        {/* 건 (Heaven) top-left: 3 solid — rotated -45° so bars go / */}
-        <g transform="translate(6,4.5) rotate(-45)">{solid(-2)}{solid(0)}{solid(2)}</g>
-        {/* 리 (Fire) top-right: solid/broken/solid — rotated +45° so bars go \ */}
-        <g transform="translate(24,4.5) rotate(45)">{solid(-2)}{broken(0)}{solid(2)}</g>
-        {/* 감 (Water) bottom-left: broken/solid/broken — rotated +45° so bars go \ */}
-        <g transform="translate(6,15.5) rotate(45)">{broken(-2)}{solid(0)}{broken(2)}</g>
-        {/* 곤 (Earth) bottom-right: 3 broken — rotated -45° so bars go / */}
-        <g transform="translate(24,15.5) rotate(-45)">{broken(-2)}{broken(0)}{broken(2)}</g>
-        {/* Taeguk */}
-        <circle cx="15" cy="10" r="5" fill="#CD2E3A"/>
-        <path d="M15 5 A2.5 2.5 0 0 1 15 10 A2.5 2.5 0 0 0 15 15 A5 5 0 0 1 15 5Z" fill="#0047A0"/>
-        <circle cx="15" cy="7.5" r="1.25" fill="#CD2E3A"/>
-        <circle cx="15" cy="12.5" r="1.25" fill="#0047A0"/>
-      </svg>
-    );
-  }
-  if (langKey === "en") return (
-    <svg width={size} height={h} viewBox="0 0 30 20" style={{ borderRadius: 2, display: "block", flexShrink: 0 }}>
-      <rect width="30" height="20" fill="#012169"/>
-      <line x1="0" y1="0" x2="30" y2="20" stroke="#fff" strokeWidth="4"/>
-      <line x1="30" y1="0" x2="0" y2="20" stroke="#fff" strokeWidth="4"/>
-      <line x1="0" y1="0" x2="30" y2="20" stroke="#C8102E" strokeWidth="2.5"/>
-      <line x1="30" y1="0" x2="0" y2="20" stroke="#C8102E" strokeWidth="2.5"/>
-      <rect x="12" y="0" width="6" height="20" fill="#fff"/>
-      <rect x="0" y="7" width="30" height="6" fill="#fff"/>
-      <rect x="13" y="0" width="4" height="20" fill="#C8102E"/>
-      <rect x="0" y="8" width="30" height="4" fill="#C8102E"/>
-    </svg>
-  );
-  if (langKey === "zh") return (
-    <svg width={size} height={h} viewBox="0 0 30 20" style={{ borderRadius: 2, display: "block", flexShrink: 0 }}>
-      <rect width="30" height="20" fill="#DE2910"/>
-      <polygon points="6,2 7.2,5.8 11,5.8 8,8 9.2,11.8 6,9.5 2.8,11.8 4,8 1,5.8 4.8,5.8" fill="#FFDE00"/>
-      <polygon points="12,2 12.8,4.4 15.3,4.4 13.3,5.8 14,8.2 12,6.8 10,8.2 10.7,5.8 8.7,4.4 11.2,4.4" fill="#FFDE00" transform="scale(0.55) translate(10,0)"/>
-      <polygon points="14,4 14.6,5.9 16.6,5.9 15,7 15.6,9 14,7.8 12.4,9 13,7 11.4,5.9 13.4,5.9" fill="#FFDE00" transform="scale(0.45) translate(16,2)"/>
-      <polygon points="14,7 14.6,8.9 16.6,8.9 15,10 15.6,12 14,10.8 12.4,12 13,10 11.4,8.9 13.4,8.9" fill="#FFDE00" transform="scale(0.45) translate(14,8)"/>
-    </svg>
-  );
-  if (langKey === "vi") return (
-    <svg width={size} height={h} viewBox="0 0 30 20" style={{ borderRadius: 2, display: "block", flexShrink: 0 }}>
-      <rect width="30" height="20" fill="#DA251D"/>
-      <polygon points="15,3 16.8,8.5 22.5,8.5 17.8,12 19.6,17.5 15,14 10.4,17.5 12.2,12 7.5,8.5 13.2,8.5" fill="#FFFF00"/>
-    </svg>
-  );
-  return null;
-}
+import CartDrawer from "./CartDrawer";
+import { LANGS, FlagSVG } from "./FlagSVG";
 
 const T = {
   th: {
     subtitle: "ร้านขายของไทยในเกาหลี · อาหาร เครื่องปรุง สินค้านำเข้า",
-    flashSale: "🔥 FLASH SALE โปรโมชั่นและกิจกรรมวันนี้", items: "รายการ",
-    allProducts: "FLASH SALE โปรโมชั่นและกิจกรรมวันนี้", allCat: "🛍️ ทั้งหมด", noProducts: "ไม่มีสินค้าในหมวดนี้ในตอนนี้",
+    flashSale: "🔥 สินค้าแนะนำ 🔥", items: "รายการ",
+    allProducts: "FLASH SALE โปรโมชั่นและกิจกรรมวันนี้", allCat: "🛍️ ทั้งหมด", noProducts: "ไม่มีสินค้าในหมวดนี้ในตอนนี้", outOfStock: "สินค้าหมด",
     addCart: "+ ใส่ตะกร้า", inCart: "ในตะกร้า",
-    viewProductsCta: "เยี่ยมชมสินค้าของเรา",
+    viewProductsCta: "เยี่ยมชมสินค้าทั้งหมดของเรา",
+    catalogSubtitle: "โปรโมชั่นและกิจกรรมวันนี้ · สินค้าไทยคุณภาพจากเจริญไทยมาร์ท",
+    comingSoonDesc: "สินค้าในหมวดนี้กำลังจะมาเร็วๆ นี้",
     cartTitle: "ตะกร้าสินค้า", emptyCart: "ไม่มีสินค้าในตะกร้า",
     total: "รวมทั้งหมด", orderLine: "💬 สั่งซื้อผ่าน LINE",
     deliveryNote: "LINE @486wfonl · ส่งทั่วเกาหลี 20กก. ₩6,000",
@@ -90,10 +23,12 @@ const T = {
   },
   ko: {
     subtitle: "한국 내 태국 식품 전문점 · 식재료 양념 수입 제품",
-    flashSale: "🔥 오늘의 FLASH SALE", items: "개",
-    allProducts: "전체 상품", allCat: "🛍️ 전체", noProducts: "이 카테고리에 상품이 없습니다",
+    flashSale: "🔥 추천 상품 🔥", items: "개",
+    allProducts: "전체 상품", allCat: "🛍️ 전체", noProducts: "이 카테고리에 상품이 없습니다", outOfStock: "품절",
     addCart: "+ 장바구니 담기", inCart: "담음",
-    viewProductsCta: "우리 상품 구경하기",
+    viewProductsCta: "우리 상품 전체 구경하기",
+    catalogSubtitle: "오늘의 프로모션 및 이벤트 · 차로엔 타이 마트의 태국 고품질 상품",
+    comingSoonDesc: "이 카테고리의 상품이 곧 준비됩니다",
     cartTitle: "장바구니", emptyCart: "장바구니가 비어 있습니다",
     total: "합계", orderLine: "💬 LINE으로 주문",
     deliveryNote: "LINE @486wfonl · 전국 배송 20kg ₩6,000",
@@ -103,10 +38,12 @@ const T = {
   },
   en: {
     subtitle: "Thai grocery store in Korea · Food, seasoning & imported goods",
-    flashSale: "🔥 FLASH SALE Today", items: "items",
-    allProducts: "All Products", allCat: "🛍️ All", noProducts: "No products in this category",
+    flashSale: "🔥 Recommended Products 🔥", items: "items",
+    allProducts: "All Products", allCat: "🛍️ All", noProducts: "No products in this category", outOfStock: "Out of stock",
     addCart: "+ Add to cart", inCart: "in cart",
-    viewProductsCta: "Explore our products",
+    viewProductsCta: "Explore all our products",
+    catalogSubtitle: "Today's promotions and events · Quality Thai products from Charoen Thai Mart",
+    comingSoonDesc: "Products in this category are coming soon",
     cartTitle: "Shopping Cart", emptyCart: "Your cart is empty",
     total: "Total", orderLine: "💬 Order via LINE",
     deliveryNote: "LINE @486wfonl · Nationwide 20kg ₩6,000",
@@ -116,10 +53,12 @@ const T = {
   },
   zh: {
     subtitle: "韩国泰国食品专卖店 · 食材 调味料 进口商品",
-    flashSale: "🔥 今日 FLASH SALE", items: "件",
-    allProducts: "全部商品", allCat: "🛍️ 全部", noProducts: "此分类暂无商品",
+    flashSale: "🔥 推荐商品 🔥", items: "件",
+    allProducts: "全部商品", allCat: "🛍️ 全部", noProducts: "此分类暂无商品", outOfStock: "缺货",
     addCart: "+ 加入购物车", inCart: "已加入",
-    viewProductsCta: "浏览我们的商品",
+    viewProductsCta: "浏览我们的全部商品",
+    catalogSubtitle: "今日促销与活动 · 来自Charoen Thai Mart的优质泰国商品",
+    comingSoonDesc: "此分类的商品即将上架",
     cartTitle: "购物车", emptyCart: "购物车为空",
     total: "总计", orderLine: "💬 通过LINE订购",
     deliveryNote: "LINE @486wfonl · 全国配送 20kg ₩6,000",
@@ -129,10 +68,12 @@ const T = {
   },
   vi: {
     subtitle: "Cửa hàng thực phẩm Thái tại Hàn Quốc · Thực phẩm, gia vị, hàng nhập khẩu",
-    flashSale: "🔥 FLASH SALE Hôm nay", items: "sản phẩm",
-    allProducts: "Tất cả sản phẩm", allCat: "🛍️ Tất cả", noProducts: "Không có sản phẩm trong danh mục này",
+    flashSale: "🔥 Sản phẩm nổi bật 🔥", items: "sản phẩm",
+    allProducts: "Tất cả sản phẩm", allCat: "🛍️ Tất cả", noProducts: "Không có sản phẩm trong danh mục này", outOfStock: "Hết hàng",
     addCart: "+ Thêm vào giỏ", inCart: "trong giỏ",
-    viewProductsCta: "Khám phá sản phẩm của chúng tôi",
+    viewProductsCta: "Khám phá tất cả sản phẩm của chúng tôi",
+    catalogSubtitle: "Khuyến mãi và sự kiện hôm nay · Sản phẩm Thái chất lượng từ Charoen Thai Mart",
+    comingSoonDesc: "Sản phẩm trong danh mục này sắp ra mắt",
     cartTitle: "Giỏ hàng", emptyCart: "Giỏ hàng trống",
     total: "Tổng cộng", orderLine: "💬 Đặt hàng qua LINE",
     deliveryNote: "LINE @486wfonl · Toàn quốc 20kg ₩6,000",
@@ -209,13 +150,6 @@ export default function CharoenthaimartPage() {
 
   const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
-
-  const orderViaLine = () => {
-    if (!cart.length) return;
-    const lines = cart.map(i => `• ${i.name} ×${i.qty}  ₩${(i.price * i.qty).toLocaleString()}`).join("\n");
-    const msg = encodeURIComponent(`สวัสดีครับ/ค่ะ 🙏\nต้องการสั่งสินค้า:\n\n${lines}\n\nรวมทั้งหมด: ₩${cartTotal.toLocaleString()}\n\nกรุณาแจ้งที่อยู่จัดส่งด้วยนะคะ`);
-    window.open(`https://line.me/R/oaMessage/%40486wfonl/?${msg}`, "_blank");
-  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#fdf6ee", color: "#1e293b", fontFamily: "sans-serif" }}>
@@ -311,6 +245,23 @@ export default function CharoenthaimartPage() {
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 20px 120px" }}>
 
+        {/* Prominent shop CTA */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+          <a href="/charoenthaimart/shop"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 14,
+              background: "linear-gradient(135deg,#b45309,#d97706)",
+              color: "#fff", textDecoration: "none",
+              borderRadius: 999, padding: "18px 44px",
+              fontWeight: 900, fontSize: 20,
+              boxShadow: "0 8px 32px rgba(180,83,9,.45)",
+              letterSpacing: 0.5,
+            }}>
+            <span style={{ fontSize: 26 }}>🛍️</span>
+            {t.viewProductsCta}
+          </a>
+        </div>
+
         {/* FLASH SALE section */}
         {promos.length > 0 && (
           <section style={{ marginBottom: 40 }}>
@@ -360,7 +311,7 @@ export default function CharoenthaimartPage() {
               {products.length > 0 && <span style={{ background: "#92400e", color: "#fde68a", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 800, border: "1px solid #b45309" }}>{products.length} {t.items}</span>}
             </div>
           </div>
-          <div style={{ color: "#065f46", fontSize: 13, fontWeight: 700, marginBottom: 18 }}>โปรโมชั่นและกิจกรรมวันนี้ · สินค้าไทยคุณภาพจากเจริญไทยมาร์ท</div>
+          <div style={{ color: "#065f46", fontSize: 13, fontWeight: 700, marginBottom: 18 }}>{t.catalogSubtitle}</div>
 
           {/* Category tabs */}
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6, marginBottom: 22, scrollbarWidth: "none" }}>
@@ -378,34 +329,44 @@ export default function CharoenthaimartPage() {
 
           {/* Product grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
-            {products.map(p => (
+            {products.map(p => {
+              const outOfStock = Number(p.stock) <= 0 || p.isActive === false;
+              return (
               <div key={p.id} className="ctm-card" style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 3px 14px rgba(0,0,0,.09)", position: "relative", display: "flex", flexDirection: "column", border: "1px solid #f5e8d8" }}>
                 {/* Like button */}
                 <button onClick={() => toggleLike(p.id)} style={{ position: "absolute", top: 8, right: 8, width: 32, height: 32, borderRadius: "50%", border: "none", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.2)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, zIndex: 2 }}>
                   {likes.has(p.id) ? "❤️" : "🤍"}
                 </button>
                 {/* Image */}
-                {p.imageUrl
-                  ? <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: 160, objectFit: "cover", flexShrink: 0 }} />
-                  : <div style={{ width: "100%", height: 160, background: "linear-gradient(135deg,#fef3c7,#fde8c8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, flexShrink: 0 }}>📦</div>}
+                <div style={{ position: "relative" }}>
+                  {p.imageUrl
+                    ? <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: 160, objectFit: "cover", flexShrink: 0 }} />
+                    : <div style={{ width: "100%", height: 160, background: "linear-gradient(135deg,#fef3c7,#fde8c8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, flexShrink: 0 }}>📦</div>}
+                  {outOfStock && (
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(31,41,55,.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ background: "#fff", color: "#b91c1c", borderRadius: 999, padding: "4px 14px", fontSize: 12, fontWeight: 900 }}>{t.outOfStock}</span>
+                    </div>
+                  )}
+                </div>
                 {/* Info */}
                 <div style={{ padding: "10px 12px 13px", flex: 1, display: "flex", flexDirection: "column" }}>
                   {p.category && <span style={{ fontSize: 10, color: "#92400e", background: "#fef3c7", borderRadius: 6, padding: "2px 8px", display: "inline-block", marginBottom: 5, alignSelf: "flex-start", fontWeight: 700, border: "1px solid #fde68a" }}>{p.category}</span>}
                   <div style={{ fontWeight: 700, fontSize: 13, color: "#1f2937", lineHeight: 1.4, marginBottom: 2, flex: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.name}</div>
                   {p.nameKo && <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 5, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{p.nameKo}</div>}
                   <div style={{ fontSize: 20, fontWeight: 900, color: "#065f46", marginBottom: 10, letterSpacing: "-0.01em" }}>₩{Number(p.sellPrice).toLocaleString()}</div>
-                  <button onClick={() => addToCart(p)}
-                    style={{ width: "100%", background: cart.some(c => c.id === p.id) ? "linear-gradient(135deg,#166534,#16a34a)" : "linear-gradient(135deg,#065f46,#059669)", color: "#fff", border: "none", borderRadius: 10, padding: "9px", fontWeight: 800, fontSize: 12, cursor: "pointer", boxShadow: cart.some(c => c.id === p.id) ? "0 2px 8px rgba(22,101,52,.3)" : "0 2px 8px rgba(6,95,70,.3)" }}>
-                    {cart.some(c => c.id === p.id) ? `✓ ${cart.find(c=>c.id===p.id).qty} ${t.inCart}` : t.addCart}
+                  <button onClick={() => !outOfStock && addToCart(p)} disabled={outOfStock}
+                    style={{ width: "100%", background: outOfStock ? "#e5e7eb" : cart.some(c => c.id === p.id) ? "linear-gradient(135deg,#166534,#16a34a)" : "linear-gradient(135deg,#065f46,#059669)", color: outOfStock ? "#9ca3af" : "#fff", border: "none", borderRadius: 10, padding: "9px", fontWeight: 800, fontSize: 12, cursor: outOfStock ? "not-allowed" : "pointer", boxShadow: outOfStock ? "none" : cart.some(c => c.id === p.id) ? "0 2px 8px rgba(22,101,52,.3)" : "0 2px 8px rgba(6,95,70,.3)" }}>
+                    {outOfStock ? t.outOfStock : cart.some(c => c.id === p.id) ? `✓ ${cart.find(c=>c.id===p.id).qty} ${t.inCart}` : t.addCart}
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
             {products.length === 0 && (
               <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "56px 24px" }}>
                 <div style={{ fontSize: 56, marginBottom: 16 }}>🛍️</div>
                 <div style={{ fontWeight: 900, fontSize: 22, color: "#b45309", letterSpacing: 3, marginBottom: 6 }}>COMING SOON</div>
-                <div style={{ color: "#9ca3af", fontSize: 13, marginBottom: 28 }}>สินค้าในหมวดนี้กำลังจะมาเร็วๆ นี้</div>
+                <div style={{ color: "#9ca3af", fontSize: 13, marginBottom: 28 }}>{t.comingSoonDesc}</div>
                 <a
                   href="/charoenthaimart/shop"
                   style={{
@@ -420,7 +381,7 @@ export default function CharoenthaimartPage() {
                   }}
                 >
                   <span style={{ fontSize: 22 }}>🛍️</span>
-                  เยี่ยมชมสินค้าของเรา
+                  {t.viewProductsCta}
                 </a>
               </div>
             )}
@@ -436,52 +397,7 @@ export default function CharoenthaimartPage() {
         </button>
       )}
 
-      {/* Cart drawer */}
-      {showCart && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 300 }}>
-          <div onClick={() => setShowCart(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)" }} />
-          <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "min(400px,100vw)", background: "#fff", display: "flex", flexDirection: "column", boxShadow: "-4px 0 32px rgba(0,0,0,.2)" }}>
-            {/* Header */}
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0fdf4", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg,#064e3b,#065f46)" }}>
-              <span style={{ fontWeight: 800, fontSize: 16, color: "#fff" }}>🛒 {t.cartTitle} <span style={{ color: "#fde68a" }}>({cartCount})</span></span>
-              <button onClick={() => setShowCart(false)} style={{ background: "rgba(255,255,255,.2)", border: "none", fontSize: 20, cursor: "pointer", color: "#fff", lineHeight: 1, width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-            </div>
-            {/* Items */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
-              {cart.length === 0 && <div style={{ textAlign: "center", color: "#9ca3af", padding: "48px 0", fontSize: 14 }}>{t.emptyCart}</div>}
-              {cart.map(item => (
-                <div key={item.id} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f1f5f9" }}>
-                  {item.image
-                    ? <img src={item.image} alt="" style={{ width: 54, height: 54, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                    : <div style={{ width: 54, height: 54, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📦</div>}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: "#1e293b", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
-                    <div style={{ fontSize: 13, color: "#b45309", fontWeight: 800 }}>₩{item.price.toLocaleString()} / {item.unit || "ชิ้น"}</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                    <button onClick={() => setCartQty(item.id, item.qty - 1)} style={{ width: 28, height: 28, border: "1px solid #e2e8f0", borderRadius: 7, background: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 15 }}>−</button>
-                    <span style={{ minWidth: 22, textAlign: "center", fontWeight: 700, fontSize: 14 }}>{item.qty}</span>
-                    <button onClick={() => setCartQty(item.id, item.qty + 1)} style={{ width: 28, height: 28, border: "1px solid #e2e8f0", borderRadius: 7, background: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 15 }}>+</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Footer */}
-            {cart.length > 0 && (
-              <div style={{ padding: "16px 20px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-                  <span style={{ fontWeight: 700, fontSize: 15, color: "#374151" }}>{t.total}</span>
-                  <span style={{ fontWeight: 900, fontSize: 22, color: "#065f46" }}>₩{cartTotal.toLocaleString()}</span>
-                </div>
-                <button onClick={orderViaLine} style={{ width: "100%", background: "linear-gradient(135deg,#059669,#06c755)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontWeight: 900, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 16px rgba(6,199,85,.4)" }}>
-                  {t.orderLine}
-                </button>
-                <div style={{ textAlign: "center", fontSize: 11, color: "#9ca3af", marginTop: 8 }}>{t.deliveryNote}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <CartDrawer cart={cart} setCartQty={setCartQty} showCart={showCart} setShowCart={setShowCart} theme="green" />
 
       {/* Footer: Map + Address + Copyright */}
       <footer style={{ background: "#1e293b", color: "#cbd5e1" }}>
@@ -509,6 +425,7 @@ export default function CharoenthaimartPage() {
               <div style={{ fontWeight: 700, fontSize: 13, color: "#f1f5f9", marginBottom: 8 }}>{t.contactLabel}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <a href="https://www.facebook.com/thaimartsuwon" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", textDecoration: "none", fontSize: 13 }}>📘 Facebook: เจริญไทยมาร์ท ซูวอน</a>
+                <a href="https://line.me/R/ti/p/@486wfonl" target="_blank" rel="noopener noreferrer" style={{ color: "#06c755", textDecoration: "none", fontSize: 13 }}>💬 Line: @486wfonl</a>
               </div>
             </div>
             <div>

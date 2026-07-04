@@ -1,15 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const STATUS_LABEL = { PENDING: "รอจัดส่ง", SHIPPED: "กำลังจัดส่ง", DELIVERED: "ส่งแล้ว", FAILED: "ส่งไม่สำเร็จ" };
-const STATUS_COLOR = { PENDING: "#f59e0b", SHIPPED: "#3b82f6", DELIVERED: "#16a34a", FAILED: "#b91c1c" };
-const STATUS_BG   = { PENDING: "#fef3c7", SHIPPED: "#dbeafe", DELIVERED: "#dcfce7", FAILED: "#fee2e2" };
+const STATUS_LABEL = { PENDING: "รอจัดส่ง", SHIPPED: "กำลังจัดส่ง", DELIVERED: "ส่งแล้ว", FAILED: "ส่งไม่สำเร็จ", CANCELLED: "ยกเลิก" };
+const STATUS_COLOR = { PENDING: "#f59e0b", SHIPPED: "#3b82f6", DELIVERED: "#16a34a", FAILED: "#b91c1c", CANCELLED: "#6b7280" };
+const STATUS_BG   = { PENDING: "#fef3c7", SHIPPED: "#dbeafe", DELIVERED: "#dcfce7", FAILED: "#fee2e2", CANCELLED: "#f3f4f6" };
 const TYPE_LABEL  = { DELIVERY: "🛵 เดลิเวอร์รี่", TAEKBAE: "📦 แทคเป (택배)" };
 const EMPTY_FORM  = { invoiceNo: "", saleId: "", type: "DELIVERY", recipientName: "", recipientPhone: "", recipientAddress: "", trackingNo: "", carrier: "", status: "PENDING", note: "" };
 
 export default function ShippingPage() {
   const [shippings, setShippings] = useState(null);
   const [sales, setSales]         = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [tab, setTab]             = useState("ALL"); // ALL | DELIVERY | TAEKBAE
   const [form, setForm]           = useState(EMPTY_FORM);
   const [editId, setEditId]       = useState(null);
@@ -17,14 +18,29 @@ export default function ShippingPage() {
   const [saving, setSaving]       = useState(false);
   const [invSearch, setInvSearch] = useState("");
   const [showInvPicker, setShowInvPicker] = useState(false);
+  const [custSearch, setCustSearch] = useState("");
+  const [showCustPicker, setShowCustPicker] = useState(false);
+  const [printTarget, setPrintTarget] = useState(null);
+  const [trackingInputs, setTrackingInputs] = useState({});
+  const [savingTracking, setSavingTracking] = useState(null);
+
+  useEffect(() => {
+    if (!printTarget) return;
+    const id = setTimeout(() => window.print(), 80);
+    const onAfterPrint = () => setPrintTarget(null);
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => { clearTimeout(id); window.removeEventListener("afterprint", onAfterPrint); };
+  }, [printTarget]);
 
   const load = async () => {
-    const [sr, sr2] = await Promise.all([
+    const [sr, sr2, sr3] = await Promise.all([
       fetch("/api/ctm/shipping").then(r => r.json()),
       fetch("/api/ctm/sales").then(r => r.json()),
+      fetch("/api/ctm/customers").then(r => r.json()),
     ]);
     setShippings(sr.shippings || []);
     setSales(sr2.sales || []);
+    setCustomers(sr3.customers || []);
   };
   useEffect(() => { load(); }, []);
 
@@ -80,9 +96,23 @@ export default function ShippingPage() {
     load();
   };
 
+  const saveTracking = async (id) => {
+    const trackingNo = trackingInputs[id] ?? "";
+    setSavingTracking(id);
+    try {
+      await fetch("/api/ctm/shipping", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, trackingNo }) });
+      await load();
+    } finally { setSavingTracking(null); }
+  };
+
   const selectInv = (sale) => {
     setForm(f => ({ ...f, invoiceNo: sale.number, saleId: sale.id, recipientName: sale.customer?.name || f.recipientName }));
     setShowInvPicker(false);
+  };
+
+  const selectCust = (c) => {
+    setForm(f => ({ ...f, recipientName: c.name, recipientPhone: c.phone || f.recipientPhone, recipientAddress: c.address || f.recipientAddress }));
+    setShowCustPicker(false);
   };
 
   const filtered = shippings ? shippings.filter(s => tab === "ALL" || s.type === tab) : [];
@@ -90,6 +120,11 @@ export default function ShippingPage() {
     if (!s) return [];
     if (!invSearch) return s.slice(0, 30);
     return s.filter(x => x.number?.includes(invSearch) || x.customer?.name?.includes(invSearch)).slice(0, 20);
+  };
+  const cust = (s) => {
+    if (!s) return [];
+    if (!custSearch) return s.slice(0, 30);
+    return s.filter(x => x.name?.includes(custSearch) || x.phone?.includes(custSearch)).slice(0, 20);
   };
 
   const inp = { border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
@@ -100,6 +135,43 @@ export default function ShippingPage() {
 
   return (
     <div style={{ padding: "28px 32px", fontFamily: "sans-serif" }}>
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #shipping-label-print, #shipping-label-print * { visibility: visible !important; }
+          #shipping-label-print { display: block !important; position: fixed; inset: 0; padding: 24px; }
+        }
+      `}</style>
+      {printTarget && (
+        <div id="shipping-label-print" style={{ display: "none" }}>
+          <div style={{ border: "3px solid #111827", borderRadius: 8, padding: "20px 24px", maxWidth: 480, fontFamily: "sans-serif" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #111827", paddingBottom: 10, marginBottom: 14 }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#7f1d1d" }}>ร้านเจริญไทยมาร์ท ซูวอน</div>
+              <div style={{ fontSize: 13, fontWeight: 800, padding: "3px 10px", borderRadius: 6, background: printTarget.type === "TAEKBAE" ? "#ede9fe" : "#dbeafe", color: printTarget.type === "TAEKBAE" ? "#7c3aed" : "#1d4ed8" }}>
+                {TYPE_LABEL[printTarget.type]}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>เลขที่บิล / INV</div>
+            <div style={{ fontSize: 16, fontFamily: "monospace", fontWeight: 800, color: "#b45309", marginBottom: 14 }}>{printTarget.invoiceNo}</div>
+
+            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>ผู้รับ / TO</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#111827", marginBottom: 6 }}>{printTarget.recipientName || "—"}</div>
+            <div style={{ fontSize: 15, color: "#374151", marginBottom: 6 }}>{printTarget.recipientPhone || "—"}</div>
+            <div style={{ fontSize: 15, color: "#374151", whiteSpace: "pre-wrap", marginBottom: 14 }}>{printTarget.recipientAddress || "—"}</div>
+
+            {printTarget.type === "TAEKBAE" && (
+              <div style={{ borderTop: "1px dashed #9ca3af", paddingTop: 12, marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>ขนส่ง / เลขที่พัสดุ</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>{printTarget.carrier || "—"}</div>
+                <div style={{ fontSize: 18, fontFamily: "monospace", fontWeight: 800, color: "#111827" }}>{printTarget.trackingNo || "—"}</div>
+              </div>
+            )}
+            {printTarget.note && (
+              <div style={{ fontSize: 12, color: "#6b7280", borderTop: "1px dashed #9ca3af", paddingTop: 10 }}>หมายเหตุ: {printTarget.note}</div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
@@ -179,7 +251,31 @@ export default function ShippingPage() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10, marginBottom: 14 }}>
-              <div><label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 3 }}>ชื่อผู้รับ</label><input value={form.recipientName} onChange={set("recipientName")} style={inp} /></div>
+              <div style={{ position: "relative" }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 3 }}>ชื่อผู้รับ</label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input value={form.recipientName} onChange={set("recipientName")} style={{ ...inp, flex: 1 }} />
+                  <button type="button" onClick={() => setShowCustPicker(v => !v)}
+                    style={{ background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, padding: "0 12px", fontWeight: 700, fontSize: 12, color: "#92400e", cursor: "pointer", flexShrink: 0 }}>
+                    🔍
+                  </button>
+                </div>
+                {showCustPicker && (
+                  <div style={{ background: "#fff", border: "1px solid #e7e3d8", borderRadius: 10, padding: 14, marginTop: 6, boxShadow: "0 4px 16px rgba(0,0,0,.08)", maxHeight: 260, overflowY: "auto", position: "absolute", zIndex: 10, width: 320 }}>
+                    <input placeholder="ค้นหาชื่อลูกค้าหรือเบอร์โทร..." value={custSearch} onChange={e => setCustSearch(e.target.value)}
+                      style={{ ...inp, marginBottom: 10 }} autoFocus />
+                    {cust(customers).length === 0 ? <div style={{ color: "#9ca3af", fontSize: 13, textAlign: "center" }}>ไม่พบ</div> : cust(customers).map(c => (
+                      <div key={c.id} onClick={() => selectCust(c)}
+                        style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, cursor: "pointer", fontSize: 13, marginBottom: 2, background: "#fafaf7", border: "1px solid #f3f4f6" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#fef3c7"}
+                        onMouseLeave={e => e.currentTarget.style.background = "#fafaf7"}>
+                        <span style={{ fontWeight: 700 }}>{c.name}</span>
+                        <span style={{ color: "#6b7280" }}>{c.phone || "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div><label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 3 }}>เบอร์โทร</label><input value={form.recipientPhone} onChange={set("recipientPhone")} style={inp} /></div>
               {form.type === "TAEKBAE" && (
                 <>
@@ -263,9 +359,24 @@ export default function ShippingPage() {
                   {s.deliveredAt && <div style={{ color: "#16a34a" }}>ถึง: {fmtDate(s.deliveredAt)}</div>}
                 </td>
                 <td style={{ padding: "9px 12px" }}>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                     <button onClick={() => openEdit(s)} style={{ background: "#fef3c7", color: "#92400e", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>แก้ไข</button>
-                    <button onClick={() => del(s.id)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>ลบ</button>
+                    {s.type === "TAEKBAE" ? (
+                      <>
+                        <input value={trackingInputs[s.id] ?? s.trackingNo ?? ""} onChange={e => setTrackingInputs(t => ({ ...t, [s.id]: e.target.value }))}
+                          placeholder="เลขที่จัดส่ง (운송장)"
+                          style={{ border: "1px solid #e7e3d8", borderRadius: 6, padding: "4px 8px", fontSize: 12, outline: "none", width: 130 }} />
+                        <button onClick={() => saveTracking(s.id)} disabled={savingTracking === s.id}
+                          style={{ background: "#eff6ff", color: "#1d4ed8", border: "none", borderRadius: 6, padding: "4px 10px", cursor: savingTracking === s.id ? "default" : "pointer", fontSize: 12, fontWeight: 600 }}>
+                          {savingTracking === s.id ? "..." : "บันทึก"}
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => setPrintTarget(s)} style={{ background: "#eff6ff", color: "#1d4ed8", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>🖨️ พิมพ์</button>
+                    )}
+                    <button onClick={() => del(s.id)} disabled={s.status === "DELIVERED"}
+                      title={s.status === "DELIVERED" ? "ส่งแล้ว ไม่สามารถลบได้" : ""}
+                      style={{ background: s.status === "DELIVERED" ? "#f3f4f6" : "#fef2f2", color: s.status === "DELIVERED" ? "#9ca3af" : "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: s.status === "DELIVERED" ? "not-allowed" : "pointer", fontSize: 12 }}>ลบ</button>
                   </div>
                 </td>
               </tr>

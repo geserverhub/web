@@ -4,14 +4,32 @@ import prisma from "@/lib/prisma";
 
 function isAdmin(s) { return s?.user?.role === "ADMIN" || s?.user?.role === "SUPER_ADMIN"; }
 
+let stockLogTableReady = false;
+async function ensureStockLogTable() {
+  if (stockLogTableReady) return;
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS CtmStockLog (
+      id        VARCHAR(191) NOT NULL PRIMARY KEY,
+      productId VARCHAR(191) NOT NULL,
+      delta     INT NOT NULL,
+      note      TEXT NULL,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_ctmstocklog_productid (productId)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
+  stockLogTableReady = true;
+}
+
 export async function GET(req) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  await ensureStockLogTable();
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
   const products = await prisma.ctmProduct.findMany({
     where: q ? { OR: [{ name: { contains: q } }, { barcode: { contains: q } }, { category: { contains: q } }] } : {},
     orderBy: { createdAt: "desc" },
+    include: { stockLogs: { orderBy: { createdAt: "desc" }, take: 1 } },
   });
   return NextResponse.json({ products });
 }

@@ -21,7 +21,7 @@ export async function GET(req) {
     prisma.ctmProduct.findMany({ select: { id: true, name: true, stock: true, category: true } }),
     prisma.ctmSale.findMany({
       where: { saleDate: { gte: since } },
-      select: { id: true, totalAmount: true, note: true, customerId: true, customer: { select: { name: true } } },
+      select: { id: true, totalAmount: true, note: true, customerId: true, customer: { select: { customerCode: true, name: true } } },
     }),
   ]);
 
@@ -45,7 +45,9 @@ export async function GET(req) {
   const custMap = {};
   for (const sale of sales) {
     const key = sale.customerId || `anon_${sale.note || ""}`;
-    const name = sale.customer?.name || sale.note || "ลูกค้าทั่วไป";
+    const name = sale.customer
+      ? `${sale.customer.customerCode ? sale.customer.customerCode + " · " : ""}${sale.customer.name}`
+      : (sale.note || "ลูกค้าทั่วไป");
     if (!custMap[key]) custMap[key] = { name, total: 0, count: 0 };
     custMap[key].total += Number(sale.totalAmount);
     custMap[key].count += 1;

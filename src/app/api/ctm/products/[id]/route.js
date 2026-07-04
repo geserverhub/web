@@ -22,6 +22,15 @@ export async function PUT(req, { params }) {
   return NextResponse.json(product);
 }
 
+export async function PATCH(req, { params }) {
+  const session = await auth();
+  if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { id } = await params;
+  const { isActive } = await req.json();
+  const product = await prisma.ctmProduct.update({ where: { id }, data: { isActive: !!isActive } });
+  return NextResponse.json(product);
+}
+
 export async function DELETE(req, { params }) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

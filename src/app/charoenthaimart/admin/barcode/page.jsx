@@ -11,6 +11,56 @@ function loadJsBarcode(cb) {
   document.head.appendChild(s);
 }
 
+function loadHtml5Qrcode(cb) {
+  if (window.Html5Qrcode) { cb(); return; }
+  const s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+function BarcodeScannerModal({ onDetected, onClose }) {
+  const scannerRef = useRef(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let stopped = false;
+    loadHtml5Qrcode(() => {
+      if (stopped) return;
+      const html5Qrcode = new window.Html5Qrcode("barcode-scanner-region");
+      scannerRef.current = html5Qrcode;
+      html5Qrcode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText) => {
+          if (stopped) return;
+          stopped = true;
+          html5Qrcode.stop().catch(() => {}).finally(() => onDetected(decodedText));
+        },
+        () => {}
+      ).catch(err => setError("ไม่สามารถเปิดกล้องได้: " + (err?.message || err)));
+    });
+    return () => {
+      stopped = true;
+      if (scannerRef.current) scannerRef.current.stop().catch(() => {});
+    };
+  }, []);
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 12, padding: 16, width: "min(420px, 92vw)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#374151" }}>📷 สแกนบาร์โค้ด</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+        </div>
+        {error && <div style={{ color: "#b91c1c", fontSize: 12, marginBottom: 8 }}>{error}</div>}
+        <div id="barcode-scanner-region" style={{ width: "100%" }} />
+        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>เล็งกล้องไปที่บาร์โค้ดสินค้า</div>
+      </div>
+    </div>
+  );
+}
+
 function BarcodePreview({ value, format, showValue }) {
   const svgRef = useRef();
   const [error, setError] = useState("");
@@ -44,6 +94,7 @@ export default function CtmBarcode() {
   const [queue, setQueue] = useState([]);
   const [productSearch, setProductSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Products tab
   const [products, setProducts] = useState([]);
@@ -68,6 +119,13 @@ export default function CtmBarcode() {
     setSelectedProduct(p);
     setBarcodeValue(p.barcode || p.productCode || "");
     setBarcodeLabel(p.name);
+  };
+
+  const handleScanDetected = (text) => {
+    setShowScanner(false);
+    setProductSearch(text);
+    const match = products.find(p => p.barcode === text || p.productCode === text);
+    if (match) selectProduct(match);
   };
 
   const addToQueue = () => {
@@ -141,12 +199,18 @@ export default function CtmBarcode() {
             <div style={{ fontWeight: 700, fontSize: 14, color: "#374151", marginBottom: 12 }}>เลือกสินค้า</div>
 
             {/* Product search */}
-            <input
-              value={productSearch}
-              onChange={e => setProductSearch(e.target.value)}
-              placeholder="🔍 ค้นหาชื่อสินค้า, บาร์โค้ด, รหัส..."
-              style={{ width: "100%", border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 8 }}
-            />
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              <input
+                value={productSearch}
+                onChange={e => setProductSearch(e.target.value)}
+                placeholder="🔍 ค้นหาชื่อสินค้า, บาร์โค้ด, รหัส..."
+                style={{ flex: 1, minWidth: 0, border: "1px solid #e7e3d8", borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              />
+              <button type="button" onClick={() => setShowScanner(true)}
+                style={{ background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, padding: "0 14px", fontWeight: 700, fontSize: 12, color: "#92400e", cursor: "pointer", flexShrink: 0 }}>
+                📷 สแกน
+              </button>
+            </div>
 
             {/* Product list */}
             <div style={{ maxHeight: 210, overflowY: "auto", border: "1px solid #e7e3d8", borderRadius: 8, marginBottom: 12 }}>
@@ -295,6 +359,8 @@ export default function CtmBarcode() {
           </div>
         </>
       )}
+
+      {showScanner && <BarcodeScannerModal onDetected={handleScanDetected} onClose={() => setShowScanner(false)} />}
     </div>
   );
 }

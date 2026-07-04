@@ -2,16 +2,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-function getLast6Months() {
-  const months = [];
-  const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(d.toISOString().slice(0, 7));
-  }
-  return months;
-}
-
 function fmtK(v) {
   v = Number(v) || 0;
   if (v >= 1000000) return `₩${(v / 1000000).toFixed(1)}M`;
@@ -81,7 +71,7 @@ function BarChart({ data, height = 240 }) {
 function LineChart({ points, height = 180, color = "#b45309" }) {
   if (!points || points.length < 2) {
     const W = 720, H = height;
-    const pad = { l: 40, r: 16, t: 20, b: 28 };
+    const pad = { l: 56, r: 16, t: 20, b: 28 };
     const cw = W - pad.l - pad.r; const ch = H - pad.t - pad.b;
     const n = 30;
     const midY = pad.t + ch / 2;
@@ -98,7 +88,7 @@ function LineChart({ points, height = 180, color = "#b45309" }) {
     );
   }
   const W = 720, H = height;
-  const pad = { l: 40, r: 16, t: 20, b: 28 };
+  const pad = { l: 56, r: 16, t: 20, b: 28 };
   const cw = W - pad.l - pad.r;
   const ch = H - pad.t - pad.b;
   const maxV = Math.max(...points.map(p => p.v), 1);
@@ -117,7 +107,10 @@ function LineChart({ points, height = 180, color = "#b45309" }) {
       {[0, 0.33, 0.66, 1].map((p) => {
         const y = pad.t + p * ch;
         return (
-          <line key={p} x1={pad.l} y1={y} x2={pad.l + cw} y2={y} stroke="#e5e7eb" strokeWidth="1"/>
+          <g key={p}>
+            <line x1={pad.l} y1={y} x2={pad.l + cw} y2={y} stroke="#e5e7eb" strokeWidth="1"/>
+            <text x={pad.l - 8} y={y + 4} fontSize="10" fill="#9ca3af" textAnchor="end">{fmtK(maxV * (1 - p))}</text>
+          </g>
         );
       })}
       <path d={area} fill="url(#lg)"/>
@@ -125,6 +118,12 @@ function LineChart({ points, height = 180, color = "#b45309" }) {
       {points.map((p, i) => p.v > 0 && (
         <circle key={i} cx={px(i)} cy={py(p.v)} r="4" fill={color} stroke="#fff" strokeWidth="2"/>
       ))}
+      {(() => {
+        const tickEvery = points.length > 20 ? 5 : points.length > 10 ? 2 : 1;
+        return points.map((p, i) => (i % tickEvery === 0 || i === points.length - 1) && (
+          <text key={`t${i}`} x={px(i)} y={H - pad.b + 16} fontSize="10" fill="#9ca3af" textAnchor="middle">{p.day}</text>
+        ));
+      })()}
     </svg>
   );
 }
@@ -206,47 +205,44 @@ export default function CtmAdminDashboard() {
   const [analyticsTab, setAnalyticsTab] = useState("sales");
 
   useEffect(() => {
-    const months = getLast6Months();
     const monthLabels = { "01":"ม.ค","02":"ก.พ","03":"มี.ค","04":"เม.ย","05":"พ.ค","06":"มิ.ย","07":"ก.ค","08":"ส.ค","09":"ก.ย","10":"ต.ค","11":"พ.ย","12":"ธ.ค" };
 
     Promise.all([
-      ...months.map(m => fetch(`/api/ctm/sales?month=${m}`).then(r => r.json())),
+      fetch("/api/ctm/sales?months=6").then(r => r.json()),
       fetch("/api/ctm/products").then(r => r.json()),
       fetch("/api/ctm/customers").then(r => r.json()),
-      ...months.map(m => fetch(`/api/ctm/expenses?month=${m}`).then(r => r.json())),
+      fetch("/api/ctm/expenses?months=6").then(r => r.json()),
       fetch("/api/ctm/analytics?months=6").then(r => r.json()),
-    ]).then(results => {
-      const monthResults = results.slice(0, 6);
-      const products = results[6];
-      const customers = results[7];
-      const expResults = results.slice(8, 14);
-      const analyticsData = results[14];
-      const current = monthResults[5];
+    ]).then(([salesBuckets, products, customers, expBuckets, analyticsData]) => {
+      const monthResults = salesBuckets.months || [];
+      const expResults = expBuckets.months || [];
+      const currentSales = salesBuckets.currentSales || [];
+      const current = monthResults[monthResults.length - 1] || {};
 
       setStats({
         revenue: current.totalRevenue || 0,
         tax: current.totalTax || 0,
         profit: current.profit || 0,
+        expense: expResults[expResults.length - 1]?.total || 0,
         products: products.products?.length || 0,
         customers: customers.customers?.length || 0,
-        salesCount: current.sales?.length || 0,
+        salesCount: current.salesCount || 0,
       });
 
-      const md = months.map((m, i) => ({
-        month: m,
-        label: monthLabels[m.slice(5)] || m.slice(5),
-        revenue: monthResults[i].totalRevenue || 0,
-        profit: monthResults[i].profit || 0,
+      const md = monthResults.map((m, i) => ({
+        month: m.month,
+        label: monthLabels[m.month.slice(5)] || m.month.slice(5),
+        revenue: m.totalRevenue || 0,
+        profit: m.profit || 0,
         expense: expResults[i]?.total || 0,
       }));
       setMonthlyData(md);
-      setMonthlyExpenses(expResults.map((e, i) => ({ label: monthLabels[months[i].slice(5)], total: e?.total || 0, byCategory: e?.byCategory || {} })));
+      setMonthlyExpenses(expResults.map(e => ({ label: monthLabels[e.month.slice(5)], total: e.total || 0, byCategory: e.byCategory || {} })));
 
       // Daily chart
-      const salesThisMonth = current.sales || [];
       const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
       const byDay = Array.from({ length: daysInMonth }, (_, i) => ({ day: i + 1, v: 0 }));
-      salesThisMonth.forEach(s => {
+      currentSales.forEach(s => {
         const day = new Date(s.saleDate).getDate() - 1;
         if (byDay[day]) byDay[day].v += Number(s.totalAmount);
       });
@@ -279,6 +275,7 @@ export default function CtmAdminDashboard() {
           { label: "ยอดขาย (inc VAT)", value: `₩${fmt(stats?.revenue)}`, color: "#b45309", bg: "#fef3c7", border: "#fde68a" },
           { label: "VAT 10%", value: `₩${fmt(stats?.tax)}`, color: "#7c3aed", bg: "#ede9fe", border: "#ddd6fe" },
           { label: "กำไรสุทธิ", value: `₩${fmt(stats?.profit)}`, color: "#15803d", bg: "#dcfce7", border: "#bbf7d0" },
+          { label: "รายจ่ายเดือนนี้", value: `₩${fmt(stats?.expense)}`, color: "#b91c1c", bg: "#fee2e2", border: "#fecaca" },
           { label: "ออเดอร์เดือนนี้", value: `${stats?.salesCount ?? "—"} ใบ`, color: "#be185d", bg: "#fce7f3", border: "#fbcfe8" },
           { label: "สินค้าทั้งหมด", value: `${stats?.products ?? "—"} รายการ`, color: "#7c3aed", bg: "#ede9fe", border: "#ddd6fe" },
           { label: "ลูกค้าในระบบ", value: `${stats?.customers ?? "—"} คน`, color: "#0369a1", bg: "#e0f2fe", border: "#bae6fd" },
@@ -307,6 +304,7 @@ export default function CtmAdminDashboard() {
           {dailyPoints.some(p => p.v > 0) && (
             <div style={{ marginTop: 10, fontSize: 12, color: "#475569" }}>
               สูงสุด: <strong style={{ color: "#b45309" }}>{fmtK(Math.max(...dailyPoints.map(p => p.v)))}</strong>
+              {" "}(วันที่ {dailyPoints.reduce((best, p) => p.v > best.v ? p : best, dailyPoints[0]).day})
               {" · "}เฉลี่ย/วัน: <strong>{fmtK(dailyPoints.filter(p => p.v > 0).reduce((s, p) => s + p.v, 0) / Math.max(1, dailyPoints.filter(p => p.v > 0).length))}</strong>
             </div>
           )}

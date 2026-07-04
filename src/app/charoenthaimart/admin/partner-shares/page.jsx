@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 
 const nowMonth = new Date().toISOString().slice(0,7);
 const EMPTY = { period: nowMonth, partnerName: "", sharePercent: "", netProfit: "", deductionAmount: "", deductionNote: "", note: "" };
+const monthLabels = { "01":"ม.ค","02":"ก.พ","03":"มี.ค","04":"เม.ย","05":"พ.ค","06":"มิ.ย","07":"ก.ค","08":"ส.ค","09":"ก.ย","10":"ต.ค","11":"พ.ย","12":"ธ.ค" };
+const SHARE_STATUS_LABEL = { PENDING: "รอชำระ", PARTIAL: "รอชำระบางส่วน", PAID: "จ่ายครบแล้ว" };
+const SHARE_STATUS_COLOR = { PENDING: ["#fee2e2", "#b91c1c"], PARTIAL: ["#fef9c3", "#854d0e"], PAID: ["#dcfce7", "#166534"] };
 
 export default function CtmPartnerShares() {
   const [data, setData] = useState(null);
@@ -12,10 +15,12 @@ export default function CtmPartnerShares() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [autoProfit, setAutoProfit] = useState(null);
+  const [autoMonths, setAutoMonths] = useState([]);
 
   const load = () => {
     fetch(`/api/ctm/partner-shares?period=${period}`).then(r => r.json()).then(setData);
     fetch("/api/ctm/partner-shares").then(r => r.json()).then(d => setAllShares(d.shares || []));
+    fetch("/api/ctm/partner-shares/auto-summary").then(r => r.json()).then(d => setAutoMonths(d.months || []));
   };
 
   const loadSalesProfit = (m) => {
@@ -70,6 +75,35 @@ export default function CtmPartnerShares() {
             รวมจ่ายส่วนแบ่ง: <span style={{ color: "#b45309" }}>₩{fmt(data.shares.reduce((s, x) => s + Number(x.shareAmount), 0))}</span>
           </span>
         )}
+      </div>
+
+      {/* Auto-calculated monthly share summary */}
+      <div style={{ background: "#fff", border: "1px solid #e7e3d8", borderRadius: 12, padding: "20px 24px", marginBottom: 24 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#374151", margin: "0 0 4px" }}>สรุปส่วนแบ่งกำไรอัตโนมัติรายเดือน</h2>
+        <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 16 }}>ยอดขาย − VAT 10% − ต้นทุน − ภาษีรายได้ตามกฎหมาย = ยอดคงเหลือ · ส่วนแบ่งหุ้นส่วน = 40% ของยอดคงเหลือ</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 14 }}>
+          {autoMonths.map(m => {
+            const [bg, color] = SHARE_STATUS_COLOR[m.status] || ["#f3f4f6", "#374151"];
+            return (
+              <div key={m.period} style={{ border: "1px solid #e7e3d8", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>{monthLabels[m.period.slice(5)]} {Number(m.period.slice(0,4)) + 543}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>ยอดขาย</div>
+                <div style={{ fontSize: 13, color: "#374151", marginBottom: 4 }}>₩{fmt(m.totalRevenue)}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>− VAT / ต้นทุน / ภาษีรายได้</div>
+                <div style={{ fontSize: 12, color: "#b91c1c", marginBottom: 4 }}>−₩{fmt(m.vatAmount + m.totalCost + m.incomeTax)}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>ยอดคงเหลือ</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", marginBottom: 8 }}>₩{fmt(m.remaining)}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>ส่วนแบ่งหุ้นส่วน (40%)</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: "#b45309", marginBottom: 10 }}>₩{fmt(m.shareAmount)}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "#6b7280" }}>{m.status === "PAID" ? "จ่ายแล้ว" : "ค้างจ่าย"}: ₩{fmt(m.status === "PAID" ? m.totalRecordedShare : m.pendingAmount)}</span>
+                  <span style={{ background: bg, color, borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{SHARE_STATUS_LABEL[m.status]}</span>
+                </div>
+              </div>
+            );
+          })}
+          {autoMonths.length === 0 && <div style={{ color: "#9ca3af", fontSize: 13 }}>กำลังโหลด...</div>}
+        </div>
       </div>
 
       {showForm && (

@@ -4,6 +4,34 @@ import prisma from "@/lib/prisma";
 
 function isAdmin(s) { return s?.user?.role === "ADMIN" || s?.user?.role === "SUPER_ADMIN"; }
 
+let stockLogTableReady = false;
+async function ensureStockLogTable() {
+  if (stockLogTableReady) return;
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS CtmStockLog (
+      id        VARCHAR(191) NOT NULL PRIMARY KEY,
+      productId VARCHAR(191) NOT NULL,
+      delta     INT NOT NULL,
+      note      TEXT NULL,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_ctmstocklog_productid (productId)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
+  stockLogTableReady = true;
+}
+
+function getRecentMonthBuckets(n) {
+  const now = new Date();
+  const buckets = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
+    buckets.push({ key, start, end });
+  }
+  return buckets;
+}
+
 function getDateRange(params) {
   const date = params.get("date");   // YYYY-MM-DD
   const month = params.get("month"); // YYYY-MM
@@ -30,7 +58,27 @@ export async function GET(req) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { searchParams } = new URL(req.url);
+  const monthsParam = searchParams.get("months");
+  if (monthsParam) {
+    const buckets = getRecentMonthBuckets(parseInt(monthsParam, 10) || 6);
+    const months = await Promise.all(buckets.map(async (b) => {
+      const sales = await prisma.ctmSale.findMany({ where: { saleDate: { gte: b.start, lt: b.end } }, include: { items: true } });
+      const totalRevenue = sales.reduce((s, r) => s + Number(r.totalAmount), 0);
+      const totalTax = sales.reduce((s, r) => s + Number(r.taxAmount), 0);
+      const totalCost = sales.reduce((s, r) => s + r.items.reduce((a, i) => a + Number(i.buyPrice) * i.quantity, 0), 0);
+      return { month: b.key, totalRevenue, totalTax, totalCost, profit: (totalRevenue - totalTax) - totalCost, salesCount: sales.length };
+    }));
+    const current = buckets[buckets.length - 1];
+    const currentSales = await prisma.ctmSale.findMany({
+      where: { saleDate: { gte: current.start, lt: current.end } },
+      orderBy: { saleDate: "desc" },
+      include: { customer: { select: { name: true } }, items: true },
+    });
+    return NextResponse.json({ months, currentSales });
+  }
   const where = getDateRange(searchParams);
+  const customerId = searchParams.get("customerId");
+  if (customerId) where.customerId = customerId;
   const sales = await prisma.ctmSale.findMany({
     where, orderBy: { saleDate: "desc" },
     include: { customer: { select: { name: true } }, items: true },
@@ -72,8 +120,12 @@ export async function POST(req) {
     },
     include: { items: true },
   });
+  await ensureStockLogTable();
   for (const i of items) {
     await prisma.ctmProduct.update({ where: { id: i.productId }, data: { stock: { decrement: i.quantity } } }).catch(() => {});
+    await prisma.ctmStockLog.create({
+      data: { id: require("crypto").randomBytes(12).toString("hex"), productId: i.productId, delta: -i.quantity, note: `ขายผ่าน ${number}` },
+    }).catch(() => {});
   }
   return NextResponse.json(sale, { status: 201 });
 }

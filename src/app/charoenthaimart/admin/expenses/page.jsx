@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 
-const CATEGORIES = ["ค่าเช่า","ค่าสาธารณูปโภค","ค่าวัตถุดิบ","ค่าขนส่ง","ค่าบรรจุภัณฑ์","ค่าโฆษณา","ค่าซ่อมบำรุง","ค่าใช้จ่ายทั่วไป","อื่นๆ"];
+const CATEGORIES = ["ภาษี","ค่าเช่า","ค่าสาธารณูปโภค","ค่าวัตถุดิบ","ค่าขนส่ง","ค่าบรรจุภัณฑ์","ค่าโฆษณา","ค่าซ่อมบำรุง","ค่าใช้จ่ายทั่วไป","อื่นๆ"];
 const EMPTY = { date: new Date().toISOString().slice(0,10), category: "", description: "", amount: "", paymentType: "CASH", note: "" };
 
 export default function CtmExpenses() {
@@ -14,10 +14,33 @@ export default function CtmExpenses() {
   const [receiptPreview, setReceiptPreview] = useState("");
   const [uploading, setUploading] = useState(false);
   const [viewReceipt, setViewReceipt] = useState(null);
+  const [pendingTax, setPendingTax] = useState([]);
   const fileRef = useRef(null);
 
   const load = () => fetch(`/api/ctm/expenses?month=${month}`).then(r => r.json()).then(setData);
   useEffect(() => { load(); }, [month]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/ctm/tax/vat-summary").then(r => r.json()),
+      fetch("/api/ctm/income-tax/auto-summary").then(r => r.json()),
+    ]).then(([vat, income]) => {
+      const pending = [
+        ...(vat.periods || []).filter(p => p.status !== "NOT_YET_DUE").map(p => ({
+          key: `vat-${p.year}-${p.half}`, label: `VAT ${p.label}`, amount: p.taxAmount, status: p.status,
+        })),
+        ...(income.years || []).filter(y => y.status !== "NOT_YET_DUE").map(y => ({
+          key: `income-${y.year}`, label: `ภาษีรายได้ ปีภาษี ${y.year + 543}`, amount: y.taxAmount, status: y.status,
+        })),
+      ];
+      setPendingTax(pending);
+    }).catch(() => {});
+  }, []);
+
+  const useTaxBill = (item) => {
+    setForm(f => ({ ...f, category: "ภาษี", description: item.label, amount: String(Math.round(item.amount)) }));
+    setShowForm(true);
+  };
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
@@ -80,6 +103,23 @@ export default function CtmExpenses() {
               {cat}: ₩{fmt(amt)}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pending tax bills */}
+      {pendingTax.length > 0 && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#b91c1c", marginBottom: 10 }}>🧾 บิลภาษีที่รอชำระ — คลิกเพื่อสร้างบันทึกรายจ่าย</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {pendingTax.map(item => (
+              <button key={item.key} onClick={() => useTaxBill(item)}
+                style={{ background: "#fff", border: "1.5px solid #fca5a5", borderRadius: 8, padding: "8px 14px", cursor: "pointer", textAlign: "left", fontSize: 12 }}>
+                <div style={{ fontWeight: 700, color: "#374151" }}>{item.label}</div>
+                <div style={{ fontWeight: 800, color: "#b91c1c", fontSize: 14 }}>₩{fmt(item.amount)}</div>
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>ยอดคำนวณอัตโนมัติจากระบบ — แก้ไขจำนวนเงินให้ตรงกับยอดที่จ่ายจริงตามใบเสร็จก่อนบันทึก</div>
         </div>
       )}
 

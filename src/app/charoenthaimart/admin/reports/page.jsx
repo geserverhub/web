@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const L = {
   th: {
@@ -49,8 +49,25 @@ const L = {
       products: "รายการสินค้า",
       customers: "รายการลูกค้า",
       suppliers: "รายการคู่ค้า",
+      invoice: "ใบแจ้งหนี้ / แจ้งชำระเงิน",
     },
     generated: "พิมพ์เมื่อ",
+    issueDate: "วันที่ออกบิล",
+    selectCustomer: "เลือกลูกค้า",
+    chooseCustomer: "-- เลือกลูกค้า --",
+    billTo: "ลูกค้า",
+    dueDate: "กำหนดชำระ",
+    bankTransfer: "ช่องทางการชำระเงิน / โอนเข้าบัญชี",
+    selectInvoices: "เลือกบิล INV ที่ต้องการแสดง",
+    selectAll: "เลือกทั้งหมด",
+    deselectAll: "ไม่เลือก",
+    noInvoiceSelected: "กรุณาเลือกบิล INV อย่างน้อย 1 รายการ",
+    noSalesForCustomer: "ลูกค้ารายนี้ยังไม่มีบิล INV",
+    printReceipt: "พิมพ์ใบเสร็จอย่างย่อ",
+    totalDue: "ยอดที่ต้องชำระทั้งหมด",
+    pleasePay: "กรุณาชำระเงินภายในกำหนด ขอบคุณค่ะ",
+    receiptThanks: "ขอบคุณที่ใช้บริการค่ะ",
+    noCustomerSelected: "กรุณาเลือกลูกค้าก่อนโหลดตัวอย่าง",
   },
   ko: {
     title: "보고서 인쇄",
@@ -99,14 +116,31 @@ const L = {
       products: "상품 목록",
       customers: "고객 목록",
       suppliers: "공급업체 목록",
+      invoice: "청구서 / 결제 안내",
     },
     generated: "출력일시",
+    issueDate: "발행일",
+    selectCustomer: "고객 선택",
+    chooseCustomer: "-- 고객 선택 --",
+    billTo: "고객",
+    dueDate: "결제 기한",
+    bankTransfer: "결제 방법 / 계좌이체",
+    selectInvoices: "표시할 INV 청구서 선택",
+    selectAll: "전체 선택",
+    deselectAll: "선택 해제",
+    noInvoiceSelected: "최소 1개의 INV 청구서를 선택하세요",
+    noSalesForCustomer: "이 고객은 아직 INV 청구서가 없습니다",
+    printReceipt: "간이 영수증 인쇄",
+    totalDue: "총 청구 금액",
+    pleasePay: "기한 내에 결제 부탁드립니다. 감사합니다.",
+    receiptThanks: "이용해 주셔서 감사합니다",
+    noCustomerSelected: "먼저 고객을 선택해 주세요",
   },
 };
 
-const REPORT_TYPES = ["sales", "expenses", "pnl", "products", "customers", "suppliers"];
-const TYPE_ICON = { sales: "💰", expenses: "📋", pnl: "📈", products: "📦", customers: "👥", suppliers: "🤝" };
-const TYPE_COLOR = { sales: "#b45309", expenses: "#b91c1c", pnl: "#15803d", products: "#1d4ed8", customers: "#7c3aed", suppliers: "#0369a1" };
+const REPORT_TYPES = ["sales", "expenses", "pnl", "products", "customers", "suppliers", "invoice"];
+const TYPE_ICON = { sales: "💰", expenses: "📋", pnl: "📈", products: "📦", customers: "👥", suppliers: "🤝", invoice: "📨" };
+const TYPE_COLOR = { sales: "#b45309", expenses: "#b91c1c", pnl: "#15803d", products: "#1d4ed8", customers: "#7c3aed", suppliers: "#0369a1", invoice: "#be185d" };
 
 function fmt(n) { return Number(n || 0).toLocaleString("ko-KR"); }
 function fmtDate(d, lang) {
@@ -128,10 +162,47 @@ export default function ReportsPage() {
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [customerId, setCustomerId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [custSales, setCustSales] = useState([]);
+  const [selectedSaleIds, setSelectedSaleIds] = useState(new Set());
+  const [printingReceipt, setPrintingReceipt] = useState(false);
   const printRef = useRef(null);
   const t = L[lang];
 
+  useEffect(() => {
+    fetch("/api/ctm/customers").then(r => r.json()).then(d => setCustomers(d.customers || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!printingReceipt) return;
+    const id = setTimeout(() => window.print(), 80);
+    const onAfterPrint = () => setPrintingReceipt(false);
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => { clearTimeout(id); window.removeEventListener("afterprint", onAfterPrint); };
+  }, [printingReceipt]);
+
+  useEffect(() => {
+    if (reportType !== "invoice" || !customerId) { setCustSales([]); setSelectedSaleIds(new Set()); return; }
+    fetch(`/api/ctm/sales?customerId=${customerId}`).then(r => r.json()).then(d => {
+      const sales = d.sales || [];
+      setCustSales(sales);
+      setSelectedSaleIds(new Set(sales.map(s => s.id)));
+    }).catch(() => {});
+  }, [reportType, customerId]);
+
+  const toggleSaleSelect = (id) => {
+    setSelectedSaleIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   const load = async () => {
+    if (reportType === "invoice" && !customerId) { alert(t.noCustomerSelected); return; }
+    if (reportType === "invoice" && selectedSaleIds.size === 0) { alert(t.noInvoiceSelected); return; }
     setLoading(true);
     setData(null);
     try {
@@ -139,6 +210,10 @@ export default function ReportsPage() {
       if (reportType === "sales") {
         const r = await fetch(`/api/ctm/sales?${q}`);
         setData(await r.json());
+      } else if (reportType === "invoice") {
+        const sales = custSales.filter(s => selectedSaleIds.has(s.id));
+        const totalRevenue = sales.reduce((s, r) => s + Number(r.totalAmount), 0);
+        setData({ sales, totalRevenue });
       } else if (reportType === "expenses") {
         const r = await fetch(`/api/ctm/expenses?${q}`);
         setData(await r.json());
@@ -194,7 +269,77 @@ export default function ReportsPage() {
           #print-area .no-print { display: none !important; }
         }
         .rpt-type-btn:hover { opacity: .85; transform: translateY(-1px); }
+        ${printingReceipt ? `
+        @page { size: A6; margin: 6mm; }
+        @media print {
+          #print-area { display: none !important; }
+          #receipt-print-area, #receipt-print-area * { visibility: visible !important; }
+          #receipt-print-area { display: block !important; position: fixed; inset: 0; padding: 4mm; background: #fff; z-index: 10000; }
+        }
+        ` : ""}
       `}</style>
+
+      {printingReceipt && data && (
+        <div id="receipt-print-area" style={{ display: "none" }}>
+          <div style={{ width: "100%", fontFamily: "sans-serif" }}>
+            <div style={{ textAlign: "center", marginBottom: 8 }}>
+              <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", marginBottom: 6, display: "block", marginLeft: "auto", marginRight: "auto" }} />
+              <div style={{ fontSize: 14, fontWeight: 900, color: "#7f1d1d" }}>ร้านเจริญไทยมาร์ท ซูวอน</div>
+              <div style={{ fontSize: 9, color: "#374151" }}>경기도 수원시 권선구 세권로 153(권선동)</div>
+              <div style={{ fontSize: 9, color: "#374151" }}>Tel. 010-8766-4569</div>
+            </div>
+            <div style={{ borderTop: "1px dashed #9ca3af", borderBottom: "1px dashed #9ca3af", padding: "4px 0", marginBottom: 8, textAlign: "center", fontWeight: 800, fontSize: 12 }}>
+              ใบเสร็จอย่างย่อ / RECEIPT
+            </div>
+            <div style={{ fontSize: 10, marginBottom: 6 }}>
+              <div>{t.billTo}: {(() => { const c = customers.find(c => c.id === customerId); return c ? `${c.customerCode ? c.customerCode + " · " : ""}${c.name}` : "—"; })()}</div>
+              <div>{t.issueDate}: {fmtDate(new Date(), lang)}</div>
+              {dueDate && <div>{t.dueDate}: {fmtDate(dueDate, lang)}</div>}
+            </div>
+
+            {(data.sales || []).map(s => (
+              <div key={s.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 800, borderBottom: "1px solid #374151", paddingBottom: 2, marginBottom: 2 }}>
+                  <span style={{ fontFamily: "monospace" }}>{s.number}</span>
+                  <span>{fmtDate(s.saleDate, lang)}</span>
+                </div>
+                <table style={{ width: "100%", fontSize: 9, borderCollapse: "collapse" }}>
+                  <tbody>
+                    {(s.items || []).map(it => (
+                      <tr key={it.id}>
+                        <td style={{ padding: "1px 0" }}>{it.productName} ×{it.quantity}</td>
+                        <td style={{ padding: "1px 0", textAlign: "right", whiteSpace: "nowrap" }}>₩{fmt(it.totalPrice)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 700, marginTop: 2 }}>
+                  <span>{t.subtotal}</span>
+                  <span>₩{fmt(s.totalAmount)}</span>
+                </div>
+              </div>
+            ))}
+
+            <div style={{ borderTop: "1px dashed #9ca3af", paddingTop: 6, display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 13 }}>
+              <span>{t.totalDue}</span>
+              <span>₩{fmt(data.totalRevenue)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+              <div style={{
+                border: "3px solid #dc2626", borderRadius: 8,
+                color: "#dc2626", fontWeight: 900, fontSize: 14, padding: "4px 10px", transform: "rotate(-12deg)",
+                opacity: 0.85, letterSpacing: 1, textAlign: "center",
+              }}>
+                ชำระเงินแล้ว<br/>PAID
+              </div>
+            </div>
+            <div style={{ marginTop: 10, textAlign: "center", fontSize: 9, color: "#374151" }}>
+              💬 Line: @486wfonl<br/>📘 Facebook: เจริญไทยมาร์ท ซูวอน
+            </div>
+            <div style={{ marginTop: 8, textAlign: "center", fontSize: 9, color: "#9ca3af" }}>{t.receiptThanks}</div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", height: "100vh", background: "#fafaf7", fontFamily: "sans-serif" }}>
         {/* Settings panel */}
@@ -237,6 +382,52 @@ export default function ReportsPage() {
             </div>
           </div>
 
+          {/* Invoice: customer + due date + payment note */}
+          {reportType === "invoice" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>{t.selectCustomer}</div>
+                <select value={customerId} onChange={e => setCustomerId(e.target.value)}
+                  style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box" }}>
+                  <option value="">{t.chooseCustomer}</option>
+                  {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>{t.dueDate}</div>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+                  style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              {customerId && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".05em" }}>{t.selectInvoices}</div>
+                    {custSales.length > 0 && (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button type="button" onClick={() => setSelectedSaleIds(new Set(custSales.map(s => s.id)))} style={{ fontSize: 10, color: "#b45309", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>{t.selectAll}</button>
+                        <button type="button" onClick={() => setSelectedSaleIds(new Set())} style={{ fontSize: 10, color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>{t.deselectAll}</button>
+                      </div>
+                    )}
+                  </div>
+                  {custSales.length === 0 ? (
+                    <div style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", padding: "10px 0" }}>{t.noSalesForCustomer}</div>
+                  ) : (
+                    <div style={{ border: "1.5px solid #e7e3d8", borderRadius: 8, maxHeight: 220, overflowY: "auto" }}>
+                      {custSales.map(s => (
+                        <label key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", fontSize: 12, borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}>
+                          <input type="checkbox" checked={selectedSaleIds.has(s.id)} onChange={() => toggleSaleSelect(s.id)} />
+                          <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#b45309", flexShrink: 0 }}>{s.number}</span>
+                          <span style={{ color: "#9ca3af", flexShrink: 0 }}>{fmtDate(s.saleDate, lang)}</span>
+                          <span style={{ marginLeft: "auto", fontWeight: 700, color: "#374151" }}>₩{fmt(s.totalAmount)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Period */}
           {(reportType === "sales" || reportType === "expenses" || reportType === "pnl") && (
             <div>
@@ -274,6 +465,12 @@ export default function ReportsPage() {
                 {t.print}
               </button>
             )}
+            {data && reportType === "invoice" && (
+              <button onClick={() => setPrintingReceipt(true)}
+                style={cardBtn({ padding: "10px", background: "#fff", color: "#92400e", border: "1.5px solid #f59e0b", fontSize: 13 })}>
+                🧾 {t.printReceipt}
+              </button>
+            )}
           </div>
         </div>
 
@@ -302,6 +499,7 @@ export default function ReportsPage() {
                       <div style={{ fontSize: 18, fontWeight: 900, color: "#7f1d1d", lineHeight: 1.2 }}>ร้านเจริญไทยมาร์ท ซูวอน</div>
                       <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>เจริญไทยมาร์ท · Charoen Thai Mart · 수원</div>
                       <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>สินค้าไทยคุณภาพสูงในเกาหลีใต้</div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>경기도 수원시 권선구 세권로 153(권선동)</div>
                     </div>
                   </div>
                   {/* Right: Doc ref info */}
@@ -310,6 +508,7 @@ export default function ReportsPage() {
                       <div style={{ fontWeight: 700 }}>เลขที่เอกสาร / Doc No.</div>
                       <div style={{ fontFamily: "monospace", color: "#92400e", fontWeight: 800 }}>{`RPT-${reportType.toUpperCase()}-${Date.now().toString().slice(-6)}`}</div>
                     </div>
+                    <div>{t.issueDate}: {fmtDate(new Date(), lang)}</div>
                     <div>{t.generated}: {nowStr(lang)}</div>
                   </div>
                 </div>
@@ -323,11 +522,19 @@ export default function ReportsPage() {
 
               {/* Report content */}
               {reportType === "sales" && <SalesReport data={data} t={t} lang={lang} />}
+              {reportType === "invoice" && <InvoiceReport data={data} t={t} lang={lang} customer={customers.find(c => c.id === customerId)} dueDate={dueDate} />}
               {reportType === "expenses" && <ExpensesReport data={data} t={t} lang={lang} />}
               {reportType === "pnl" && <PnlReport data={data} t={t} lang={lang} />}
               {reportType === "products" && <ProductsReport data={data} t={t} lang={lang} />}
               {reportType === "customers" && <CustomersReport data={data} t={t} lang={lang} />}
               {reportType === "suppliers" && <SuppliersReport data={data} t={t} lang={lang} />}
+
+              {/* Bank transfer info */}
+              <div style={{ marginTop: 28, background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 8, padding: "12px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#92400e", marginBottom: 4 }}>{t.bankTransfer}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#7f1d1d" }}>ธนาคารกุ๊กมิน KOOKMIN BANK · 217001-04-249820</div>
+                <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>SEEHAKUN PHAKHAWAN</div>
+              </div>
 
               {/* Signature area */}
               <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, borderTop: "1px solid #e7e3d8", paddingTop: 24 }}>
@@ -441,7 +648,46 @@ function SalesReport({ data, t, lang }) {
   );
 }
 
-function ExpensesReport({ data, t }) {
+function InvoiceReport({ data, t, lang, customer, dueDate }) {
+  const sales = data.sales || [];
+  const totalDue = data.totalRevenue || 0;
+  return (
+    <div>
+      <div style={{ background: "#fafaf7", border: "1px solid #e7e3d8", borderRadius: 10, padding: "14px 18px", marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, marginBottom: 4 }}>{t.billTo}</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#1f2937" }}>{customer ? `${customer.customerCode ? customer.customerCode + " · " : ""}${customer.name}` : "—"}</div>
+        {customer?.phone && <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>{t.phone}: {customer.phone}</div>}
+        {customer?.address && <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>{t.address}: {customer.address}</div>}
+        {dueDate && <div style={{ fontSize: 12, color: "#b91c1c", fontWeight: 700, marginTop: 6 }}>{t.dueDate}: {fmtDate(dueDate, lang)}</div>}
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={[t.date, t.number, t.items, t.subtotal, t.tax, t.grand].map((label, i) => ({ label, right: i >= 3 }))} />
+          <TBody rows={sales} cols={[
+            { key: "saleDate", render: r => fmtDate(r.saleDate, lang) },
+            { key: "number" },
+            { key: "items", right: true, render: r => r.items?.length || 0 },
+            { key: "sub", right: true, render: r => `₩${fmt(Number(r.totalAmount) - Number(r.taxAmount))}` },
+            { key: "tax", right: true, render: r => `₩${fmt(r.taxAmount)}` },
+            { key: "total", right: true, bold: true, render: r => `₩${fmt(r.totalAmount)}` },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+        <div style={{ background: "#fef2f2", border: "2px solid #b91c1c", borderRadius: 10, padding: "14px 22px", minWidth: 260, textAlign: "right" }}>
+          <div style={{ fontSize: 12, color: "#7f1d1d", fontWeight: 700 }}>{t.totalDue}</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: "#b91c1c" }}>₩{fmt(totalDue)}</div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#92400e", fontWeight: 700 }}>{t.pleasePay}</div>
+    </div>
+  );
+}
+
+function ExpensesReport({ data, t, lang }) {
   const expenses = data.expenses || [];
   const CAT_COLORS = { "ค่าเช่า":"#fee2e2","ค่าสาธารณูปโภค":"#fef9c3","ค่าวัตถุดิบ":"#dcfce7","ค่าขนส่ง":"#dbeafe","ค่าบรรจุภัณฑ์":"#ede9fe","ค่าโฆษณา":"#fce7f3","ค่าซ่อมบำรุง":"#ffedd5","ค่าใช้จ่ายทั่วไป":"#f1f5f9","อื่นๆ":"#f3f4f6" };
   return (

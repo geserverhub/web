@@ -829,9 +829,22 @@ model CtmProduct {
 
   saleItems  CtmSaleItem[]
   promotions CtmPromotion[]
+  stockLogs  CtmStockLog[]
 
   @@index([barcode])
   @@index([category])
+}
+
+model CtmStockLog {
+  id        String   @id @default(cuid())
+  productId String
+  delta     Int
+  note      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  product CtmProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
 }
 
 model CtmPromotion {
@@ -886,6 +899,24 @@ model CtmSaleItem {
 
   @@index([saleId])
   @@index([productId])
+}
+
+model CtmOrder {
+  id               String   @id @default(cuid())
+  orderNo          String   @unique
+  itemsJson        String   @db.Text
+  subtotal         Decimal  @db.Decimal(10, 2)
+  taxAmount        Decimal  @db.Decimal(10, 2)
+  shippingFee      Decimal  @db.Decimal(10, 2)
+  totalAmount      Decimal  @db.Decimal(10, 2)
+  recipientName    String
+  recipientPhone   String
+  recipientAddress String   @db.Text
+  slipUrl          String?
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+
+  @@index([status])
 }
 
 model CtmCustomer {
