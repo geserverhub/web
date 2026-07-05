@@ -30,11 +30,27 @@ async function ensureTable() {
   tableReady = true;
 }
 
+async function findOrCreateCustomer(name, phone, address) {
+  const existing = await prisma.ctmCustomer.findFirst({ where: { phone } });
+  if (existing) return existing;
+
+  const allCodes = await prisma.ctmCustomer.findMany({ where: { customerCode: { not: null } }, select: { customerCode: true } });
+  let maxNum = 0;
+  for (const c of allCodes) {
+    const m = c.customerCode?.match(/^CUS(\d+)$/);
+    if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+  }
+  const customerCode = `CUS${String(maxNum + 1).padStart(4, "0")}`;
+  return prisma.ctmCustomer.create({ data: { customerCode, name, phone, address, note: "สร้างอัตโนมัติจากคำสั่งซื้อออนไลน์" } });
+}
+
 export async function POST(req) {
   await ensureTable();
   const { items, recipientName, recipientPhone, recipientAddress, slipUrl } = await req.json();
   if (!items?.length) return NextResponse.json({ error: "ตะกร้าว่างเปล่า" }, { status: 400 });
   if (!recipientName || !recipientPhone || !recipientAddress) return NextResponse.json({ error: "กรุณากรอกที่อยู่จัดส่งให้ครบ" }, { status: 400 });
+
+  await findOrCreateCustomer(recipientName, recipientPhone, recipientAddress).catch(() => {});
 
   const subtotal = items.reduce((s, i) => s + Number(i.price) * Number(i.qty), 0);
   const taxAmount = Math.round(subtotal * 0.10 * 100) / 100;

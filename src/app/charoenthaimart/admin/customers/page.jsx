@@ -115,11 +115,16 @@ export default function CtmCustomers() {
                 <td style={{ padding: "8px 12px" }}>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => openEdit(c)} style={{ background: "#eff6ff", color: "#1d4ed8", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>แก้ไข</button>
-                    <button onClick={() => del(c.id)} disabled={c._count?.sales > 0}
-                      title={c._count?.sales > 0 ? "ลูกค้ารายนี้มีรายการสั่งซื้อแล้ว ไม่สามารถลบได้" : ""}
-                      style={{ background: c._count?.sales > 0 ? "#f3f4f6" : "#fef2f2", color: c._count?.sales > 0 ? "#9ca3af" : "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: c._count?.sales > 0 ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>
-                      ลบ
-                    </button>
+                    {(() => {
+                      const blocked = c._count?.sales > 0 || c.hasOnlineOrder;
+                      return (
+                        <button onClick={() => del(c.id)} disabled={blocked}
+                          title={blocked ? "ลูกค้ารายนี้มีรายการสั่งซื้อแล้ว ไม่สามารถลบได้" : ""}
+                          style={{ background: blocked ? "#f3f4f6" : "#fef2f2", color: blocked ? "#9ca3af" : "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: blocked ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>
+                          ลบ
+                        </button>
+                      );
+                    })()}
                   </div>
                 </td>
               </tr>

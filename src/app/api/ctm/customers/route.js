@@ -7,8 +7,13 @@ function isAdmin(s) { return s?.user?.role === "ADMIN" || s?.user?.role === "SUP
 export async function GET() {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const customers = await prisma.ctmCustomer.findMany({ orderBy: { createdAt: "desc" }, include: { _count: { select: { sales: true } } } });
-  return NextResponse.json({ customers });
+  const [customers, orders] = await Promise.all([
+    prisma.ctmCustomer.findMany({ orderBy: { createdAt: "desc" }, include: { _count: { select: { sales: true } } } }),
+    prisma.ctmOrder.findMany({ select: { recipientPhone: true } }).catch(() => []),
+  ]);
+  const orderPhones = new Set(orders.map(o => o.recipientPhone));
+  const withOrderFlag = customers.map(c => ({ ...c, hasOnlineOrder: !!c.phone && orderPhones.has(c.phone) }));
+  return NextResponse.json({ customers: withOrderFlag });
 }
 
 export async function POST(req) {

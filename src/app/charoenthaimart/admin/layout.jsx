@@ -21,6 +21,7 @@ const MENU = [
   { href: "/charoenthaimart/admin/customers", label: "ลูกค้า", icon: "👥" },
   { href: "/charoenthaimart/admin/suppliers", label: "คู่ค้า", icon: "📦" },
   { href: "/charoenthaimart/admin/announcements", label: "ป้ายประกาศ", icon: "📣" },
+  { href: "/charoenthaimart/admin/packing", label: "แพ็คสินค้า", icon: "📦" },
   { href: "/charoenthaimart/admin/shipping", label: "การจัดส่ง", icon: "🚚" },
   { href: "/charoenthaimart/admin/reports", label: "ปริ้นรายงาน", icon: "🖨️" },
 ];

@@ -847,6 +847,20 @@ model CtmStockLog {
   @@index([productId])
 }
 
+model CtmPacking {
+  id       String    @id @default(cuid())
+  saleId   String    @unique
+  status   String    @default("PENDING")
+  photoUrl String?
+  packedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sale CtmSale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
 model CtmPromotion {
   id         String   @id @default(cuid())
   promoCode  String?  @unique
@@ -880,6 +894,7 @@ model CtmSale {
   customer  CtmCustomer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items     CtmSaleItem[]
   shippings CtmShipping[]
+  packing   CtmPacking?
 
   @@index([customerId])
   @@index([saleDate])
