@@ -33,6 +33,10 @@ export default function CtmSales() {
   const [onlineOrders, setOnlineOrders] = useState([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [usedOrderId, setUsedOrderId] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [customerId, setCustomerId] = useState("");
+  const [custSearch, setCustSearch] = useState("");
+  const [showCustPicker, setShowCustPicker] = useState(false);
   const barcodeRef = useRef(null);
 
   const queryParam = tab === "day" ? `date=${day}` : tab === "month" ? `month=${month}` : `year=${year}`;
@@ -46,12 +50,13 @@ export default function CtmSales() {
 
   const openAdd = async () => {
     setCart([]); setPSearch(""); setBarcodeVal(""); setPayType("CASH"); setSaleNote(""); setNextInv("");
-    setOrderSearch(""); setUsedOrderId(null);
-    const [pr, pm, nc, ord] = await Promise.all([
+    setOrderSearch(""); setUsedOrderId(null); setCustomerId(""); setCustSearch(""); setShowCustPicker(false);
+    const [pr, pm, nc, ord, cust] = await Promise.all([
       fetch("/api/ctm/products").then(r => r.json()),
       fetch("/api/ctm/promotions/public").then(r => r.json()),
       fetch("/api/ctm/sales/nextcode").then(r => r.json()).catch(() => ({})),
       fetch("/api/ctm/orders").then(r => r.json()).catch(() => ({})),
+      fetch("/api/ctm/customers").then(r => r.json()).catch(() => ({})),
     ]);
     setNextInv(nc.code || "");
     setProducts((pr.products || []).filter(p => p.isActive));
@@ -59,6 +64,7 @@ export default function CtmSales() {
     (pm.promotions || []).forEach(p => { promoMap[p.productId] = p; });
     setPromos(promoMap);
     setOnlineOrders((ord.orders || []).filter(o => o.status === "PENDING"));
+    setCustomers(cust.customers || []);
     setShowAdd(true);
     setTimeout(() => barcodeRef.current?.focus(), 150);
   };
@@ -73,7 +79,19 @@ export default function CtmSales() {
     setUsedOrderId(order.id);
     setSaleNote(`ออนไลน์ ${order.orderNo} · ${order.recipientName} · ${order.recipientPhone}`);
     setOrderSearch("");
+    const matchedCustomer = customers.find(c => c.phone && c.phone === order.recipientPhone);
+    if (matchedCustomer) setCustomerId(matchedCustomer.id);
   };
+
+  const selectCustomer = (c) => {
+    setCustomerId(c.id);
+    setShowCustPicker(false);
+    setCustSearch("");
+  };
+
+  const filteredCustomers = custSearch
+    ? customers.filter(c => c.name.toLowerCase().includes(custSearch.toLowerCase()) || (c.phone || "").includes(custSearch))
+    : customers;
 
   const filteredOrders = orderSearch
     ? onlineOrders.filter(o =>
@@ -119,7 +137,7 @@ export default function CtmSales() {
     const res = await fetch("/api/ctm/sales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: cart, paymentType: payType, note: saleNote || null }),
+      body: JSON.stringify({ items: cart, paymentType: payType, note: saleNote || null, customerId: customerId || null }),
     });
     if (res.ok) {
       if (usedOrderId) {
@@ -365,6 +383,36 @@ export default function CtmSales() {
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, fontWeight: 800, color: "#b45309", borderTop: "1px solid #fcd34d", paddingTop: 8, marginBottom: 12 }}>
                     <span>ยอดรวม</span><span>₩{fmt(total.toFixed(0))}</span>
+                  </div>
+
+                  <div style={{ marginBottom: 8, position: "relative" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>ลูกค้า (ถ้ามี)</div>
+                    {customerId ? (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fef9c3", border: "1px solid #fcd34d", borderRadius: 6, padding: "6px 10px" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#92400e" }}>{customers.find(c => c.id === customerId)?.name}</span>
+                        <button type="button" onClick={() => setCustomerId("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 14 }}>×</button>
+                      </div>
+                    ) : (
+                      <input value={custSearch}
+                        onChange={e => { setCustSearch(e.target.value); setShowCustPicker(true); }}
+                        onFocus={() => setShowCustPicker(true)}
+                        placeholder="ค้นหาชื่อลูกค้าหรือเบอร์โทร..."
+                        style={{ width: "100%", border: "1px solid #e7e3d8", borderRadius: 6, padding: "6px 10px", fontSize: 12, boxSizing: "border-box", outline: "none" }} />
+                    )}
+                    {showCustPicker && !customerId && (
+                      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10, background: "#fff", border: "1px solid #e7e3d8", borderRadius: 8, marginTop: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 16px rgba(0,0,0,.08)" }}>
+                        {filteredCustomers.length === 0 && <div style={{ padding: 10, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>ไม่พบลูกค้า</div>}
+                        {filteredCustomers.map(c => (
+                          <div key={c.id} onClick={() => selectCustomer(c)}
+                            style={{ padding: "7px 10px", borderBottom: "1px solid #f3f4f6", cursor: "pointer", fontSize: 12 }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#fef3c7"}
+                            onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
+                            <span style={{ fontWeight: 700, color: "#1f2937" }}>{c.name}</span>
+                            <span style={{ color: "#9ca3af", marginLeft: 6 }}>{c.phone || "—"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ marginBottom: 8 }}>
