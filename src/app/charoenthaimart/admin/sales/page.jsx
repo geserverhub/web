@@ -158,6 +158,15 @@ export default function CtmSales() {
 
   return (
     <div style={{ padding: "28px 32px" }}>
+      <style>{`
+        @media (max-width: 760px) {
+          .ctm-addsale-modal { max-width: 100% !important; height: 100vh !important; border-radius: 0 !important; }
+          .ctm-addsale-split { flex-direction: column !important; }
+          .ctm-addsale-left { border-right: none !important; border-bottom: 1px solid #e7e3d8; flex: 1 1 55% !important; }
+          .ctm-addsale-cart { width: 100% !important; flex: 1 1 45% !important; }
+          .ctm-addsale-overlay { padding: 0 !important; }
+        }
+      `}</style>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: 0 }}>ยอดขาย</h1>
         <button onClick={openAdd} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>+ เพิ่มรายการขาย</button>
@@ -200,14 +209,14 @@ export default function CtmSales() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#fef3c7" }}>
-                {["","เลขที่บิล","วันที่","รายการ","ชำระเงิน","VAT","ยอดรวม"].map(h => (
+                {["","เลขที่บิล","วันที่","ลูกค้า","รายการ","ชำระเงิน","VAT","ยอดรวม"].map(h => (
                   <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {(!data?.sales || data.sales.length === 0) && (
-                <tr><td colSpan={7} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ไม่มีรายการขาย</td></tr>
+                <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ไม่มีรายการขาย</td></tr>
               )}
               {data?.sales?.map((s, i) => (
                 <Fragment key={s.id}>
@@ -216,6 +225,14 @@ export default function CtmSales() {
                     <td style={{ padding: "8px 12px", color: "#9ca3af", fontSize: 11 }}>{expanded[s.id] ? "▼" : "▶"}</td>
                     <td style={{ padding: "8px 12px", fontFamily: "monospace", fontSize: 11, color: "#6b7280" }}>{s.number}</td>
                     <td style={{ padding: "8px 12px", color: "#374151" }}>{fmtDate(s.saleDate)}</td>
+                    <td style={{ padding: "8px 12px", color: "#374151" }}>
+                      {s.customer ? (
+                        <>
+                          <div style={{ fontWeight: 600 }}>{s.customer.name}</div>
+                          {s.customer.phone && <div style={{ fontSize: 11, color: "#9ca3af" }}>{s.customer.phone}</div>}
+                        </>
+                      ) : <span style={{ color: "#d1d5db" }}>—</span>}
+                    </td>
                     <td style={{ padding: "8px 12px", color: "#6b7280" }}>{s.items?.length || 0} รายการ</td>
                     <td style={{ padding: "8px 12px" }}>
                       <span style={{ background: s.paymentType === "CASH" ? "#dcfce7" : s.paymentType === "TRANSFER" ? "#dbeafe" : "#fef3c7", color: s.paymentType === "CASH" ? "#166534" : s.paymentType === "TRANSFER" ? "#1d4ed8" : "#b45309", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{s.paymentType}</span>
@@ -225,7 +242,10 @@ export default function CtmSales() {
                   </tr>
                   {expanded[s.id] && (
                     <tr style={{ background: "#fafaf7" }}>
-                      <td colSpan={7} style={{ padding: "0 12px 12px 40px" }}>
+                      <td colSpan={8} style={{ padding: "0 12px 12px 40px" }}>
+                        {s.customer?.address && (
+                          <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>📍 ที่อยู่: {s.customer.address}</div>
+                        )}
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                           <thead>
                             <tr style={{ color: "#9ca3af" }}>
@@ -258,8 +278,8 @@ export default function CtmSales() {
 
       {/* Add Sale Overlay */}
       {showAdd && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", width: "100%", maxWidth: 1100, borderRadius: 16, display: "flex", height: "92vh", overflow: "hidden", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,.25)" }}>
+        <div className="ctm-addsale-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div className="ctm-addsale-modal" style={{ background: "#fff", width: "100%", maxWidth: 1100, borderRadius: 16, display: "flex", height: "92vh", overflow: "hidden", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,.25)" }}>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e7e3d8", background: "#fef3c7", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -274,9 +294,9 @@ export default function CtmSales() {
               <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#9ca3af", lineHeight: 1 }}>✕</button>
             </div>
 
-            <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+            <div className="ctm-addsale-split" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
               {/* Left: product picker */}
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: "1px solid #e7e3d8", overflow: "hidden" }}>
+              <div className="ctm-addsale-left" style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: "1px solid #e7e3d8", overflow: "hidden" }}>
                 {/* Online orders picker */}
                 <div style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", background: "#fef2f2", flexShrink: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#b91c1c", marginBottom: 4 }}>🛍️ ดึงจากคำสั่งซื้อออนไลน์ที่รอดำเนินการ ({onlineOrders.length})</div>
@@ -345,7 +365,7 @@ export default function CtmSales() {
               </div>
 
               {/* Right: cart + checkout */}
-              <div style={{ width: 300, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <div className="ctm-addsale-cart" style={{ width: 300, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 {/* Cart items */}
                 <div style={{ flex: 1, overflow: "auto", padding: "12px 14px" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>รายการในบิล ({cart.length} รายการ)</div>

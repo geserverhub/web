@@ -81,7 +81,7 @@ export async function GET(req) {
   if (customerId) where.customerId = customerId;
   const sales = await prisma.ctmSale.findMany({
     where, orderBy: { saleDate: "desc" },
-    include: { customer: { select: { name: true } }, items: true },
+    include: { customer: { select: { name: true, phone: true, address: true } }, items: true },
   });
   const totalRevenue = sales.reduce((s, r) => s + Number(r.totalAmount), 0);
   const totalTax = sales.reduce((s, r) => s + Number(r.taxAmount), 0);

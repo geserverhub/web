@@ -2,7 +2,7 @@
 import { SessionProvider, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const MENU = [
   { href: "/charoenthaimart/admin", label: "แดชบอร์ด", icon: "📊", exact: true },
@@ -30,6 +30,7 @@ function CtmAdminInner({ children }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/charoenthaimart/login");
@@ -39,15 +40,43 @@ function CtmAdminInner({ children }) {
     }
   }, [status, session, router]);
 
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
   if (status === "loading") return <div style={{ minHeight: "100vh", background: "#fafaf7", display: "flex", alignItems: "center", justifyContent: "center", color: "#92400e", fontSize: 16 }}>กำลังโหลด...</div>;
   if (status !== "authenticated") return null;
 
   const isActive = (item) => item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  const currentLabel = MENU.find(isActive)?.label || "";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#fafaf7", fontFamily: "sans-serif" }}>
+      <style>{`
+        .ctm-mobile-topbar { display: none; }
+        .ctm-sidebar-backdrop { display: none; }
+        @media (max-width: 860px) {
+          .ctm-mobile-topbar { display: flex; }
+          .ctm-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; z-index: 210;
+            transform: translateX(-100%); transition: transform .2s ease;
+            box-shadow: 4px 0 24px rgba(0,0,0,.15);
+          }
+          .ctm-sidebar.open { transform: translateX(0); }
+          .ctm-sidebar-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 205; }
+          .ctm-main { padding-top: 52px; }
+        }
+      `}</style>
+
+      {/* Mobile top bar */}
+      <div className="ctm-mobile-topbar" style={{ position: "fixed", top: 0, left: 0, right: 0, height: 52, background: "#fff", borderBottom: "1px solid #e7e3d8", alignItems: "center", gap: 10, padding: "0 14px", zIndex: 220 }}>
+        <button onClick={() => setMobileOpen(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#92400e", padding: 4, lineHeight: 1 }} aria-label="เมนู">☰</button>
+        <span style={{ fontWeight: 800, fontSize: 14, color: "#92400e" }}>{currentLabel || "เจริญไทยมาร์ท"}</span>
+      </div>
+
+      {/* Backdrop */}
+      <div className={`ctm-sidebar-backdrop${mobileOpen ? " open" : ""}`} onClick={() => setMobileOpen(false)} />
+
       {/* Sidebar */}
-      <aside style={{ width: 220, background: "#fff", borderRight: "1px solid #e7e3d8", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh" }}>
+      <aside className={`ctm-sidebar${mobileOpen ? " open" : ""}`} style={{ width: 220, background: "#fff", borderRight: "1px solid #e7e3d8", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
         <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid #e7e3d8" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
@@ -57,7 +86,7 @@ function CtmAdminInner({ children }) {
             </div>
           </div>
         </div>
-        <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2, overflowY: "auto" }}>
           {MENU.map((item) => (
             <Link key={item.href} href={item.href} style={{
               display: "flex", alignItems: "center", gap: 10,
@@ -78,7 +107,7 @@ function CtmAdminInner({ children }) {
         </div>
       </aside>
       {/* Main */}
-      <main style={{ flex: 1, overflow: "auto" }}>{children}</main>
+      <main className="ctm-main" style={{ flex: 1, overflow: "auto", minWidth: 0 }}>{children}</main>
     </div>
   );
 }
