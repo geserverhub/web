@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { FlagSVG } from "../../FlagSVG";
 
 const L = {
   th: {
@@ -365,9 +366,10 @@ export default function ReportsPage() {
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>Language / ภาษา</div>
             <div style={{ display: "flex", gap: 6 }}>
-              {[["th", "🇹🇭 ไทย"], ["ko", "🇰🇷 한국어"]].map(([l, label]) => (
+              {[["th", "ไทย"], ["ko", "한국어"]].map(([l, label]) => (
                 <button key={l} onClick={() => setLang(l)} className="rpt-type-btn"
-                  style={cardBtn({ flex: 1, padding: "7px 4px", background: lang === l ? "#fef3c7" : "#f3f4f6", color: lang === l ? "#92400e" : "#6b7280", border: lang === l ? "1.5px solid #f59e0b" : "1.5px solid transparent", fontSize: 12 })}>
+                  style={cardBtn({ flex: 1, padding: "7px 4px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: lang === l ? "#fef3c7" : "#f3f4f6", color: lang === l ? "#92400e" : "#6b7280", border: lang === l ? "1.5px solid #f59e0b" : "1.5px solid transparent", fontSize: 12 })}>
+                  <FlagSVG langKey={l} size={18} />
                   {label}
                 </button>
               ))}

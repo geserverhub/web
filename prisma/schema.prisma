@@ -877,8 +877,9 @@ model CtmSale {
   saleDate    DateTime @default(now())
   createdAt   DateTime @default(now())
 
-  customer CtmCustomer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  items    CtmSaleItem[]
+  customer  CtmCustomer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items     CtmSaleItem[]
+  shippings CtmShipping[]
 
   @@index([customerId])
   @@index([saleDate])
@@ -997,9 +998,12 @@ model CtmShipping {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  sale CtmSale? @relation(fields: [saleId], references: [id], onDelete: SetNull)
+
   @@index([invoiceNo])
   @@index([status])
   @@index([type])
+  @@index([saleId])
 }
 
 model CtmDailyExpense {

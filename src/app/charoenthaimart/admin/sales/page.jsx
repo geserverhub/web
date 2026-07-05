@@ -30,6 +30,9 @@ export default function CtmSales() {
   const [payType, setPayType] = useState("CASH");
   const [saleNote, setSaleNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [onlineOrders, setOnlineOrders] = useState([]);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [usedOrderId, setUsedOrderId] = useState(null);
   const barcodeRef = useRef(null);
 
   const queryParam = tab === "day" ? `date=${day}` : tab === "month" ? `month=${month}` : `year=${year}`;
@@ -43,19 +46,41 @@ export default function CtmSales() {
 
   const openAdd = async () => {
     setCart([]); setPSearch(""); setBarcodeVal(""); setPayType("CASH"); setSaleNote(""); setNextInv("");
-    const [pr, pm, nc] = await Promise.all([
+    setOrderSearch(""); setUsedOrderId(null);
+    const [pr, pm, nc, ord] = await Promise.all([
       fetch("/api/ctm/products").then(r => r.json()),
       fetch("/api/ctm/promotions/public").then(r => r.json()),
       fetch("/api/ctm/sales/nextcode").then(r => r.json()).catch(() => ({})),
+      fetch("/api/ctm/orders").then(r => r.json()).catch(() => ({})),
     ]);
     setNextInv(nc.code || "");
     setProducts((pr.products || []).filter(p => p.isActive));
     const promoMap = {};
     (pm.promotions || []).forEach(p => { promoMap[p.productId] = p; });
     setPromos(promoMap);
+    setOnlineOrders((ord.orders || []).filter(o => o.status === "PENDING"));
     setShowAdd(true);
     setTimeout(() => barcodeRef.current?.focus(), 150);
   };
+
+  const useOnlineOrder = (order) => {
+    const items = (order.items || []).map(oi => {
+      const product = products.find(p => p.id === oi.id);
+      if (!product) return null;
+      return { productId: product.id, productName: product.name, quantity: oi.qty, unitPrice: Number(oi.price), buyPrice: Number(product.buyPrice), isPromo: false, origPrice: Number(product.sellPrice) };
+    }).filter(Boolean);
+    setCart(items);
+    setUsedOrderId(order.id);
+    setSaleNote(`ออนไลน์ ${order.orderNo} · ${order.recipientName} · ${order.recipientPhone}`);
+    setOrderSearch("");
+  };
+
+  const filteredOrders = orderSearch
+    ? onlineOrders.filter(o =>
+        o.orderNo.toLowerCase().includes(orderSearch.toLowerCase()) ||
+        o.recipientName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+        o.recipientPhone.includes(orderSearch))
+    : onlineOrders;
 
   const addToCart = (product) => {
     const promo = promos[product.id];
@@ -96,8 +121,12 @@ export default function CtmSales() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: cart, paymentType: payType, note: saleNote || null }),
     });
-    if (res.ok) { setShowAdd(false); load(); }
-    else { alert("บันทึกไม่สำเร็จ"); }
+    if (res.ok) {
+      if (usedOrderId) {
+        await fetch("/api/ctm/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: usedOrderId, status: "CONFIRMED" }) }).catch(() => {});
+      }
+      setShowAdd(false); load();
+    } else { alert("บันทึกไม่สำเร็จ"); }
     setSaving(false);
   };
 
@@ -230,6 +259,33 @@ export default function CtmSales() {
             <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
               {/* Left: product picker */}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: "1px solid #e7e3d8", overflow: "hidden" }}>
+                {/* Online orders picker */}
+                <div style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", background: "#fef2f2", flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#b91c1c", marginBottom: 4 }}>🛍️ ดึงจากคำสั่งซื้อออนไลน์ที่รอดำเนินการ ({onlineOrders.length})</div>
+                  <input value={orderSearch} onChange={e => setOrderSearch(e.target.value)}
+                    placeholder="ค้นหาเลขที่คำสั่งซื้อ / ชื่อ / เบอร์โทร..."
+                    style={{ width: "100%", border: "1px solid #fca5a5", borderRadius: 8, padding: "7px 12px", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                  {orderSearch && (
+                    <div style={{ marginTop: 6, maxHeight: 180, overflowY: "auto", border: "1px solid #fca5a5", borderRadius: 8, background: "#fff" }}>
+                      {filteredOrders.length === 0 && <div style={{ padding: 10, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>ไม่พบคำสั่งซื้อ</div>}
+                      {filteredOrders.map(o => (
+                        <div key={o.id} onClick={() => useOnlineOrder(o)}
+                          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"}
+                          onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
+                          <div>
+                            <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#b91c1c", fontSize: 12 }}>{o.orderNo}</div>
+                            <div style={{ fontSize: 11, color: "#6b7280" }}>{o.recipientName} · {o.recipientPhone} · {o.items?.length || 0} รายการ</div>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#b45309" }}>₩{fmt(o.totalAmount)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {usedOrderId && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: "#166534", fontWeight: 700 }}>✓ ใช้ข้อมูลจากคำสั่งซื้อออนไลน์แล้ว</div>
+                  )}
+                </div>
                 {/* Barcode input */}
                 <div style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", background: "#f9fafb", flexShrink: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4 }}>🔍 สแกนบาร์โค้ด (กด Enter เพื่อเพิ่ม)</div>
