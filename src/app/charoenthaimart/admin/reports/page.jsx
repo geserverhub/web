@@ -80,6 +80,25 @@ const L = {
     billNo: "เลขที่บิล",
     paymentTerms: "เงื่อนไขชำระเงิน",
     totalPO: "ยอดสั่งซื้อทั้งหมด",
+    qty: "จำนวน",
+    unitCost: "ราคา/หน่วย",
+    poSubtotal: "รวมบิลนี้",
+    storeTagline: "สินค้าไทยคุณภาพสูงในเกาหลีใต้",
+    docNoLabel: "เลขที่เอกสาร / Doc No.",
+    noSupplierBankInfo: "— ยังไม่มีข้อมูลเลขบัญชีของคู่ค้ารายนี้ —",
+    bankKookmin: "ธนาคารกุ๊กมิน KOOKMIN BANK · 217001-04-249820",
+    footerDoc: "เอกสารนี้จัดทำโดยระบบ GEserverhub",
+    previewHintBefore: 'กด “',
+    previewHintAfter: '” เพื่อดูตัวอย่างรายงาน',
+    receiptTitle: "ใบเสร็จอย่างย่อ / RECEIPT",
+    paidStamp: "ชำระเงินแล้ว",
+    productCountLabel: "จำนวนสินค้าทั้งหมด",
+    customerCountLabel: "จำนวนลูกค้า",
+    supplierCountLabel: "จำนวนคู่ค้า",
+    itemsSuffix: "รายการ",
+    personSuffix: "ราย",
+    productCost: "ต้นทุนสินค้า",
+    overview: "สรุปภาพรวม",
   },
   ko: {
     title: "보고서 인쇄",
@@ -93,7 +112,7 @@ const L = {
     print: "🖨️ 인쇄",
     loading: "로딩 중...",
     noData: "데이터 없음",
-    store: "จำหน่ายสินค้าไทย Suwon",
+    store: "차로엔 타이 마트 수원",
     total: "합계",
     subtotal: "공급가액",
     tax: "부가세 10%",
@@ -158,6 +177,25 @@ const L = {
     billNo: "청구서 번호",
     paymentTerms: "결제 조건",
     totalPO: "총 발주 금액",
+    qty: "수량",
+    unitCost: "단가",
+    poSubtotal: "이 주문서 합계",
+    storeTagline: "한국 내 최고 품질의 태국 상품",
+    docNoLabel: "문서번호 / Doc No.",
+    noSupplierBankInfo: "— 이 공급업체의 계좌 정보가 없습니다 —",
+    bankKookmin: "국민은행 KOOKMIN BANK · 217001-04-249820",
+    footerDoc: "이 문서는 GEserverhub 시스템에서 작성되었습니다",
+    previewHintBefore: '“',
+    previewHintAfter: '”을 클릭해 미리보기',
+    receiptTitle: "간이 영수증 / RECEIPT",
+    paidStamp: "결제완료",
+    productCountLabel: "총 상품 수",
+    customerCountLabel: "총 고객 수",
+    supplierCountLabel: "총 공급업체 수",
+    itemsSuffix: "개",
+    personSuffix: "명",
+    productCost: "상품 원가",
+    overview: "전체 요약",
   },
 };
 
@@ -336,12 +374,12 @@ export default function ReportsPage() {
           <div style={{ width: "100%", fontFamily: "sans-serif" }}>
             <div style={{ textAlign: "center", marginBottom: 8 }}>
               <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", marginBottom: 6, display: "block", marginLeft: "auto", marginRight: "auto" }} />
-              <div style={{ fontSize: 14, fontWeight: 900, color: "#7f1d1d" }}>ร้านเจริญไทยมาร์ท ซูวอน</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: "#7f1d1d" }}>{t.store}</div>
               <div style={{ fontSize: 9, color: "#374151" }}>경기도 수원시 권선구 세권로 153(권선동)</div>
               <div style={{ fontSize: 9, color: "#374151" }}>Tel. 010-8766-4569</div>
             </div>
             <div style={{ borderTop: "1px dashed #9ca3af", borderBottom: "1px dashed #9ca3af", padding: "4px 0", marginBottom: 8, textAlign: "center", fontWeight: 800, fontSize: 12 }}>
-              ใบเสร็จอย่างย่อ / RECEIPT
+              {t.receiptTitle}
             </div>
             <div style={{ fontSize: 10, marginBottom: 6 }}>
               <div>{t.billTo}: {(() => { const c = customers.find(c => c.id === customerId); return c ? `${c.customerCode ? c.customerCode + " · " : ""}${c.name}` : "—"; })()}</div>
@@ -392,11 +430,11 @@ export default function ReportsPage() {
                 color: "#dc2626", fontWeight: 900, fontSize: 14, padding: "4px 10px", transform: "rotate(-12deg)",
                 opacity: 0.85, letterSpacing: 1, textAlign: "center",
               }}>
-                ชำระเงินแล้ว<br/>PAID
+                {t.paidStamp}<br/>PAID
               </div>
             </div>
             <div style={{ marginTop: 10, textAlign: "center", fontSize: 9, color: "#374151" }}>
-              💬 Line: @486wfonl<br/>📘 Facebook: เจริญไทยมาร์ท ซูวอน
+              💬 Line: @486wfonl<br/>📘 Facebook: {t.store}
             </div>
             <div style={{ marginTop: 8, textAlign: "center", fontSize: 9, color: "#9ca3af" }}>{t.receiptThanks}</div>
           </div>
@@ -584,7 +622,7 @@ export default function ReportsPage() {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60vh", gap: 16, color: "#9ca3af" }}>
               <div style={{ fontSize: 64 }}>{TYPE_ICON[reportType]}</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: "#374151" }}>{t.types[reportType]}</div>
-              <div style={{ fontSize: 13 }}>กด &ldquo;{t.loadPreview}&rdquo; เพื่อดูตัวอย่างรายงาน</div>
+              <div style={{ fontSize: 13 }}>{t.previewHintBefore}{t.loadPreview}{t.previewHintAfter}</div>
             </div>
           )}
           {loading && (
@@ -600,16 +638,16 @@ export default function ReportsPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                     <img src="/charoenthaimart/charoenthaimart-logo.jpg" alt="logo" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "2px solid #b45309", flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: "#7f1d1d", lineHeight: 1.2 }}>ร้านเจริญไทยมาร์ท ซูวอน</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: "#7f1d1d", lineHeight: 1.2 }}>{t.store}</div>
                       <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>เจริญไทยมาร์ท · Charoen Thai Mart · 수원</div>
-                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>สินค้าไทยคุณภาพสูงในเกาหลีใต้</div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>{t.storeTagline}</div>
                       <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>경기도 수원시 권선구 세권로 153(권선동)</div>
                     </div>
                   </div>
                   {/* Right: Doc ref info */}
                   <div style={{ textAlign: "right", fontSize: 11, color: "#374151" }}>
                     <div style={{ border: "1px solid #9ca3af", borderRadius: 4, padding: "6px 12px", display: "inline-block", marginBottom: 6 }}>
-                      <div style={{ fontWeight: 700 }}>เลขที่เอกสาร / Doc No.</div>
+                      <div style={{ fontWeight: 700 }}>{t.docNoLabel}</div>
                       <div style={{ fontFamily: "monospace", color: "#92400e", fontWeight: 800 }}>{`RPT-${reportType.toUpperCase()}-${Date.now().toString().slice(-6)}`}</div>
                     </div>
                     <div>{t.issueDate}: {fmtDate(new Date(), lang)}</div>
@@ -637,8 +675,18 @@ export default function ReportsPage() {
               {/* Bank transfer info */}
               <div style={{ marginTop: 28, background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 8, padding: "12px 20px", textAlign: "center" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#92400e", marginBottom: 4 }}>{t.bankTransfer}</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "#7f1d1d" }}>ธนาคารกุ๊กมิน KOOKMIN BANK · 217001-04-249820</div>
-                <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>SEEHAKUN PHAKHAWAN</div>
+                {reportType === "purchaseOrder" ? (
+                  suppliers.find(s => s.id === supplierId)?.bankAccount ? (
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#7f1d1d", whiteSpace: "pre-line" }}>{suppliers.find(s => s.id === supplierId).bankAccount}</div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: "#9ca3af" }}>{t.noSupplierBankInfo}</div>
+                  )
+                ) : (
+                  <>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#7f1d1d" }}>{t.bankKookmin}</div>
+                    <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>SEEHAKUN PHAKHAWAN</div>
+                  </>
+                )}
               </div>
 
               {/* Signature area */}
@@ -653,7 +701,7 @@ export default function ReportsPage() {
               </div>
 
               <div style={{ marginTop: 16, textAlign: "center", fontSize: 10, color: "#9ca3af", borderTop: "1px solid #f3f4f6", paddingTop: 10 }}>
-                เอกสารนี้จัดทำโดยระบบ GEserverhub · เจริญไทยมาร์ท ซูวอน · พิมพ์เมื่อ {nowStr(lang)}
+                {t.footerDoc} · {t.store} · {t.generated} {nowStr(lang)}
               </div>
             </div>
           )}
@@ -805,19 +853,37 @@ function PurchaseOrderReport({ data, t, lang, supplier }) {
         {supplier?.address && <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>{t.address}: {supplier.address}</div>}
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <THead cols={[t.date, t.number, t.billNo, t.items, t.paymentTerms, t.grand].map((label, i) => ({ label, right: i === 5 }))} />
-          <TBody rows={purchaseOrders} cols={[
-            { key: "createdAt", render: r => fmtDate(r.createdAt, lang) },
-            { key: "poNumber", render: r => <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#0891b2" }}>{r.poNumber}</span> },
-            { key: "supplierBillNo", render: r => r.supplierBillNo || "—" },
-            { key: "items", right: true, render: r => r.items?.length || 0 },
-            { key: "paymentTerms" },
-            { key: "total", right: true, bold: true, render: r => `₩${fmt(r.totalAmount)}` },
-          ]} empty={t.noData} />
-        </table>
-      </div>
+      {purchaseOrders.length === 0 && (
+        <div style={{ padding: 20, textAlign: "center", color: "#9ca3af", border: "1px solid #d1d5db" }}>{t.noData}</div>
+      )}
+
+      {purchaseOrders.map(po => (
+        <div key={po.id} style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0891b2", color: "#fff", padding: "8px 14px", borderRadius: "6px 6px 0 0" }}>
+            <div style={{ fontFamily: "monospace", fontWeight: 800, fontSize: 14 }}>{t.number}: {po.poNumber}</div>
+            <div style={{ fontSize: 12, display: "flex", gap: 16 }}>
+              <span>{t.date}: {fmtDate(po.createdAt, lang)}</span>
+              <span>{t.billNo}: {po.supplierBillNo || "—"}</span>
+              <span>{t.paymentTerms}: {po.paymentTerms}</span>
+            </div>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <THead cols={[t.name, t.qty, t.unit, t.unitCost, t.grand].map((label, i) => ({ label, right: i >= 3 }))} />
+              <TBody rows={po.items || []} cols={[
+                { key: "productName", bold: true },
+                { key: "quantity", right: true },
+                { key: "unit", render: r => r.unit || "—" },
+                { key: "unitCost", right: true, render: r => `₩${fmt(r.unitCost)}` },
+                { key: "totalCost", right: true, bold: true, render: r => `₩${fmt(r.totalCost)}` },
+              ]} empty={t.noData} />
+            </table>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", padding: "6px 10px", border: "1px solid #d1d5db", borderTop: "none", background: "#f9fafb" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>{t.poSubtotal}: <span style={{ color: "#0891b2" }}>₩{fmt(po.totalAmount)}</span></span>
+          </div>
+        </div>
+      ))}
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
         <div style={{ background: "#ecfeff", border: "2px solid #0891b2", borderRadius: 10, padding: "14px 22px", minWidth: 260, textAlign: "right" }}>
@@ -879,7 +945,7 @@ function PnlReport({ data, t }) {
           <SummaryRow label={t.revenue} value={revenue} />
           <SummaryRow label={`  - ${t.tax}`} value={tax} />
           <SummaryRow label={t.subtotal} value={revenue - tax} />
-          <SummaryRow label="  - ต้นทุนสินค้า" value={cost} />
+          <SummaryRow label={`  - ${t.productCost}`} value={cost} />
           <SummaryRow label={t.profit} value={grossProfit} />
           <SummaryRow label={`  - ${t.expense}`} value={totalExpense} />
           <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", marginTop: 6, borderTop: "2px solid #92400e" }}>
@@ -889,7 +955,7 @@ function PnlReport({ data, t }) {
         </div>
         <div>
           {/* Simple visual bar */}
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#374151", marginBottom: 12, paddingBottom: 6, borderBottom: "2px solid #fef3c7" }}>สรุปภาพรวม</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#374151", marginBottom: 12, paddingBottom: 6, borderBottom: "2px solid #fef3c7" }}>{t.overview}</div>
           {[
             { label: t.revenue, val: revenue, color: "#f59e0b" },
             { label: t.expense, val: totalExpense, color: "#ef4444" },
@@ -918,10 +984,10 @@ function ProductsReport({ data, t }) {
   const products = data.products || [];
   return (
     <div>
-      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>จำนวนสินค้าทั้งหมด: <strong style={{ color: "#374151" }}>{products.length} รายการ</strong></div>
+      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>{t.productCountLabel}: <strong style={{ color: "#374151" }}>{products.length} {t.itemsSuffix}</strong></div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <THead cols={[t.code, t.barcode, t.name, "หมวดหมู่", t.price, t.buyPrice, t.stock, t.unit].map((label, i) => ({ label, right: i >= 4 }))} />
+          <THead cols={[t.code, t.barcode, t.name, t.category, t.price, t.buyPrice, t.stock, t.unit].map((label, i) => ({ label, right: i >= 4 }))} />
           <TBody rows={products} cols={[
             { key: "productCode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11, background: "#fef3c7", borderRadius: 4, padding: "1px 6px" }}>{r.productCode || "—"}</span> },
             { key: "barcode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11 }}>{r.barcode || "—"}</span> },
@@ -942,7 +1008,7 @@ function CustomersReport({ data, t }) {
   const customers = data.customers || [];
   return (
     <div>
-      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>จำนวนลูกค้า: <strong style={{ color: "#374151" }}>{customers.length} ราย</strong></div>
+      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>{t.customerCountLabel}: <strong style={{ color: "#374151" }}>{customers.length} {t.personSuffix}</strong></div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <THead cols={["#", t.code, t.name, t.phone, t.email, t.address, t.note].map(label => ({ label }))} />
@@ -965,7 +1031,7 @@ function SuppliersReport({ data, t }) {
   const suppliers = data.suppliers || [];
   return (
     <div>
-      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>จำนวนคู่ค้า: <strong style={{ color: "#374151" }}>{suppliers.length} ราย</strong></div>
+      <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>{t.supplierCountLabel}: <strong style={{ color: "#374151" }}>{suppliers.length} {t.personSuffix}</strong></div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <THead cols={["#", t.code, t.name, t.phone, t.email, t.address, t.note].map(label => ({ label }))} />

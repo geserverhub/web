@@ -108,7 +108,7 @@ export default function CtmReceiveGoods() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: "#fef3c7" }}>
-                        {["", "สินค้า", "สั่ง", "รับแล้ว", "เหลือ", "รับเข้าครั้งนี้"].map(h => (
+                        {["", "สินค้า", "หน่วย", "สั่ง", "รับแล้ว", "เหลือ", "รับเข้าครั้งนี้"].map(h => (
                           <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#92400e", fontWeight: 700 }}>{h}</th>
                         ))}
                       </tr>
@@ -122,6 +122,7 @@ export default function CtmReceiveGoods() {
                               <input type="checkbox" checked={!!checked[i.id]} onChange={(e) => setChecked(c => ({ ...c, [i.id]: e.target.checked }))} />
                             </td>
                             <td style={{ padding: "6px 10px", fontWeight: 600 }}>{i.productName}</td>
+                            <td style={{ padding: "6px 10px", color: "#6b7280" }}>{i.unit || "—"}</td>
                             <td style={{ padding: "6px 10px", color: "#6b7280" }}>{i.quantity}</td>
                             <td style={{ padding: "6px 10px", color: "#6b7280" }}>{i.receivedQty}</td>
                             <td style={{ padding: "6px 10px", color: "#b45309", fontWeight: 700 }}>{remaining}</td>

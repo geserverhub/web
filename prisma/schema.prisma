@@ -1002,6 +1002,7 @@ model CtmPurchaseOrderItem {
   productName String
   quantity    Int
   receivedQty Int     @default(0)
+  unit        String?
   unitCost    Decimal @db.Decimal(10, 2)
   totalCost   Decimal @db.Decimal(10, 2)
 

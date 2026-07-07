@@ -41,8 +41,9 @@ export default function CtmNewPurchaseProduct() {
     });
     setSaving(false);
     if (!res.ok) { const d = await res.json(); setError(d.error || "เกิดข้อผิดพลาด"); return; }
+    const product = await res.json();
     setDone(true);
-    if (window.opener) window.opener.postMessage({ type: "ctm-po-product-created" }, "*");
+    if (window.opener) window.opener.postMessage({ type: "ctm-po-product-created", product }, "*");
   };
 
   const inp = { border: "1px solid #e7e3d8", borderRadius: 8, padding: "9px 12px", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
@@ -52,7 +53,7 @@ export default function CtmNewPurchaseProduct() {
       <div style={{ padding: "40px 32px", maxWidth: 480, fontFamily: "sans-serif" }}>
         <div style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: 12, padding: "20px 24px", color: "#15803d" }}>
           <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>บันทึกสินค้าสำเร็จ ✓</div>
-          <div style={{ fontSize: 13 }}>ผูกกับคู่ค้า{supplier ? ` "${supplier.name}"` : ""}เรียบร้อยแล้ว กลับไปที่แท็บใบสั่งซื้อได้เลย รายการสินค้าจะอัปเดตอัตโนมัติ</div>
+          <div style={{ fontSize: 13 }}>ผูกกับคู่ค้า{supplier ? ` "${supplier.name}"` : ""}เรียบร้อยแล้ว และเพิ่มลงในรายการสั่งซื้อของแท็บใบสั่งซื้อให้อัตโนมัติ กลับไปที่แท็บนั้นได้เลย</div>
         </div>
         <button onClick={() => window.close()} style={{ marginTop: 16, background: "#374151", color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>ปิดแท็บนี้</button>
       </div>

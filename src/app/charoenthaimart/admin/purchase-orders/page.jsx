@@ -46,7 +46,13 @@ export default function CtmPurchaseOrders() {
   useEffect(() => {
     const onMessage = (e) => {
       if (e.data?.type === "ctm-po-product-created" && supplierId) {
-        fetch(`/api/ctm/products?q=`).then(r => r.json()).then(d => setProducts(d.products || []));
+        const p = e.data.product;
+        if (p) {
+          setProducts(list => list.some(x => x.id === p.id) ? list : [p, ...list]);
+          addToCart(p);
+        } else {
+          fetch(`/api/ctm/products?q=`).then(r => r.json()).then(d => setProducts(d.products || []));
+        }
       }
     };
     window.addEventListener("message", onMessage);
@@ -216,17 +222,18 @@ export default function CtmPurchaseOrders() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: "#fef3c7" }}>
-                    {["สินค้า", "จำนวน", "ราคา/หน่วย", "รวม", ""].map(h => <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#92400e", fontWeight: 700 }}>{h}</th>)}
+                    {["สินค้า", "จำนวน", "หน่วย", "ราคา/หน่วย", "รวม", ""].map(h => <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#92400e", fontWeight: 700 }}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
-                  {cart.length === 0 && <tr><td colSpan={5} style={{ padding: 16, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีรายการ — เลือกคู่ค้าแล้วกด + เพิ่มสินค้า</td></tr>}
+                  {cart.length === 0 && <tr><td colSpan={6} style={{ padding: 16, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีรายการ — เลือกคู่ค้าแล้วกด + เพิ่มสินค้า</td></tr>}
                   {cart.map(i => (
                     <tr key={i.productId} style={{ borderTop: "1px solid #f3f4f6" }}>
                       <td style={{ padding: "6px 10px", fontWeight: 600 }}>{i.productName}</td>
                       <td style={{ padding: "6px 10px" }}>
                         <input type="number" min="1" value={i.quantity} onChange={(e) => updateCartItem(i.productId, "quantity", Number(e.target.value))} style={{ ...inp, width: 70 }} />
                       </td>
+                      <td style={{ padding: "6px 10px", color: "#6b7280" }}>{i.unit || "—"}</td>
                       <td style={{ padding: "6px 10px" }}>
                         <input type="number" min="0" value={i.unitCost} onChange={(e) => updateCartItem(i.productId, "unitCost", Number(e.target.value))} style={{ ...inp, width: 90 }} />
                       </td>
@@ -240,7 +247,7 @@ export default function CtmPurchaseOrders() {
                 {cart.length > 0 && (
                   <tfoot>
                     <tr style={{ borderTop: "2px solid #e7e3d8" }}>
-                      <td colSpan={3} style={{ padding: "8px 10px", textAlign: "right", fontWeight: 700, color: "#374151" }}>รวมทั้งหมด</td>
+                      <td colSpan={4} style={{ padding: "8px 10px", textAlign: "right", fontWeight: 700, color: "#374151" }}>รวมทั้งหมด</td>
                       <td colSpan={2} style={{ padding: "8px 10px", fontWeight: 800, color: "#b45309", fontSize: 15 }}>₩{fmt(cartTotal)}</td>
                     </tr>
                   </tfoot>

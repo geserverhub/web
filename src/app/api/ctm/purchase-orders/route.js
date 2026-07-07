@@ -45,7 +45,7 @@ export async function POST(req) {
       items: {
         create: items.map((i) => ({
           id: crypto.randomBytes(12).toString("hex"),
-          productId: i.productId, productName: i.productName,
+          productId: i.productId, productName: i.productName, unit: i.unit || null,
           quantity: Number(i.quantity), unitCost: Number(i.unitCost),
           totalCost: Number(i.unitCost) * Number(i.quantity),
         })),
