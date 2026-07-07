@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-const EMPTY = { name: "", nameKo: "", barcode: "", category: "", buyPrice: "", sellPrice: "", stock: "0", unit: "ชิ้น", imageUrl: "", description: "" };
+const EMPTY = { name: "", nameKo: "", barcode: "", category: "", buyPrice: "", sellPrice: "", stock: "0", unit: "ชิ้น", imageUrl: "", description: "", supplierId: "" };
 
 export default function CtmProductAdd() {
   const router = useRouter();
@@ -13,24 +13,28 @@ export default function CtmProductAdd() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const fileRef = useRef();
 
   const [nextCode, setNextCode] = useState("");
 
   useEffect(() => {
     fetch("/api/ctm/categories").then(r => r.json()).then(d => setCategories(d.categories || [])).catch(() => {});
+    fetch("/api/ctm/suppliers").then(r => r.json()).then(d => setSuppliers(d.suppliers || [])).catch(() => {});
     if (editId) {
       fetch(`/api/ctm/products?q=`)
         .then(r => r.json())
         .then(d => {
           const p = d.products?.find(x => x.id === editId);
           if (p) {
-            setForm({ name: p.name || "", nameKo: p.nameKo || "", barcode: p.barcode || "", category: p.category || "", buyPrice: p.buyPrice || "", sellPrice: p.sellPrice || "", stock: p.stock ?? "0", unit: p.unit || "ชิ้น", imageUrl: p.imageUrl || "", description: p.description || "" });
+            setForm({ name: p.name || "", nameKo: p.nameKo || "", barcode: p.barcode || "", category: p.category || "", buyPrice: p.buyPrice || "", sellPrice: p.sellPrice || "", stock: p.stock ?? "0", unit: p.unit || "ชิ้น", imageUrl: p.imageUrl || "", description: p.description || "", supplierId: p.supplierId || "" });
             setNextCode(p.productCode || "");
           }
         });
     } else {
       fetch("/api/ctm/products/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
+      const presetSupplierId = params.get("supplierId");
+      if (presetSupplierId) setForm(f => ({ ...f, supplierId: presetSupplierId }));
     }
   }, [editId]);
 
@@ -106,6 +110,13 @@ export default function CtmProductAdd() {
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>ราคาขาย (₩)*</label><input required type="number" min="0" value={form.sellPrice} onChange={set("sellPrice")} style={inp} /></div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>สต็อก</label><input type="number" min="0" value={form.stock} onChange={set("stock")} style={inp} /></div>
           <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>หน่วย</label><input value={form.unit} onChange={set("unit")} style={inp} /></div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>คู่ค้า/ซัพพลายเออร์</label>
+            <select value={form.supplierId} onChange={set("supplierId")} style={inp}>
+              <option value="">— ไม่ระบุ —</option>
+              {suppliers.map(s => <option key={s.id} value={s.id}>{s.supplierCode ? `${s.supplierCode} - ` : ""}{s.name}</option>)}
+            </select>
+          </div>
         </div>
         <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>คำอธิบาย</label><textarea value={form.description} onChange={set("description")} rows={3} style={{ ...inp, resize: "vertical" }} /></div>
         <div style={{ display: "flex", gap: 10 }}>

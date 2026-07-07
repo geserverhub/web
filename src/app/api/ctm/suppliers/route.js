@@ -7,14 +7,17 @@ function isAdmin(s) { return s?.user?.role === "ADMIN" || s?.user?.role === "SUP
 export async function GET() {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const suppliers = await prisma.ctmSupplier.findMany({ orderBy: { createdAt: "desc" } });
+  const suppliers = await prisma.ctmSupplier.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { purchaseOrders: true } } },
+  });
   return NextResponse.json({ suppliers });
 }
 
 export async function POST(req) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const { name, company, phone, email, address, country, note } = await req.json();
+  const { name, company, phone, email, address, country, bankAccount, note } = await req.json();
   if (!name) return NextResponse.json({ error: "กรุณากรอกชื่อ" }, { status: 400 });
 
   const allCodes = await prisma.ctmSupplier.findMany({ where: { supplierCode: { not: null } }, select: { supplierCode: true } });
@@ -25,7 +28,7 @@ export async function POST(req) {
   }
   const supplierCode = `SUP${String(maxNum + 1).padStart(4, "0")}`;
 
-  const supplier = await prisma.ctmSupplier.create({ data: { supplierCode, name, company: company || null, phone: phone || null, email: email || null, address: address || null, country: country || null, note: note || null } });
+  const supplier = await prisma.ctmSupplier.create({ data: { supplierCode, name, company: company || null, phone: phone || null, email: email || null, address: address || null, country: country || null, bankAccount: bankAccount || null, note: note || null } });
   return NextResponse.json(supplier, { status: 201 });
 }
 
@@ -41,6 +44,9 @@ export async function DELETE(req) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { searchParams } = new URL(req.url);
-  await prisma.ctmSupplier.delete({ where: { id: searchParams.get("id") } });
+  const id = searchParams.get("id");
+  const poCount = await prisma.ctmPurchaseOrder.count({ where: { supplierId: id } });
+  if (poCount > 0) return NextResponse.json({ error: "คู่ค้านี้มีประวัติการซื้อขายอยู่ ไม่สามารถลบได้" }, { status: 400 });
+  await prisma.ctmSupplier.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

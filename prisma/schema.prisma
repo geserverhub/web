@@ -824,15 +824,19 @@ model CtmProduct {
   imageUrl    String?
   description String?  @db.Text
   isActive    Boolean  @default(true)
+  supplierId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  supplier   CtmSupplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   saleItems  CtmSaleItem[]
   promotions CtmPromotion[]
   stockLogs  CtmStockLog[]
+  poItems    CtmPurchaseOrderItem[]
 
   @@index([barcode])
   @@index([category])
+  @@index([supplierId])
 }
 
 model CtmStockLog {
@@ -956,14 +960,56 @@ model CtmSupplier {
   id           String   @id @default(cuid())
   supplierCode String?  @unique
   name         String
-  company   String?
-  phone     String?
-  email     String?
-  address   String?  @db.Text
-  country   String?
-  note      String?  @db.Text
+  company     String?
+  phone       String?
+  email       String?
+  address     String?  @db.Text
+  country     String?
+  bankAccount String?  @db.Text
+  note        String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  products       CtmProduct[]
+  purchaseOrders CtmPurchaseOrder[]
+}
+
+model CtmPurchaseOrder {
+  id             String    @id @default(cuid())
+  poNumber       String    @unique
+  supplierBillNo String?
+  supplierId     String
+  paymentTerms   String    @default("CASH")
+  totalAmount    Decimal   @db.Decimal(12, 2)
+  status         String    @default("PENDING")
+  note           String?   @db.Text
+  receivedAt     DateTime?
+  expensedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  supplier CtmSupplier            @relation(fields: [supplierId], references: [id])
+  items    CtmPurchaseOrderItem[]
+
+  @@index([supplierId])
+  @@index([status])
+}
+
+model CtmPurchaseOrderItem {
+  id          String  @id @default(cuid())
+  poId        String
+  productId   String
+  productName String
+  quantity    Int
+  receivedQty Int     @default(0)
+  unitCost    Decimal @db.Decimal(10, 2)
+  totalCost   Decimal @db.Decimal(10, 2)
+
+  po      CtmPurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product CtmProduct       @relation(fields: [productId], references: [id])
+
+  @@index([poId])
+  @@index([productId])
 }
 
 model CtmTaxRecord {
@@ -1035,6 +1081,18 @@ model CtmDailyExpense {
 
   @@index([date])
   @@index([category])
+}
+
+model CtmCardSettlement {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  amount    Decimal  @db.Decimal(12, 2)
+  imageUrl  String?
+  note      String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
 }
 
 model CtmWage {

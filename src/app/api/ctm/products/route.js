@@ -26,10 +26,19 @@ export async function GET(req) {
   await ensureStockLogTable();
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
+  const supplierId = searchParams.get("supplierId");
+  const onlyWithSupplier = searchParams.get("onlyWithSupplier");
+  const where = {};
+  if (q) where.OR = [{ name: { contains: q } }, { barcode: { contains: q } }, { category: { contains: q } }];
+  if (supplierId) where.supplierId = supplierId;
+  if (onlyWithSupplier) where.supplierId = { not: null };
   const products = await prisma.ctmProduct.findMany({
-    where: q ? { OR: [{ name: { contains: q } }, { barcode: { contains: q } }, { category: { contains: q } }] } : {},
+    where,
     orderBy: { createdAt: "desc" },
-    include: { stockLogs: { orderBy: { createdAt: "desc" }, take: 1 } },
+    include: {
+      stockLogs: { orderBy: { createdAt: "desc" }, take: 1 },
+      supplier: { select: { id: true, name: true, supplierCode: true } },
+    },
   });
   return NextResponse.json({ products });
 }
@@ -38,7 +47,7 @@ export async function POST(req) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const body = await req.json();
-  const { name, nameKo, barcode, category, buyPrice, sellPrice, stock, unit, imageUrl, description } = body;
+  const { name, nameKo, barcode, category, buyPrice, sellPrice, stock, unit, imageUrl, description, supplierId } = body;
   if (!name || !buyPrice || !sellPrice) return NextResponse.json({ error: "กรุณากรอกข้อมูลให้ครบ" }, { status: 400 });
 
   const allCodes = await prisma.ctmProduct.findMany({ where: { productCode: { not: null } }, select: { productCode: true } });
@@ -50,7 +59,7 @@ export async function POST(req) {
   const productCode = `CTM${String(maxNum + 1).padStart(4, "0")}`;
 
   const product = await prisma.ctmProduct.create({
-    data: { productCode, name, nameKo: nameKo || null, barcode: barcode || null, category: category || null, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), stock: Number(stock || 0), unit: unit || "ชิ้น", imageUrl: imageUrl || null, description: description || null },
+    data: { productCode, name, nameKo: nameKo || null, barcode: barcode || null, category: category || null, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), stock: Number(stock || 0), unit: unit || "ชิ้น", imageUrl: imageUrl || null, description: description || null, supplierId: supplierId || null },
   });
   return NextResponse.json(product, { status: 201 });
 }

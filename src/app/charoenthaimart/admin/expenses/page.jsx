@@ -15,6 +15,8 @@ export default function CtmExpenses() {
   const [uploading, setUploading] = useState(false);
   const [viewReceipt, setViewReceipt] = useState(null);
   const [pendingTax, setPendingTax] = useState([]);
+  const [pendingPo, setPendingPo] = useState([]);
+  const [sourcePoId, setSourcePoId] = useState(null);
   const fileRef = useRef(null);
 
   const load = () => fetch(`/api/ctm/expenses?month=${month}`).then(r => r.json()).then(setData);
@@ -37,8 +39,20 @@ export default function CtmExpenses() {
     }).catch(() => {});
   }, []);
 
+  const loadPendingPo = () => {
+    fetch("/api/ctm/purchase-orders?status=RECEIVED&unexpensed=1").then(r => r.json()).then(d => setPendingPo(d.purchaseOrders || [])).catch(() => {});
+  };
+  useEffect(() => { loadPendingPo(); }, []);
+
   const useTaxBill = (item) => {
+    setSourcePoId(null);
     setForm(f => ({ ...f, category: "ภาษี", description: item.label, amount: String(Math.round(item.amount)) }));
+    setShowForm(true);
+  };
+
+  const usePoBill = (po) => {
+    setSourcePoId(po.id);
+    setForm(f => ({ ...f, category: "ค่าวัตถุดิบ", description: `ใบสั่งซื้อ ${po.poNumber} (${po.supplier?.name || ""}) เลขที่บิล ${po.supplierBillNo || "—"}`, amount: String(Math.round(po.totalAmount)) }));
     setShowForm(true);
   };
 
@@ -68,6 +82,11 @@ export default function CtmExpenses() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, amount: Number(form.amount), receiptUrl: receiptUrl || null }),
     });
+    if (sourcePoId) {
+      await fetch(`/api/ctm/purchase-orders/${sourcePoId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ markExpensed: true }) });
+      setSourcePoId(null);
+      loadPendingPo();
+    }
     setSaving(false); setShowForm(false); setForm(EMPTY); clearReceipt(); load();
   };
 
@@ -86,7 +105,7 @@ export default function CtmExpenses() {
     <div style={{ padding: "28px 32px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: 0 }}>บันทึกรายจ่ายประจำวัน</h1>
-        <button onClick={() => setShowForm(v => !v)} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+        <button onClick={() => { setShowForm(v => !v); setSourcePoId(null); setForm(EMPTY); }} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
           {showForm ? "ซ่อนฟอร์ม" : "+ เพิ่มรายจ่าย"}
         </button>
       </div>
@@ -120,6 +139,24 @@ export default function CtmExpenses() {
             ))}
           </div>
           <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>ยอดคำนวณอัตโนมัติจากระบบ — แก้ไขจำนวนเงินให้ตรงกับยอดที่จ่ายจริงตามใบเสร็จก่อนบันทึก</div>
+        </div>
+      )}
+
+      {/* Pending received PO bills */}
+      {pendingPo.length > 0 && (
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8", marginBottom: 10 }}>📥 ใบสั่งซื้อที่รับสินค้าแล้ว — คลิกเพื่อสร้างบันทึกรายจ่าย</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {pendingPo.map(po => (
+              <button key={po.id} onClick={() => usePoBill(po)}
+                style={{ background: "#fff", border: "1.5px solid #93c5fd", borderRadius: 8, padding: "8px 14px", cursor: "pointer", textAlign: "left", fontSize: 12 }}>
+                <div style={{ fontWeight: 700, color: "#374151" }}>{po.poNumber} — {po.supplier?.name}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>เลขที่บิล {po.supplierBillNo || "—"}</div>
+                <div style={{ fontWeight: 800, color: "#1d4ed8", fontSize: 14 }}>₩{fmt(po.totalAmount)}</div>
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>แก้ไขจำนวนเงินให้ตรงกับยอดที่จ่ายจริงก่อนบันทึก — บันทึกแล้วบิลนี้จะไม่แสดงซ้ำอีก</div>
         </div>
       )}
 

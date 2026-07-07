@@ -51,6 +51,7 @@ const L = {
       customers: "รายการลูกค้า",
       suppliers: "รายการคู่ค้า",
       invoice: "ใบแจ้งหนี้ / แจ้งชำระเงิน",
+      purchaseOrder: "ใบสั่งซื้อ",
     },
     generated: "พิมพ์เมื่อ",
     issueDate: "วันที่ออกบิล",
@@ -69,6 +70,16 @@ const L = {
     pleasePay: "กรุณาชำระเงินภายในกำหนด ขอบคุณค่ะ",
     receiptThanks: "ขอบคุณที่ใช้บริการค่ะ",
     noCustomerSelected: "กรุณาเลือกลูกค้าก่อนโหลดตัวอย่าง",
+    selectSupplier: "เลือกคู่ค้า",
+    chooseSupplier: "-- เลือกคู่ค้า --",
+    poTo: "คู่ค้า",
+    selectPOs: "เลือกใบสั่งซื้อที่ต้องการแสดง",
+    noPOSelected: "กรุณาเลือกใบสั่งซื้ออย่างน้อย 1 รายการ",
+    noPOForSupplier: "คู่ค้ารายนี้ยังไม่มีใบสั่งซื้อ",
+    noSupplierSelected: "กรุณาเลือกคู่ค้าก่อนโหลดตัวอย่าง",
+    billNo: "เลขที่บิล",
+    paymentTerms: "เงื่อนไขชำระเงิน",
+    totalPO: "ยอดสั่งซื้อทั้งหมด",
   },
   ko: {
     title: "보고서 인쇄",
@@ -118,6 +129,7 @@ const L = {
       customers: "고객 목록",
       suppliers: "공급업체 목록",
       invoice: "청구서 / 결제 안내",
+      purchaseOrder: "구매 주문서",
     },
     generated: "출력일시",
     issueDate: "발행일",
@@ -136,12 +148,22 @@ const L = {
     pleasePay: "기한 내에 결제 부탁드립니다. 감사합니다.",
     receiptThanks: "이용해 주셔서 감사합니다",
     noCustomerSelected: "먼저 고객을 선택해 주세요",
+    selectSupplier: "공급업체 선택",
+    chooseSupplier: "-- 공급업체 선택 --",
+    poTo: "공급업체",
+    selectPOs: "표시할 구매 주문서 선택",
+    noPOSelected: "최소 1개의 구매 주문서를 선택하세요",
+    noPOForSupplier: "이 공급업체는 아직 구매 주문서가 없습니다",
+    noSupplierSelected: "먼저 공급업체를 선택해 주세요",
+    billNo: "청구서 번호",
+    paymentTerms: "결제 조건",
+    totalPO: "총 발주 금액",
   },
 };
 
-const REPORT_TYPES = ["sales", "expenses", "pnl", "products", "customers", "suppliers", "invoice"];
-const TYPE_ICON = { sales: "💰", expenses: "📋", pnl: "📈", products: "📦", customers: "👥", suppliers: "🤝", invoice: "📨" };
-const TYPE_COLOR = { sales: "#b45309", expenses: "#b91c1c", pnl: "#15803d", products: "#1d4ed8", customers: "#7c3aed", suppliers: "#0369a1", invoice: "#be185d" };
+const REPORT_TYPES = ["sales", "expenses", "pnl", "products", "customers", "suppliers", "invoice", "purchaseOrder"];
+const TYPE_ICON = { sales: "💰", expenses: "📋", pnl: "📈", products: "📦", customers: "👥", suppliers: "🤝", invoice: "📨", purchaseOrder: "📤" };
+const TYPE_COLOR = { sales: "#b45309", expenses: "#b91c1c", pnl: "#15803d", products: "#1d4ed8", customers: "#7c3aed", suppliers: "#0369a1", invoice: "#be185d", purchaseOrder: "#0891b2" };
 
 function fmt(n) { return Number(n || 0).toLocaleString("ko-KR"); }
 function fmtDate(d, lang) {
@@ -169,11 +191,16 @@ export default function ReportsPage() {
   const [custSales, setCustSales] = useState([]);
   const [selectedSaleIds, setSelectedSaleIds] = useState(new Set());
   const [printingReceipt, setPrintingReceipt] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [supplierId, setSupplierId] = useState("");
+  const [supplierPOs, setSupplierPOs] = useState([]);
+  const [selectedPoIds, setSelectedPoIds] = useState(new Set());
   const printRef = useRef(null);
   const t = L[lang];
 
   useEffect(() => {
     fetch("/api/ctm/customers").then(r => r.json()).then(d => setCustomers(d.customers || [])).catch(() => {});
+    fetch("/api/ctm/suppliers").then(r => r.json()).then(d => setSuppliers(d.suppliers || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -201,9 +228,28 @@ export default function ReportsPage() {
     });
   };
 
+  useEffect(() => {
+    if (reportType !== "purchaseOrder" || !supplierId) { setSupplierPOs([]); setSelectedPoIds(new Set()); return; }
+    fetch(`/api/ctm/purchase-orders?supplierId=${supplierId}`).then(r => r.json()).then(d => {
+      const pos = d.purchaseOrders || [];
+      setSupplierPOs(pos);
+      setSelectedPoIds(new Set(pos.map(p => p.id)));
+    }).catch(() => {});
+  }, [reportType, supplierId]);
+
+  const togglePoSelect = (id) => {
+    setSelectedPoIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   const load = async () => {
     if (reportType === "invoice" && !customerId) { alert(t.noCustomerSelected); return; }
     if (reportType === "invoice" && selectedSaleIds.size === 0) { alert(t.noInvoiceSelected); return; }
+    if (reportType === "purchaseOrder" && !supplierId) { alert(t.noSupplierSelected); return; }
+    if (reportType === "purchaseOrder" && selectedPoIds.size === 0) { alert(t.noPOSelected); return; }
     setLoading(true);
     setData(null);
     try {
@@ -216,6 +262,10 @@ export default function ReportsPage() {
         const totalRevenue = sales.reduce((s, r) => s + Number(r.totalAmount), 0);
         const totalTax = sales.reduce((s, r) => s + Number(r.taxAmount), 0);
         setData({ sales, totalRevenue, totalTax });
+      } else if (reportType === "purchaseOrder") {
+        const purchaseOrders = supplierPOs.filter(p => selectedPoIds.has(p.id));
+        const totalAmount = purchaseOrders.reduce((s, p) => s + Number(p.totalAmount), 0);
+        setData({ purchaseOrders, totalAmount });
       } else if (reportType === "expenses") {
         const r = await fetch(`/api/ctm/expenses?${q}`);
         setData(await r.json());
@@ -441,6 +491,47 @@ export default function ReportsPage() {
             </div>
           )}
 
+          {/* Purchase Order: supplier + select POs */}
+          {reportType === "purchaseOrder" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>{t.selectSupplier}</div>
+                <select value={supplierId} onChange={e => setSupplierId(e.target.value)}
+                  style={{ width: "100%", border: "1.5px solid #e7e3d8", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box" }}>
+                  <option value="">{t.chooseSupplier}</option>
+                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.supplierCode ? `${s.supplierCode} - ` : ""}{s.name}</option>)}
+                </select>
+              </div>
+              {supplierId && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".05em" }}>{t.selectPOs}</div>
+                    {supplierPOs.length > 0 && (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button type="button" onClick={() => setSelectedPoIds(new Set(supplierPOs.map(p => p.id)))} style={{ fontSize: 10, color: "#b45309", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>{t.selectAll}</button>
+                        <button type="button" onClick={() => setSelectedPoIds(new Set())} style={{ fontSize: 10, color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>{t.deselectAll}</button>
+                      </div>
+                    )}
+                  </div>
+                  {supplierPOs.length === 0 ? (
+                    <div style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", padding: "10px 0" }}>{t.noPOForSupplier}</div>
+                  ) : (
+                    <div style={{ border: "1.5px solid #e7e3d8", borderRadius: 8, maxHeight: 220, overflowY: "auto" }}>
+                      {supplierPOs.map(p => (
+                        <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", fontSize: 12, borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}>
+                          <input type="checkbox" checked={selectedPoIds.has(p.id)} onChange={() => togglePoSelect(p.id)} />
+                          <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#0891b2", flexShrink: 0 }}>{p.poNumber}</span>
+                          <span style={{ color: "#9ca3af", flexShrink: 0 }}>{fmtDate(p.createdAt, lang)}</span>
+                          <span style={{ marginLeft: "auto", fontWeight: 700, color: "#374151" }}>₩{fmt(p.totalAmount)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Period */}
           {(reportType === "sales" || reportType === "expenses" || reportType === "pnl") && (
             <div>
@@ -536,6 +627,7 @@ export default function ReportsPage() {
               {/* Report content */}
               {reportType === "sales" && <SalesReport data={data} t={t} lang={lang} />}
               {reportType === "invoice" && <InvoiceReport data={data} t={t} lang={lang} customer={customers.find(c => c.id === customerId)} dueDate={dueDate} />}
+              {reportType === "purchaseOrder" && <PurchaseOrderReport data={data} t={t} lang={lang} supplier={suppliers.find(s => s.id === supplierId)} />}
               {reportType === "expenses" && <ExpensesReport data={data} t={t} lang={lang} />}
               {reportType === "pnl" && <PnlReport data={data} t={t} lang={lang} />}
               {reportType === "products" && <ProductsReport data={data} t={t} lang={lang} />}
@@ -696,6 +788,43 @@ function InvoiceReport({ data, t, lang, customer, dueDate }) {
       </div>
 
       <div style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "#92400e", fontWeight: 700 }}>{t.pleasePay}</div>
+    </div>
+  );
+}
+
+function PurchaseOrderReport({ data, t, lang, supplier }) {
+  const purchaseOrders = data.purchaseOrders || [];
+  const totalAmount = data.totalAmount || 0;
+  return (
+    <div>
+      <div style={{ background: "#fafaf7", border: "1px solid #e7e3d8", borderRadius: 10, padding: "14px 18px", marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, marginBottom: 4 }}>{t.poTo}</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#1f2937" }}>{supplier ? `${supplier.supplierCode ? supplier.supplierCode + " · " : ""}${supplier.name}` : "—"}</div>
+        {supplier?.company && <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>{supplier.company}</div>}
+        {supplier?.phone && <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>{t.phone}: {supplier.phone}</div>}
+        {supplier?.address && <div style={{ fontSize: 12, color: "#374151", marginTop: 2 }}>{t.address}: {supplier.address}</div>}
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <THead cols={[t.date, t.number, t.billNo, t.items, t.paymentTerms, t.grand].map((label, i) => ({ label, right: i === 5 }))} />
+          <TBody rows={purchaseOrders} cols={[
+            { key: "createdAt", render: r => fmtDate(r.createdAt, lang) },
+            { key: "poNumber", render: r => <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#0891b2" }}>{r.poNumber}</span> },
+            { key: "supplierBillNo", render: r => r.supplierBillNo || "—" },
+            { key: "items", right: true, render: r => r.items?.length || 0 },
+            { key: "paymentTerms" },
+            { key: "total", right: true, bold: true, render: r => `₩${fmt(r.totalAmount)}` },
+          ]} empty={t.noData} />
+        </table>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+        <div style={{ background: "#ecfeff", border: "2px solid #0891b2", borderRadius: 10, padding: "14px 22px", minWidth: 260, textAlign: "right" }}>
+          <div style={{ fontSize: 12, color: "#155e75", fontWeight: 700 }}>{t.totalPO}</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: "#0891b2" }}>₩{fmt(totalAmount)}</div>
+        </div>
+      </div>
     </div>
   );
 }

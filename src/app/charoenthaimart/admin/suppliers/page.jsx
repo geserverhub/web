@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const EMPTY = { name: "", company: "", phone: "", email: "", address: "", country: "", note: "" };
+const EMPTY = { name: "", company: "", phone: "", email: "", address: "", country: "", bankAccount: "" };
 
 export default function CtmSuppliers() {
   const [suppliers, setSuppliers] = useState([]);
@@ -22,7 +22,7 @@ export default function CtmSuppliers() {
     fetch("/api/ctm/suppliers/nextcode").then(r => r.json()).then(d => setNextCode(d.code || "")).catch(() => {});
   };
   const openEdit = (s) => {
-    setForm({ name: s.name || "", company: s.company || "", phone: s.phone || "", email: s.email || "", address: s.address || "", country: s.country || "", note: s.note || "" });
+    setForm({ name: s.name || "", company: s.company || "", phone: s.phone || "", email: s.email || "", address: s.address || "", country: s.country || "", bankAccount: s.bankAccount || "" });
     setEditId(s.id); setEditCode(s.supplierCode || ""); setNextCode(""); setOpen(true);
   };
 
@@ -36,7 +36,8 @@ export default function CtmSuppliers() {
 
   const del = async (id) => {
     if (!confirm("ลบคู่ค้านี้?")) return;
-    await fetch(`/api/ctm/suppliers?id=${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/ctm/suppliers?id=${id}`, { method: "DELETE" });
+    if (!res.ok) { const d = await res.json(); alert(d.error || "ลบไม่สำเร็จ"); return; }
     load();
   };
 
@@ -45,7 +46,7 @@ export default function CtmSuppliers() {
   return (
     <div style={{ padding: "28px 32px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: 0 }}>ข้อมูลคู่ค้า / ซัพพลายเออร์</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: "#92400e", margin: 0 }}>รายชื่อซัพพลายเออร์</h1>
         <button onClick={openAdd} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>+ เพิ่มคู่ค้า</button>
       </div>
       {/* Modal */}
@@ -80,7 +81,7 @@ export default function CtmSuppliers() {
                 </div>
               </div>
               <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>ที่อยู่</label><input value={form.address} onChange={set("address")} style={inp} /></div>
-              <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>หมายเหตุ</label><textarea value={form.note} onChange={set("note")} rows={2} style={{ ...inp, resize: "vertical" }} /></div>
+              <div><label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 3 }}>เลขบัญชี ชำระเงิน</label><textarea value={form.bankAccount} onChange={set("bankAccount")} rows={2} placeholder="ธนาคาร / เลขบัญชี / ชื่อบัญชี" style={{ ...inp, resize: "vertical" }} /></div>
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                 <button type="button" onClick={() => setOpen(false)} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>ยกเลิก</button>
                 <button type="submit" disabled={saving} style={{ background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{saving ? "กำลังบันทึก..." : "บันทึก"}</button>
@@ -94,14 +95,16 @@ export default function CtmSuppliers() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#fef3c7" }}>
-              {["รหัส","ชื่อ","บริษัท","เบอร์โทร","อีเมล","ประเทศ","ที่อยู่","จัดการ"].map(h => (
+              {["รหัส","ชื่อ","บริษัท","เบอร์โทร","อีเมล","ประเทศ","ที่อยู่","เลขบัญชี","จัดการ"].map(h => (
                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {suppliers.length === 0 && <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีคู่ค้า</td></tr>}
-            {suppliers.map((s, i) => (
+            {suppliers.length === 0 && <tr><td colSpan={9} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีคู่ค้า</td></tr>}
+            {suppliers.map((s, i) => {
+              const blocked = (s._count?.purchaseOrders || 0) > 0;
+              return (
               <tr key={s.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
                 <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700, color: "#b45309", fontSize: 12 }}>{s.supplierCode || "—"}</td>
                 <td style={{ padding: "8px 12px", fontWeight: 600, color: "#1f2937" }}>{s.name}</td>
@@ -112,14 +115,16 @@ export default function CtmSuppliers() {
                   {s.country ? <span style={{ background: "#f3f4f6", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700, color: "#374151" }}>{s.country}</span> : "—"}
                 </td>
                 <td style={{ padding: "8px 12px", color: "#6b7280", fontSize: 12, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.address || "—"}</td>
+                <td style={{ padding: "8px 12px", color: "#6b7280", fontSize: 12, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.bankAccount || "—"}</td>
                 <td style={{ padding: "8px 12px" }}>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => openEdit(s)} style={{ background: "#eff6ff", color: "#1d4ed8", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>แก้ไข</button>
-                    <button onClick={() => del(s.id)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>ลบ</button>
+                    <button onClick={() => del(s.id)} disabled={blocked} title={blocked ? "มีประวัติการซื้อขายอยู่ ไม่สามารถลบได้" : ""} style={{ background: blocked ? "#f3f4f6" : "#fef2f2", color: blocked ? "#9ca3af" : "#b91c1c", border: "none", borderRadius: 6, padding: "4px 10px", cursor: blocked ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>ลบ</button>
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

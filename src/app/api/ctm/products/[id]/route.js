@@ -17,6 +17,7 @@ export async function PUT(req, { params }) {
       stock: Number(body.stock || 0), unit: body.unit || "ชิ้น",
       imageUrl: body.imageUrl || null, description: body.description || null,
       isActive: body.isActive !== false,
+      supplierId: body.supplierId || null,
     },
   });
   return NextResponse.json(product);
@@ -26,8 +27,11 @@ export async function PATCH(req, { params }) {
   const session = await auth();
   if (!isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
-  const { isActive } = await req.json();
-  const product = await prisma.ctmProduct.update({ where: { id }, data: { isActive: !!isActive } });
+  const body = await req.json();
+  const data = {};
+  if (body.isActive !== undefined) data.isActive = !!body.isActive;
+  if (body.supplierId !== undefined) data.supplierId = body.supplierId || null;
+  const product = await prisma.ctmProduct.update({ where: { id }, data });
   return NextResponse.json(product);
 }
 
