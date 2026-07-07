@@ -814,19 +814,35 @@ function InvoiceReport({ data, t, lang, customer, dueDate }) {
         {dueDate && <div style={{ fontSize: 12, color: "#b91c1c", fontWeight: 700, marginTop: 6 }}>{t.dueDate}: {fmtDate(dueDate, lang)}</div>}
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <THead cols={[t.date, t.number, t.items, t.subtotal, t.tax, t.grand].map((label, i) => ({ label, right: i >= 3 }))} />
-          <TBody rows={sales} cols={[
-            { key: "saleDate", render: r => fmtDate(r.saleDate, lang) },
-            { key: "number" },
-            { key: "items", right: true, render: r => r.items?.length || 0 },
-            { key: "sub", right: true, render: r => `₩${fmt(Number(r.totalAmount) - Number(r.taxAmount))}` },
-            { key: "tax", right: true, render: r => `₩${fmt(r.taxAmount)}` },
-            { key: "total", right: true, bold: true, render: r => `₩${fmt(r.totalAmount)}` },
-          ]} empty={t.noData} />
-        </table>
-      </div>
+      {sales.length === 0 && (
+        <div style={{ padding: 20, textAlign: "center", color: "#9ca3af", border: "1px solid #d1d5db" }}>{t.noData}</div>
+      )}
+
+      {sales.map(sale => (
+        <div key={sale.id} style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#be185d", color: "#fff", padding: "8px 14px", borderRadius: "6px 6px 0 0" }}>
+            <div style={{ fontFamily: "monospace", fontWeight: 800, fontSize: 14 }}>{t.number}: {sale.number}</div>
+            <div style={{ fontSize: 12 }}>{t.date}: {fmtDate(sale.saleDate, lang)}</div>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <THead cols={["#", t.name, t.qty, t.unitCost, t.grand].map((label, i) => ({ label, right: i >= 3 }))} />
+              <TBody rows={sale.items || []} cols={[
+                { key: "seq", render: (_, i) => i + 1 },
+                { key: "productName", bold: true },
+                { key: "quantity", right: true },
+                { key: "unitPrice", right: true, render: r => `₩${fmt(r.unitPrice)}` },
+                { key: "totalPrice", right: true, bold: true, render: r => `₩${fmt(r.totalPrice)}` },
+              ]} empty={t.noData} />
+            </table>
+          </div>
+          <div style={{ border: "1px solid #d1d5db", borderTop: "none", background: "#f9fafb", padding: "6px 10px", fontSize: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}><span>{t.subtotal}</span><span>₩{fmt(Number(sale.totalAmount) - Number(sale.taxAmount))}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}><span>{t.tax}</span><span>₩{fmt(sale.taxAmount)}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, color: "#be185d" }}><span>{t.grand}</span><span>₩{fmt(sale.totalAmount)}</span></div>
+          </div>
+        </div>
+      ))}
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
         <div style={{ background: "#fef2f2", border: "2px solid #b91c1c", borderRadius: 10, padding: "14px 22px", minWidth: 260, textAlign: "right" }}>
@@ -869,8 +885,9 @@ function PurchaseOrderReport({ data, t, lang, supplier }) {
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <THead cols={[t.name, t.qty, t.unit, t.unitCost, t.grand].map((label, i) => ({ label, right: i >= 3 }))} />
+              <THead cols={["#", t.name, t.qty, t.unit, t.unitCost, t.grand].map((label, i) => ({ label, right: i >= 4 }))} />
               <TBody rows={po.items || []} cols={[
+                { key: "seq", render: (_, i) => i + 1 },
                 { key: "productName", bold: true },
                 { key: "quantity", right: true },
                 { key: "unit", render: r => r.unit || "—" },
@@ -987,8 +1004,9 @@ function ProductsReport({ data, t }) {
       <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>{t.productCountLabel}: <strong style={{ color: "#374151" }}>{products.length} {t.itemsSuffix}</strong></div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <THead cols={[t.code, t.barcode, t.name, t.category, t.price, t.buyPrice, t.stock, t.unit].map((label, i) => ({ label, right: i >= 4 }))} />
+          <THead cols={["#", t.code, t.barcode, t.name, t.category, t.price, t.buyPrice, t.stock, t.unit].map((label, i) => ({ label, right: i >= 5 }))} />
           <TBody rows={products} cols={[
+            { key: "seq", render: (_, i) => i + 1 },
             { key: "productCode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11, background: "#fef3c7", borderRadius: 4, padding: "1px 6px" }}>{r.productCode || "—"}</span> },
             { key: "barcode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11 }}>{r.barcode || "—"}</span> },
             { key: "name", bold: true },

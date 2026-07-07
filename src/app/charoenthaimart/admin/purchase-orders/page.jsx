@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 
 const PAYMENT_TERMS = [
   { value: "CASH", label: "เงินสด" },
@@ -35,8 +35,16 @@ export default function CtmPurchaseOrders() {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState({});
 
   const loadPos = () => fetch("/api/ctm/purchase-orders").then(r => r.json()).then(d => { setPos(d.purchaseOrders || []); setLoading(false); });
+
+  const deletePoItem = async (po, item) => {
+    if (!confirm(`ลบรายการ "${item.productName}" ออกจากใบสั่งซื้อ ${po.poNumber}?`)) return;
+    const res = await fetch(`/api/ctm/purchase-orders/${po.id}/items/${item.id}`, { method: "DELETE" });
+    if (!res.ok) { const d = await res.json(); alert(d.error || "ลบไม่สำเร็จ"); return; }
+    loadPos();
+  };
   useEffect(() => {
     loadPos();
     fetch("/api/ctm/suppliers").then(r => r.json()).then(d => setSuppliers(d.suppliers || []));
@@ -272,18 +280,20 @@ export default function CtmPurchaseOrders() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#fef3c7" }}>
-              {["เลขที่ใบสั่งซื้อ", "เลขที่บิล (คู่ค้า)", "คู่ค้า", "เงื่อนไขชำระเงิน", "จำนวนรายการ", "ยอดรวม", "สถานะ", "วันที่สั่ง", "จัดการ"].map(h => (
+              {["", "เลขที่ใบสั่งซื้อ", "เลขที่บิล (คู่ค้า)", "คู่ค้า", "เงื่อนไขชำระเงิน", "จำนวนรายการ", "ยอดรวม", "สถานะ", "วันที่สั่ง", "จัดการ"].map(h => (
                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={9} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>กำลังโหลด...</td></tr>}
-            {!loading && pos.length === 0 && <tr><td colSpan={9} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีใบสั่งซื้อ</td></tr>}
+            {loading && <tr><td colSpan={10} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>กำลังโหลด...</td></tr>}
+            {!loading && pos.length === 0 && <tr><td colSpan={10} style={{ padding: 20, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีใบสั่งซื้อ</td></tr>}
             {pos.map((po, i) => {
               const badge = STATUS_BADGE[po.status] || STATUS_BADGE.PENDING;
               return (
-                <tr key={po.id} style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                <Fragment key={po.id}>
+                <tr style={{ borderTop: "1px solid #f3f4f6", background: i % 2 ? "#fafaf7" : "#fff" }}>
+                  <td style={{ padding: "8px 12px", cursor: "pointer", color: "#9ca3af" }} onClick={() => setExpanded(e => ({ ...e, [po.id]: !e[po.id] }))}>{expanded[po.id] ? "▼" : "▶"}</td>
                   <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700, color: "#b45309" }}>{po.poNumber}</td>
                   <td style={{ padding: "8px 12px", color: "#374151" }}>{po.supplierBillNo || "—"}</td>
                   <td style={{ padding: "8px 12px", color: "#1f2937" }}>{po.supplier?.name}{po.supplier?.supplierCode ? ` (${po.supplier.supplierCode})` : ""}</td>
@@ -306,6 +316,40 @@ export default function CtmPurchaseOrders() {
                     </div>
                   </td>
                 </tr>
+                {expanded[po.id] && (
+                  <tr style={{ background: "#fafaf7" }}>
+                    <td colSpan={10} style={{ padding: "0 12px 12px 40px" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ color: "#9ca3af" }}>
+                            {["สินค้า", "จำนวน", "หน่วย", "ราคา/หน่วย", "รวม", ""].map(h => (
+                              <th key={h} style={{ textAlign: h === "สินค้า" ? "left" : "right", padding: "4px 8px", fontWeight: 600 }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {po.items?.map(item => (
+                            <tr key={item.id}>
+                              <td style={{ padding: "3px 8px", color: "#374151" }}>{item.productName}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: "#374151" }}>{item.quantity}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: "#374151" }}>{item.unit || "—"}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: "#374151" }}>₩{fmt(item.unitCost)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", fontWeight: 600, color: "#b45309" }}>₩{fmt(item.totalCost)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right" }}>
+                                {item.receivedQty > 0 ? (
+                                  <span style={{ fontSize: 11, color: "#9ca3af" }} title="รับเข้าสต๊อกไปแล้วบางส่วน ไม่สามารถลบได้">รับแล้ว</span>
+                                ) : (
+                                  <button onClick={() => deletePoItem(po, item)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "2px 8px", fontSize: 11, cursor: "pointer" }}>ลบ</button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>

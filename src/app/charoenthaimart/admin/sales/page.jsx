@@ -48,6 +48,13 @@ export default function CtmSales() {
 
   useEffect(() => { load(); }, [load]);
 
+  const deleteSaleItem = async (sale, item) => {
+    if (!confirm(`ลบรายการ "${item.productName}" ออกจากบิล ${sale.number}?`)) return;
+    const res = await fetch(`/api/ctm/sales/${sale.id}/items/${item.id}`, { method: "DELETE" });
+    if (!res.ok) { const d = await res.json(); alert(d.error || "ลบไม่สำเร็จ"); return; }
+    load();
+  };
+
   const openAdd = async () => {
     setCart([]); setPSearch(""); setBarcodeVal(""); setPayType("CASH"); setSaleNote(""); setNextInv("");
     setOrderSearch(""); setUsedOrderId(null); setCustomerId(""); setCustSearch(""); setShowCustPicker(false);
@@ -249,7 +256,7 @@ export default function CtmSales() {
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                           <thead>
                             <tr style={{ color: "#9ca3af" }}>
-                              {["สินค้า","จำนวน","ราคา/หน่วย","รวม"].map(h => (
+                              {["สินค้า","จำนวน","ราคา/หน่วย","รวม",""].map(h => (
                                 <th key={h} style={{ textAlign: h === "สินค้า" ? "left" : "right", padding: "4px 8px", fontWeight: 600 }}>{h}</th>
                               ))}
                             </tr>
@@ -261,9 +268,12 @@ export default function CtmSales() {
                                 <td style={{ padding: "3px 8px", textAlign: "right", color: "#374151" }}>{item.quantity}</td>
                                 <td style={{ padding: "3px 8px", textAlign: "right", color: "#374151" }}>₩{fmt(item.unitPrice)}</td>
                                 <td style={{ padding: "3px 8px", textAlign: "right", fontWeight: 600, color: "#b45309" }}>₩{fmt(item.totalPrice)}</td>
+                                <td style={{ padding: "3px 8px", textAlign: "right" }}>
+                                  <button onClick={() => deleteSaleItem(s, item)} style={{ background: "#fef2f2", color: "#b91c1c", border: "none", borderRadius: 6, padding: "2px 8px", fontSize: 11, cursor: "pointer" }}>ลบ</button>
+                                </td>
                               </tr>
                             ))}
-                            {s.note && <tr><td colSpan={4} style={{ padding: "4px 8px", color: "#9ca3af", fontStyle: "italic" }}>หมายเหตุ: {s.note}</td></tr>}
+                            {s.note && <tr><td colSpan={5} style={{ padding: "4px 8px", color: "#9ca3af", fontStyle: "italic" }}>หมายเหตุ: {s.note}</td></tr>}
                           </tbody>
                         </table>
                       </td>
