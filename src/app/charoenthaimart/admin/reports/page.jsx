@@ -997,7 +997,7 @@ function PnlReport({ data, t }) {
   );
 }
 
-function ProductsReport({ data, t }) {
+function ProductsReport({ data, t, lang }) {
   const products = data.products || [];
   return (
     <div>
@@ -1009,9 +1009,9 @@ function ProductsReport({ data, t }) {
             { key: "seq", render: (_, i) => i + 1 },
             { key: "productCode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11, background: "#fef3c7", borderRadius: 4, padding: "1px 6px" }}>{r.productCode || "—"}</span> },
             { key: "barcode", render: r => <span style={{ fontFamily: "monospace", fontSize: 11 }}>{r.barcode || "—"}</span> },
-            { key: "name", bold: true },
+            { key: "name", bold: true, render: r => (lang === "ko" ? (r.nameKo || r.name) : r.name) },
             { key: "category", render: r => r.category || "—" },
-            { key: "price", right: true, bold: true, color: "#b45309", render: r => `₩${fmt(r.price)}` },
+            { key: "price", right: true, bold: true, color: "#b45309", render: r => `₩${fmt(r.sellPrice)}` },
             { key: "buyPrice", right: true, color: "#b91c1c", render: r => `₩${fmt(r.buyPrice)}` },
             { key: "stock", right: true, color: r => r.stock <= 5 ? "#b91c1c" : "#15803d", render: r => r.stock },
             { key: "unit", render: r => r.unit || "—" },
