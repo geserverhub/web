@@ -104,6 +104,7 @@ type EqStrings = {
   statusPhases: string;
   reportPageBadge: string;
   dbMigrationHint: string;
+  staleDataWarning: string;
 };
 
 const th: EqStrings = {
@@ -183,6 +184,8 @@ const th: EqStrings = {
   reportPageBadge: '14 หมวด · สถานะ Good / Warning / Critical · สารบัญรายงานด้านล่าง',
   dbMigrationHint:
     'ฐานข้อมูลรายงานยังไม่พร้อม — รัน npm run db:migrate-energy-quality-report',
+  staleDataWarning:
+    '⚠ ข้อมูลนี้ไม่ใช่ข้อมูลล่าสุด — บันทึกครั้งล่าสุดเมื่อ {days} วันที่แล้ว ค่าที่แสดงอาจไม่ตรงกับสถานะปัจจุบันของอุปกรณ์',
 };
 
 const ko: EqStrings = {
@@ -262,6 +265,8 @@ const ko: EqStrings = {
   reportPageBadge: '14개 섹션 · Good / Warning / Critical 상태 · 아래 목차',
   dbMigrationHint:
     '리포트 DB가 준비되지 않음 — npm run db:migrate-energy-quality-report 실행',
+  staleDataWarning:
+    '⚠ 최신 데이터가 아닙니다 — 마지막 기록은 {days}일 전입니다. 표시된 값은 장치의 현재 상태와 다를 수 있습니다',
 };
 
 const en: EqStrings = {
@@ -341,6 +346,8 @@ const en: EqStrings = {
   reportPageBadge: '14 sections · Good / Warning / Critical status · table of contents below',
   dbMigrationHint:
     'Report database not ready — run npm run db:migrate-energy-quality-report',
+  staleDataWarning:
+    '⚠ This is not live data — the last record is {days} days old. Values shown may not reflect the device\'s current state',
 };
 
 const cn: EqStrings = {
@@ -420,6 +427,8 @@ const cn: EqStrings = {
   reportPageBadge: '14 节 · Good / Warning / Critical 状态 · 下方目录',
   dbMigrationHint:
     '报告数据库未就绪 — 运行 npm run db:migrate-energy-quality-report',
+  staleDataWarning:
+    '⚠ 这不是实时数据 — 最新记录是 {days} 天前的。显示的数值可能与设备当前状态不符',
 };
 
 const vn: EqStrings = {
@@ -499,6 +508,8 @@ const vn: EqStrings = {
   reportPageBadge: '14 mục · trạng thái Good / Warning / Critical · mục lục bên dưới',
   dbMigrationHint:
     'CSDL báo cáo chưa sẵn sàng — chạy npm run db:migrate-energy-quality-report',
+  staleDataWarning:
+    '⚠ Đây không phải dữ liệu trực tiếp — bản ghi gần nhất cách đây {days} ngày. Giá trị hiển thị có thể không phản ánh trạng thái hiện tại của thiết bị',
 };
 
 const ms: EqStrings = {
@@ -578,6 +589,8 @@ const ms: EqStrings = {
   reportPageBadge: '14 bahagian · status Good / Warning / Critical · kandungan di bawah',
   dbMigrationHint:
     'Pangkalan data laporan belum sedia — jalankan npm run db:migrate-energy-quality-report',
+  staleDataWarning:
+    '⚠ Ini bukan data langsung — rekod terakhir adalah {days} hari lalu. Nilai yang dipaparkan mungkin tidak mencerminkan keadaan semasa peranti',
 };
 
 const catalog: Record<EqLocale, EqStrings> = { th, ko, en, cn, vn, ms };

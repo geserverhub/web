@@ -1,12 +1,13 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
 import {
+  CO2_KG_PER_KWH,
   buildRuleBasedInsights,
   computeCarbonSummary,
   getSiteCreditPricing,
 } from '@/lib/energy/carbon-credits';
 import { callAiText, resolveAiCredentials } from '@/lib/energy/ai-settings';
-import { getDevicesColumnSet, meterIdGroupBySql, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -59,6 +60,8 @@ export async function GET(request: NextRequest) {
       pricing.creditPricePerTonne = overridePrice;
     }
 
+    // Trend query still filters raw telemetry by record_time (each grouped day already
+    // isolates one snapshot per device, so summing per day is safe).
     let whereClause = `WHERE pr.record_time >= DATE_SUB(NOW(), INTERVAL ${period} DAY)`;
     const params: unknown[] = [];
 
@@ -77,22 +80,57 @@ export async function GET(request: NextRequest) {
       whereClause += " AND LOWER(COALESCE(d.site, d.location, '')) LIKE ?";
     }
 
+    // Scope filter applied to `devices` for the per-device "latest paired reading" queries
+    // below (summary + topDevices) — kept separate from whereClause because it has no
+    // pr.record_time term (that lives inside the latest_pr subquery instead).
+    let deviceScopeWhere = '';
+    const deviceScopeParams: unknown[] = [];
+    if (parsedDeviceIds.length > 0) {
+      deviceScopeWhere = `WHERE d.deviceID IN (${parsedDeviceIds.map(() => '?').join(',')})`;
+      deviceScopeParams.push(...parsedDeviceIds);
+    } else if (deviceId) {
+      deviceScopeWhere = 'WHERE d.deviceID = ?';
+      deviceScopeParams.push(deviceId);
+    } else {
+      deviceScopeWhere = `WHERE LOWER(COALESCE(d.site, d.location, '')) LIKE ?`;
+      deviceScopeParams.push(`%${safeSite}%`);
+    }
+
     const deviceColumns = await getDevicesColumnSet();
     const meterSelect = meterIdSelectSql(deviceColumns);
-    const meterGroup = meterIdGroupBySql(deviceColumns);
+
+    // `latest_pr` = each device's single most recent record where BOTH before_kWh and
+    // metrics_kWh are present (a genuine paired CH1/CH2 reading). Do NOT sum
+    // energy_reduction/co2_reduction across records — those are snapshot diffs of
+    // cumulative registers, so summing many readings for the same meter inflates
+    // totals. Saved kWh = latest CH1 (before) − latest CH2 (after), summed across
+    // *different* meters (which is a legitimate sum).
+    const perDeviceLatestSql = `
+       FROM devices d
+       INNER JOIN (
+         SELECT pr.*
+         FROM power_records pr
+         INNER JOIN (
+           SELECT device_id, MAX(record_time) AS max_time
+           FROM power_records
+           WHERE before_kWh IS NOT NULL
+             AND metrics_kWh IS NOT NULL
+             AND record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+           GROUP BY device_id
+         ) mx ON mx.device_id = pr.device_id AND mx.max_time = pr.record_time
+       ) latest_pr ON latest_pr.device_id = d.deviceID
+       ${deviceScopeWhere}`;
 
     const summaryRows = (await queryGeserverhub(
       `SELECT
-        SUM(pr.energy_reduction) AS total_energy_saved,
-        SUM(pr.co2_reduction) AS total_co2_saved,
-        AVG(pr.before_kWh) AS avg_before,
-        AVG(pr.metrics_kWh) AS avg_after,
+        SUM(latest_pr.before_kWh - latest_pr.metrics_kWh) AS total_energy_saved,
+        SUM((latest_pr.before_kWh - latest_pr.metrics_kWh) * ${CO2_KG_PER_KWH}) AS total_co2_saved,
+        AVG(latest_pr.before_kWh) AS avg_before,
+        AVG(latest_pr.metrics_kWh) AS avg_after,
         COUNT(*) AS record_count,
-        COUNT(DISTINCT pr.device_id) AS device_count
-       FROM power_records pr
-       JOIN devices d ON pr.device_id = d.deviceID
-       ${whereClause}`,
-      params
+        COUNT(DISTINCT d.deviceID) AS device_count
+       ${perDeviceLatestSql}`,
+      [period, ...deviceScopeParams]
     )) as Row[];
 
     const s = summaryRows[0] || {};
@@ -124,15 +162,12 @@ export async function GET(request: NextRequest) {
         d.deviceID AS device_id,
         d.deviceName AS device_name,
         ${meterSelect.replace('AS GEsaveID', 'AS gesave_id')},
-        SUM(pr.energy_reduction) AS energy_saved,
-        SUM(pr.co2_reduction) AS co2_kg
-       FROM power_records pr
-       JOIN devices d ON pr.device_id = d.deviceID
-       ${whereClause}
-       GROUP BY d.deviceID, d.deviceName, ${meterGroup}
+        (latest_pr.before_kWh - latest_pr.metrics_kWh) AS energy_saved,
+        (latest_pr.before_kWh - latest_pr.metrics_kWh) * ${CO2_KG_PER_KWH} AS co2_kg
+       ${perDeviceLatestSql}
        ORDER BY co2_kg DESC
        ${parsedDeviceIds.length > 0 ? '' : 'LIMIT 8'}`,
-      params
+      [period, ...deviceScopeParams]
     )) as Row[];
 
     const ruleBased = buildRuleBasedInsights(

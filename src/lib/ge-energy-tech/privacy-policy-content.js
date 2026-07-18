@@ -180,9 +180,9 @@ export const PRIVACY_POLICY = {
 };
 
 export const GEET_COMPANY_ADDRESS = {
-  ko: '경기도 안산시 상록구 월피동 445-28 301호',
-  en: 'Unit 301, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Republic of Korea',
-  th: 'ห้อง 301, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, สาธารณรัฐเกาหลี',
+  ko: '경기도 안산시 상록구 월피동 445-28 301-J1호',
+  en: 'Unit 301-J1, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, Republic of Korea',
+  th: 'ห้อง 301-J1, 445-28 Wollipi-dong, Sangnok-gu, Ansan-si, Gyeonggi-do, สาธารณรัฐเกาหลี',
 };
 
 export function getPrivacyPolicyCopy(lang) {

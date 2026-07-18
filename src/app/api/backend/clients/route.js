@@ -48,8 +48,8 @@ const CLIENT_CARD_OVERRIDES = {
     system_url: "https://strong-dory-enabled.ngrok-free.app/charoenthaimart",
   },
   "ge-energy-tech": {
-    thumbnail: "/ge-energyTech/138568.jpg",
-    thumbnail_style: "photo",
+    thumbnail: "/ge-energyTech/138568-transparent.png",
+    thumbnail_fit: "contain",
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8488-0865",
     system_url: "https://www.ge-energytech.com",

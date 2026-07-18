@@ -160,6 +160,11 @@ function EnergyQualityReportInner() {
   const livePending = Boolean(selectedDevice) && !hasLiveData && !hasHistoryData;
   const noMeter = !selectedDevice;
 
+  /** Data older than 1 day is shown with real (non-null) values but isn't "live" — flag it. */
+  const staleDataDays =
+    lastUpdateTs != null ? Math.floor((Date.now() - lastUpdateTs) / (1000 * 60 * 60 * 24)) : null;
+  const isStaleData = staleDataDays != null && staleDataDays >= 1 && hasLiveData;
+
   const dbAnalysis = useMemo(
     () =>
       analyzeCurrentHistory(chartData, {
@@ -615,6 +620,11 @@ function EnergyQualityReportInner() {
       </div>
 
       {error && <div className="eq-error">{error}</div>}
+      {selectedDevice && isStaleData && (
+        <p className="eq-db-hint text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 font-semibold">
+          {ui.staleDataWarning.replace('{days}', String(staleDataDays))}
+        </p>
+      )}
       {selectedDevice && dbTablesReady === false && (
         <p className="eq-db-hint text-sm text-amber-600/90 mb-3">{ui.dbMigrationHint}</p>
       )}

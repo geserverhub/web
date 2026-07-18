@@ -8,7 +8,7 @@ import { parseJsonResponse } from '@/lib/parse-json-response';
 
 const translations = {
   th: {
-    brand: 'MOMOGE SPACE',
+    brand: 'GE ENERGY TECH',
     title: 'AI SMART ENERGY MONITORING PLATFORM',
     subtitle: 'ระบบมอนิเตอริ่งพลังงานไฟฟ้า',
     username: 'ชื่อผู้ใช้',
@@ -25,7 +25,7 @@ const translations = {
     dbUnavailable: 'เชื่อมต่อฐานข้อมูลไม่ได้ — รัน npm run dev:wsl ใน WSL แล้วลองใหม่',
   },
   en: {
-    brand: 'MOMOGE SPACE',
+    brand: 'GE ENERGY TECH',
     title: 'AI SMART ENERGY MONITORING PLATFORM',
     subtitle: 'Smart electricity energy monitoring system',
     username: 'Username',
@@ -42,7 +42,7 @@ const translations = {
     dbUnavailable: 'Database unavailable — run npm run dev:wsl in WSL, then open the site again',
   },
   ko: {
-    brand: 'MOMOGE SPACE',
+    brand: 'GE ENERGY TECH',
     title: 'AI SMART ENERGY MONITORING PLATFORM',
     subtitle: '스마트 전력 에너지 모니터링 시스템',
     username: '사용자명',
@@ -66,8 +66,7 @@ const langOptions = [
   { code: 'en', label: 'EN' },
 ];
 
-/** Bump when public/momoge/Logo-brand.png changes (cache bust) */
-const LOGO_SRC = '/momoge/Logo-brand.png?v=3';
+const LOGO_SRC = '/ge-energyTech/138568.jpg';
 
 const HOME_URL = 'https://ge-serverhub.com';
 
@@ -225,7 +224,7 @@ export default function EnergyDashboardLoginPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={LOGO_SRC}
-              alt="MOMOGE SPACE"
+              alt="GE Energy Tech"
               width={200}
               height={88}
               style={{

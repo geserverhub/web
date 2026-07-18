@@ -6,8 +6,9 @@
  *
  * Usage:
  *   npm run db:seed-energy-quality-report
- *   npm run db:seed-energy-quality-report -- --force   # replace last 24h history
+ *   npm run db:seed-energy-quality-report -- --force   # replace last N-hour history
  *   npm run db:seed-energy-quality-report -- --device=GE-TH01
+ *   npm run db:seed-energy-quality-report -- --force --hours=336 --interval=30
  */
 import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
@@ -24,8 +25,10 @@ config({ path: resolve(ROOT, '.env') });
 const FORCE = process.argv.includes('--force');
 const DEVICE_FILTER = process.argv.find((a) => a.startsWith('--device='))?.split('=')[1]?.trim();
 
-const HOURS = 24;
-const INTERVAL_MIN = 5;
+const HOURS_ARG = Number(process.argv.find((a) => a.startsWith('--hours='))?.split('=')[1]);
+const INTERVAL_ARG = Number(process.argv.find((a) => a.startsWith('--interval='))?.split('=')[1]);
+const HOURS = Number.isFinite(HOURS_ARG) && HOURS_ARG > 0 ? HOURS_ARG : 24;
+const INTERVAL_MIN = Number.isFinite(INTERVAL_ARG) && INTERVAL_ARG > 0 ? INTERVAL_ARG : 5;
 const POINTS = Math.floor((HOURS * 60) / INTERVAL_MIN);
 
 function getConfig() {

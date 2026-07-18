@@ -41,8 +41,8 @@
   --agency-radius-xl:   1.25rem;
   --agency-radius-2xl:  1.75rem;
   --agency-radius-pill: 999px;
-  --agency-font-display: "Itim", "Inter", "SF Pro Display", "Segoe UI", sans-serif;
-  --agency-font-body:    "Itim", "Inter", "SF Pro Text",    "Segoe UI", system-ui, sans-serif;
+  --agency-font-display: var(--font-itim), var(--font-inter), "SF Pro Display", "Segoe UI", sans-serif;
+  --agency-font-body:    var(--font-itim), var(--font-inter), "SF Pro Text",    "Segoe UI", system-ui, sans-serif;
 }
 
 *,

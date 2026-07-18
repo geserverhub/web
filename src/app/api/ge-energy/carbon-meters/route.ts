@@ -1,7 +1,8 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { queryGeserverhub } from '@/lib/geserverhub-db';
-import { getDevicesColumnSet, meterIdGroupBySql, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
+import { getDevicesColumnSet, meterIdSelectSql } from '@/lib/ge-energy/devices-schema';
 import {
+  CO2_KG_PER_KWH,
   DEFAULT_CREDIT_PRICE_KRW_PER_TONNE,
   DEFAULT_CREDIT_PRICE_THB_PER_TONNE,
 } from '@/lib/energy/carbon-credits';
@@ -34,7 +35,6 @@ export async function GET(request: NextRequest) {
     const deviceColumns = await getDevicesColumnSet();
     const meterSelect = meterIdSelectSql(deviceColumns);
     const meterSelectBare = meterIdSelectSql(deviceColumns, '');
-    const meterGroup = meterIdGroupBySql(deviceColumns);
     const hasBeforeMeterNo = deviceColumns.has('beforeMeterNo');
     const hasMetricsMeterNo = deviceColumns.has('metricsMeterNo');
     const prHasBeforeMeterNo = await powerRecordsHasColumn('before_meter_no');
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const params: unknown[] = [period];
+    const params: unknown[] = [period, period];
     let deviceWhere = '';
 
     if (deviceIdsParam) {
@@ -73,11 +73,15 @@ export async function GET(request: NextRequest) {
 
     const ch1DeviceCol = hasBeforeMeterNo ? 'NULLIF(TRIM(d.beforeMeterNo), \'\')' : 'NULL';
     const ch2DeviceCol = hasMetricsMeterNo ? 'NULLIF(TRIM(d.metricsMeterNo), \'\')' : 'NULL';
-    const ch1PrCol = prHasBeforeMeterNo ? 'NULLIF(TRIM(pr.before_meter_no), \'\')' : 'NULL';
-    const ch2PrCol = prHasMetricsMeterNo ? 'NULLIF(TRIM(pr.metrics_meter_no), \'\')' : 'NULL';
+    const ch1PrCol = prHasBeforeMeterNo ? 'NULLIF(TRIM(latest_pr.before_meter_no), \'\')' : 'NULL';
+    const ch2PrCol = prHasMetricsMeterNo ? 'NULLIF(TRIM(latest_pr.metrics_meter_no), \'\')' : 'NULL';
 
     // LEFT JOIN so every selected device appears even without telemetry in the period.
-    // Use latest cumulative kWh readings (not SUM) — summing cumulative registers inflates totals.
+    // `latest_pr` is the single most recent record where BOTH before_kWh and metrics_kWh
+    // are present — a genuine paired CH1/CH2 reading. Other tables (e.g. the Energy
+    // Quality Report's seed data) write CH1-only rows against the same device_id, so
+    // picking "latest non-null before_kWh" and "latest non-null metrics_kWh" independently
+    // can mix two different dates; requiring both non-null on the same row avoids that.
     const rows = (await queryGeserverhub(
       `SELECT
         d.deviceID   AS device_id,
@@ -86,46 +90,52 @@ export async function GET(request: NextRequest) {
         d.site,
         d.location,
         d.ipAddress  AS ip_address,
-        COALESCE(SUM(pr.energy_reduction), 0) AS energy_saved,
-        COALESCE(SUM(pr.co2_reduction), 0)    AS co2_kg,
-        COALESCE(
-          CAST(
-            SUBSTRING_INDEX(
-              GROUP_CONCAT(CAST(pr.before_kWh AS CHAR) ORDER BY pr.record_time DESC SEPARATOR '|'),
-              '|', 1
-            ) AS DECIMAL(20, 4)
-          ),
-          0
-        ) AS total_kwh_ch1_before,
-        COALESCE(
-          CAST(
-            SUBSTRING_INDEX(
-              GROUP_CONCAT(CAST(pr.metrics_kWh AS CHAR) ORDER BY pr.record_time DESC SEPARATOR '|'),
-              '|', 1
-            ) AS DECIMAL(20, 4)
-          ),
-          0
-        ) AS total_kwh_ch2_after,
-        COALESCE(${ch1DeviceCol}, MAX(${ch1PrCol})) AS ch1_before,
-        COALESCE(${ch2DeviceCol}, MAX(${ch2PrCol})) AS ch2_after,
-        COUNT(pr.id)         AS record_count,
-        MIN(pr.record_time)  AS first_record,
-        MAX(pr.record_time)  AS last_record
+        COALESCE(latest_pr.before_kWh, 0)  AS total_kwh_ch1_before,
+        COALESCE(latest_pr.metrics_kWh, 0) AS total_kwh_ch2_after,
+        COALESCE(${ch1DeviceCol}, ${ch1PrCol}) AS ch1_before,
+        COALESCE(${ch2DeviceCol}, ${ch2PrCol}) AS ch2_after,
+        COALESCE(agg.record_count, 0) AS record_count,
+        agg.first_record,
+        agg.last_record
        FROM devices d
-       LEFT JOIN power_records pr
-         ON pr.device_id = d.deviceID
-        AND pr.record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+       LEFT JOIN (
+         SELECT pr.*
+         FROM power_records pr
+         INNER JOIN (
+           SELECT device_id, MAX(record_time) AS max_time
+           FROM power_records
+           WHERE before_kWh IS NOT NULL
+             AND metrics_kWh IS NOT NULL
+             AND record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+           GROUP BY device_id
+         ) mx ON mx.device_id = pr.device_id AND mx.max_time = pr.record_time
+       ) latest_pr ON latest_pr.device_id = d.deviceID
+       LEFT JOIN (
+         SELECT device_id,
+                COUNT(*)          AS record_count,
+                MIN(record_time)  AS first_record,
+                MAX(record_time)  AS last_record
+         FROM power_records
+         WHERE record_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+         GROUP BY device_id
+       ) agg ON agg.device_id = d.deviceID
        ${deviceWhere}
-       GROUP BY d.deviceID, d.deviceName, ${meterGroup}, d.site, d.location, d.ipAddress
-       ORDER BY co2_kg DESC, d.deviceName ASC`,
+       ORDER BY (COALESCE(latest_pr.before_kWh, 0) - COALESCE(latest_pr.metrics_kWh, 0)) DESC, d.deviceName ASC`,
       params,
     )) as Row[];
 
     const meters = rows.map((r, idx) => {
-      const co2Kg = Math.round((Number(r.co2_kg) || 0) * 100) / 100;
-      const carbonCreditsTonnes = Math.round((co2Kg / 1000) * 10000) / 10000;
       const ch1Raw = String(r.ch1_before || '').trim();
       const ch2Raw = String(r.ch2_after || '').trim();
+      const totalKwhCh1Before = Math.round((Number(r.total_kwh_ch1_before) || 0) * 100) / 100;
+      const totalKwhCh2After = Math.round((Number(r.total_kwh_ch2_after) || 0) * 100) / 100;
+      // kWh Saved = latest CH1 (before) reading − latest CH2 (after) reading.
+      // Do NOT sum per-record energy_reduction — before_kWh/metrics_kWh are
+      // cumulative registers, so summing the generated column across many
+      // readings double/triple-counts the same gap and inflates totals.
+      const energySavedKwh = Math.round((totalKwhCh1Before - totalKwhCh2After) * 100) / 100;
+      const co2Kg = Math.round(energySavedKwh * CO2_KG_PER_KWH * 100) / 100;
+      const carbonCreditsTonnes = Math.round((co2Kg / 1000) * 10000) / 10000;
       return {
         rank: idx + 1,
         deviceId: Number(r.device_id),
@@ -135,12 +145,12 @@ export async function GET(request: NextRequest) {
         ipAddress: String(r.ip_address || ''),
         ch1Before: ch1Raw ? (ch1Raw.startsWith('#') ? ch1Raw : `# ${ch1Raw}`) : '—',
         ch2After: ch2Raw ? (ch2Raw.startsWith('#') ? ch2Raw : `# ${ch2Raw}`) : '—',
-        totalKwhCh1Before: Math.round((Number(r.total_kwh_ch1_before) || 0) * 100) / 100,
-        totalKwhCh2After: Math.round((Number(r.total_kwh_ch2_after) || 0) * 100) / 100,
+        totalKwhCh1Before,
+        totalKwhCh2After,
         recordCount: Number(r.record_count) || 0,
         firstRecord: r.first_record,
         lastRecord: r.last_record,
-        energySavedKwh: Math.round((Number(r.energy_saved) || 0) * 100) / 100,
+        energySavedKwh,
         co2Kg,
         carbonCreditsTonnes,
         estimatedValueKRW: Math.round(carbonCreditsTonnes * DEFAULT_CREDIT_PRICE_KRW_PER_TONNE),

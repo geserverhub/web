@@ -209,9 +209,9 @@ export const fallbackClients = [
     contact_email: "goeunserverhub@gmail.com",
     contact_phone: "010-8488-0865",
     contact_fax: "050-8958-0865",
-    address: "경기도 안산시 상록구 월피동 445-28 301호",
-    thumbnail: "/ge-energyTech/138568.jpg",
-    thumbnail_style: "photo",
+    address: "경기도 안산시 상록구 월피동 445-28 301-J1호",
+    thumbnail: "/ge-energyTech/138568-transparent.png",
+    thumbnail_fit: "contain",
     system_url: "https://www.ge-energytech.com",
   },
   {

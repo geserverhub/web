@@ -10,7 +10,7 @@
   padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
     max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   background: linear-gradient(165deg, #ecfdf5 0%, #f0fdf4 35%, #e0f2fe 70%, #f8fafc 100%);
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-inter), 'Inter', 'Segoe UI', system-ui, sans-serif;
   position: relative;
   overflow-x: hidden;
 }

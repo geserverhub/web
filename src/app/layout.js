@@ -1,7 +1,22 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
+import { Itim, Inter } from "next/font/google";
 import { CHUNK_RECOVERY_INLINE_SCRIPT } from "@/lib/chunk-recovery";
 import AppRefreshNotice from "@/components/AppRefreshNotice";
+
+const itim = Itim({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-itim",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata = {
   title: "GE SERVER HUB",
@@ -13,15 +28,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Itim&family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="th" className={`${itim.variable} ${inter.variable}`}>
       <body>
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_INLINE_SCRIPT }} />
         <AppRefreshNotice />
