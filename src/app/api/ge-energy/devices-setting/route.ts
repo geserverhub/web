@@ -175,6 +175,7 @@ export async function GET(req: NextRequest) {
       const rawLocation = String(d.installation_location || d.location || '').trim()
       return {
         ...d,
+        recordScope: d.record_scope ? String(d.record_scope).trim() : undefined,
         seriesNo: d.series_no ? String(d.series_no).trim() : undefined,
         customerName: d.customerName
           ? normalizeCustomerDisplayName(d.customerName as string, d.deviceName as string)

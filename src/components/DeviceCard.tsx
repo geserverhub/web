@@ -7,17 +7,25 @@ import {
   Clock,
   Edit2,
   Fingerprint,
+  Leaf,
   MapPin,
   Wifi,
   WifiOff,
   Zap,
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useLocale } from '@/lib/LocaleContext';
 
 interface PhaseReadings {
   l1: number | null;
   l2: number | null;
   l3: number | null;
+}
+
+interface TrendPoint {
+  time: string;
+  ch1: number;
+  ch2: number;
 }
 
 interface DeviceCardProps {
@@ -27,7 +35,11 @@ interface DeviceCardProps {
   seriesNo?: string | null;
   location?: string | null;
   isOnline: boolean;
-  currentReadings?: PhaseReadings;
+  ch1Readings?: PhaseReadings;
+  ch2Readings?: PhaseReadings;
+  co2Kg?: number | null;
+  carbonCreditsTonnes?: number | null;
+  trend?: TrendPoint[];
   lastConnected?: string;
   onlineTime?: string;
   onEdit?: () => void;
@@ -61,7 +73,11 @@ export default function DeviceCard({
   seriesNo,
   location,
   isOnline,
-  currentReadings,
+  ch1Readings,
+  ch2Readings,
+  co2Kg,
+  carbonCreditsTonnes,
+  trend,
   lastConnected,
   onlineTime,
   onEdit,
@@ -69,7 +85,9 @@ export default function DeviceCard({
   const { t } = useLocale();
   const na = t('notAvailable');
 
-  const hasCurrent = currentReadings && PHASE_STYLES.some(({ key }) => currentReadings[key] != null);
+  const hasCh1 = ch1Readings && PHASE_STYLES.some(({ key }) => ch1Readings[key] != null);
+  const hasCh2 = ch2Readings && PHASE_STYLES.some(({ key }) => ch2Readings[key] != null);
+  const hasCurrent = hasCh1 || hasCh2;
   const cardAccent = isOnline
     ? 'border-emerald-200 ring-1 ring-emerald-100'
     : hasCurrent
@@ -171,12 +189,14 @@ export default function DeviceCard({
         </div>
       ) : null}
 
-      {/* Phase current (A) */}
-      {currentReadings && (
+      {/* Phase current (A) — CH1 and CH2 measured simultaneously at two points */}
+      {hasCh1 && (
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <Activity className="w-3.5 h-3.5 text-amber-500" />
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{t('current')}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              CH1 {t('current')}
+            </p>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {PHASE_STYLES.map(({ key, label, dot, box }) => (
@@ -186,13 +206,108 @@ export default function DeviceCard({
                   <p className="text-[10px] font-bold opacity-80">{label}</p>
                 </div>
                 <p className="text-sm font-extrabold leading-none">
-                  {currentReadings[key] != null ? `${currentReadings[key]!.toFixed(1)}` : na}
+                  {ch1Readings![key] != null ? `${ch1Readings![key]!.toFixed(1)}` : na}
                 </p>
-                {currentReadings[key] != null && (
+                {ch1Readings![key] != null && (
                   <p className="text-[9px] font-semibold opacity-70 mt-0.5">{t('ampere')}</p>
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {hasCh2 && (
+        <div>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Activity className="w-3.5 h-3.5 text-blue-500" />
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              CH2 {t('current')}
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {PHASE_STYLES.map(({ key, label, dot, box }) => (
+              <div key={key} className={`rounded-xl border px-2 py-2 text-center ${box}`}>
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                  <p className="text-[10px] font-bold opacity-80">{label}</p>
+                </div>
+                <p className="text-sm font-extrabold leading-none">
+                  {ch2Readings![key] != null ? `${ch2Readings![key]!.toFixed(1)}` : na}
+                </p>
+                {ch2Readings![key] != null && (
+                  <p className="text-[9px] font-semibold opacity-70 mt-0.5">{t('ampere')}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CH1 vs CH2 mini trend chart */}
+      {trend && trend.length > 0 && (
+        <div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Activity className="w-3.5 h-3.5 text-emerald-500" />
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              {t('ch1Ch2TrendTitle')}
+            </p>
+          </div>
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-1.5">
+            <ResponsiveContainer width="100%" height={110}>
+              <AreaChart data={trend} margin={{ top: 4, right: 6, left: -18, bottom: 0 }}>
+                <defs>
+                  <linearGradient id={`dc-ch1-${deviceName}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ea580c" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="#ea580c" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id={`dc-ch2-${deviceName}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="time" tick={{ fontSize: 9 }} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 9 }} width={28} />
+                <Tooltip
+                  contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                  formatter={(v: number, name: string) => [`${v.toFixed(1)} A`, name]}
+                />
+                <Area type="monotone" dataKey="ch1" name="CH1" stroke="#ea580c" strokeWidth={1.5} fill={`url(#dc-ch1-${deviceName})`} />
+                <Area type="monotone" dataKey="ch2" name="CH2" stroke="#2563eb" strokeWidth={1.5} fill={`url(#dc-ch2-${deviceName})`} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* CO2 avoided / Carbon credits */}
+      {(co2Kg != null || carbonCreditsTonnes != null) && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2 rounded-xl bg-teal-50/80 border border-teal-100 px-2.5 py-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+              <Leaf className="w-3.5 h-3.5 text-teal-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-teal-600/80">
+                CO₂
+              </p>
+              <p className="text-xs font-bold text-teal-800 truncate">
+                {co2Kg != null ? `${co2Kg.toFixed(1)} kg` : na}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-emerald-50/80 border border-emerald-100 px-2.5 py-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+              <Leaf className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600/80">
+                Carbon Credit
+              </p>
+              <p className="text-xs font-bold text-emerald-800 truncate">
+                {carbonCreditsTonnes != null ? `${carbonCreditsTonnes.toFixed(4)} tCO₂e` : na}
+              </p>
+            </div>
           </div>
         </div>
       )}

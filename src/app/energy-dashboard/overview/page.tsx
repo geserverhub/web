@@ -1,10 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/lib/LocaleContext';
 import DeviceCard from '@/components/DeviceCard';
-import { Plus, RefreshCw, Server, Wifi, WifiOff } from 'lucide-react';
+import { Plus, RefreshCw, Server, Wifi, WifiOff, Activity } from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface Device {
   deviceID: string;
@@ -15,12 +25,21 @@ interface Device {
   location: string | null;
   isOnline: boolean;
   lastUpdate: string | null;
-  currentReadings: {
+  ch1Readings: {
     l1: number | null;
     l2: number | null;
     l3: number | null;
   };
+  ch2Readings: {
+    l1: number | null;
+    l2: number | null;
+    l3: number | null;
+  };
+  co2Kg: number | null;
+  carbonCreditsTonnes: number | null;
 }
+
+type TrendPoint = { time: string; ch1: number; ch2: number };
 
 type DashboardStatsDevice = {
   deviceID: string;
@@ -42,7 +61,7 @@ function mapStatsDevice(device: DashboardStatsDevice): Device {
   const customerName =
     (device.customerName || device.customerNameEn || '').trim() || null;
   return {
-    deviceID: device.deviceID,
+    deviceID: String(device.deviceID),
     deviceName: device.deviceName,
     customerName,
     geId: device.GEsaveID?.trim() || null,
@@ -50,11 +69,18 @@ function mapStatsDevice(device: DashboardStatsDevice): Device {
     location: device.location?.trim() || null,
     isOnline: device.isOnline,
     lastUpdate: device.lastUpdate,
-    currentReadings: {
-      l1: ch2[0] ?? ch1[0] ?? null,
-      l2: ch2[1] ?? ch1[1] ?? null,
-      l3: ch2[2] ?? ch1[2] ?? null,
+    ch1Readings: {
+      l1: ch1[0] ?? null,
+      l2: ch1[1] ?? null,
+      l3: ch1[2] ?? null,
     },
+    ch2Readings: {
+      l1: ch2[0] ?? null,
+      l2: ch2[1] ?? null,
+      l3: ch2[2] ?? null,
+    },
+    co2Kg: null,
+    carbonCreditsTonnes: null,
   };
 }
 
@@ -64,8 +90,11 @@ export default function OverviewPage() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const [trendByDevice, setTrendByDevice] = useState<Map<string, TrendPoint[]>>(new Map());
+  const [trendLoading, setTrendLoading] = useState(false);
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/ge-energy/dashboard-stats?site=all');
@@ -73,8 +102,37 @@ export default function OverviewPage() {
 
       if (json.success) {
         const recent = (json.data?.recentDevices ?? []) as DashboardStatsDevice[];
-        setDevices(recent.map(mapStatsDevice));
+        const mapped = recent.map(mapStatsDevice);
+        setDevices(mapped);
         setError(null);
+
+        // Merge in CO2 / carbon credits per meter (latest CH1-CH2 diff, already
+        // computed correctly by carbon-meters — see earlier fixes this session).
+        try {
+          const carbonRes = await fetch('/api/ge-energy/carbon-meters?period=365&all=true', {
+            cache: 'no-store',
+          });
+          const carbonJson = await carbonRes.json();
+          if (carbonJson.success) {
+            const byId = new Map<string, { co2Kg: number; carbonCreditsTonnes: number }>(
+              carbonJson.meters.map((m: { deviceId: number; co2Kg: number; carbonCreditsTonnes: number }) => [
+                String(m.deviceId),
+                { co2Kg: m.co2Kg, carbonCreditsTonnes: m.carbonCreditsTonnes },
+              ]),
+            );
+            setDevices((prev) =>
+              prev.map((d) => {
+                const c = byId.get(d.deviceID);
+                return c ? { ...d, co2Kg: c.co2Kg, carbonCreditsTonnes: c.carbonCreditsTonnes } : d;
+              }),
+            );
+          }
+        } catch {
+          /* non-critical — cards just show without CO2/credit stats */
+        }
+
+        // Aggregate CH1 vs CH2 trend across all meters for the comparison chart.
+        fetchTrend(mapped.map((d) => d.deviceID));
       } else {
         setError(json.error || t('loadDevicesFailed'));
       }
@@ -83,10 +141,66 @@ export default function OverviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  const fetchTrend = useCallback(async (deviceIds: string[]) => {
+    if (!deviceIds.length) {
+      setTrend([]);
+      setTrendByDevice(new Map());
+      return;
+    }
+    setTrendLoading(true);
+    try {
+      const results = await Promise.all(
+        deviceIds.map((id) =>
+          fetch(`/api/ge-energy/current-history?deviceId=${encodeURIComponent(id)}&hours=3&scope=installed`, {
+            cache: 'no-store',
+          })
+            .then((r) => r.json())
+            .then((json) => ({ id, json }))
+            .catch(() => ({ id, json: null })),
+        ),
+      );
+
+      // Bucket every device's chartData by its "time" label (HH:MM) and average
+      // beforeAvg (CH1) / afterAvg (CH2) across whichever meters have a point
+      // at that minute.
+      const buckets = new Map<string, { ch1: number[]; ch2: number[] }>();
+      const perDevice = new Map<string, TrendPoint[]>();
+      for (const { id, json } of results) {
+        const points = json?.data?.chartData ?? [];
+        const series: TrendPoint[] = [];
+        for (const p of points) {
+          if (!p?.time) continue;
+          const bucket = buckets.get(p.time) ?? { ch1: [], ch2: [] };
+          if (p.beforeAvg != null && Number.isFinite(p.beforeAvg)) bucket.ch1.push(p.beforeAvg);
+          if (p.afterAvg != null && Number.isFinite(p.afterAvg)) bucket.ch2.push(p.afterAvg);
+          buckets.set(p.time, bucket);
+          series.push({
+            time: p.time,
+            ch1: p.beforeAvg != null ? Math.round(p.beforeAvg * 100) / 100 : 0,
+            ch2: p.afterAvg != null ? Math.round(p.afterAvg * 100) / 100 : 0,
+          });
+        }
+        perDevice.set(id, series);
+      }
+
+      const avg = (vals: number[]) => (vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
+      const merged = Array.from(buckets.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([time, b]) => ({ time, ch1: Math.round(avg(b.ch1) * 100) / 100, ch2: Math.round(avg(b.ch2) * 100) / 100 }));
+
+      setTrend(merged);
+      setTrendByDevice(perDevice);
+    } finally {
+      setTrendLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchDevices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deviceCount = devices.length;
@@ -158,6 +272,40 @@ export default function OverviewPage() {
         </div>
       )}
 
+      {/* CH1 vs CH2 trend, averaged across all meters */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="flex items-center gap-1.5 mb-3">
+          <Activity className="w-4 h-4 text-emerald-600" />
+          <h2 className="text-sm font-bold text-gray-800">{t('ch1Ch2TrendTitle')}</h2>
+          {trendLoading && <RefreshCw className="w-3.5 h-3.5 text-gray-300 animate-spin ml-1" />}
+        </div>
+        {trend.length > 0 ? (
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={trend}>
+              <defs>
+                <linearGradient id="ovCh1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ea580c" stopOpacity={0.55} />
+                  <stop offset="95%" stopColor="#ea580c" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="ovCh2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.55} />
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="time" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} unit=" A" />
+              <Tooltip formatter={(v: number) => `${v.toFixed(1)} A`} />
+              <Legend />
+              <Area type="monotone" dataKey="ch1" name="CH1" stroke="#ea580c" fill="url(#ovCh1)" strokeWidth={2} />
+              <Area type="monotone" dataKey="ch2" name="CH2" stroke="#2563eb" fill="url(#ovCh2)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-center text-gray-400 text-sm py-10">{t('noChart')}</p>
+        )}
+      </div>
+
       {/* Device Cards */}
       {devices.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -172,7 +320,11 @@ export default function OverviewPage() {
                 seriesNo={device.seriesNo}
                 location={device.location}
                 isOnline={isOnline}
-                currentReadings={device.currentReadings}
+                ch1Readings={device.ch1Readings}
+                ch2Readings={device.ch2Readings}
+                co2Kg={device.co2Kg}
+                carbonCreditsTonnes={device.carbonCreditsTonnes}
+                trend={trendByDevice.get(device.deviceID)}
                 lastConnected={device.lastUpdate ? new Date(device.lastUpdate).toLocaleString() : t('notAvailable')}
                 onlineTime={isOnline && device.lastUpdate ? calculateTimeAgo(device.lastUpdate) : undefined}
                 onEdit={() => handleEditDevice(device.deviceID)}
@@ -196,7 +348,9 @@ export default function OverviewPage() {
 function calculateTimeAgo(timestamp: string): string {
   const now = new Date();
   const then = new Date(timestamp);
-  const diffMs = now.getTime() - then.getTime();
+  // Clamp to 0 instead of going negative when the browser's clock lags
+  // slightly behind the server's (clock skew), or the reading is very fresh.
+  const diffMs = Math.max(0, now.getTime() - then.getTime());
   const diffSecs = Math.floor(diffMs / 1000);
   const diffMins = Math.floor(diffSecs / 60);
   const diffHours = Math.floor(diffMins / 60);

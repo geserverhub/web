@@ -97,19 +97,48 @@ export async function GET(request: NextRequest) {
 
     // 2. Online/offline counts are computed from latest-per-device rows below
 
-    // 3. Get total energy saved this month (kWh) for selected site
+    // 3. Total energy saved (kWh): latest CH1 (before) − latest CH2 (after)
+    // reading, per device, summed across devices. Do NOT sum energy_reduction
+    // across records — before_kWh/metrics_kWh are cumulative registers, so
+    // summing the generated column across many readings for the same meter
+    // massively inflates the total.
     const energySavedResult = await queryGe(
-      `SELECT SUM(pr.energy_reduction) as total_energy
-       FROM power_records pr
-       JOIN devices d ON pr.device_id = d.deviceID
-       WHERE ${siteCond}
-       AND MONTH(pr.record_time) = MONTH(NOW())
-       AND YEAR(pr.record_time) = YEAR(NOW())`,
+      `SELECT SUM(latest_pr.before_kWh - latest_pr.metrics_kWh) AS total_energy
+       FROM devices d
+       INNER JOIN (
+         SELECT pr.*
+         FROM power_records pr
+         INNER JOIN (
+           SELECT device_id, MAX(record_time) AS max_time
+           FROM power_records
+           WHERE before_kWh IS NOT NULL AND metrics_kWh IS NOT NULL
+           GROUP BY device_id
+         ) mx ON mx.device_id = pr.device_id AND mx.max_time = pr.record_time
+       ) latest_pr ON latest_pr.device_id = d.deviceID
+       WHERE ${siteCond}`,
       [...siteArgs]
     )
     const energySaved = Math.round(energySavedResult[0]?.total_energy || 0)
 
     const hasPreInstallTable = await tableExists('power_records_preinstall')
+
+    // device_connectivity is updated only by genuine ingest paths (mqtt-bridge,
+    // the power-record API) — unlike power_records, it can't be made to look
+    // "live" by backfilled/seeded historical rows, so it's the real signal for
+    // whether a meter is actually receiving MQTT data right now.
+    const hasConnectivityTable = await tableExists('device_connectivity')
+    const connectivityByDevice = new Map<number, { lastSeenAt: Date | null; onlineStatus: boolean }>()
+    if (hasConnectivityTable) {
+      const connRows = await queryGe(
+        `SELECT device_id, last_seen_at, online_status FROM device_connectivity`
+      )
+      for (const r of connRows as { device_id: number; last_seen_at: string | Date | null; online_status: number }[]) {
+        connectivityByDevice.set(Number(r.device_id), {
+          lastSeenAt: r.last_seen_at ? new Date(r.last_seen_at) : null,
+          onlineStatus: Boolean(r.online_status),
+        })
+      }
+    }
 
     // 4. Get latest record for all devices in the selected site
     // Some environments may still run an older power_records schema.
@@ -261,6 +290,9 @@ export async function GET(request: NextRequest) {
         ${selectedColumn('metrics_L1')},
         ${selectedColumn('metrics_L2')},
         ${selectedColumn('metrics_L3')},
+        ${selectedColumn('metrics_current_L1')},
+        ${selectedColumn('metrics_current_L2')},
+        ${selectedColumn('metrics_current_L3')},
         ${selectedColumn('metrics_P')},
         ${selectedColumn('metrics_Q')},
         ${selectedColumn('metrics_S')},
@@ -310,7 +342,19 @@ export async function GET(request: NextRequest) {
       const lastUpdate = device.record_time ? new Date(device.record_time) : null
       const beforeLastUpdate = device.record_time_preinstall ? device.record_time_preinstall : null
       const now = new Date()
-      const isOnline = lastUpdate && (now.getTime() - lastUpdate.getTime()) < 20 * 60 * 1000 // 20 minutes
+      const connectivity = hasConnectivityTable
+        ? connectivityByDevice.get(Number(device.deviceID))
+        : undefined
+      // Real MQTT connectivity, not just "some power_records row is recent"
+      // (which seeded/backfilled data can satisfy without a live gateway).
+      const isOnline = hasConnectivityTable
+        ? Boolean(
+            connectivity?.onlineStatus &&
+              connectivity.lastSeenAt &&
+              now.getTime() - connectivity.lastSeenAt.getTime() < 20 * 60 * 1000,
+          )
+        : Boolean(lastUpdate && now.getTime() - lastUpdate.getTime() < 20 * 60 * 1000) // 20 minutes fallback
+      const connectivityLastSeen = connectivity?.lastSeenAt ?? null
 
       const row = device as Record<string, unknown>
       const vCols = pickCh1VoltageColumns(powerMetricColumns)
@@ -363,7 +407,10 @@ export async function GET(request: NextRequest) {
         ipAddress: device.ipAddress,
         GEsaveID: device.GEsaveID,
         isOnline,
-        lastUpdate: device.record_time,
+        // Prefer the real MQTT last-seen timestamp so "last connected" doesn't
+        // show a seeded/backfilled power_records date that looks deceptively
+        // fresh next to an (accurate) offline status.
+        lastUpdate: hasConnectivityTable ? (connectivityLastSeen ?? device.record_time) : device.record_time,
         beforeLastUpdate: beforeLastUpdate,
         voltageLL,
         currentABC: [...currentABC],
