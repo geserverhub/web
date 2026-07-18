@@ -33,7 +33,7 @@ import {
   chartDataCh1Only,
   type DbChartPoint,
 } from '@/lib/energy/energy-quality-current-analysis';
-import { normalizeRecordScope } from '@/lib/energy/energy-quality-scope';
+import { isCh1OnlyScope, normalizeRecordScope } from '@/lib/energy/energy-quality-scope';
 import {
   RefreshCw,
   Wifi,
@@ -153,7 +153,8 @@ function EnergyQualityReportInner() {
   }, [devices, selectedLocation]);
 
   const selectedInfo = filteredDevices.find((d) => d.deviceID === selectedDevice);
-  const ch1Only = true;
+  /** CH2 (after-install) comparison shows whenever the meter's scope has both channels. */
+  const ch1Only = isCh1OnlyScope(selectedInfo?.recordScope);
 
   const hasLiveData = channelHasLiveData(ch1) || (!ch1Only && channelHasLiveData(ch2));
   const hasHistoryData = chartData.length > 0;
@@ -286,9 +287,9 @@ function EnergyQualityReportInner() {
       const histJson = await histRes.json();
 
       if (json.success && json.data?.metrics) {
-        const { ch1: c1 } = mapChannels(json.data.metrics as Record<string, unknown>, ch1Only);
+        const { ch1: c1, ch2: c2 } = mapChannels(json.data.metrics as Record<string, unknown>, ch1Only);
         setCh1(c1);
-        setCh2(EMPTY_CHANNEL);
+        setCh2(c2);
         setLastUpdateTs(
           json.data.lastUpdate ? new Date(json.data.lastUpdate).getTime() : Date.now(),
         );
@@ -302,7 +303,7 @@ function EnergyQualityReportInner() {
 
       const hist = histJson.data;
       const rawPoints = (hist?.chartData ?? []) as DbChartPoint[];
-      const points = chartDataCh1Only(rawPoints);
+      const points = ch1Only ? chartDataCh1Only(rawPoints) : rawPoints;
       setChartData(points);
       setHistoryPoints(hist?.dataPoints ?? points.length);
       if (hist?.period) {
@@ -474,7 +475,7 @@ function EnergyQualityReportInner() {
         ch1: selectedDevice ? ch1 : EMPTY_CHANNEL,
         ch2: selectedDevice && !ch1Only ? ch2 : EMPTY_CHANNEL,
         ch1Only,
-        logoUrl: `${window.location.origin}/momoge/Logo-brand.png`,
+        logoUrl: `${window.location.origin}/ge-energyTech/138568.jpg`,
         chartData: ch1Only ? chartDataCh1Only(chartData) : chartData,
         historyPeriod,
         historyPoints,
@@ -660,7 +661,7 @@ function EnergyQualityReportInner() {
               powerFactor: ui.powerFactor,
               frequency: ui.frequency,
             }}
-            dbChartData={chartDataCh1Only(chartData)}
+            dbChartData={ch1Only ? chartDataCh1Only(chartData) : chartData}
             dbStats={dbAnalysis.stats}
             technicalInsights={dbAnalysis.insights}
             chartUi={{ l1: ui.l1, l2: ui.l2, l3: ui.l3, noChart: ui.noChart }}

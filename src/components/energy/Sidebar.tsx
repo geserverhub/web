@@ -122,7 +122,7 @@ const menuSections: NavSection[] = [
 
 const sectionFallback: Record<string, Record<string, string>> = {
   menuGreenEnergy: { th: "พลังงานสีเขียว", en: "Green Energy", ko: "그린 에너지" },
-  menuEnergyQuality: { th: "การวิเคราะห์คุณภาพพลังงาน ก่อนการติดตั้ง", en: "Energy Quality Analysis Before Installation", ko: "설치 전 전력 품질 분석" },
+  menuEnergyQuality: { th: "การวิเคราะห์คุณภาพพลังงาน (เปรียบเทียบ CH1/CH2)", en: "Energy Quality Analysis (CH1/CH2 Comparison)", ko: "전력 품질 분석 (CH1/CH2 비교)" },
   energyQualityMeters: { th: "เพิ่มมิเตอร์เพื่อเก็บค่า", en: "Add meters for monitoring", ko: "측정 미터 추가" },
   energyQualityReport: { th: "รายงานการวิเคราะห์กระแสไฟ", en: "Current analysis report", ko: "전류 분석 보고서" },
   menuMonitoring: { th: "มอนิเตอร์พลังงาน", en: "Energy Monitoring", ko: "에너지 모니터링" },

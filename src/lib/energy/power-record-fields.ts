@@ -1,13 +1,15 @@
 /**
  * Canonical mapping for power_records telemetry.
- * - before_L1/L2/L3 = line/phase voltage (V)
+ * - before_L1/L2/L3 = CH1 line/phase voltage (V)
  * - before_current_L1/L2/L3 = CH1 phase current (A)
- * - metrics_L1/L2/L3 = CH2 phase current (A)
+ * - metrics_L1/L2/L3 = CH2 line/phase voltage (V)
+ * - metrics_current_L1/L2/L3 = CH2 phase current (A)
  */
 
 export const CH1_VOLTAGE_COLUMNS = ['before_L1', 'before_L2', 'before_L3'] as const;
 export const CH1_CURRENT_COLUMNS = ['before_current_L1', 'before_current_L2', 'before_current_L3'] as const;
-export const CH2_CURRENT_COLUMNS = ['metrics_L1', 'metrics_L2', 'metrics_L3'] as const;
+export const CH2_VOLTAGE_COLUMNS = ['metrics_L1', 'metrics_L2', 'metrics_L3'] as const;
+export const CH2_CURRENT_COLUMNS = ['metrics_current_L1', 'metrics_current_L2', 'metrics_current_L3'] as const;
 
 export type PowerRecordRow = Record<string, unknown>;
 
@@ -24,6 +26,10 @@ export function pickCh1VoltageColumns(available: Set<string>): (string | null)[]
 
 export function pickCh1CurrentColumns(available: Set<string>): (string | null)[] {
   return CH1_CURRENT_COLUMNS.map((c) => (available.has(c) ? c : null));
+}
+
+export function pickCh2VoltageColumns(available: Set<string>): (string | null)[] {
+  return CH2_VOLTAGE_COLUMNS.map((c) => (available.has(c) ? c : null));
 }
 
 export function pickCh2CurrentColumns(available: Set<string>): (string | null)[] {

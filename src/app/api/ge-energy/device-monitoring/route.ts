@@ -4,6 +4,7 @@ import {
   pickCh1CurrentColumns,
   pickCh1VoltageColumns,
   pickCh2CurrentColumns,
+  pickCh2VoltageColumns,
   readCh1Currents,
   readCh2Currents,
 } from '@/lib/energy/power-record-fields'
@@ -29,6 +30,9 @@ const METRIC_COLUMN_CANDIDATES = [
   'metrics_L1',
   'metrics_L2',
   'metrics_L3',
+  'metrics_current_L1',
+  'metrics_current_L2',
+  'metrics_current_L3',
   'before_P',
   'before_Q',
   'before_S',
@@ -138,6 +142,7 @@ function buildMonitoringPayload(
   columnSets: {
     ch1CurrentCols: (string | null)[]
     ch1VoltageCols: (string | null)[]
+    ch2VoltageCols: (string | null)[]
     ch2CurrentCols: (string | null)[]
   },
 ) {
@@ -147,6 +152,9 @@ function buildMonitoringPayload(
     col ? toNum(record[col]) : null,
   )
   const ch1Current = readCh1Currents(record, columnSets.ch1CurrentCols, columnSets.ch1VoltageCols)
+  const ch2Voltage = ch1Only
+    ? [null, null, null]
+    : columnSets.ch2VoltageCols.map((col) => (col ? toNum(record[col]) : null))
   const ch2Current = ch1Only
     ? [null, null, null]
     : readCh2Currents(record, columnSets.ch2CurrentCols)
@@ -154,7 +162,7 @@ function buildMonitoringPayload(
   const ch1 = buildChannel(ch1Voltage, ch1Current, 'before', record)
   const ch2 = ch1Only
     ? buildChannel([null, null, null], [null, null, null], 'metrics', {})
-    : buildChannel([null, null, null], ch2Current, 'metrics', record)
+    : buildChannel(ch2Voltage, ch2Current, 'metrics', record)
 
   return {
     deviceId: record.device_id,
@@ -200,6 +208,9 @@ async function fetchLatestRecord(deviceId: string, table: string, scope: RecordS
   const ch2L1 = pickCol(powerCols, ['metrics_L1'])
   const ch2L2 = pickCol(powerCols, ['metrics_L2'])
   const ch2L3 = pickCol(powerCols, ['metrics_L3'])
+  const ch2I1 = pickCol(powerCols, ['metrics_current_L1'])
+  const ch2I2 = pickCol(powerCols, ['metrics_current_L2'])
+  const ch2I3 = pickCol(powerCols, ['metrics_current_L3'])
 
   // Select raw column names (no alias): buildMonitoringPayload / readCh1Currents
   // read the record by original column name (before_L1, metrics_L1, …), so
@@ -214,6 +225,9 @@ async function fetchLatestRecord(deviceId: string, table: string, scope: RecordS
   if (ch2L1) selectParts.push(ch2L1)
   if (ch2L2) selectParts.push(ch2L2)
   if (ch2L3) selectParts.push(ch2L3)
+  if (ch2I1) selectParts.push(ch2I1)
+  if (ch2I2) selectParts.push(ch2I2)
+  if (ch2I3) selectParts.push(ch2I3)
 
   for (const col of [
     'before_P', 'before_Q', 'before_S', 'before_PF', 'before_THD', 'before_F', 'before_kWh',
@@ -239,6 +253,7 @@ async function fetchLatestRecord(deviceId: string, table: string, scope: RecordS
     record,
     ch1CurrentCols: pickCh1CurrentColumns(powerCols),
     ch1VoltageCols: pickCh1VoltageColumns(powerCols),
+    ch2VoltageCols: pickCh2VoltageColumns(powerCols),
     ch2CurrentCols: pickCh2CurrentColumns(powerCols),
   }
 }

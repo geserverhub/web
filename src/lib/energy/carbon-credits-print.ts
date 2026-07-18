@@ -468,7 +468,7 @@ ${methodologyHtml}
       <strong>${t('พารามิเตอร์ที่ตรวจวัด:', 'Monitored Parameters:', '모니터링 파라미터:')}</strong>
       <ul>
         <li>${t('การใช้พลังงานไฟฟ้าจริง (kWh) — อ่านจากมิเตอร์', 'Actual electricity consumption (kWh) — meter readings', '실제 전력 소비 (kWh) — 미터 수치')}</li>
-        <li>${t('ค่าฐาน (Baseline) — ก่อนติดตั้งอุปกรณ์', 'Baseline consumption — pre-installation', '기준선 소비 — 설치 전')}</li>
+        <li>${t('ค่าฐาน (Baseline) — CH1 ไม่ผ่านอุปกรณ์ (วัดพร้อมกับ CH2)', 'Baseline consumption — CH1 without device (measured in parallel with CH2)', '기준선 소비 — CH1 장치 미적용 (CH2와 동시 측정)')}</li>
         <li>${t('ค่าแฟกเตอร์ปล่อยก๊าซเรือนกระจก (EF) — TGO/DEDE', 'Emission Factor (EF) — TGO/DEDE', '배출 계수 (EF) — TGO/DEDE')}</li>
       </ul>
     </div>
@@ -494,10 +494,10 @@ ${
     <th>#</th>
     <th>${t('อุปกรณ์', 'Device', '장치')}</th>
     <th>Meter ID</th>
-    <th class="center">${t('CH1 ก่อนติดตั้ง', 'CH1 Before Install', 'CH1 설치 전')}</th>
-    <th class="center">${t('CH2 หลังติดตั้ง', 'CH2 After Install', 'CH2 설치 후')}</th>
-    <th class="num">${t('kWh CH1 ก่อน', 'Total kWh CH1 Before', 'CH1 설치 전 kWh')}</th>
-    <th class="num">${t('kWh CH2 หลัง', 'Total kWh CH2 After', 'CH2 설치 후 kWh')}</th>
+    <th class="center">${t('CH1 (ไม่ผ่านอุปกรณ์)', 'CH1 (Without Device)', 'CH1 (장치 미적용)')}</th>
+    <th class="center">${t('CH2 (ผ่านอุปกรณ์)', 'CH2 (With Device)', 'CH2 (장치 적용)')}</th>
+    <th class="num">${t('kWh CH1', 'Total kWh CH1', 'CH1 kWh')}</th>
+    <th class="num">${t('kWh CH2', 'Total kWh CH2', 'CH2 kWh')}</th>
     <th class="num">${t('kWh ประหยัด', 'kWh Saved', '절감 kWh')}</th>
     <th class="num">CO₂ (kg)</th>
     <th class="num">${t('เครดิต', 'Credits', '크레딧')} (tCO₂e)</th>

@@ -536,7 +536,7 @@ const th: ReportStrings = {
   longTerm: 'ระยะยาว (1–3 ปี)',
   aiNote: 'วิเคราะห์อัตโนมัติจากข้อมูลมิเตอร์เรียลไทม์ — ค่าบางรายการเป็นการประมาณเมื่อไม่มีข้อมูลครบ',
   noData: '—',
-  ch1Label: 'CH1 (ก่อนติดตั้ง)',
+  ch1Label: 'CH1 (ไม่ผ่านอุปกรณ์)',
   ch2Label: '—',
   threePhase400V: '3-Phase 400V',
   realtimeResolution: 'เรียลไทม์ / 1 นาที',
@@ -607,31 +607,31 @@ const th: ReportStrings = {
   maintenanceNote: 'ตรวจ Thermographic หาก imbalance > 20%',
   solutionApfc: 'GE Energy Tech Smart Saving System',
   geSolutionCapabilities: 'ปรับแรงดัน · ปรับกระแส · ปรับเสถียร · เก็บกระแสไว้ใช้ภายหลัง',
-  geCompareExecutiveTitle: 'เปรียบเทียบก่อนติดตั้ง — ระบบ GE Energy Tech',
+  geCompareExecutiveTitle: 'เปรียบเทียบค่าที่วัดจาก CH1 — ระบบ GE Energy Tech',
   geCompareExecutiveDetail:
-    'ก่อนติดตั้ง: PF {pf} · ไม่สมดุลกระแส {imb} · Peak {peak} · THD {thd} — ระบบ GE Energy Tech ({capabilities}) แก้ปัญหาข้างต้นแบบครบวงจร',
-  geComparePfTitle: 'เปรียบเทียบ Power Factor — ก่อนติดตั้ง',
+    'ค่าที่วัดจาก CH1: PF {pf} · ไม่สมดุลกระแส {imb} · Peak {peak} · THD {thd} — ระบบ GE Energy Tech ({capabilities}) แก้ปัญหาข้างต้นแบบครบวงจร',
+  geComparePfTitle: 'เปรียบเทียบ Power Factor — CH1',
   geComparePfDetail:
-    'ก่อนติดตั้ง PF {pf} (< 0.95) — ระบบ GE ปรับกระแสและปรับแรงดันแบบเรียลไทม์ ยก PF ใกล้ 0.95–1.0 ลดค่าปรับ ({capabilities})',
-  geComparePeakTitle: 'เปรียบเทียบ Peak Demand — ก่อนติดตั้ง',
+    'PF ที่วัดจาก CH1 {pf} (< 0.95) — ระบบ GE ปรับกระแสและปรับแรงดันแบบเรียลไทม์ ยก PF ใกล้ 0.95–1.0 ลดค่าปรับ ({capabilities})',
+  geComparePeakTitle: 'เปรียบเทียบ Peak Demand — CH1',
   geComparePeakDetail:
     'Peak {peak} (เฉลี่ย {avg}) — ระบบ GE เก็บกระแสไฟใช้ตอน Peak ลด Demand Charge และกระจายโหลดอัตโนมัติ',
-  geCompareBalanceTitle: 'เปรียบเทียบความสมดุล 3 เฟส — ก่อนติดตั้ง',
+  geCompareBalanceTitle: 'เปรียบเทียบความสมดุล 3 เฟส — CH1',
   geCompareBalanceDetail:
     'ไม่สมดุล 3 เฟส {imb} — ระบบ GE ปรับกระแสเฟสอัตโนมัติ ลดความร้อนและความเสี่ยงต่อเบรกเกอร์/สายเคเบิล',
-  geCompareHarmonicTitle: 'เปรียบเทียบฮาร์มอนิก — ก่อนติดตั้ง',
+  geCompareHarmonicTitle: 'เปรียบเทียบฮาร์มอนิก — CH1',
   geCompareHarmonicDetail:
     'THD {thd} — ระบบ GE ปรับเสถียรลดฮาร์มอนิก ปกป้องมอเตอร์ หม้อแปลง และอุปกรณ์อิเล็กทรอนิกส์',
-  geCompareVoltageTitle: 'เปรียบเทียบแรงดัน — ก่อนติดตั้ง',
+  geCompareVoltageTitle: 'เปรียบเทียบแรงดัน — CH1',
   geCompareVoltageDetail:
     'ไม่สมดุลแรงดัน {volt} — ระบบ GE ปรับแรงดันรักษาเสถียร 400V 3 เฟส ลดความเสียหายอุปกรณ์',
-  geCompareEnergyTitle: 'เปรียบเทียบการใช้พลังงาน — ก่อนติดตั้ง',
+  geCompareEnergyTitle: 'เปรียบเทียบการใช้พลังงาน — CH1',
   geCompareEnergyDetail:
     'โหลดเฉลี่ย {avg} — ระบบ GE เก็บพลังงานช่วง Off-peak คืนกระแสช่วง Peak ช่วยลด kWh และค่าไฟ',
   geCompareFinancialTitle: 'เปรียบเทียบผลทางการเงิน — ก่อน/หลังติดตั้ง GE',
   geCompareFinancialDetail:
     'ประหยัดได้ประมาณ {saving}/เดือน — เปรียบเทียบก่อน/หลังติดตั้ง: ลดค่าปรับ PF + Peak + ใช้พลังงานสะสม ({capabilities})',
-  geCompareEquipmentTitle: 'เปรียบเทียบความเสี่ยงอุปกรณ์ — ก่อนติดตั้ง',
+  geCompareEquipmentTitle: 'เปรียบเทียบความเสี่ยงอุปกรณ์ — CH1',
   geCompareEquipmentDetail:
     'สถานะอุปกรณ์ {status} — ระบบ GE ปรับเสถียรและปรับแรงดัน ยืดอายุมอเตอร์ หม้อแปลง เบรกเกอร์',
   geCompareRoiTitle: 'เปรียบเทียบ ROI — ลงทุนระบบ GE Energy Tech',
@@ -639,12 +639,12 @@ const th: ReportStrings = {
     'แนวทาง {solution} — คืนทุนเร็วขึ้นจากลดค่าปรับ PF·Peak และพลังงานสะสมช่วง Off-peak ({capabilities})',
   geCompareConclusionTitle: 'สรุปเปรียบเทียบก่อน/หลังติดตั้ง GE Energy Tech',
   geCompareConclusionDetail:
-    'ก่อนติดตั้ง: {problem} — แนะนำ {solution} ({capabilities}) ประหยัด {saving}',
+    'ค่าที่วัดจาก CH1: {problem} — แนะนำ {solution} ({capabilities}) ประหยัด {saving}',
   investmentDefault: '200,000 บาท',
   recApfcTitle: 'ติดตั้งระบบ GE Energy Tech Smart Saving',
   recApfcInvestTitle: 'ลงทุนระบบ GE Energy Tech Smart Saving',
   recApfcDesc:
-    'เปรียบเทียบก่อนติดตั้ง — ระบบปรับแรงดัน ปรับกระแส 3 เฟส ปรับเสถียรลดฮาร์มอนิก และเก็บกระแสไฟใช้ช่วง Peak/Off-peak',
+    'เปรียบเทียบค่าที่วัดจาก CH1 — ระบบปรับแรงดัน ปรับกระแส 3 เฟส ปรับเสถียรลดฮาร์มอนิก และเก็บกระแสไฟใช้ช่วง Peak/Off-peak',
   recRedistributeTitle: 'กระจายโหลด 3 เฟส',
   recRedistributeDesc: 'สมดุล L1/L2/L3 ลดความเครียดสายและเบรกเกอร์',
   recPeakTitle: 'จัดการ Peak Demand',
@@ -992,7 +992,7 @@ const en: ReportStrings = {
   longTerm: 'Long-term (1–3 years)',
   aiNote: 'Auto-analysis from live meter data — some values are estimated when data is incomplete.',
   noData: '—',
-  ch1Label: 'CH1 (before install)',
+  ch1Label: 'CH1 (without device)',
   ch2Label: '—',
   threePhase400V: '3-Phase 400V',
   realtimeResolution: 'Real-time / 1 min',
@@ -1069,31 +1069,31 @@ const en: ReportStrings = {
   maintenanceNote: 'Thermographic inspection if imbalance > 20%',
   solutionApfc: 'GE Energy Tech Smart Saving System',
   geSolutionCapabilities: 'voltage · current · stability · stored energy',
-  geCompareExecutiveTitle: 'Pre-install comparison — GE Energy Tech system',
+  geCompareExecutiveTitle: 'Comparison from CH1 readings — GE Energy Tech system',
   geCompareExecutiveDetail:
-    'Before install: PF {pf} · current imbalance {imb} · peak {peak} · THD {thd} — GE Energy Tech ({capabilities}) addresses these holistically',
-  geComparePfTitle: 'PF comparison — before install',
+    'CH1 readings: PF {pf} · current imbalance {imb} · peak {peak} · THD {thd} — GE Energy Tech ({capabilities}) addresses these holistically',
+  geComparePfTitle: 'PF comparison — CH1',
   geComparePfDetail:
-    'Before install PF {pf} (< 0.95) — GE system adjusts current and voltage in real time to raise PF toward 0.95–1.0 ({capabilities})',
-  geComparePeakTitle: 'Peak demand comparison — before install',
+    'CH1 PF {pf} (< 0.95) — GE system adjusts current and voltage in real time to raise PF toward 0.95–1.0 ({capabilities})',
+  geComparePeakTitle: 'Peak demand comparison — CH1',
   geComparePeakDetail:
     'Peak {peak} (avg {avg}) — GE stored energy discharges at peak to cut demand charges and smooth load',
-  geCompareBalanceTitle: '3-phase balance comparison — before install',
+  geCompareBalanceTitle: '3-phase balance comparison — CH1',
   geCompareBalanceDetail:
     'Imbalance {imb} — GE auto phase-current balancing reduces heat and breaker/cable stress',
-  geCompareHarmonicTitle: 'Harmonic comparison — before install',
+  geCompareHarmonicTitle: 'Harmonic comparison — CH1',
   geCompareHarmonicDetail:
     'THD {thd} — GE stability control reduces harmonics and protects motors, transformers, and electronics',
-  geCompareVoltageTitle: 'Voltage comparison — before install',
+  geCompareVoltageTitle: 'Voltage comparison — CH1',
   geCompareVoltageDetail:
     'Voltage imbalance {volt} — GE voltage regulation maintains stable 400V 3-phase supply',
-  geCompareEnergyTitle: 'Energy use comparison — before install',
+  geCompareEnergyTitle: 'Energy use comparison — CH1',
   geCompareEnergyDetail:
     'Average load {avg} — GE stores energy off-peak and returns current at peak to lower kWh and bills',
   geCompareFinancialTitle: 'Financial comparison — before/after GE install',
   geCompareFinancialDetail:
     'Estimated savings {saving}/month — before/after: lower PF penalties, peak charges, and stored-energy use ({capabilities})',
-  geCompareEquipmentTitle: 'Equipment risk comparison — before install',
+  geCompareEquipmentTitle: 'Equipment risk comparison — CH1',
   geCompareEquipmentDetail:
     'Equipment status {status} — GE stability and voltage control extends motor, transformer, and breaker life',
   geCompareRoiTitle: 'ROI comparison — GE Energy Tech investment',
@@ -1101,12 +1101,12 @@ const en: ReportStrings = {
     '{solution} — faster payback from PF/peak savings and off-peak stored energy ({capabilities})',
   geCompareConclusionTitle: 'GE Energy Tech before/after summary',
   geCompareConclusionDetail:
-    'Before install: {problem} — recommend {solution} ({capabilities}) · save {saving}',
+    'CH1 readings: {problem} — recommend {solution} ({capabilities}) · save {saving}',
   investmentDefault: '200,000 THB',
   recApfcTitle: 'Install GE Energy Tech Smart Saving System',
   recApfcInvestTitle: 'Invest in GE Energy Tech Smart Saving',
   recApfcDesc:
-    'Pre-install comparison — voltage regulation, 3-phase current balancing, stability/harmonic control, and stored energy for peak/off-peak use',
+    'Comparison from CH1 readings — voltage regulation, 3-phase current balancing, stability/harmonic control, and stored energy for peak/off-peak use',
   recRedistributeTitle: 'Redistribute Three-Phase Load',
   recRedistributeDesc: 'Balance L1/L2/L3 loading to reduce cable and breaker stress.',
   recPeakTitle: 'Peak Demand Management',

@@ -568,6 +568,8 @@ function EqStatusPanel({
   isOnline,
   hasData,
   ch1,
+  ch2,
+  showCh2,
 }: {
   ui: ReturnType<typeof eqT>;
   waiting: boolean;
@@ -575,11 +577,17 @@ function EqStatusPanel({
   isOnline: boolean;
   hasData: boolean;
   ch1: Em4374Channel;
+  ch2: Em4374Channel;
+  showCh2: boolean;
 }) {
   const meterStatus = getMeterStatusVisual(ui, waiting, dataPending, isOnline, hasData);
   const ch1Active = countActivePhases(ch1.current);
-  const overallCurrent = getCurrentStatusVisual(ui, waiting, ch1Active, 3);
+  const ch2Active = countActivePhases(ch2.current);
+  const overallActive = showCh2 ? ch1Active + ch2Active : ch1Active;
+  const overallTotal = showCh2 ? 6 : 3;
+  const overallCurrent = getCurrentStatusVisual(ui, waiting, overallActive, overallTotal);
   const ch1Status = getCurrentStatusVisual(ui, waiting, ch1Active, 3);
+  const ch2Status = getCurrentStatusVisual(ui, waiting, ch2Active, 3);
 
   return (
     <section className="eq-status-panel">
@@ -587,7 +595,7 @@ function EqStatusPanel({
         <CircleDot className="w-4 h-4 text-emerald-600" />
         <h2>{ui.statusPanelTitle}</h2>
       </div>
-      <div className="eq-status-grid eq-status-grid--ch1">
+      <div className={`eq-status-grid${showCh2 ? '' : ' eq-status-grid--ch1'}`}>
         <EqStatusRing
           title={ui.meterStatusTitle}
           percent={meterStatus.percent}
@@ -615,6 +623,17 @@ function EqStatusPanel({
           bg={ch1Status.bg}
           icon={Zap}
         />
+        {showCh2 && (
+          <EqStatusRing
+            title={ui.ch2StatusTitle}
+            percent={ch2Status.percent}
+            statusLabel={ch2Status.label}
+            detail={ch2Status.detail}
+            fill={ch2Status.fill}
+            bg={ch2Status.bg}
+            icon={Zap}
+          />
+        )}
       </div>
     </section>
   );
@@ -654,11 +673,20 @@ export default function EnergyQualityPage() {
 
   const selectedInfo = filteredDevices.find((d) => d.deviceID === selectedDevice);
   const waiting = !selectedDevice;
+
+  // Auto-select the first meter once the list loads, so the page shows data
+  // on arrival instead of an empty "select a meter" state every visit.
+  useEffect(() => {
+    if (selectedDevice || filteredDevices.length === 0) return;
+    setSelectedDevice(filteredDevices[0].deviceID);
+  }, [filteredDevices, selectedDevice]);
   const dataPending = Boolean(selectedDevice) && !loading && !hasMetricReadings(metrics);
   const ch1Data = metrics?.channels?.ch1 ?? EMPTY_CHANNEL;
+  const ch2Data = metrics?.channels?.ch2 ?? EMPTY_CHANNEL;
+  const hasCh2Data = channelHasReadings(ch2Data);
   const isMeterOnline = selectedInfo?.connection === 'ONLINE';
   const hasLiveData = hasMetricReadings(metrics);
-  const chartLines = useMemo(() => buildEqCurrentChartLines(ui), [ui]);
+  const chartLines = useMemo(() => buildEqCurrentChartLines(ui, !hasCh2Data), [ui, hasCh2Data]);
 
   const fetchDevices = useCallback(async () => {
     try {
@@ -1054,6 +1082,8 @@ export default function EnergyQualityPage() {
           isOnline={isMeterOnline}
           hasData={hasLiveData}
           ch1={ch1Data}
+          ch2={ch2Data}
+          showCh2={waiting || hasCh2Data}
         />
 
         <Em4374ChannelPanel
@@ -1068,6 +1098,21 @@ export default function EnergyQualityPage() {
           dataPending={dataPending}
           lastUpdate={lastUpdate}
         />
+
+        {(waiting || hasCh2Data) && (
+          <Em4374ChannelPanel
+            title={ui.afterCurrent}
+            subtitle={ui.selectMeterHint}
+            channelLabel="CH2"
+            channelClass="ch2"
+            blockClass="eq-monitor-block--ch2"
+            data={ch2Data}
+            ui={ui}
+            waiting={waiting}
+            dataPending={dataPending}
+            lastUpdate={lastUpdate}
+          />
+        )}
 
         <div className="eq-chart-panel">
           <h2>

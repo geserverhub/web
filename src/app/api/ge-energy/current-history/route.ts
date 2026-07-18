@@ -84,6 +84,9 @@ async function loadHistoryRecords(
     'metrics_L1',
     'metrics_L2',
     'metrics_L3',
+    'metrics_current_L1',
+    'metrics_current_L2',
+    'metrics_current_L3',
   ])
 
   const selectParts = ['record_time']
