@@ -239,27 +239,49 @@ function EqPhaseMetricRow({
   variant: 'ch1' | 'ch2' | 'avg';
 }) {
   const hasPhases = Boolean(phases?.some((v) => v != null && Number.isFinite(v)));
-  const phaseLabels = [ui.l1, ui.l2, ui.l3, hasPhases ? ui.avg : ui.totalPhase];
-  const phaseKinds: PhaseKind[] = ['l1', 'l2', 'l3', 'sum'];
-  const phaseValues: (number | null)[] = waiting
-    ? [null, null, null, null]
-    : hasPhases
-      ? [
-          phaseDisplay(phases?.[0]),
-          phaseDisplay(phases?.[1]),
-          phaseDisplay(phases?.[2]),
-          phaseAvg(phases),
-        ]
-      : [null, null, null, waiting ? null : total ?? null];
-  const cardVariants: ('ch1' | 'ch2' | 'avg')[] = [
-    variant,
-    variant,
-    variant,
-    hasPhases ? 'avg' : variant,
-  ];
   const format =
     unit === 'V' ? 'v' : unit === 'A' ? 'a' : ('num' as const);
   const RowIcon = METRIC_ICONS[metricKind];
+
+  // Only voltage/current are measured per phase on this meter. P/Q/S/PF/THD/
+  // Hz/kWh are single scalar readings — showing an L1/L2/L3 grid for those
+  // would render 3 permanently-empty "—" cells, so show just the one value.
+  if (!hasPhases && phases === undefined) {
+    return (
+      <div className="eq-metric-row">
+        <p className="eq-metric-row-label">
+          <span className="eq-metric-row-icon">
+            <RowIcon strokeWidth={2.25} />
+          </span>
+          {metricLabel}
+          {unit ? <span className="eq-metric-row-unit">{unit}</span> : null}
+        </p>
+        <div className="eq-phase-grid eq-phase-grid--scalar">
+          <EqPhaseCard
+            label={ui.totalPhase}
+            value={waiting ? null : total ?? null}
+            unit={unit}
+            variant={variant}
+            format={format}
+            metricKind={metricKind}
+            phaseKind="sum"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const phaseLabels = [ui.l1, ui.l2, ui.l3, ui.avg];
+  const phaseKinds: PhaseKind[] = ['l1', 'l2', 'l3', 'sum'];
+  const phaseValues: (number | null)[] = waiting
+    ? [null, null, null, null]
+    : [
+        phaseDisplay(phases?.[0]),
+        phaseDisplay(phases?.[1]),
+        phaseDisplay(phases?.[2]),
+        phaseAvg(phases),
+      ];
+  const cardVariants: ('ch1' | 'ch2' | 'avg')[] = [variant, variant, variant, 'avg'];
 
   return (
     <div className="eq-metric-row">
@@ -276,7 +298,7 @@ function EqPhaseMetricRow({
             key={`${metricLabel}-${label}`}
             label={label}
             value={phaseValues[i]}
-            unit={hasPhases || i < 3 ? unit : unit}
+            unit={unit}
             variant={cardVariants[i]}
             format={format}
             metricKind={metricKind}

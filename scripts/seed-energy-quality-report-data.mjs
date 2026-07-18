@@ -95,7 +95,7 @@ function genPoint(baseTime, idx, deviceId) {
   const beforeS = round(beforeP / Math.max(beforePf, 0.01), 3);
   const beforeQ = round(Math.sqrt(Math.max(0, beforeS ** 2 - beforeP ** 2)), 3);
 
-  const kwhStep = round((beforeP * INTERVAL_MIN) / 60 / 1000, 3);
+  const kwhStep = round((beforeP * INTERVAL_MIN) / 60, 3);
   const beforeKwh = round(12000 + idx * kwhStep + deviceId * 50, 3);
 
   return {

@@ -565,6 +565,31 @@
   font-size: 1.35rem;
 }
 
+/* Scalar metrics (P/Q/S/PF/THD/Hz/kWh) have one meter-wide reading, not
+   per-phase — show a single card sized to its own content instead of a
+   fixed-width grid cell (which clipped longer values like "12,065.43 kWh"). */
+.eq-phase-grid--scalar {
+  display: block;
+}
+
+.eq-phase-grid--scalar .eq-phase-card {
+  display: inline-flex;
+  flex-direction: column;
+  width: auto;
+  min-width: 160px;
+  max-width: 100%;
+  padding: 0.85rem 1.15rem 0.75rem;
+}
+
+.eq-phase-grid--scalar .eq-phase-value {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.eq-phase-grid--scalar .eq-phase-value strong {
+  font-size: 1.5rem;
+}
+
 .eq-status-panel {
   margin-bottom: 1.25rem;
   padding: 1.1rem 1.15rem 1.15rem;
