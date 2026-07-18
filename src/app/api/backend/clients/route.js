@@ -51,7 +51,7 @@ const CLIENT_CARD_OVERRIDES = {
     thumbnail: "/ge-energyTech/138568.jpg",
     thumbnail_style: "photo",
     contact_email: "goeunserverhub@gmail.com",
-    contact_phone: "010-8105-0384",
+    contact_phone: "010-8488-0865",
     system_url: "https://www.ge-energytech.com",
   },
   cargo: {
