@@ -40,6 +40,10 @@ mkdirSync(outDir, { recursive: true });
 const dumpUser = process.env.DB_USER || cfg.user;
 const dumpPassword = process.env.DB_PASSWORD ?? cfg.password;
 
+/** MariaDB's mysqldump doesn't recognize MySQL-only flags like --set-gtid-purged. */
+const versionCheck = spawnSync('mysqldump', ['--version'], { encoding: 'utf8' });
+const isMariaDb = /mariadb/i.test(versionCheck.stdout || '');
+
 const args = [
   `-h${cfg.host}`,
   `-P${cfg.port}`,
@@ -49,7 +53,7 @@ const args = [
   '--no-tablespaces',
   '--routines',
   '--triggers',
-  '--set-gtid-purged=OFF',
+  ...(isMariaDb ? [] : ['--set-gtid-purged=OFF']),
   cfg.database,
 ];
 
