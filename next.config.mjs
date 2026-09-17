@@ -15,7 +15,13 @@ const extraDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Allow browsers hitting dev via WSL/LAN IP (e.g. http://172.20.24.10:3005)
-  allowedDevOrigins: ["localhost", "127.0.0.1", "172.20.24.10", ...extraDevOrigins],
+  allowedDevOrigins: [
+    "localhost",
+    "127.0.0.1",
+    "172.20.24.10",
+    "strong-dory-enabled.ngrok-free.app",
+    ...extraDevOrigins,
+  ],
   // Force this folder as app root (parent C:\web\package-lock.json must not win)
   outputFileTracingRoot: __dirname,
   turbopack: {

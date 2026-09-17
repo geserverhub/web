@@ -124,6 +124,14 @@ export default function CargoTrackPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Support direct tab links when the public tunnel cannot keep HMR connected.
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get("tab");
+    if (["track", "request", "shipments-list", "profile"].includes(requestedTab)) {
+      setTab(requestedTab);
+    }
+  }, []);
+
   const doLogin = async () => {
     if (!loginPhone.trim()) return;
     setLoginLoading(true); setLoginError("");
@@ -337,9 +345,9 @@ export default function CargoTrackPage() {
 
       <div style={{ width: "100%", maxWidth: 520, display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         {[["track","🔍 ตรวจสอบสถานะ"],["request","📬 แจ้งส่งสินค้า"], ...(cargoUser ? [["shipments-list","📦 สถานะการจัดส่ง"],["profile","👤 ข้อมูลของฉัน"]] : [])].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: "11px 8px", borderRadius: 10, border: `1px solid ${tab === key ? "#facc15" : "#2a2d3a"}`, background: tab === key ? "#facc1515" : "#16181f", color: tab === key ? "#facc15" : "#64748b", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Noto Sans Thai',sans-serif" }}>
+          <a key={key} href={`/cargo/track?tab=${key}`} onClick={e => { e.preventDefault(); setTab(key); window.history.replaceState(null, "", `/cargo/track?tab=${key}`); }} style={{ flex: 1, padding: "11px 8px", borderRadius: 10, border: `1px solid ${tab === key ? "#facc15" : "#2a2d3a"}`, background: tab === key ? "#facc1515" : "#16181f", color: tab === key ? "#facc15" : "#64748b", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Noto Sans Thai',sans-serif", textDecoration: "none", textAlign: "center" }}>
             {label}
-          </button>
+          </a>
         ))}
       </div>
 
