@@ -632,7 +632,7 @@ export default function CargoTrackPage() {
 
               {/* Action buttons */}
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { setTab("track"); setTrackInput(reqDone.number); setReqDone(null); }}
+                <button onClick={() => { setTab("track"); setTrackPhone(""); setTrackError(""); setReqDone(null); }}
                   style={{ padding: "10px 18px", background: "#facc15", color: "#000", fontWeight: 800, border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
                   🔍 ตรวจสอบสถานะ
                 </button>
