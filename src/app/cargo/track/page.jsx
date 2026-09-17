@@ -614,7 +614,7 @@ export default function CargoTrackPage() {
               <div style={{ background: "#fff", borderRadius: 14, padding: 16, display: "inline-block", marginBottom: 16, boxShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
                 <div style={{ fontSize: 12, color: "#06c755", fontWeight: 800, marginBottom: 10, textAlign: "center" }}>💬 แอดไลน์ GE CARGO</div>
                 <img
-                  src="/uploads/logos/line-qr.png"
+                  src="/cargo/lineqr.jpg"
                   alt="LINE QR Code"
                   style={{ width: 180, height: 180, objectFit: "contain", display: "block", margin: "0 auto" }}
                   onError={e => {
