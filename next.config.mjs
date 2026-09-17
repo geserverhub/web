@@ -14,6 +14,11 @@ const extraDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Uploaded assets are served as static files; do not copy the local upload
+  // archive into the admin download Function bundle.
+  outputFileTracingExcludes: {
+    "/api/admin/file-converter/app-archives/**/*": ["./public/uploads/**"],
+  },
   // Allow browsers hitting dev via WSL/LAN IP (e.g. http://172.20.24.10:3005)
   allowedDevOrigins: [
     "localhost",

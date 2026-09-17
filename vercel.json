@@ -3,6 +3,10 @@
   "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
+  "env": {
+    "VERCEL_SUPPORT_LARGE_FUNCTIONS": "1",
+    "VERCEL_ANALYZE_BUILD_OUTPUT": "1"
+  },
   "crons": [
     {
       "path": "/api/cron/monthly-invoice-reminders",
