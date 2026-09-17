@@ -409,7 +409,7 @@ export default function CargoTrackPage() {
                                 <div style={{ textAlign: "center", padding: "12px 0" }}>
                                   <div style={{ fontSize: 22, marginBottom: 6 }}>📞</div>
                                   <div style={{ fontSize: 13, color: "#4ade80", fontWeight: 700 }}>ติดต่อสอบถามราคา</div>
-                                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{brandName} · 095-389-9313</div>
+                                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{brandName} · 062-671-8941</div>
                                 </div>
                               );
                               return (
@@ -672,13 +672,12 @@ export default function CargoTrackPage() {
                   <div style={{ marginTop: 10, background: "#1a2010", border: "1px solid #4ade80", borderRadius: 8, padding: "12px 14px" }}>
                     <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700, marginBottom: 6 }}>📦 ส่งสินค้ามาที่ (ที่อยู่โกดังในไทย)</div>
                     <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.7 }}>
-                      <strong>Sbai (GE-SERVERHUB)</strong><br />
-                      เลขที่ 270 ถนนเลียบคลองสอง 22<br />
-                      แขวงบางชัน เขตคลองสามวา<br />
-                      จังหวัด กรุงเทพมหานคร 10510
+                      <strong>Sarang park minyeon (GE SERVERHUB)</strong><br />
+                      4/8 เลียบคลองสอง 22<br />
+                      แขวงบางชัน เขตคลองสามวา กรุงเทพมหานคร 10510
                     </div>
                     <div style={{ marginTop: 8, fontSize: 13, color: "#facc15", fontWeight: 700 }}>
-                      📞 โทร. 095-389-9313
+                      📞 โทร. 062-671-8941
                     </div>
                   </div>
                 )}
