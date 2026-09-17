@@ -18,6 +18,7 @@ const nextConfig = {
   // archive into the admin download Function bundle.
   outputFileTracingExcludes: {
     "/api/admin/file-converter/app-archives/**/*": ["./public/uploads/**"],
+    "/api/admin/upload": ["./public/uploads/**"],
   },
   // Allow browsers hitting dev via WSL/LAN IP (e.g. http://172.20.24.10:3005)
   allowedDevOrigins: [
