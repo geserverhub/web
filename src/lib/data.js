@@ -32,9 +32,9 @@ export const fallbackProfile = {
   headline: "ศูนย์กลางระบบลูกค้าและหน้าโปรโมทบริการของคุณ",
   subheadline:
     "รวมหน้าแนะนำบริการ, ช่องทางติดต่อ, และทางเข้าระบบสำหรับลูกค้าหลายรายไว้ในเว็บเดียว",
-  phone: "081-234-5678\n010-8105-0384",
+  phone: "010-8105-0384",
   email: "goeunserverhub@gmail.com",
-  address: "Bangkok, Thailand\nAnsan, Republic of Korea",
+  address: "Ansan, Republic of Korea",
 };
 
 export const fallbackServices = [
